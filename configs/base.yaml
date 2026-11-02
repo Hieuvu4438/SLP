@@ -1,0 +1,13 @@
+# Global defaults shared by ALL methods. Method/data configs override these.
+data:
+  name: toy
+
+eval:
+  metrics: [accuracy, macro_f1]
+  primary_metric: accuracy     # metric used for model selection / main table
+  higher_is_better: true
+
+train:
+  deterministic: true
+
+method: {}                     # hyper-parameters; filled by methods/<name>/config.yaml

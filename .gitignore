@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.ipynb_checkpoints/
+
+# Data & artifacts (never commit raw data, checkpoints or run outputs)
+data/raw/*
+data/processed/*
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+outputs/
+wandb/
+*.ckpt
+*.pt
+*.pth
+*.safetensors
+
+# OS / editor
+.DS_Store
+.vscode/
+.idea/
