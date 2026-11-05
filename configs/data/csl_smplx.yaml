@@ -1,0 +1,6 @@
+# SOKE SMPL-X fittings in MaDiS 133-D layout (official splits). Pack first: scripts/madis_build_*.py
+data:
+  name: csl_smplx
+  source: csl
+  root: data/processed/madis/CSL-Daily
+  stats: third_party/SOKE/deps/stats

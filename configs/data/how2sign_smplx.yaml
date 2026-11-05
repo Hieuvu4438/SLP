@@ -1,0 +1,6 @@
+# SOKE SMPL-X fittings in MaDiS 133-D layout (official splits). Pack first: scripts/madis_build_*.py
+data:
+  name: how2sign_smplx
+  source: how2sign
+  root: data/processed/madis/How2Sign
+  stats: third_party/SOKE/deps/stats

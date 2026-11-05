@@ -1,0 +1,6 @@
+# SOKE SMPL-X fittings in MaDiS 133-D layout (official splits). Pack first: scripts/madis_build_*.py
+data:
+  name: phoenix_smplx
+  source: phoenix
+  root: data/processed/madis/Phoenix_2014T
+  stats: third_party/SOKE/deps/stats

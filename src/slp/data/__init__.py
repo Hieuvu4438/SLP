@@ -6,10 +6,14 @@ from __future__ import annotations
 from typing import Callable
 
 from slp.data.base import DatasetSplits, Split
+from slp.data.sign_smplx import load_sign_smplx
 from slp.data.toy import load_toy
 
 DATASETS: dict[str, Callable[[dict], DatasetSplits]] = {
     "toy": load_toy,
+    "phoenix_smplx": load_sign_smplx,
+    "csl_smplx": load_sign_smplx,
+    "how2sign_smplx": load_sign_smplx,
 }
 
 
