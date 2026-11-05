@@ -1,0 +1,97 @@
+{
+  "checked_at": "2026-11-05T06:35:24.131495+00:00",
+  "scope": "toy algebra check only; no dataset/model/training or empirical support for proposed method",
+  "partition_example": {
+    "L": 4,
+    "Dmax": 2,
+    "temperature": 0.5,
+    "score": "a(i,j)=0.2*j-0.1*(j-i)^2-0.3",
+    "partitions": [
+      [
+        1,
+        1,
+        1,
+        1
+      ],
+      [
+        1,
+        1,
+        2
+      ],
+      [
+        1,
+        2,
+        1
+      ],
+      [
+        2,
+        1,
+        1
+      ],
+      [
+        2,
+        2
+      ]
+    ],
+    "probabilities": [
+      0.32931394225829824,
+      0.12114782904794734,
+      0.18073132343935036,
+      0.26961945194421555,
+      0.09918745331018852
+    ],
+    "Z_enumeration": 6.75811328615677,
+    "Z_forward": 6.758113286156769,
+    "absolute_error": 8.881784197001252e-16,
+    "probability_sum": 1.0
+  },
+  "expected_vs_marginal": {
+    "q": [
+      0.5,
+      0.5
+    ],
+    "conditional_probabilities": [
+      0.8,
+      0.2
+    ],
+    "expected_negative_log": 0.916290731874155,
+    "negative_log_expected_probability": 0.6931471805599453
+  },
+  "exposure_short_canvas": {
+    "predicted_durations": [
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "reference_latent_length": 2,
+    "overlap_weights": [
+      [
+        0.4,
+        0.4,
+        0.19999999999999996,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        0.20000000000000018,
+        0.3999999999999999,
+        0.3999999999999999
+      ]
+    ],
+    "row_sums": [
+      1.0,
+      1.0
+    ],
+    "column_sums": [
+      0.4,
+      0.4,
+      0.40000000000000013,
+      0.3999999999999999,
+      0.3999999999999999
+    ]
+  }
+}

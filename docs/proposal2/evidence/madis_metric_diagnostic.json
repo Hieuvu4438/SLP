@@ -1,0 +1,24 @@
+{
+  "scope": "synthetic metric-only function execution, no model or benchmark run",
+  "source_commit": "071828ea1b94530dc7ff0a6c009c0a7c6d1f0784",
+  "file_sha256": "ecb391f2edaeaa4f91729bb6ef105ea72399e54bc0d95011ffdbf28300f34c90",
+  "reference": [
+    1,
+    2,
+    3,
+    4
+  ],
+  "prediction": [
+    4,
+    3,
+    2,
+    1
+  ],
+  "statistics": [
+    4.0,
+    4.0,
+    4.0
+  ],
+  "released_score": 100.0,
+  "matching_fourgrams": 0
+}

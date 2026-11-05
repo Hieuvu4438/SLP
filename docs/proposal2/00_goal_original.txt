@@ -1,0 +1,123 @@
+Mục tiêu: Thực hiện một nghiên cứu literature review chuyên sâu, xuất phát từ các paper hiện đại về Motion Generation, để đề xuất phương pháp có cơ sở khoa học và tiềm năng đạt SOTA cho bài toán Sign Language Generation (SLG).
+
+Yêu cầu quan trọng nhất: KHÔNG lấy các hướng thực nghiệm hiện có trong repo SLP làm điểm xuất phát hoặc định hướng lựa chọn phương pháp.
+
+1. Phạm vi độc lập với thực nghiệm hiện tại
+
+- Không đọc hoặc sử dụng docs/proposal1, các implementation nội bộ trong methods/, configs thực nghiệm, outputs/, results/, research logs hay kết quả chạy hiện tại để hình thành đề xuất.
+- Không dùng FLARE-Sign, d2c_sign hoặc PACT-Sign làm khung phương pháp mặc định.
+- Không lấy proposal2 cũ làm nền rồi bổ sung module, đổi tên hoặc diễn giải lại.
+- Những nhận định từ các trao đổi trước về ưu thế của MaDiS, flow refinement, retrieval hoặc quantization bottleneck phải được xem là giả thuyết chưa được xác lập cho nghiên cứu này.
+- Được đọc source code công khai chính thức của các paper. Nếu cần clone, đặt trong third_party/.
+- Tính độc lập phải thể hiện ở chuỗi lập luận và bằng chứng lựa chọn phương pháp. Không cố tạo khác biệt hình thức; nếu khảo sát thực sự dẫn tới một hướng tương tự, phải giải thích bằng nguồn độc lập và so sánh nghiêm túc với các phương án khác.
+
+2. Literature review rộng trước khi chọn phương pháp
+
+Khảo sát các paper có ảnh hưởng và các tiến bộ gần đây, ưu tiên nguồn chính thức từ CVPR, ICCV, ECCV, NeurIPS, ICML, ICLR, ACL và các venue phù hợp khác. Bao gồm các preprint mới có liên quan trực tiếp, nhưng phải phân biệt rõ với paper đã peer review.
+
+Phạm vi cần đủ rộng để tránh mặc định đi theo một kiến trúc:
+- Human Motion Generation và Text-to-Motion.
+- Whole-body generation: body, hands, face và tương tác giữa các bộ phận.
+- Motion representation, tokenization và continuous latent representations.
+- Autoregressive, masked generation, discrete/continuous diffusion và flow matching.
+- Temporal planning, duration, alignment, composition và coarticulation.
+- Controllability, geometry/contact, semantic fidelity và evaluation.
+- Các kỹ thuật liên quan từ gesture, speech, video, robotics hoặc domain khác khi có cơ chế chuyển giao rõ ràng.
+
+Không chỉ liệt kê paper hoặc tóm tắt abstract. Không chọn method chính trước rồi tìm paper để hợp thức hóa lựa chọn đó.
+
+3. Đọc sâu và ghi bằng chứng
+
+Với mỗi paper có vai trò quyết định đối với đề xuất, cần đọc và phân tích:
+- Bài toán và giả định.
+- Representation, kiến trúc và objective/loss.
+- Training và inference.
+- Dữ liệu, supervision và điều kiện đánh giá.
+- Kết quả thực nghiệm và ablation liên quan.
+- Hạn chế, trường hợp thất bại và điều paper chưa chứng minh.
+- Khi cần, đối chiếu source code để hiểu implementation.
+
+Phân biệt rõ:
+- Đã xác minh qua abstract/metadata.
+- Đã đọc chọn lọc một số section.
+- Đã đọc sâu method, experimental setup và ablation liên quan.
+- Đã kiểm tra code.
+
+Tải full text không đồng nghĩa đã đọc kỹ. Không dùng số lượng paper hoặc số file tải về để thay thế chất lượng nghiên cứu.
+
+4. Sau đó mới đi sâu vào Sign Language Generation
+
+Đọc kỹ tối thiểu các công trình trọng tâm:
+- Signs as Tokens / SOKE:
+  https://arxiv.org/abs/2411.17799
+- MaDiS:
+  https://arxiv.org/abs/2601.19577
+- SignSparK, cùng các công trình SLG liên quan và mới hơn được tìm thấy trong quá trình khảo sát.
+
+Xác định các khác biệt giữa motion generation thông thường và SLG, đặc biệt:
+- Chuyển động phải truyền tải nội dung ngôn ngữ.
+- Handshape, orientation, location, timing và phối hợp hai tay.
+- Non-manual markers và quan hệ body–hands–face.
+- Spoken-language order khác sign-language order.
+- Dữ liệu ít, fitting nhiễu và nhiều cách ký hiệu hợp lệ.
+- Giới hạn của các metric tự động.
+
+Mọi nhận định về bottleneck phải có nguồn hoặc được ghi rõ là giả thuyết cần kiểm nghiệm.
+
+5. Phát triển nhiều phương án trước khi lựa chọn
+
+Từ literature, xây dựng ít nhất 3 phương án có khác biệt thực chất về cơ chế giải quyết bài toán, không chỉ là các biến thể của cùng một pipeline.
+
+Với mỗi phương án:
+- Nêu vấn đề cụ thể cần giải quyết.
+- Chỉ ra bằng chứng từ paper dẫn đến phương án đó.
+- Giải thích kỹ thuật gốc hoạt động thế nào.
+- Phân tích giả định nào phù hợp hoặc không phù hợp với SLG.
+- Đặc tả cách điều chỉnh cho SLG.
+- Nêu prior art gần nhất, rủi ro trùng ý tưởng, tính khả thi và failure modes.
+- Đề xuất thí nghiệm phân biệt hiệu quả thật với data gain, capacity gain hoặc metric bias.
+
+Chỉ chọn phương án chính sau khi đã so sánh các phương án trên cùng mức độ chi tiết. Không mặc định phải dùng MaDiS làm backbone hoặc phải có một flow refiner.
+
+6. Proposal cuối phải cụ thể và trung thực
+
+Phương pháp được chọn phải có:
+- Lập luận vì sao đáng ưu tiên hơn các phương án còn lại.
+- Pipeline, representation, các module và objective/loss.
+- Quy trình training và inference rõ ràng.
+- Những input/supervision có ở train nhưng không có ở inference.
+- Thành phần kế thừa từ từng paper và phần đóng góp ứng viên.
+- Những giả thuyết chưa có bằng chứng.
+- Baseline mạnh, ablation, tiêu chí bác bỏ và hướng thay thế nếu thất bại.
+
+Không coi việc ghép vài module đã có là novelty tự động. Không hứa chắc đạt SOTA khi chưa chạy thực nghiệm.
+
+7. Benchmark và tiêu chí kiểm chứng
+
+Mục tiêu thực nghiệm là vượt các mốc SOKE và các đối thủ hiện thời trên How2Sign, CSL-Daily và PHOENIX-2014T trong điều kiện so sánh hợp lệ.
+
+Phải phân biệt:
+- Text-only, gloss-conditioned, retrieval-conditioned và keyframe completion.
+- Ground-truth length/keyframes với length/keyframes được dự đoán.
+- Khác biệt fitting, dữ liệu bổ sung, tokenizer và evaluator.
+- Số liệu tác giả báo cáo với kết quả thực sự được tái lập.
+
+Không thu hẹp thành thắng một metric thuận lợi. Phương pháp phải được kiểm tra về cả độ đúng ngữ nghĩa và chất lượng chuyển động.
+
+8. Deliverables và điều kiện hoàn thành
+
+Viết lại bộ tài liệu nghiên cứu tại:
+  /home/haipd/SLP/docs/proposal2/
+
+Dùng các file Markdown, bằng tiếng Việt, có liên kết nguồn chính xác. Bộ tài liệu phải bao gồm:
+- Search strategy và reading ledger.
+- Literature review có synthesis và phản bằng chứng.
+- Phân tích sâu SLG và benchmark.
+- Các phương án ứng viên và so sánh lựa chọn.
+- Proposal phương pháp chính đầy đủ.
+- Kế hoạch thực nghiệm và ablation.
+- Critical review về novelty, giả định và tính khả thi.
+
+Tiếp tục tự chủ đến khi hoàn tất nghiên cứu và proposal; không dừng ở kế hoạch hay shortlist paper. Không cần triển khai model hoặc chạy training trong goal này.
+
+Chỉ đánh dấu goal hoàn thành khi chất lượng đọc, tổng hợp, so sánh phương án và đặc tả phương pháp thực sự đáp ứng các yêu cầu trên. Việc đã tạo đủ file hoặc có một proposal nghe hợp lý không phải bằng chứng hoàn thành.

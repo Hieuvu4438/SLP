@@ -1,0 +1,12 @@
+{
+  "checked_at": "2026-11-05T06:55:14.431373+00:00",
+  "scope": "mechanical document/source checks supporting content audit in 10/11; not empirical model or novelty validation",
+  "markdown_files": 44,
+  "broken_local_links": [],
+  "unbalanced_fences": [],
+  "missing_deep_notes": [],
+  "source_artifacts_checked": 102,
+  "source_integrity_failures": [],
+  "pinned_code_paths_checked": 19,
+  "pinned_code_path_errors": []
+}

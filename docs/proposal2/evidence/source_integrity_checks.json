@@ -1,0 +1,619 @@
+{
+  "scope": "primary acquisition artifacts plus selected published/supplementary PDFs: existence/hash only; not source truth or PDF page-anchor certification",
+  "checked": 102,
+  "failures": [],
+  "checks": [
+    {
+      "key": "act",
+      "path": "third_party/proposal2_review_20261104/sources/act/metadata.html",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "act",
+      "path": "third_party/proposal2_review_20261104/sources/act/html.html",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "atom",
+      "path": "third_party/proposal2_review_20261104/sources/atom/metadata.html",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "atom",
+      "path": "third_party/proposal2_review_20261104/sources/atom/html.html",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "blanc",
+      "path": "third_party/proposal2_review_20261104/sources/blanc/metadata.html",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "blanc",
+      "path": "third_party/proposal2_review_20261104/sources/blanc/html.html",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "discord",
+      "path": "third_party/proposal2_review_20261104/sources/discord/metadata.html",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "discord",
+      "path": "third_party/proposal2_review_20261104/sources/discord/html.html",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "emage",
+      "path": "third_party/proposal2_review_20261104/sources/emage/metadata.html",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "emage",
+      "path": "third_party/proposal2_review_20261104/sources/emage/html.html",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "eventt2m",
+      "path": "third_party/proposal2_review_20261104/sources/eventt2m/metadata.html",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "eventt2m",
+      "path": "third_party/proposal2_review_20261104/sources/eventt2m/html.html",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "f5tts",
+      "path": "third_party/proposal2_review_20261104/sources/f5tts/metadata.html",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "f5tts",
+      "path": "third_party/proposal2_review_20261104/sources/f5tts/html.html",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "fgdm",
+      "path": "third_party/proposal2_review_20261104/sources/fgdm/paper.pdf",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "finemotion",
+      "path": "third_party/proposal2_review_20261104/sources/finemotion/metadata.html",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "finemotion",
+      "path": "third_party/proposal2_review_20261104/sources/finemotion/html.html",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "flowmdm",
+      "path": "third_party/proposal2_review_20261104/sources/flowmdm/metadata.html",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "flowmdm",
+      "path": "third_party/proposal2_review_20261104/sources/flowmdm/html.html",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "frankenmotion",
+      "path": "third_party/proposal2_review_20261104/sources/frankenmotion/metadata.html",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "frankenmotion",
+      "path": "third_party/proposal2_review_20261104/sources/frankenmotion/html.html",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "fusion",
+      "path": "third_party/proposal2_review_20261104/sources/fusion/metadata.html",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "fusion",
+      "path": "third_party/proposal2_review_20261104/sources/fusion/html.html",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "gesture_eval",
+      "path": "third_party/proposal2_review_20261104/sources/gesture_eval/metadata.html",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "gesture_eval",
+      "path": "third_party/proposal2_review_20261104/sources/gesture_eval/html.html",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "gesture_token_semantics",
+      "path": "third_party/proposal2_review_20261104/sources/gesture_token_semantics/metadata.html",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "gesture_token_semantics",
+      "path": "third_party/proposal2_review_20261104/sources/gesture_token_semantics/html.html",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "glowtts",
+      "path": "third_party/proposal2_review_20261104/sources/glowtts/metadata.html",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "glowtts",
+      "path": "third_party/proposal2_review_20261104/sources/glowtts/html.html",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "gp_hsmm",
+      "path": "third_party/proposal2_review_20261104/sources/gp_hsmm/paper.pdf",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "handmdm",
+      "path": "third_party/proposal2_review_20261104/sources/handmdm/metadata.html",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "handmdm",
+      "path": "third_party/proposal2_review_20261104/sources/handmdm/html.html",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "handx",
+      "path": "third_party/proposal2_review_20261104/sources/handx/metadata.html",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "handx",
+      "path": "third_party/proposal2_review_20261104/sources/handx/html.html",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "human_tomato",
+      "path": "third_party/proposal2_review_20261104/sources/human_tomato/metadata.html",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "human_tomato",
+      "path": "third_party/proposal2_review_20261104/sources/human_tomato/html.html",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "imprecise_semicrf",
+      "path": "third_party/proposal2_review_20261104/sources/imprecise_semicrf/paper.pdf",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "ksl_nms",
+      "path": "third_party/proposal2_review_20261104/sources/ksl_nms/article.html",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "lgtok",
+      "path": "third_party/proposal2_review_20261104/sources/lgtok/metadata.html",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "lgtok",
+      "path": "third_party/proposal2_review_20261104/sources/lgtok/html.html",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "madis",
+      "path": "third_party/proposal2_review_20261104/sources/madis/metadata.html",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "madis",
+      "path": "third_party/proposal2_review_20261104/sources/madis/html.html",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "mar",
+      "path": "third_party/proposal2_review_20261104/sources/mar/metadata.html",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "mar",
+      "path": "third_party/proposal2_review_20261104/sources/mar/html.html",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "mardm",
+      "path": "third_party/proposal2_review_20261104/sources/mardm/metadata.html",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "mardm",
+      "path": "third_party/proposal2_review_20261104/sources/mardm/html.html",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "mdm",
+      "path": "third_party/proposal2_review_20261104/sources/mdm/metadata.html",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "mdm",
+      "path": "third_party/proposal2_review_20261104/sources/mdm/html.html",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "mld",
+      "path": "third_party/proposal2_review_20261104/sources/mld/metadata.html",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "mld",
+      "path": "third_party/proposal2_review_20261104/sources/mld/html.html",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "mobius",
+      "path": "third_party/proposal2_review_20261104/sources/mobius/metadata.html",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "mobius",
+      "path": "third_party/proposal2_review_20261104/sources/mobius/html.html",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "molingo",
+      "path": "third_party/proposal2_review_20261104/sources/molingo/metadata.html",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "molingo",
+      "path": "third_party/proposal2_review_20261104/sources/molingo/html.html",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "momask",
+      "path": "third_party/proposal2_review_20261104/sources/momask/metadata.html",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "momask",
+      "path": "third_party/proposal2_review_20261104/sources/momask/html.html",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "motionhiflow",
+      "path": "third_party/proposal2_review_20261104/sources/motionhiflow/metadata.html",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "motionhiflow",
+      "path": "third_party/proposal2_review_20261104/sources/motionhiflow/html.html",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "motionlab",
+      "path": "third_party/proposal2_review_20261104/sources/motionlab/metadata.html",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "motionlab",
+      "path": "third_party/proposal2_review_20261104/sources/motionlab/html.html",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "motionstreamer",
+      "path": "third_party/proposal2_review_20261104/sources/motionstreamer/metadata.html",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "motionstreamer",
+      "path": "third_party/proposal2_review_20261104/sources/motionstreamer/html.html",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "nextscale",
+      "path": "third_party/proposal2_review_20261104/sources/nextscale/metadata.html",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "nextscale",
+      "path": "third_party/proposal2_review_20261104/sources/nextscale/html.html",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "nmm_asl",
+      "path": "third_party/proposal2_review_20261104/sources/nmm_asl/article.html",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "nsa",
+      "path": "third_party/proposal2_review_20261104/sources/nsa/metadata.html",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "nsa",
+      "path": "third_party/proposal2_review_20261104/sources/nsa/html.html",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "omnimotion",
+      "path": "third_party/proposal2_review_20261104/sources/omnimotion/metadata.html",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "omnimotion",
+      "path": "third_party/proposal2_review_20261104/sources/omnimotion/html.html",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "open_t2m",
+      "path": "third_party/proposal2_review_20261104/sources/open_t2m/metadata.html",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "open_t2m",
+      "path": "third_party/proposal2_review_20261104/sources/open_t2m/html.html",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "party",
+      "path": "third_party/proposal2_review_20261104/sources/party/metadata.html",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "party",
+      "path": "third_party/proposal2_review_20261104/sources/party/html.html",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "plan_dont_pose",
+      "path": "third_party/proposal2_review_20261104/sources/plan_dont_pose/metadata.html",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "plan_dont_pose",
+      "path": "third_party/proposal2_review_20261104/sources/plan_dont_pose/html.html",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "sdam",
+      "path": "third_party/proposal2_review_20261104/sources/sdam/metadata.html",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "sdam",
+      "path": "third_party/proposal2_review_20261104/sources/sdam/html.html",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "segmo",
+      "path": "third_party/proposal2_review_20261104/sources/segmo/paper.pdf",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "semtalk",
+      "path": "third_party/proposal2_review_20261104/sources/semtalk/metadata.html",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "semtalk",
+      "path": "third_party/proposal2_review_20261104/sources/semtalk/html.html",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "signer",
+      "path": "third_party/proposal2_review_20261104/sources/signer/metadata.html",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "signer",
+      "path": "third_party/proposal2_review_20261104/sources/signer/html.html",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "signflip",
+      "path": "third_party/proposal2_review_20261104/sources/signflip/metadata.html",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "signflip",
+      "path": "third_party/proposal2_review_20261104/sources/signflip/html.html",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "signrr",
+      "path": "third_party/proposal2_review_20261104/sources/signrr/metadata.html",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "signrr",
+      "path": "third_party/proposal2_review_20261104/sources/signrr/html.html",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "signspark",
+      "path": "third_party/proposal2_review_20261104/sources/signspark/metadata.html",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "signspark",
+      "path": "third_party/proposal2_review_20261104/sources/signspark/html.html",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "soke",
+      "path": "third_party/proposal2_review_20261104/sources/soke/metadata.html",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "soke",
+      "path": "third_party/proposal2_review_20261104/sources/soke/html.html",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "stride",
+      "path": "third_party/proposal2_review_20261104/sources/stride/metadata.html",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "stride",
+      "path": "third_party/proposal2_review_20261104/sources/stride/html.html",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "t2mbench",
+      "path": "third_party/proposal2_review_20261104/sources/t2mbench/metadata.html",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "t2mbench",
+      "path": "third_party/proposal2_review_20261104/sources/t2mbench/html.html",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "t2mgpt",
+      "path": "third_party/proposal2_review_20261104/sources/t2mgpt/metadata.html",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "t2mgpt",
+      "path": "third_party/proposal2_review_20261104/sources/t2mgpt/html.html",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "transition",
+      "path": "third_party/proposal2_review_20261104/sources/transition/metadata.html",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "transition",
+      "path": "third_party/proposal2_review_20261104/sources/transition/html.html",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "umf",
+      "path": "third_party/proposal2_review_20261104/sources/umf/metadata.html",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "umf",
+      "path": "third_party/proposal2_review_20261104/sources/umf/html.html",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "human_tomato_published",
+      "path": "third_party/proposal2_review_20261104/sources/human_tomato/published_icml2024.pdf",
+      "exists": true,
+      "hash_matches": true
+    },
+    {
+      "key": "signer_supplement",
+      "path": "third_party/proposal2_review_20261104/sources/signer/supplement.pdf",
+      "exists": true,
+      "hash_matches": true
+    }
+  ]
+}
