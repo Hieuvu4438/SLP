@@ -1,0 +1,6 @@
+# Default hyper-parameters for this method.
+# Anything here overrides configs/base.yaml and configs/data/*.yaml;
+# CLI overrides (method.lr=0.01) override this.
+method:
+  lr: 0.001
+  epochs: 10
