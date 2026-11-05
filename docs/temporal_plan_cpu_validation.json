@@ -1,0 +1,67 @@
+{
+  "recorded_at": "2026-11-05T09:39:13.165671+00:00",
+  "scope": "CPU algorithm/gradient/contract/integration verification; no real-data efficacy or GPU validation",
+  "commands": [
+    {
+      "command": "CUDA_VISIBLE_DEVICES='' OMP_NUM_THREADS=2 OPENBLAS_NUM_THREADS=2 MKL_NUM_THREADS=2 python -m pytest -q tests/temporal_plan tests/test_methods.py",
+      "outcome": "53 passed, 2 warnings in 11.24s"
+    },
+    {
+      "command": "python -m ruff check methods/temporal_plan tests/temporal_plan",
+      "outcome": "All checks passed"
+    },
+    {
+      "command": "python -m compileall -q methods/temporal_plan",
+      "outcome": "passed"
+    }
+  ],
+  "resource_contract": {
+    "execution": "cpu",
+    "cuda_visible_devices": "",
+    "host_threads": 2,
+    "full_pretrained_weights_downloaded": false,
+    "human_smplx_assets_loaded": false
+  },
+  "sha256": {
+    "methods/temporal_plan/__init__.py": "90acb6dba2e81de1f7bdf4b59f4c5ae882151c2a72fba2a7e85bf5fbe9009ca2",
+    "methods/temporal_plan/application.py": "38fcba7d57f504792d94e7c9158142376c6023e809719dc9df0722956a6eca07",
+    "methods/temporal_plan/cache.py": "eec6bc2e9cc8802cd618680249f71655fe6c86ac59ce2e228dad42da853f022e",
+    "methods/temporal_plan/checkpoint.py": "d4205902efd488591ae6eab518b61d26a0eef8aca3ca46055d8a4b3195190b6d",
+    "methods/temporal_plan/cli.py": "82c582af82b2690f01d9368130f907a448ec4d5a6303e54fa9124796014e30ec",
+    "methods/temporal_plan/codec.py": "b0fe509496848944d17a608b9df40e088fb1b3d0c52c4b008e5d637ca9ab0187",
+    "methods/temporal_plan/conditioning.py": "a9c6172e4ab764c5f55ba8d2453efc8683934ac9e2fd4b778e5825634d6e4024",
+    "methods/temporal_plan/data.py": "a62aa5170f563cb90ec78f77b48a037981fd2cb0adbfb95e1fec446583968999",
+    "methods/temporal_plan/denoiser.py": "7be1fe00ff06b9aee504ec6896c873a434b710ccfba33f40d11298168c5afb8c",
+    "methods/temporal_plan/diffusion.py": "1f383c962bec952f7b81b999718d87e8cf5aec085f3aa11b271c0bc3d220dc1b",
+    "methods/temporal_plan/geometry.py": "7f02fae1f0cbb666c1efb644e37f5e6cc0044ce639914bdd896bce46fdd27efb",
+    "methods/temporal_plan/kinematics.py": "b9aa209e0143b954cc809a5b05ba66115746d00b7a6f4b9eec1bf4998f021abe",
+    "methods/temporal_plan/losses.py": "d73c17e07e232db2d6151bac2e300ceb913e8802a06b5e8d06b5d715c3f052d3",
+    "methods/temporal_plan/method.py": "488cf44d1d40a2c58aae58917798558924b20d593483462ce4dff4f9c0f2f6e0",
+    "methods/temporal_plan/normalization.py": "edcd2bba3bb86756165f148c2d735095bc84bc95cbadc230e9f27f8dbcac846e",
+    "methods/temporal_plan/planner.py": "28b0ca03209a1586b219eb3ba18f367d87f1503eb8a5683d53163d537946d3e0",
+    "methods/temporal_plan/plans.py": "2e64f3b6dc28bba09c7fc248ac59d0e6c16677fde5cb98caacd9cef8175c6ed9",
+    "methods/temporal_plan/representation.py": "bc2f85a5950e528a656d52b236204953cb5b1cd244495404f3e5953ae09494ea",
+    "methods/temporal_plan/segments.py": "fc32ec2221d6bf24847db7dc9f8caef9dbfc3e895dcc69f92c1cc606c66625d1",
+    "methods/temporal_plan/system.py": "c9f136a16c8ae8be09a8b0094143150ccbb0c1737e5e53d1302beb3cf744a18f",
+    "methods/temporal_plan/teacher.py": "a8b43c987a6456f37e295644c230ed4c047b5bce94030b257199ea4b762003ad",
+    "methods/temporal_plan/tensors.py": "1b3e21d771130b758d4882aa4e0e4064f76cf66dd64f44f14b56d79bdcc0349c",
+    "methods/temporal_plan/text.py": "9d90d2e5afddc8eb8b9e1f369400e3012105272bc3b3fd130df0beb4c889fc5a",
+    "methods/temporal_plan/training.py": "09682d2c73f79824db3a746b7516c1298ab2b08983f0850d96e6af7a4f77c731",
+    "tests/temporal_plan/conftest.py": "aea751abe3d11c562de90afcd891ba084261ccdc94594b1f9ca404faa9b04a6e",
+    "tests/temporal_plan/test_application_cli_method.py": "24a451462bb9aba769e7519818c428102d25159bc426e11bd8bd3da1fdf0b6a4",
+    "tests/temporal_plan/test_cache.py": "f6b1417f825fff2ba5f8239eef67cfc79389ba4c6abd9bc27594593b1e9668ef",
+    "tests/temporal_plan/test_data_checkpoint_training.py": "1e42b6365625c84b6e7d0951a5c2965ddb480a9db284e9d10cfe18509f6f7673",
+    "tests/temporal_plan/test_diffusion.py": "4e43e96722fbd418f782b58f24893123981944bb070dc669c830957262edca45",
+    "tests/temporal_plan/test_geometry_codec.py": "0cddccea7de8de8d4474b78a86a10a60941fd349e24358f153337ce35575636b",
+    "tests/temporal_plan/test_planner_conditioning.py": "fdc57eb02af5310e1f34636bf75afb41dba90fda767c1f72459994217e88244b",
+    "tests/temporal_plan/test_segments.py": "afcf34f6dcada71a09e33b39a6b141521e8a973c54ec2bcc2b72719dbd92e02c",
+    "tests/temporal_plan/test_smplx_adapter.py": "429977bfd3b9a18c6f90d9fe356fad7ad5f7010c5b772fbcec45c89259b85208",
+    "tests/temporal_plan/test_system.py": "459a6418f43da445b2eab6422418054de9d9ecb38abe30f400292e3e0d445761",
+    "tests/temporal_plan/test_text.py": "8346ceec8b138a15d9af2b47bf631e9b79bea98c3f2bc16f34a59aaa482d3ba7"
+  },
+  "configuration_sha256": {
+    "methods/temporal_plan/config.yaml": "b7c565d8e300aef93a15d9dc8f36e8828f5be3223a94114add1e239c36113374",
+    "methods/temporal_plan/text_model.json": "424d9e50c6f452a3d67c85f21bdc9e563ac82b9b248d4cdfe4675b521689f28e",
+    "pyproject.toml": "7b056add5748519c7c6592e825f8b0953ee8ff512b1e24df5077518d9c87dc28"
+  }
+}

@@ -1,0 +1,58 @@
+method:
+  # These defaults are the full proposal. No command is run by importing/composing.
+  model:
+    max_latents: null  # derived from TRAIN, never validation/test lengths
+    latent_width: 64
+    codec_hidden: 128
+    content_width: 128
+    segment_hidden: 512
+    hidden: 512
+    heads: 8
+    planner_layers: 4
+    denoiser_layers: 8
+    mixtures: 4
+    stop_threshold: 0.5
+    dropout: 0.1
+    diffusion_steps: 1000
+    sampling_steps: 50
+    plan_samples: 2
+    teacher_mode: sample
+    plan_dropout: 0.1
+    exposure_probability: 0.25
+    overlap: 2.0
+    teacher:
+      max_duration: 32
+      phase_steps: 8
+      radii: [1, 2, 4]
+      alpha: 1.0
+      beta: 0.5
+      penalty: 0.3
+      temperature: 0.5
+    losses:
+      fk: 1.0
+      velocity: 0.1
+      kl: 0.0001
+      expression: 1.0
+  text_width: 512
+  training:
+    device: cpu
+    seed: 0
+    batch_size: 8
+    accumulation: 8
+    epochs: {codec: 100, segment: 50, planner: 100, generator: 100, exposure: 25}
+    codec_lr: 0.0002
+    lr: 0.0001
+    weight_decay: 0.01
+    gradient_clip: 1.0
+    patience: 10
+    max_text_length: 128
+  # Generic Split bridge: MUST declare actual representation/preprocessing explicitly.
+  target_format: null  # raw133 or normalized133; never inferred by magnitude
+  target_stats: null   # normalized133: {mean: file133.npy, std: file133.npy}
+  target_preprocessing: null
+  source_key: source_id
+  fps_by_language: {}
+  smplx_model_dir: null
+  rotation_offsets: null
+  smplx_ext: npz
+  allow_download: false

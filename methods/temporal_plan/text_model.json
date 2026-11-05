@@ -1,0 +1,6 @@
+{
+  "model_id": "google/mt5-base",
+  "revision": "2eb15465c5dd7f72a8f7984306ad05ebc3dd1e1f",
+  "source": "https://huggingface.co/api/models/google/mt5-base",
+  "downloaded_weights": false
+}
