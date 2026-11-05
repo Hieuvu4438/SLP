@@ -27,3 +27,12 @@ wandb/
 .DS_Store
 .vscode/
 .idea/
+
+# Independent upstream checkout; see third_party/README.md.
+third_party/SOKE/
+
+# Independent upstream checkouts and local review clones
+third_party/MaDiS/
+third_party/MoMask/
+third_party/SignSparK/
+third_party/proposal2_review_20261104/code/
