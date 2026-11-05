@@ -1,0 +1,58 @@
+{
+  "key": "plan_dont_pose",
+  "requested_id": "2605.29906",
+  "retrieved_at": "2026-11-04T16:53:20.766704+00:00",
+  "reading_level": "unread",
+  "artifacts": [
+    {
+      "kind": "metadata",
+      "url": "https://arxiv.org/abs/2605.29906",
+      "path": "sources/plan_dont_pose/metadata.html",
+      "sha256": "304a07f8ee1ffd0b52d7a741dab2ba966f736076146e0a61976e3d73f8bf457e",
+      "bytes": 42155
+    },
+    {
+      "kind": "html",
+      "url": "https://arxiv.org/html/2605.29906",
+      "path": "sources/plan_dont_pose/html.html",
+      "sha256": "a11ecfd74f0c0fb1b6012b69d921bcab100ac79c79bbae0092821e0f785fdec0",
+      "bytes": 345676
+    }
+  ],
+  "title": "Plan, Don't Pose: Long Composite Motion Generation with Text-Aligned BFM",
+  "history": "Submission history From: Nikolay Shvetsov [ view email ] [v1] Thu, 28 May 2026 13:24:30 UTC (4,665 KB) [v2] Thu, 11 Jun 2026 14:09:45 UTC (4,665 KB)",
+  "canonical_ids": [
+    "2605.29906v2"
+  ],
+  "headings": [
+    "Plan, Don’t Pose: Long Composite Motion Generation with Text-Aligned BFM",
+    "1 Introduction",
+    "2 Related Work",
+    "Zero-Shot Reinforcement Learning.",
+    "Physics-Based Motion Control.",
+    "Text-to-Motion Generation.",
+    "Language-Aligned Latent Motion Generation.",
+    "3 Method",
+    "4 Experiments",
+    "4.1 Experimental Setup",
+    "4.2 Main Results",
+    "4.3 Compositional Motion Evaluation",
+    "4.4 Ablation Study",
+    "Latent sequence compression.",
+    "Effect of semantic alignment.",
+    "Compression factors.",
+    "Flow Matching VS Diffusion.",
+    "4.5 Conclusion & Limitations",
+    "Code and reproducibility.",
+    "Existing assets.",
+    "Broader impacts.",
+    "References",
+    "Appendix A Technical Details and Hyperparameters",
+    "Stage 1: Semantic VAE.",
+    "Stage 2: Text-to-latent generator.",
+    "Compute resources.",
+    "Appendix B Theoretical Motivation for Text-Aligned Behavioral Compression",
+    "Appendix C Dataset Structure",
+    "Appendix D Additional examples of motion generation using our method"
+  ]
+}

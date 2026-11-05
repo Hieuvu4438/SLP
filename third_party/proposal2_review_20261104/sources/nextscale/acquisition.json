@@ -1,0 +1,47 @@
+{
+  "key": "nextscale",
+  "requested_id": "2604.03799",
+  "retrieved_at": "2026-11-04T17:02:04.408673+00:00",
+  "reading_level": "unread",
+  "artifacts": [
+    {
+      "kind": "metadata",
+      "url": "https://arxiv.org/abs/2604.03799",
+      "path": "sources/nextscale/metadata.html",
+      "sha256": "e7a721474b526f43496055c8becb79aebd8670916d18b0f299f8b9c83659f2b2",
+      "bytes": 40858
+    },
+    {
+      "kind": "html",
+      "url": "https://arxiv.org/html/2604.03799",
+      "path": "sources/nextscale/html.html",
+      "sha256": "6cd94059d7db38ed41015040d48c67812595d1c895ce665672622338eaa59832",
+      "bytes": 335100
+    }
+  ],
+  "title": "Next-Scale Autoregressive Models for Text-to-Motion Generation",
+  "history": "Submission history From: Zhiwei Zheng [ view email ] [v1] Sat, 4 Apr 2026 17:07:37 UTC (9,289 KB) [v2] Tue, 26 May 2026 23:21:25 UTC (9,289 KB)",
+  "canonical_ids": [
+    "2604.03799v2"
+  ],
+  "headings": [
+    "Next-Scale Autoregressive Models for Text-to-Motion Generation",
+    "1 Introduction",
+    "2 Related Work",
+    "3 Preliminaries",
+    "4 Method",
+    "4.1 Next-Scale Motion Generation",
+    "4.2 Cross-Scale Hierarchical Refinement",
+    "4.3 In-Scale Temporal Refinement",
+    "4.4 Model Training and Inference",
+    "5 Experiments",
+    "5.1 Text-to-Motion Performance",
+    "5.2 Zero-shot Generalization",
+    "5.3 Ablation Studies",
+    "6 Conclusion",
+    "References",
+    "Appendix A Coarse to Fine Visualization",
+    "Appendix B Details of Residual VQVAE",
+    "B.1 Model Architecture"
+  ]
+}

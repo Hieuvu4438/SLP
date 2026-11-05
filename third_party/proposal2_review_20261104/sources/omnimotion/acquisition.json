@@ -1,0 +1,64 @@
+{
+  "key": "omnimotion",
+  "requested_id": "2510.14954",
+  "retrieved_at": "2026-11-04T16:53:19.270757+00:00",
+  "reading_level": "unread",
+  "artifacts": [
+    {
+      "kind": "metadata",
+      "url": "https://arxiv.org/abs/2510.14954",
+      "path": "sources/omnimotion/metadata.html",
+      "sha256": "754b378ccbb6ee4776990ee82c2941e98f94d9481ed61c98b57e950b32b24c13",
+      "bytes": 41060
+    },
+    {
+      "kind": "html",
+      "url": "https://arxiv.org/html/2510.14954",
+      "path": "sources/omnimotion/html.html",
+      "sha256": "fad73ef334c142b65945bb260efec5a8239379bf03eca6733e4847fd8ed28c66",
+      "bytes": 284584
+    }
+  ],
+  "title": "OmniMotion: Multimodal Motion Generation with Continuous Masked Autoregression",
+  "history": "Submission history From: Zhe Li [ view email ] [v1] Thu, 16 Oct 2025 17:57:53 UTC (5,978 KB)",
+  "canonical_ids": [
+    "2510.14954v1"
+  ],
+  "headings": [
+    "OmniMotion: Multimodal Motion Generation with Continuous Masked Autoregression",
+    "1 Introduction",
+    "2 Related Work",
+    "Text-based Motion Generation.",
+    "Multimodal Motion Generation.",
+    "3 Method",
+    "3.1 Overview",
+    "3.2 Continuous Autoencoder",
+    "3.3 Continuous Masked Autoregression",
+    "Gated Linear Mechanism.",
+    "RMSNorm.",
+    "3.4 Diffusion Transformer",
+    "3.5 Text-to-motion Pretraining and Multimodal Control Adaptation",
+    "3.6 Inference",
+    "4 Experiments",
+    "4.1 Experiment Settings",
+    "4.2 Evaluation",
+    "4.3 Ablation Study",
+    "5 Conclusion",
+    "References",
+    "Appendix A Appendix",
+    "A.1 Training Details",
+    "Encoding of Speech and Music",
+    "Training of AE",
+    "Motion Representation",
+    "A.2 Datasets.",
+    "A.3 Metrics",
+    "Text-based Motion Generation",
+    "Speech-based Motion Generation",
+    "Music-based Motion Generation",
+    "A.4 Additional Experiment Results",
+    "More Results on Text-to-motion",
+    "Text-to-motion Evaluation after fine-tuning",
+    "Evaluation of OmniMotion Variants",
+    "A.5 More Visualization"
+  ]
+}

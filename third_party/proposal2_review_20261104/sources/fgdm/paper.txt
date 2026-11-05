@@ -1,0 +1,1631 @@
+Focal–General Diffusion Model with Semantic Consistent Guidance for Sign
+Language Production
+Yiheng Yu1,2
+Sheng Liu1,2*
+Yuan Feng1,2
+Zhelun Jin1,2
+Yining Jiang1,2
+Min Xu1,2
+1Zhejiang University of Technology, Hangzhou, Zhejiang
+2Zhejiang Key Laboratory of Visual Information Intelligent Processing
+{yhyu, edliu, fengyuan, zljin, ynjiang, mxu2019}@zjut.edu.cn
+Abstract
+Sign Language Production (SLP) aims to translate spoken
+language into sign sequences, where the main challenge
+lies in generating coherent and natural poses from dis-
+crete glosses (G2P). Existing G2P methods typically treat
+each pose as an indivisible unit, limiting their ability to
+capture fine-grained joint-level dependencies and thus de-
+grading pose quality. To address this, we propose the Fo-
+cal–General Diffusion Model (FGDM), characterized by
+a pioneering two-stage denoising framework that harmo-
+nizes local joint-level dependencies and global coherence.
+Specifically, in the Focal stage, a novel Adaptive Sign GCN
+(ASGCN) adaptively models each pose based on contextual
+correlations, skeletal topology, and semantic conditions,
+ensuring precise generation of local details. In the Gen-
+eral stage, a Transformer-based module refines the entire
+pose sequence to enhance global coherence and natural-
+ness. Moreover, we introduce a Semantic Consistent Guid-
+ance (SCG) mechanism that seamlessly integrates semantic
+supervision into diffusion training, enforcing tighter align-
+ment between generated pose sequences and their intended
+gloss semantics. Extensive experiments on PHOENIX14T
+and USTC-CSL demonstrate that FGDM achieves SOTA
+performance. Our project page is available at here.
+1. Introduction
+Sign Language Production (SLP) plays a crucial role in pro-
+moting communication, education, and the broader adop-
+tion of sign languages [2, 3, 46].
+However, due to the
+unique grammatical structures of sign languages and the
+complex, fine-grained movements they involve, existing
+methods struggle to generate accurate and realistic sign se-
+quences directly. To address this challenge, previous studies
+[20, 31, 39, 41] typically decompose the task into two stages
+for pose generation (shown in Fig. 1 Top): Text-to-Gloss
+*Corresponding author.
+......
+SUEDWEST
+(Southwest)
+SOWIESO
+(Anyway)
+SEHEN
+  (See)
+Gloss 1
+Gloss 2
+Gloss 5
+Gloss Sequence
+Pose Sequence
+Gloss 1
+Gloss 2
+Gloss 5
+Transition
+Transition
+IM SÜDEN FUNKELN OHNEHIN HÄUFIG DIE STERNE.
+       (In the south, the stars often sparkle anyway.)
+KOENNEN
+     (Can)
+Gloss 4
+STWRN
+   (Star)
+Gloss 3
+Spoken Language
+Text to Glosses
+(T2G)
+Glosses to Poses
+(G2P)
+DEV Set
+TEST Set
+Ours
+Sign-IDD
+PT-BASE
+GCDM
+GEN-OBT
+Figure 1. Top: Illustration pipeline of SLP, including T2G and
+G2P. T2G converts text into glosses, while G2P maps each gloss
+to its corresponding pose sequence and generates smooth transi-
+tions to ensure naturalness. This work primarily focuses on G2P.
+Bottom: Comparison with existing methods on the challenging
+PHOENIX14T [5] dataset. Our approach achieves new SOTA re-
+sults across all metrics on both DEV and TEST sets.
+(T2G) and Gloss-to-Pose (G2P). The former has been ef-
+fectively tackled using NMT-based methods [24, 25], while
+the latter remains considerably more challenging and thus
+carries greater research significance. Furthermore, the gen-
+erated pose sequences from the G2P stage can be used to
+animate digital avatars or serve as the foundation for sign
+video synthesis. Motivated by these factors, this work fo-
+cuses on advancing the G2P task.
+Recently, increasing efforts have been devoted to im-
+proving G2P methods.
+Saunders et al.
+[31] introduced
+the first end-to-end approach, a Progressive Transformer for
+This CVPR paper is the Open Access version, provided by the Computer Vision Foundation.
+Except for this watermark, it is identical to the accepted version;
+the final published version of the proceedings is available on IEEE Xplore.
+35915
+
+G2P, and later enhanced it with adversarial training to pro-
+duce more realistic results [32, 33]. However, the autore-
+gressive design of Saunders’ model leads to error accumu-
+lation. To address this issue, Hwang et al. [21] proposed a
+non-autoregressive Transformer that maps gloss sequences
+directly to pose sequences, while Huang et al. [20] fur-
+ther introduced an External Aligner to improve sequence
+alignment learning in non-autoregressive models. More re-
+cently, diffusion-based methods have emerged: Xie et al.
+[47] proposed a discrete diffusion model for G2P, Tang et al.
+[42] enhanced diffusion generation stability through multi-
+hypothesis aggregation, and in their subsequent work [41],
+incorporated feature disentanglement into the diffusion pro-
+cess to better capture decoupled attributes. However, exist-
+ing SOTA methods [39–42, 47] overemphasize global mod-
+eling and fail to capture fine-grained joint-level dependen-
+cies, leading to degraded pose quality.
+Additionally, ensuring the semantic consistency of gen-
+erated pose sequences is crucial, as it directly determines
+the intelligibility and expressiveness of sign language gen-
+eration. However, advanced diffusion architectures [15, 40–
+42, 47] can only blindly fit coordinates under regression-
+based supervision, failing to guarantee semantic consis-
+tency.
+Although a few early studies have investigated
+semantic-guided generation in non-diffusion models [20,
+39], these approaches suffer from large cross-modal align-
+ment gaps, which severely affect training stability and over-
+all performance. Moreover, due to the unique character-
+istics of diffusion training, previous methods cannot be
+directly transferred to diffusion-based models.
+In gen-
+eral, how to effectively leverage semantic signals for cross-
+modal guidance, particularly within diffusion frameworks,
+remains an open question.
+To address the aforementioned challenges, we propose a
+Focal–General Diffusion Model (FGDM) with a Seman-
+tic Consistent Guidance (SCG) mechanism for the G2P
+task in SLP. 1) To enhance the model’s awareness of fine-
+grained dependencies, FGDM originally adopts a two-stage
+denoising paradigm: a Focal stage that models joint-level
+dependencies, and a General stage that enables global se-
+quence coherence. In the Focal stage, we reformulate the
+graph convolution and introduce the Adaptive Sign GCN
+(ASGCN), which innovatively incorporates contextual cor-
+relations and semantic conditions for adaptive pose model-
+ing. In the General stage, skeletal representations are pro-
+jected into a higher-level space, allowing the Transformer-
+based module to enhance global naturalness and coherence.
+2) To bridge the gap in cross-modal semantic supervision,
+SCG introduces a new perspective: it jointly trains a seman-
+tic decoder that maps the generated pose features into the
+semantic space. In this space, pose features are effectively
+aligned with gloss sequences by maximizing the likelihood
+over all feasible alignment paths, following the principle of
+Connectionist Temporal Classification (CTC) [12]. More-
+over, to adapt to diffusion training, SCG dynamically ad-
+justs the supervision strength according to the current sam-
+pling stage, ensuring stable model convergence. As shown
+in Fig. 1, FGDM trained with SCG achieves SOTA results
+across all metrics on the challenging PHOENIX14T bench-
+mark, confirming the effectiveness of our method.
+2. Related Work
+2.1. Sign Language Production
+Sign language production (SLP), as the inverse of recogni-
+tion [14, 18, 19, 29, 51] and translation [7, 8, 53], directly
+benefits the Deaf community and also supports the promo-
+tion and teaching of sign language. With the increasing de-
+mand, research interest in SLP has been steadily growing
+[30, 45].
+Early approaches to SLP relied on avatar-based tech-
+nologies [11, 23] and Statistical Machine Translation
+(SMT) [24, 25], but these methods were costly and in-
+flexible.
+Stoll et al.
+[38] first introduced deep learn-
+ing and decomposing SLP into three subproblems: Text-
+to-Gloss (T2G), Gloss-to-Pose (G2P), and Pose-to-Video
+(P2V), with G2P receiving the most attention due to its
+cross-modal challenges and practical value.
+Saunders et
+al. [31] proposed the first end-to-end G2P model, Progress
+Transformer, and later enhanced it with GANs and Mixture
+Density Networks [32, 34]. Subsequent research [20, 21]
+has underscored the inherent limitations of autoregressive
+models (e.g., error accumulation, regression to the mean),
+thereby motivating the exploration of non-regressive alter-
+natives. Recently, diffusion models have been applied to
+G2P. Xie et al.
+[47] employed discrete denoising diffu-
+sion for discretized pose representations, while Tang et al.
+[41] introduced an iconicity-disentangled diffusion frame-
+work that maps 3D joints into 4D bones. However, cur-
+rent methods typically ignore joint-level dependencies and
+solely rely on regression losses, which severely degrade
+generation quality. To overcome these limitations, we in-
+troduce FGDM with an SCG supervision mechanism.
+2.2. Graph Convolutional Networks
+Graph Convolutional Networks (GCNs) [4] can effectively
+capture both topological structures and node attributes in
+graph data, making them well-suited for skeleton-based
+tasks. In Skeleton-Based Action Recognition, Yan et al.
+[48] introduced ST-GCN, the first framework to leverage
+graph convolution for modeling spatiotemporal skeleton dy-
+namics. This pioneering work inspired a series of follow-
+up studies [9, 10, 26, 36, 37].
+Among them, Shi et al.
+[36] introduced the Adaptive Graph Convolutional Net-
+work (AGCN), where the adjacency matrix is dynamically
+learned rather than predefined. It was later extended with a
+multi-stream architecture and refined attention mechanisms
+35916
+
+MORGEN DAENEMARK IX ZWANZIG
+ MAXIMAL DREISSIG GRAD
+Gloss Sequence
+...
+Target Sequence
+...
+Diffusion Process (Training)
+Noise Sequence
+Denoising Process
+ASGCN
+TCN
+Cross-MHA
+Focal Stage
+General Stage
+Gloss
+Encoder
+Self-MHA
+Output
+Layer
+Gloss Feature
+     F2G Transform
+PE
+...
+...
+Sampling
+  Noise Sequence
+Gaussian space
+Random Sampling (Testing)
+Time
+Embedding
+PE
+Position
+Embedding
+V2S Adapter
+ Semantic
+Decoder
+SCG Loss
+Regression
+ Loss
+Training
+Only
+Testing
+Only
+...
+Output
+Embedding
+SCG
+1D-TCN
+1D-TCN
+MaxPool
+BiLSTM
+Gloss Classifier
+Linear
+ReLU
+Linear
+V2S Adapter
+Sementic Decoder
+LSD
+GSD
+TE
+TE
+Figure 2. Overall pipeline of FGDM during training and inference. In training, the noisy sequence Xt is generated by adding noise to the
+target sequence X0 for t steps. FGDM denoises Xt under glosses guidance to predict the initial sequence ˆ
+X0. It comprises two stages:
+a Focal stage for joint-level dependency modeling and a General stage for global sequence modeling. Beyond the standard regression
+loss, Semantic Consistent Guidance (SCG) provides auxiliary supervision, where the V2S Adapter and Semantic Decoder project visual
+features into the semantic space, and the SCG loss enforces tighter consistency with the gloss sequence. During inference, FGDM iteratively
+denoises random inputs to generate sign sequences.
+to further boost performance [37]. In sign language recog-
+nition (SLR), ST-GCN has been widely adopted. Jiao et
+al.
+[22] leveraged multiple ST-GCNs to capture region-
+specific body dynamics, whereas Li et al. [27] adopted ST-
+GCN as a robust pose encoder. For SLP, Saunders et al.
+[35] developed a graph-based pose decoder, Huang et al.
+[20] integrated ST-GCN as the generator head, and He et
+al. [15] proposed a diffusion-based architecture built upon
+ST-GCN. However, the frame-shared GCN paradigm is sub-
+optimal for SLP, as joint semantics and spatial dependency
+strength dynamically change over time, making static meth-
+ods incapable of adapting flexibly. To address this, we pro-
+pose a novel frame-wise adaptive GCN, ASGCN, to achieve
+flexible and precise sign pose modeling in the Focal stage.
+3. Methodology
+3.1. Overview
+Given a gloss sequence G = {gi}L
+i=1 containing L glosses,
+our objective is to generate the corresponding sign pose se-
+quence X = {xi}S
+i=1 with S frames, where each xi ∈
+RJ×3 represents the 3D coordinates of J keypoints. As
+illustrated in Fig. 2, the proposed Focal–General Diffu-
+sion Model (FGDM) presents the overall architecture as
+well as the training and inference pipelines. The key in-
+novation of this framework lies in constructing a novel de-
+noising network, enabling progressive modeling from local
+joint dependencies to global sequence coherence. More-
+over, the Semantic Consistent Guidance (SCG) ensures
+consistency between the generated sequence and the seman-
+tic conditions. The following describes each component.
+3.2. Focal–General Diffusion Model
+As a diffusion-based model, FGDM comprises two Markov
+chains during training: a diffusion process and a denoising
+process. In the diffusion process, the 3D target pose se-
+quence X0 ∈RS×J×3 is gradually corrupted by Gaussian
+noise ϵ ∼N(0, I) for t steps, resulting in a noisy sequence
+Xt. Following DDPMs [16], this process is formulated as:
+Q(Xt|X0) := √¯atX0 + ϵ
+√
+1 −¯at,
+t ∼U(0, T),
+(1)
+where T denotes the maximum diffusion sample steps,
+¯at := Qt
+s=0 as, and as := 1 −βs. Here, βs represents
+the cosine noise variance schedule. During inference, Xt is
+directly sampled from a Gaussian distribution. As the main
+innovation lies in the denoising process, we focus on intro-
+ducing this part as follows.
+Embedding.
+We first apply Iconicity Disentangle-
+ment [41] to Xt ∈RS×J×3 to obtain an enhanced rep-
+resentation X′
+t ∈RS×J×7. Then, X′
+t is embedded into
+Xe
+t ∈RS×J×d through an embedding matrix. Meanwhile,
+the gloss sequence is processed by the Gloss Encoder [42],
+whose output is fused with the time embedding to generate
+the gloss feature G ∈RL×c.
+Focal Stage. As illustrated in Fig. 2, the Focal stage pri-
+marily comprises L1 stacked layers of ASGCN and TCN.
+ASGCN primarily models spatial joint dependencies, while
+TCN focuses on temporal joint dynamics, following the
+space–time decomposition design [36, 48]. Since ASGCN
+is our core contribution, we detail it below.
+ASGCN. Conventional static graph convolutions [26,
+36, 37, 48] are insufficient to model the dynamic variations
+in joint semantics and spatial dependencies inherent in sign
+35917
+
+Correlation
+...
+...
+...
+...
+...
+...
+...
+...
+...
+...
+...
+...
+Correlation Aggregation
+Correlation Maps
+Skeletal Topology
+...
+...
+Adjacency Matrix
+Root
+Spatial Separation
+Normalization
+Gloss Features
+...
+...
+Compute Correlations 
+(Within n Neighbors)
+Initialization
+Gloss-wise Correlation Map
+Mask Generator
+Weighted Aggregation
+Adaptive Separation
+Graph
+Conv
+BN
+...
+...
+Input (          Frame)
+Data Flow
+Legend
+Element-wise Add
+Hadamard Product
+Prototype Masks 
+(a) Contextual Correlation Aggregatetion
+(b) Skeletal Topology Embedding
+(c) Semantic Mask Generation
+Separated Matrix
+Build
+Adjacency Matrix
+Pose Sequence
+Output (          Frame)
+Dropout
+ReLU
+          Frame
+Dot Product
+Softmax
+Average
+Figure 3. Illustration of ASGCN. Taking the i-th frame as an example, ASGCN constructs a frame-wise adaptive adjacency matrix by
+integrating (a) contextual correlations Ai
+a and (b) skeletal topology Ai
+b. The (c) semantic mask Mi further enhances or suppresses the
+connection strengths in Ai
+a + Ai
+b from a semantic perspective. Graph convolution is then applied, followed by batch normalization (BN),
+dropout, and ReLU activation.
+language. To address this, we first design a more flexible
+graph convolution operation:
+Xi
+out = Wθ
+Kv
+X
+k
+Wδk ⊙(Xi
+inAi
+k),
+(2)
+where Xi
+in and Xi
+out denote the input and output of the i-
+th frame, respectively; Kv is the kernel size and typically
+set to 3; Wδk ∈RCin×1×1×1 and Wθ ∈RCout×Cin×1×1
+represent the depthwise convolution and the pointwise con-
+volution, respectively, following the separable design [17].
+Ai
+k ∈RJ×J denotes the k-th adjacency matrix of the i-th
+frame, where ⊙represents the Hadamard product.
+According to the above formulation, since the adjacency
+matrix Ai is no longer shared, we design Ai to be frame-
+level adaptive and inject semantic conditions as follows:
+Ai = (Ai
+a + Ai
+b) ⊙Mi.
+(3)
+Here, Ai
+a and Ai
+b are constructed based on contextual cor-
+relation and topological dependencies, respectively, while
+Mi serves as a dynamic semantic mask that enhances or
+suppresses joint connections from a semantic perspective.
+We next describe these three components in detail.
+(a) Get Ai
+a. Modeling multi-frame contextual correla-
+tions enables the GCN to infer dynamic, context-aware joint
+dependencies, resulting in more coherent and accurate rep-
+resentations for the current frame. As shown in Fig. 3 (a),
+for the i-th frame Xi, we compute its correlations with itself
+and its n neighboring frames as follows:
+Ci = { WψXi · WτXi+j | j ∈[−n, n] },
+(4)
+where Ci ∈R(2n+1)×J×J, and Wψ and Wτ denote two
+distinct convolution for embedding. We then aggregate the
+(2n + 1) correlation matrices in Ci to obtain Ai
+a:
+Ai
+a = σ(Ci) · WAgg,
+(5)
+where the sigmoid function σ(·) serve as a gating
+mechanism and ensures numerical stability.
+WAgg
+∈
+R(2n+1)×Kv denotes a linear layer that adaptively weights
+and integrates correlations. Note that WAgg is initialized to
+zero, allowing the model to gradually incorporate Ai
+a.
+(b) Get Ai
+b. The purpose of Ai
+b is to preserve the skeletal
+prior topology and enhance structural stability. As shown
+in Fig. 3 (b), we first set the neck joint as the root to estab-
+lish the skeletal hierarchy. We then apply Spatial Separa-
+tion [48] to decompose the topology into Kv submatrices,
+which are subsequently normalized to initialize Ai
+b. As Ai
+b
+encodes the physical topology, it remains consistent and is
+shared across all frames.
+(c) Get Mi. Since sign poses with different semantics
+may exhibit distinct joint dependency strengths, we con-
+struct a semantic mask Mi to align the graph structure with
+the corresponding semantics. As shown in Fig. 3 (c), for
+a gloss feature sequence G = G1, G2, . . . , GL, we build
+a corresponding mask set M = M 1, M 2, . . . , M L, which
+serves as prototype masks for generating Mi:
+M = {MG(Gl) | l ∈[1, L]},
+(6)
+the mask generator MG(·) maps each gloss feature into a
+J × J mask, and this mapping is currently realized through
+35918
+
+a linear layer, with potential improvements left for future
+exploration. For the i-th frame Xi, we compute the mean
+of its J joints and then calculate its correlation with each
+gloss feature, followed by a softmax operation:
+wi = Softmax((Wψ′ 1
+J
+J
+X
+j=1
+Xi
+j) · (Wτ ′G)),
+(7)
+here Wψ′ and Wτ ′ denote two distinct 1 × 1 convolutions
+for feature embedding. We then aggregate the prototype
+matrices using the weights wi ∈RL to obtain a weighted
+representation ¯
+M i ∈RJ×J:
+¯
+M i =
+L
+X
+l=1
+wilM l.
+(8)
+Subsequently, we employ a convolution Ws to adaptively
+simulate the Spatial Separation [48], and a scaled sigmoid
+maps the mask values to [0, 2], enabling suppression (< 1)
+or enhancement (> 1):
+Mi = 2 · σ(Ws ¯
+M i).
+(9)
+After obtaining Ai
+a, Ai
+b, and Mi, we compute the final
+adjacency matrix Ai using Eq. 3, apply graph convolution
+as defined in Eq. 2, and then perform batch normalization,
+dropout, and ReLU to produce the output of ASGCN.
+F2G Transform. Since the General stage no longer fo-
+cuses on joint-level dependencies, we transform the Focal
+output Xfo
+t
+as follows:
+Xg
+t = TF →G(Xfo
+t ) + PE,
+(10)
+where TF →G(·) denotes a transformation function that con-
+verts the feature shape from S × J × df to S × dg, mainly
+consisting of reshape operations and linear transformations.
+PE denotes the temporal positional encoding.
+General Stage. The General stage models long-range
+dependencies to promote globally coherent and natural sign
+sequences. As shown in Fig. 2, it is implemented as a Trans-
+former decoder [43] with L2 stacked layers, and its main
+computation is given by:
+Xg′
+t
+=
+MHA(Q, K, V ) |Q=K=V =Xg
+t ,
+Xgo
+t
+=
+MHA(Q, K, V ) |Q=Xg′
+t , K=V =G,
+(11)
+where MHA(Q, K, V ) denotes the multi-head attention
+mechanism [43], which is not elaborated here as it is not
+the focus of this work.
+Output Layer. For the output Xgo
+t , we apply layer nor-
+malization and a Multi-Layer Perception (MLP) to obtain
+the final prediction:
+ˆX0 = MLP(LayerNorm(Xgo
+t )).
+(12)
+During inference, ˆX0 is used to estimate Xt′ as follows:
+Xt′
+=
+√¯at′ · ˆX0 +
+q
+1 −¯at′ −σ2
+t · ϵt + σtϵ,
+(13)
+where t and t′ denote the current and next timesteps, re-
+spectively, with the initial t = T. ϵ ∼N(0, I) is a standard
+Gaussian noise independent of Xt, and
+(
+ϵt = (Xt −√¯at · ˆ
+X0)/√1 −¯at,
+σt =
+p
+(1 −¯at′)/(1 −¯at) ·
+p
+1 −¯at/¯at′.
+(14)
+Here, ϵt denotes the noise at timestep t (see Eq. 1), while
+σt controls the stochasticity of the diffusion process. In the
+next iteration, Xt′ is fed into FGDM to progressively refine
+ˆX0 over I steps. Starting from t = T, the timestep is up-
+dated as t = T · (1 −i/I), where i ∈[0, I), and I balances
+the trade-off between diversity and quality of the results.
+3.3. Semantic Consistent Guidance
+SCG uniquely introduces semantic guidance into diffusion
+training, bridging the cross-modal gap and ensuring strong
+semantic consistency in the generated pose sequences.
+As shown in Fig. 2, for the visual features XGo
+t
+output
+from the General stage, the V2S Adapter first performs an
+intermediate visual-to-semantic transition:
+Xtrans
+t
+= V 2S Adapter(Xgo
+t ),
+(15)
+where V 2S Adapter(·) consists of two linear layers and a
+ReLU activation. Xtrans
+t
+∈RS×dg is then decoded into the
+semantic space by the Semantic Decoder.
+The architecture of the Semantic Decoder is inspired by
+advances in sign language recognition [19, 28, 49, 50]. As
+illustrated in Fig. 2, it consists of three main components:
+a Local Semantic Decoder (LSD), a Global Semantic De-
+coder (GSD), and a Gloss Classifier, defined as follows:
+yl
+t
+=
+LSD(Xtrans
+t
+),
+yg
+t
+=
+GSD(yl
+t),
+yo
+t
+=
+Gloss Classifier(yg
+t ).
+(16)
+LSD(·) consists of two 1D-TCNs and a MaxPool layer to
+model local features, producing yl
+t ∈RS′×d′
+g with S′ <
+S/2. GSD(·) employs a BiLSTM to capture global depen-
+dencies, and the final outputs is yo
+t ∈RS′×(num glosses+1),
+where num glosses + 1 denotes all glosses plus an addi-
+tional blank label for alignment.
+Given the logits yo
+t and the corresponding glosses G, we
+reformulate the CTC loss [12] to obtain the SCG loss:
+LSCG = −1
+eα t
+T log
+X
+π∈B−1(G)
+p(π | yo
+t ),
+(17)
+where
+1
+eα t
+T is used to make the model aware of the current
+diffusion stage t, controlling the loss magnitude to ensure
+model stable convergence. B−1(G) denotes the set of all
+alignments π of length S′ that can be collapsed into G via
+the dynamic programming algorithm [12]. The probability
+of an alignment path π is computed under the assumption
+of conditional independence across time steps:
+p(π | yo
+t ) =
+S′
+Y
+s=1
+p(πs | yo
+t ),
+(18)
+where the per-frame probabilities p(πs | yo
+t ) is obtained via
+a softmax operation over the logits yo
+t .
+35919
+
+Table 1. Comparison with existing methods on PHOENIX14T. ‘†’ indicates reproduced results, while ‘–’ denotes results missing in the
+original paper. Best results are in bold, and the second-best are underlined.
+Methods
+DEV
+TEST
+B1↑
+B2↑
+B3↑
+B4↑
+ROUGE↑
+WER↓
+FID↓
+B1↑
+B2↑
+B3↑
+B4↑
+ROUGE↑
+WER↓
+FID↓
+Ground Truth
+29.77
+20.21
+15.16
+12.13
+29.60
+74.17
+0.00
+29.76
+20.12
+14.93
+11.93
+28.98
+71.94
+0.00
+Non-Diffusion Based
+PT-base† [31] ECCV ′20
+10.13
+5.43
+4.25
+3.62
+11.20
+100.00
+3.25
+10.90
+6.10
+4.89
+4.25
+11.14
+100.00
+3.62
+PT-GN† [31] ECCV ′20
+14.30
+7.53
+4.58
+3.15
+12.91
+94.00
+2.66
+15.07
+8.73
+5.77
+4.25
+14.08
+92.30
+2.91
+NAT-EA [20] MM ′21
+–
+–
+–
+–
+–
+–
+–
+15.12
+10.45
+7.99
+6.66
+19.43
+82.01
+–
+GEN-OBT [39] MM ′22
+24.92
+15.72
+11.20
+8.68
+25.21
+82.36
+–
+23.08
+14.91
+10.48
+8.01
+23.49
+81.78
+–
+DET [44] SEM′23
+17.25
+10.17
+7.04
+5.32
+17.85
+–
+–
+17.18
+10.39
+7.39
+5.76
+17.64
+–
+–
+Diffusion Based
+G2P-DDM [47] AAAI′24
+–
+–
+–
+–
+–
+–
+–
+16.11
+11.37
+9.22
+7.50
+–
+77.26
+–
+GCDM [42] T OMM ′24
+22.88
+14.28
+10.01
+7.64
+23.35
+82.81
+–
+22.03
+14.21
+10.16
+7.91
+23.20
+81.94
+–
+Sign-IDD† [41] AAAI′25
+25.13
+16.17
+11.59
+8.87
+26.51
+79.08
+2.22
+23.16
+15.02
+10.72
+8.22
+24.51
+79.15
+2.44
+Sign-D2C [40] CV P R′25
+22.46
+–
+–
+8.06
+22.07
+80.73
+2.68
+22.36
+–
+–
+8.73
+22.36
+79.06
+2.98
+FGDM (ours)
+26.92
+17.44
+12.37
+9.48
+28.87
+72.22
+2.09
+26.51
+17.68
+12.71
+9.67
+28.45
+70.70
+2.31
+Table 2. Comparison with existing methods on USTC-CSL. Split-I and Split-II refer to two partitioning schemes [13]. ’†’ indicates
+reproduced results. Best results are in bold, and the second-best are underlined.
+Methods
+TEST (Split-I)
+TEST (Split-II)
+B1↑
+B2↑
+B3↑
+B4↑
+ROUGE↑
+WER↓
+FID↓
+B1↑
+B2↑
+B3↑
+B4↑
+ROUGE↑
+WER↓
+FID↓
+Ground Truth
+96.08
+95.51
+95.23
+95.01
+95.90
+4.24
+0.00
+44.01
+26.13
+13.74
+0.00
+43.14
+68.50
+0.00
+PT-base† [31] ECCV ′20
+27.29
+10.19
+4.77
+3.27
+29.71
+98.77
+0.28
+11.41
+0.00
+0.00
+0.00
+15.23
+96.45
+0.41
+PT-GN† [31] ECCV ′20
+30.06
+15.60
+10.35
+8.51
+28.37
+88.10
+0.22
+23.00
+9.99
+0.00
+0.00
+26.10
+78.36
+0.43
+Sign-IDD† [41] AAAI′25
+90.53
+87.31
+85.47
+83.88
+91.67
+14.01
+0.07
+41.86
+13.43
+2.68
+0.00
+41.01
+74.41
+0.26
+FGDM (ours)
+92.04
+89.69
+88.58
+87.80
+92.37
+12.98
+0.07
+43.61
+26.46
+15.71
+0.00
+42.19
+72.00
+0.25
+Loss Design. The overall loss of FGDM is defined as:
+L = Ljoint + λ · Lbone
+|
+{z
+}
+Regression Loss
++γ · LSCG,
+(19)
+where λ and γ are weighting coefficients. LSCG denotes
+the proposed SCG loss introduced in Eq. 17, while Ljoint
+and Lbone are conventional regression losses, defined as:
+(
+Ljoint = 1
+S
+PS
+s=1 ∥Xs
+0 −ˆXs
+0∥1,
+Lbone = 1
+S
+PS
+s=1 ∥Bone(Xs
+0) −Bone( ˆXs
+0)∥2
+2.
+(20)
+Here, Xs
+0 and ˆXs
+0 denote the ground-truth and predicted
+poses at the s-th frame, respectively, and Bone(·) extracts
+bone vectors based on the skeletal topology.
+4. Experiments
+4.1. Experimental Setup
+4.1.1. Datasets
+PHOENIX14T [5] is the most widely used dataset for SLP.
+It comprises 2,887 unique German words and 1,066 distinct
+signs, totaling 8,257 German weather forecast samples with
+corresponding annotations. The dataset is partitioned into
+7,096 training, 519 validation, and 642 testing samples.
+USTC-CSL [13] is a Chinese sign language dataset that
+has been adopted in recent SLP studies [15, 40, 41].
+It
+contains 100 unique sentences performed by 50 signers and
+provides two official data splits: Split-I (4,000 training and
+1,000 testing samples) and Split-II (4,700 training and 300
+testing samples). Previous SLP methods [15, 40, 41] used
+only Split-I, where test sentences overlap with the training
+set. In this work, we evaluate on both Split-I and the more
+challenging Split-II.
+4.1.2. Evaluation Metrics.
+Following previous works [20, 39, 42, 47], the generated
+sign poses are back-translated into gloss sequences and text
+using a sign language translation model [5]. The outputs are
+then evaluated against the references using WER, BLEU,
+and ROUGE. Moreover, FID is also employed to assess the
+quality of the generated results. These evaluation metrics
+are described in more detail in the supplementary materials.
+4.1.3. Implementation Details.
+Following prior works [20, 39, 42, 47], we first use Open-
+Pose [6] to extract 50 human 2D keypoints per frame from
+PHOENIX14T. The keypoints are then converted into 3D
+coordinates using a skeletal correction model [52] to serve
+as the ground truth. For USTC-CSL, which provides 25 hu-
+man 3D keypoints per frame, normalization is applied, and
+the processed data are used as the ground truth. For model
+evaluation, we adopt NSLT [5], which translates the gen-
+erated pose sequences into gloss sequences and spoken lan-
+guage. To ensure fair comparison, we use the NSLT weights
+from [41] on PHOENIX14T. Since pretrained weights for
+USTC-CSL are unavailable, we retrain the model and re-
+produce all compared methods for consistent and fair eval-
+uation. In addition, the diffusion model is trained with 1000
+35920
+
+Table 3. Ablations for the main innovations on PHOENIX14T,
+where the General stage is regarded as our baseline.
+Methods
+DEV
+TEST
+B1↑
+B4↑
+WER↓
+B1↑
+B4↑
+WER↓
+Baseline (General only)
+22.54
+7.39
+81.00
+22.41
+7.77
+79.76
+Baseline+Focal
+28.09
+9.84
+76.57
+26.29
+9.25
+73.91
+Baseline+SCG
+25.13
+9.12
+78.92
+24.26
+9.17
+78.12
+Baseline+Focal+SCG
+26.92
+9.48
+72.22
+26.51
+9.67
+70.70
+Table 4. Ablations for parameters L1 and L2 on PHOENIX14T.
+Methods
+DEV
+TEST
+B1↑
+B4↑
+WER↓
+B1↑
+B4↑
+WER↓
+L1
+1
+26.10
+9.17
+76.27
+24.92
+9.13
+75.72
+2
+26.53
+8.93
+72.40
+25.33
+9.16
+71.45
+3
+26.92
+9.48
+72.22
+26.51
+9.67
+70.70
+4
+26.46
+9.21
+72.35
+26.53
+9.64
+70.42
+L2
+1
+24.12
+7.54
+79.13
+23.43
+8.27
+77.44
+2
+26.92
+9.48
+72.22
+26.51
+9.67
+70.70
+3
+23.72
+8.24
+73.79
+23.29
+8.51
+72.62
+timesteps (T = 1000) and 5 inference steps (I = 5). We
+use the Adam optimizer [1] with a learning rate of 0.001.
+The n in Eq. 4 is set to 3, α in Eq. 17 is set to 10, while λ
+and γ in Eq. 19 are set to 0.1 and 0.0001, respectively. All
+experiments are conducted on 1 NVIDIA A6000 GPU.
+4.2. Comparison with State-of-the-Arts
+We evaluate FGDM on two datasets, PHOENIX14T and
+USTC-CSL.
+PHOENIX14T. Tab. 1 presents the comparison between
+FGDM and existing SLP methods on the PHOENIX14T.
+According to whether diffusion models are used, meth-
+ods are grouped into Non-Diffusion Based and Diffusion
+Based. FGDM consistently outperforms all baselines across
+all metrics, achieving new SOTA results.
+Specifically,
+compared with the strongest non-diffusion method GEN-
+OBT, FGDM shows notable gains of +2.0%/+3.43% (DE-
+V/TEST) on BLEU-1, +3.66%/+4.96% on ROUGE, and
+-10.14%/-11.08% on WER. Even among diffusion-based
+models, FGDM remains dominant, surpassing the best-
+performing Sign-IDD by +2.36%/+3.94% in ROUGE and
+reducing WER by -6.86%/-8.45%.
+Interestingly, FGDM
+achieves a lower WER than Ground Truth, likely because
+1) its generated poses are closer to the training distribution,
+aiding recognition, and 2) it can correct mislabeled ground
+truth samples (see Fig. 4 (c)). These comparison results
+highlight the strong performance of FGDM.
+USTC-CSL. Since most existing methods only report re-
+sults on PHOENIX14T, we compare FGDM with available
+open-source methods on USTC-CSL. As shown in the Tab.
+2, FGDM consistently outperforms others on both Split-I
+and Split-II. Specifically, on Split-I, although FGDM and
+Sign-IDD achieve the same FID of 0.07, FGDM surpasses
+Sign-IDD on all other metrics, with BLEU-1 and BLEU-4
+improved by +1.51% and +3.92%, respectively, and WER
+Table 5. Ablations for Ai
+a, Ai
+b, Mi in Eq. 3 on PHOENIX14T.
+Methods
+DEV
+TEST
+B1↑
+B4↑
+WER↓
+B1↑
+B4↑
+WER↓
+Baseline+Focal
+28.09
+9.84
+76.57
+26.29
+9.25
+73.91
+w/o Ai
+a
+23.29
+7.99
+79.16
+22.13
+7.88
+78.47
+w/o Ai
+b
+26.44
+9.08
+76.70
+25.05
+8.80
+75.18
+w/o Mi
+25.00
+8.69
+77.66
+23.46
+8.40
+77.20
+reduced by -1.03%. On the more challenging Split-II, while
+all methods (including the ground truth) yield a BLEU-4 of
+0, FGDM still leads in the remaining metrics, notably out-
+performing Sign-IDD by +13.01% and +13.03% on BLEU-
+2 and BLEU-3.
+These results demonstrate that FGDM
+achieves strong performance and generalization across dif-
+ferent languages and dataset splits.
+4.3. Ablation Study
+We perform ablations on the PHOENIX14T to evaluate the
+proposed methods.
+Ablations for the main innovations.
+As shown in
+Tab. 3, we take the General stage as the baseline and pro-
+gressively incorporate the other components.
+According
+to the results, both components consistently enhance per-
+formance. Introducing the Focal stage boosts BLEU-1 to
+28.09% and BLEU-4 to 9.84% on the DEV, while reducing
+WER by -4.43%/-5.85% (DEV/TEST). Adding the SCG
+strategy also significantly improves all metrics. When Focal
+and SCG are combined, the model achieves the best results,
+with WER reductions of -8.78%/-9.06% compared to the
+baseline. Overall, both Focal and SCG contribute to higher-
+quality pose generation, and their combination yields the
+best results.
+Ablations for parameters L1 and L2. We investigate
+the impact of the stacked layer numbers in the Focal and
+General stages. As shown in Tab. 4, increasing L1 consis-
+tently improves performance, with L1 = 3 achieving the
+best BLEU-1, BLEU-4, and WER on DEV and optimal
+BLEU-4 on TEST. Further increases bring negligible gains
+(+0.02% BLEU-1, –0.28% WER). For L2, the best results
+are obtained when L2 = 2. Therefore, we adopt L1 = 3
+and L2 = 2 as the final configuration.
+Ablations for Ai
+a, Ai
+b, and Mi in Eq. 3. As shown
+in Tab. 5, we ablate the core components of Eq. 3 in AS-
+GCN. Ai
+a, Ai
+b, and Mi are generated based on contextual
+correlations, skeletal topology, and semantic conditions, re-
+spectively. Removing any of them degrades performance.
+Excluding Ai
+a causes the largest drop (BLEU-1: -4.80%/-
+4.16%; WER: +2.59%/+4.56%), followed by Mi (BLEU-
+1: -3.09%/-2.83%; WER: +1.09%/+3.29%). Above results
+demonstrate the effectiveness of combining Ai
+a, Ai
+b, and
+Mi, with the correlation term Ai
+a and semantic mask Mi
+being most critical to ASGCN’s performance.
+35921
+
+Ground
+Truth
+PT-GN
+Sign-IDD
+FGDM
+(ours)
+Gloss
+Sequence
+Raw 
+Image
+  MILD NORD AUCH ZWOELF ZWISCHEN VIERZEHN SUED UNGEFAEHR VIERZEHN MAXIMAL SECHSZEHN GRAD
+(Mild North Also Twelve Between Fourteen South Approximately Fourteen Maximum Sixteen Degrees)
+(a)
+(b)
+(c)
+Figure 4. Qualitative comparison of generation quality with previous methods on PHOENIX14T. We compare FGDM with PT [31] and
+Sign-IDD [41], together with the corresponding gloss sequence, raw images, and ground truth (GT) poses. Panels (a)–(c) present zoomed-
+in regions where FGDM generates more natural and GT-consistent hand details. Even when the GT is inaccurate (as in (b) (c)), FGDM
+still produces realistic results, demonstrating its superior performance.
+w/o Focal
+Ground Truth
+Raw Image
+w/ Focal
+Figure 5. Qualitative comparison of generation quality without
+and with the Focal stage (w/o Focal vs. w/ Focal). Hand details
+are enlarged for better observation.
+4.4. Qualitative Results
+Qualitative comparison with previous methods.
+As
+shown in Fig. 4, we compare the generated results of FGDM
+with PT-GN and Sign-IDD on the PHOENIX14T. Since PT-
+GN and Sign-IDD neglect fine-grained dependencies, their
+generated poses are less accurate and natural, especially
+in the zoomed-in regions (a) and (b), where densely con-
+nected hand joints are difficult to model precisely. In con-
+trast, FGDM dynamically captures joint-level dependencies
+through the Focal stage, producing more natural and GT-
+consistent hand shapes and overall poses. Notably, in panels
+(b) and (c), even when the GT is corrupted by occlusion or
+motion blur, FGDM still produces results that are closer to
+the raw image. This robustness partly arise from our SCG
+strategy, which semantically mitigates the impact of inac-
+curate GT during training. Overall, FGDM demonstrates
+superior realism and robustness with previous methods.
+Qualitative comparison between w/o and w/ Focal. As
+shown in Fig. 5, without the Focal stage, the model strug-
+gles to capture joint-level dependencies, resulting in un-
+natural and distorted hand shapes due to the complex cor-
+relations among hand joints. In contrast, with the Focal
+stage, the model learns intricate joint relationships through
+the ASGCN and generates more natural and accurate ges-
+tures—for example, correctly producing the extended index
+finger in the first case and the clenched fist in the second.
+These results demonstrate that the Focal stage effectively
+models joint-level dependencies and enhances fine-grained
+pose accuracy.
+5. Conclusions
+This paper presents a novel Focal–General Diffusion Model
+(FGDM) with a Semantic Consistent Guidance (SCG)
+mechanism for Sign Language Production (SLP). Specifi-
+cally, FGDM introduces a pioneering two-stage denoising
+framework that effectively balances joint-level dependen-
+cies and global coherence.
+In the Focal stage, we pro-
+pose the Adaptive Sign GCN (ASGCN), which reformu-
+lates graph convolution to enable frame-wise adaptive pose
+modeling. Furthermore, SCG seamlessly integrates seman-
+tic supervision into diffusion training, enforcing tighter se-
+mantic consistency between generated poses and gloss se-
+quences. Extensive quantitative and qualitative experiments
+demonstrate that FGDM surpasses existing SOTA methods
+by a clear margin. We hope this work can inspire future
+research to further explore the potential of diffusion frame-
+works in SLP from new perspectives.
+35922
+
+References
+[1] Kingma DP Ba J Adam et al. A method for stochastic opti-
+mization. arXiv preprint arXiv:1412.6980, 1412(6), 2014.
+[2] Danielle Bragg, Oscar Koller, Mary Bellard, Larwan Berke,
+Patrick Boudreault, Annelies Braffort, Naomi Caselli, Matt
+Huenerfauth, Hernisa Kacorri, Tessa Verhoef, et al.
+Sign
+language recognition, generation, and translation: An inter-
+disciplinary perspective. In Proceedings of the 21st interna-
+tional ACM SIGACCESS conference on computers and ac-
+cessibility, pages 16–31, 2019.
+[3] Danielle Bragg, Naomi Caselli, Julie A Hochgesang, Matt
+Huenerfauth, Leah Katz-Hernandez, Oscar Koller, Raja
+Kushalnagar, Christian Vogler, and Richard E Ladner. The
+fate landscape of sign language ai datasets: An interdisci-
+plinary perspective. ACM Transactions on Accessible Com-
+puting (TACCESS), 14(2):1–45, 2021.
+[4] Joan Bruna, Wojciech Zaremba, Arthur Szlam, and Yann Le-
+Cun. Spectral networks and locally connected networks on
+graphs. arXiv preprint arXiv:1312.6203, 2013.
+[5] Necati Cihan Camgoz, Simon Hadfield, Oscar Koller, Her-
+mann Ney, and Richard Bowden. Neural sign language trans-
+lation. In Proceedings of the IEEE conference on computer
+vision and pattern recognition, pages 7784–7793, 2018.
+[6] Zhe Cao, Tomas Simon, Shih-En Wei, and Yaser Sheikh.
+Realtime multi-person 2d pose estimation using part affinity
+fields. In Proceedings of the IEEE conference on computer
+vision and pattern recognition, pages 7291–7299, 2017.
+[7] Yutong Chen, Fangyun Wei, Xiao Sun, Zhirong Wu, and
+Stephen Lin.
+A simple multi-modality transfer learning
+baseline for sign language translation.
+In Proceedings of
+the IEEE/CVF conference on computer vision and pattern
+recognition, pages 5120–5130, 2022.
+[8] Yutong Chen, Ronglai Zuo, Fangyun Wei, Yu Wu, Shujie
+Liu, and Brian Mak. Two-stream network for sign language
+recognition and translation. Advances in Neural Information
+Processing Systems, 35:17043–17056, 2022.
+[9] Ke Cheng, Yifan Zhang, Congqi Cao, Lei Shi, Jian Cheng,
+and Hanqing Lu. Decoupling gcn with dropgraph module for
+skeleton-based action recognition. In European conference
+on computer vision, pages 536–553. Springer, 2020.
+[10] Ke Cheng, Yifan Zhang, Xiangyu He, Weihan Chen, Jian
+Cheng, and Hanqing Lu. Skeleton-based action recognition
+with shift graph convolutional network. In Proceedings of
+the IEEE/CVF conference on computer vision and pattern
+recognition, pages 183–192, 2020.
+[11] J. R. W. Glauert, R. Elliot, S. J. Cox, J. Tryggvason, and M.
+Sheard. Vanessa - a system for communication between deaf
+and hearing people. Technology and Disability, 18(4):207–
+216, 2006.
+[12] Alex Graves, Santiago Fern´andez, Faustino Gomez, and
+J¨urgen Schmidhuber. Connectionist temporal classification:
+labelling unsegmented sequence data with recurrent neural
+networks. In Proceedings of the 23rd international confer-
+ence on Machine learning, pages 369–376, 2006.
+[13] Dan Guo, Wengang Zhou, Houqiang Li, and Meng Wang.
+Hierarchical lstm for sign language translation. In Proceed-
+ings of the AAAI conference on artificial intelligence, 2018.
+[14] Aiming Hao, Yuecong Min, and Xilin Chen. Self-mutual dis-
+tillation learning for continuous sign language recognition.
+2021 IEEE/CVF International Conference on Computer Vi-
+sion (ICCV), pages 11283–11292, 2021.
+[15] Jiashu He, Jiayi He, Shengeng Tang, Huixia Ben, Lechao
+Cheng, and Richang Hong. Stgcdiff: Spatial-temporal graph
+condition diffusion for sign language transition generation.
+arXiv preprint arXiv:2506.13156, 2025.
+[16] Jonathan Ho, Ajay Jain, and Pieter Abbeel. Denoising dif-
+fusion probabilistic models. Advances in neural information
+processing systems, 33:6840–6851, 2020.
+[17] Andrew G Howard, Menglong Zhu, Bo Chen, Dmitry
+Kalenichenko, Weijun Wang, Tobias Weyand, Marco An-
+dreetto, and Hartwig Adam. Mobilenets: Efficient convolu-
+tional neural networks for mobile vision applications. arXiv
+preprint arXiv:1704.04861, 2017.
+[18] Hezhen Hu, Weichao Zhao, Wengang Zhou, Yuechen Wang,
+and Houqiang Li.
+Signbert: Pre-training of hand-model-
+aware representation for sign language recognition. In Pro-
+ceedings of the IEEE/CVF international conference on com-
+puter vision, pages 11087–11096, 2021.
+[19] Lianyu Hu, Liqing Gao, Zekang Liu, and Wei Feng. Con-
+tinuous sign language recognition with correlation network.
+In 2023 IEEE/CVF Conference on Computer Vision and Pat-
+tern Recognition (CVPR), pages 2529–2539, 2023.
+[20] Wencan Huang, Wenwen Pan, Zhou Zhao, and Qi Tian. To-
+wards fast and high-quality sign language production.
+In
+Proceedings of the 29th ACM International Conference on
+Multimedia, pages 3172–3181, 2021.
+[21] Eui Jun Hwang, Jung-Ho Kim, and Jong C Park.
+Non-
+autoregressive sign language production with gaussian
+space. In BMVC, page 197, 2021.
+[22] Peiqi Jiao, Yuecong Min, Yanan Li, Xiaotao Wang, Lei Lei,
+and Xilin Chen. Cosign: Exploring co-occurrence signals
+in skeleton-based continuous sign language recognition. In
+Proceedings of the IEEE/CVF international conference on
+computer vision, pages 20676–20686, 2023.
+[23] K. Karpouzis, G. Caridakis, S.-E. Fotinea, and E. Efthimiou.
+Educational resources and implementation of a greek sign
+language synthesis architecture.
+Computers & Education,
+49(1):54–74, 2007. Web3D Technologies in Learning, Edu-
+cation and Training.
+[24] Dilek Kayahan and Tunga G¨ung¨or. A hybrid translation sys-
+tem from turkish spoken language to turkish sign language.
+In 2019 IEEE International Symposium on INnovations in
+Intelligent SysTems and Applications (INISTA), pages 1–6,
+2019.
+[25] Dimitris Kouremenos, Klimis S. Ntalianis, Georgios Siolas,
+and Andreas Stafylopatis. Statistical machine translation for
+greek to greek sign language using parallel corpora produced
+via rule-based machine translation. In CIMA@ICTAI, 2018.
+[26] Maosen Li, Siheng Chen, Xu Chen, Ya Zhang, Yanfeng
+Wang, and Qi Tian. Actional-structural graph convolutional
+networks for skeleton-based action recognition. In Proceed-
+ings of the IEEE/CVF conference on computer vision and
+pattern recognition, pages 3595–3603, 2019.
+35923
+
+[27] Zecheng Li, Wengang Zhou, Weichao Zhao, Kepeng Wu,
+Hezhen Hu, and Houqiang Li.
+Uni-sign:
+Toward uni-
+fied sign language understanding at scale.
+arXiv preprint
+arXiv:2501.15187, 2025.
+[28] Sheng Liu, Yiheng Yu, Yuan Feng, Min Xu, Zhelun Jin,
+Yining Jiang, and Tiantian Yuan.
+Design:
+Dynamic
+context-aware convolution and efficient subnet regulariza-
+tion for continuous sign language recognition. arXiv preprint
+arXiv:2507.03339, 2025.
+[29] Yuecong Min, Aiming Hao, Xiujuan Chai, and Xilin Chen.
+Visual alignment constraint for continuous sign language
+recognition. In proceedings of the IEEE/CVF international
+conference on computer vision, pages 11542–11551, 2021.
+[30] Razieh Rastgoo, Kourosh Kiani, Sergio Escalera, Vassilis
+Athitsos, and Mohammad Sabokrou. A survey on recent ad-
+vances in sign language production.
+Expert Systems with
+Applications, 243:122846, 2024.
+[31] Ben Saunders, Necati Cihan Camgoz, and Richard Bowden.
+Progressive transformers for end-to-end sign language pro-
+duction. In European Conference on Computer Vision, pages
+687–705. Springer, 2020.
+[32] Ben Saunders, Necati Cihan Camgoz, and Richard Bowden.
+Adversarial training for multi-channel sign language produc-
+tion. arXiv preprint arXiv:2008.12405, 2020.
+[33] Ben Saunders, Necati Cihan Camgoz, and Richard Bowden.
+Continuous 3d multi-channel sign language production via
+progressive transformers and mixture density networks. In-
+ternational journal of computer vision, 129(7):2113–2135,
+2021.
+[34] Ben Saunders, Necati Cihan Camgoz, and Richard Bowden.
+Mixed signals: Sign language production via a mixture of
+motion primitives. In Proceedings of the IEEE/CVF Inter-
+national Conference on Computer Vision, pages 1919–1929,
+2021.
+[35] Ben Saunders, Necati Cihan Camgoz, and Richard Bow-
+den.
+Skeletal graph self-attention: Embedding a skeleton
+inductive bias into sign language production. arXiv preprint
+arXiv:2112.05277, 2021.
+[36] Lei Shi, Yifan Zhang, Jian Cheng, and Hanqing Lu. Two-
+stream adaptive graph convolutional networks for skeleton-
+based action recognition. In Proceedings of the IEEE/CVF
+conference on computer vision and pattern recognition,
+pages 12026–12035, 2019.
+[37] Lei Shi, Yifan Zhang, Jian Cheng, and Hanqing Lu.
+Skeleton-based action recognition with multi-stream adap-
+tive graph convolutional networks. IEEE Transactions on
+Image Processing, 29:9532–9545, 2020.
+[38] Stephanie Stoll, Necati Cihan Camg¨oz, Simon Hadfield, and
+Richard Bowden.
+Sign language production using neural
+machine translation and generative adversarial networks. In
+Proceedings of the 29th British Machine Vision Conference
+(BMVC 2018). British Machine Vision Association, 2018.
+[39] Shengeng Tang, Richang Hong, Dan Guo, and Meng
+Wang. Gloss semantic-enhanced network with online back-
+translation for sign language production.
+In Proceedings
+of the 30th ACM International Conference on Multimedia,
+pages 5630–5638, 2022.
+[40] Shengeng Tang, Jiayi He, Lechao Cheng, Jingjing Wu, Dan
+Guo, and Richang Hong. Discrete to continuous: Generating
+smooth transition poses from sign language observations. In
+Proceedings of the Computer Vision and Pattern Recognition
+Conference, pages 3481–3491, 2025.
+[41] Shengeng Tang, Jiayi He, Dan Guo, Yanyan Wei, Feng Li,
+and Richang Hong.
+Sign-idd: Iconicity disentangled dif-
+fusion for sign language production.
+In Proceedings of
+the AAAI Conference on Artificial Intelligence, pages 7266–
+7274, 2025.
+[42] Shengeng Tang, Feng Xue, Jingjing Wu, Shuo Wang, and
+Richang Hong. Gloss-driven conditional diffusion models
+for sign language production. ACM Transactions on Mul-
+timedia Computing, Communications and Applications, 21
+(4):1–17, 2025.
+[43] Ashish Vaswani, Noam Shazeer, Niki Parmar, Jakob Uszko-
+reit, Llion Jones, Aidan N Gomez, Łukasz Kaiser, and Illia
+Polosukhin. Attention is all you need. Advances in neural
+information processing systems, 30, 2017.
+[44] Carla Viegas,
+Mert Inan,
+Lorna Quandt,
+and Malihe
+Alikhani.
+Including facial expressions in contextual em-
+beddings for sign language generation.
+arXiv preprint
+arXiv:2202.05383, 2022.
+[45] Harry Walsh, Ed Fish, Ozge Mercanoglu Sincan, Mo-
+hamed Ilyes Lakhal, Richard Bowden, Neil Fox, Ben-
+cie Woll, Kepeng Wu, Zecheng Li, Weichao Zhao, et al.
+Slrtp2025 sign language production challenge: Methodol-
+ogy, results and future work. In Proceedings of the Computer
+Vision and Pattern Recognition Conference, pages 4109–
+4119, 2025.
+[46] Cong Wang, Zexuan Deng, Zhiwei Jiang, Fei Shen, Yafeng
+Yin, Shiwei Gan, Zifeng Cheng, Shiping Ge, and Qing Gu.
+Advanced sign language video generation with compressed
+and quantized multi-condition tokenization. arXiv preprint
+arXiv:2506.15980, 2025.
+[47] Pan Xie, Qipeng Zhang, Peng Taiying, Hao Tang, Yao Du,
+and Zexian Li. G2p-ddm: Generating sign pose sequence
+from gloss sequence with discrete diffusion model. In Pro-
+ceedings of the AAAI Conference on Artificial Intelligence,
+pages 6234–6242, 2024.
+[48] Sijie Yan, Yuanjun Xiong, and Dahua Lin. Spatial tempo-
+ral graph convolutional networks for skeleton-based action
+recognition. In Proceedings of the AAAI conference on arti-
+ficial intelligence, 2018.
+[49] Yiheng Yu, Sheng Liu, Yuan Feng, Min Xu, Zhelun Jin, and
+Xuhua Yang. Improving continuous sign language recog-
+nition via cross-frame interactions in expanded contextual
+spaces. In ICASSP 2025-2025 IEEE International Confer-
+ence on Acoustics, Speech and Signal Processing (ICASSP),
+pages 1–5. IEEE, 2025.
+[50] Yiheng Yu, Sheng Liu, Yuan Feng, Min Xu, Zhelun Jin, and
+Xuhua Yang. Olmd: Orientation-aware long-term motion de-
+coupling for continuous sign language recognition. In Pro-
+ceedings of the AAAI Conference on Artificial Intelligence,
+pages 9707–9715, 2025.
+[51] Yiheng Yu, Sheng Liu, Yuan Feng, Min Xu, Zhelun Jin, and
+Xuhua Yang. Olmd: Orientation-aware long-term motion de-
+35924
+
+coupling for continuous sign language recognition. In Pro-
+ceedings of the AAAI Conference on Artificial Intelligence,
+pages 9707–9715, 2025.
+[52] Jan Zelinka and Jakub Kanis. Neural sign language synthe-
+sis: Words are our glosses. In Proceedings of the IEEE/CVF
+winter conference on applications of computer vision, pages
+3395–3403, 2020.
+[53] Benjia Zhou, Zhigang Chen, Albert Clap´es, Jun Wan,
+Yanyan Liang, Sergio Escalera, Zhen Lei, and Du Zhang.
+Gloss-free sign language translation: Improving from visual-
+language pretraining. In Proceedings of the IEEE/CVF In-
+ternational Conference on Computer Vision, pages 20871–
+20881, 2023.
+35925

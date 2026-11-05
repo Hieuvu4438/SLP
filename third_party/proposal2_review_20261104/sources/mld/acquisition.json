@@ -1,0 +1,63 @@
+{
+  "key": "mld",
+  "requested_id": "2212.04048",
+  "retrieved_at": "2026-11-04T16:53:21.539122+00:00",
+  "reading_level": "unread",
+  "artifacts": [
+    {
+      "kind": "metadata",
+      "url": "https://arxiv.org/abs/2212.04048",
+      "path": "sources/mld/metadata.html",
+      "sha256": "e8e096b742b3a765a616dcda43efb3b218ef02b448eb0c171b8a59c2f072bf6c",
+      "bytes": 43402
+    },
+    {
+      "kind": "html",
+      "url": "https://arxiv.org/html/2212.04048",
+      "path": "sources/mld/html.html",
+      "sha256": "ec49524b595ae01bc0223e4cc9ab5d55ebd02304a24d873d68c3a81c8348a768",
+      "bytes": 548498
+    }
+  ],
+  "title": "Executing your Commands via Motion Diffusion in Latent Space",
+  "history": "Submission history From: Xin Chen [ view email ] [v1] Thu, 8 Dec 2022 03:07:00 UTC (3,139 KB) [v2] Fri, 24 Mar 2023 06:59:39 UTC (42,031 KB) [v3] Fri, 19 May 2023 08:14:04 UTC (42,030 KB)",
+  "canonical_ids": [
+    "2212.04048v3"
+  ],
+  "headings": [
+    "Executing your Commands via Motion Diffusion in Latent Space",
+    "1 Introduction",
+    "2 Related Work",
+    "3 Method",
+    "3.1 Motion Representation in Latents",
+    "3.2 Motion Latent Diffusion Model",
+    "3.3 Conditional Motion Latent Diffusion Model",
+    "4 Experiments",
+    "4.1 Datasets and Evaluation Metrics",
+    "4.2 Implementation Details",
+    "4.3 Comparisons on Text-to-motion",
+    "4.4 Comparisons on Action-to-motion",
+    "4.5 Comparisons on Unconditional Generation",
+    "5 Ablation Studies",
+    "6 Disscusion",
+    "7 Acknowledgements",
+    "References",
+    "Appendix",
+    "A Qualitative Results",
+    "B Additional Experiments",
+    "B.1 Evaluation of Language Models [MATH: \\tau_{\\theta}^{w}]",
+    "B.2 Effectiveness of Long Skip Connection",
+    "B.3 Diffusion on Autoencoder or VAE",
+    "B.4 Prediction of Denoising",
+    "C Inference time",
+    "D Latent space visualization",
+    "E Evaluation of Hyperparameters",
+    "F User Study",
+    "G Motion Representations",
+    "H Details on Motion Latent Diffusion Models",
+    "H.1 Details Information on Variational Autoencoder Models",
+    "H.2 Network Architectures",
+    "H.3 Implementation Details",
+    "I Metric Definitions"
+  ]
+}

@@ -1,0 +1,53 @@
+{
+  "key": "motionlab",
+  "requested_id": "2502.02358",
+  "retrieved_at": "2026-11-04T16:53:20.867036+00:00",
+  "reading_level": "unread",
+  "artifacts": [
+    {
+      "kind": "metadata",
+      "url": "https://arxiv.org/abs/2502.02358",
+      "path": "sources/motionlab/metadata.html",
+      "sha256": "a4496d4b4336bf93be283cf0b3d21414a9993303aff061d440071feea543e8c6",
+      "bytes": 43825
+    },
+    {
+      "kind": "html",
+      "url": "https://arxiv.org/html/2502.02358",
+      "path": "sources/motionlab/html.html",
+      "sha256": "0f4263a08389f93a4c713b5d3279f8589643ad917e51331b715ad2ae08f16254",
+      "bytes": 307911
+    }
+  ],
+  "title": "MotionLab: Unified Human Motion Generation and Editing via the Motion-Condition-Motion Paradigm",
+  "history": "Submission history From: Ziyan Guo [ view email ] [v1] Tue, 4 Feb 2025 14:43:26 UTC (2,144 KB) [v2] Wed, 5 Feb 2025 04:36:10 UTC (2,144 KB) [v3] Thu, 6 Feb 2025 15:03:54 UTC (2,144 KB) [v4] Wed, 12 Mar 2025 11:59:19 UTC (2,150 KB) [v5] Tue, 22 Jul 2025 13:47:07 UTC (2,244 KB)",
+  "canonical_ids": [
+    "2502.02358v5"
+  ],
+  "headings": [
+    "MotionLab: Unified Human Motion Generation and Editing via the Motion-Condition-Motion Paradigm",
+    "1 Introduction",
+    "2 Related Work",
+    "3 Preliminary: Rectified Flows",
+    "4 Motion-Condition-Motion",
+    "5 MotionLab",
+    "5.1 MotionFlow Transformer",
+    "5.2 Task Instruction Modulation",
+    "5.3 Motion Curriculum Learning",
+    "6 Experiments",
+    "6.1 Quantitative Results",
+    "6.2 Qualitative Results",
+    "6.3 Ablation Studies",
+    "7 Conclusion",
+    "References",
+    "8 Details of Rectified Flows",
+    "9 MotionLab Inference",
+    "10 Memory Usage and Time Cost",
+    "11 Additional Quantitative Results",
+    "12 Additional Ablation Studies",
+    "13 Representation for Each Modality",
+    "14 Instructions for Each Task",
+    "15 Classifier Free Guidance for Each Task",
+    "16 3D Assets"
+  ]
+}

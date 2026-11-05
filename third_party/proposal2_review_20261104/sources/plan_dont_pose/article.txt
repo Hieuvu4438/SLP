@@ -1,0 +1,1912 @@
+*
+*
+footnotetext:
+n.shvetsov@avacapo.com
+Plan, Don’t Pose: Long Composite Motion Generation with Text-Aligned BFM
+Nikolay Shvetsov
+∗
+Affiliation:
+AvaCapo, Potsdam, Germany
+Affiliation:
+Potsdam University, Potsdam, Germany
+Maksim Bobrin
+Affiliation:
+Applied AI Institute, Computational Imaging Lab, Moscow, Russia
+Affiliation:
+AXXX, Moscow, Russia
+Nazar Buzun
+Affiliation:
+AXXX, Moscow, Russia
+Affiliation:
+Innopolis University, Innopolis, Russia
+Anton Bozhedarov
+Affiliation:
+AvaCapo, Potsdam, Germany
+Dmitry V. Dylov
+Affiliation:
+Applied AI Institute, Computational Imaging Lab, Moscow, Russia
+Affiliation:
+AXXX, Moscow, Russia
+Abstract
+Text-to-motion (T2M) generation has broad applications in character animation, virtual avatars, and human-robot interaction. Existing methods typically generate pose trajectories or motion tokens directly from language, forcing a single model to handle semantic interpretation, long-horizon structure, and low-level physical realization. This coupling makes them costly and often unreliable for long, compositional, or semantically dense prompts.
+We propose Text2BFM, the first framework that aligns natural language with pretrained Behavioral Foundation Models (BFMs) for T2M generation without relying on heavy end-to-end motion generators. Text2BFM operates in the latent policy space of a frozen BFM, using it as an executable motion prior. A text-aligned variational behavioral bottleneck compresses BFM policy-latent sequences into compact motion representations that are compatible with language and preserve long-horizon behavioral structure.
+Generation is performed in this compact behavioral manifold with a lightweight conditional generator, and the resulting latent encoded behaviors are decoded into policy latents that drive the pretrained frozen BFM. By decoupling semantic planning from motion execution, Text2BFM achieves efficient, robust T2M generation and strong performance on long, compositional textual descriptions.
+A person does a cartwheel, a spin, then two twirls,
+and finishes with a low jump landing using ballet movements.
+A person runs forward, then turns left, does a quick, sharp punch, and
+follows it with a kick to the right. After that, he walks forward,
+raises his arms in victory, and finishes by waving happily.
+Figure 1
+:
+Two rollouts of proposed Text2BFM model, showcasing precise following of the instructions in the prompt while remaining semantically correct.
+1
+Introduction
+Natural language describes human motion at the level of intentions, phases, and behaviors: a person walks toward an object, reaches for it, picks it up, and then performs another action.
+Most text-to-motion methods, however, generate pose trajectories or discrete motion tokens directly from language embeddings
+[
+12
+,
+26
+,
+43
+,
+36
+,
+7
+,
+42
+,
+22
+]
+.
+This requires a single generative model to simultaneously solve semantic interpretation, long-horizon temporal organization, and low-level physical realization.
+As a result, visually plausible motions can still exhibit foot sliding, unstable contacts, unnatural transitions, implausible joint configurations, or poor consistency under compositional prompts
+[
+30
+,
+41
+,
+34
+]
+.
+We argue that this stems from a representational mismatch: language specifies behavior, while most text-to-motion models synthesize positions.
+A more natural interface is to expose motion to the text model as executable behavior.
+Behavioral Foundation Models
+(BFMs) provide such an interface by learning structured spaces of reusable behaviors from offline data
+[
+37
+,
+33
+,
+15
+,
+6
+]
+.
+In particular, Forward-Backward representations
+[
+5
+,
+38
+]
+enable promptable behavior inference through policy latents.
+A single global policy latent can represent short behaviors such as walking forward or turning, but long text prompts typically require temporally localized phases, transitions, and hierarchical structure
+[
+26
+,
+42
+,
+9
+,
+20
+]
+.
+Representing a motion as a trajectory of local policy latents
+[MATH: z_{1:T}]
+is therefore more expressive, but a direct generation of such trajectories creates another long, weakly text-aligned sequence modeling problem.
+We address this problem with a text-aligned variational behavioral bottleneck.
+Given a trajectory of Forward-Backward policy encoded representations
+[MATH: z_{1:T}]
+, the bottleneck compresses it into a more compact motion representations that can reconstruct executable local policy latents, while being aligned with textual descriptions.
+Unlike a purely reconstructive autoencoder
+[
+14
+,
+32
+]
+, our bottleneck is additionally regularized by a semantic-similarity objective that aligns the bottleneck with the corresponding text embedding, following the broader success of cross-modal representation learning
+[
+29
+,
+35
+,
+27
+]
+.
+The resulting plan space is both temporally compact and language-discriminative.
+Text-conditioned generation is then performed in this compact behavioral plan space.
+Rather than generating poses or full policy-latent trajectories, a conditional generative model samples a text-consistent motion program, which is decoded into local policy latents and is executed by the pretrained FB policy.
+This separates semantic planning from physical realization: the compact program captures high-level temporal structure, while the behavioral policy provides executable motion.
+We instantiate the generator with Transformer-based flow matching, using flow matching as an efficient continuous generative model
+[
+17
+,
+18
+,
+3
+]
+in the learned plan space rather than directly in the pose space
+[
+23
+,
+40
+]
+.
+Our contributions are:
+•
+We formulate text-to-motion generation as generation of compact executable behavioral programs, using policy-latent trajectories
+[MATH: z_{1:T}]
+from a pretrained Forward-Backward behavioral model.
+•
+We introduce a text-aligned variational behavioral bottleneck that compresses policy-latent trajectories while aligning the resulting motion programs with language.
+•
+A unified framework for semantic planning and physically grounded motion execution via the learned bottleneck with text-conditioned flow matching and BFM-policy rollout.
+•
+We show that the proposed framework improves semantic consistency and compositional ordering, while identifying a distributional-quality trade-off caused by the frozen BFM prior.
+2
+Related Work
+Zero-Shot Reinforcement Learning.
+A central goal in reinforcement learning is to learn reusable behavioral structure that transfers to new tasks without retraining. Successor representations and successor features
+[
+8
+,
+4
+]
+decompose value functions into dynamics- and reward-dependent components, enabling efficient transfer. Forward-Backward (FB) representations extend this idea by learning low-rank successor-measure factorizations and latent codes for executable behaviors
+[
+38
+,
+5
+,
+39
+,
+1
+]
+, making them well suited for motion generation as policy interfaces rather than descriptive embeddings.
+However, standard FB policies usually rely on a single behavior latent or short-horizon command, which is too limited for multi-phase language prompts. We therefore represent motion as local policy latents
+[MATH: z_{1:T}]
+and learn a compact, text-aligned variational bottleneck over them, preserving temporal structure while enabling generation in a lower-dimensional behavioral plan space.
+[
+33
+]
+also enables imitation learning via text descriptions, but relies on heavy image/video generation models, which limits applications.
+Physics-Based Motion Control.
+Physics-based motion control methods learn executable motion priors from reference motion data. AMP regularizes control policies toward natural motion through adversarial imitation
+[
+25
+]
+, while ASE learns reusable skill embeddings for downstream control
+[
+24
+]
+. CALM learns directable latent controllers for virtual characters
+[
+34
+]
+, and PHC learns robust humanoid controllers for high-fidelity motion tracking and recovery
+[
+19
+]
+. Unlike purely kinematic generators, these methods produce motion through policy execution, making them closely related to our use of BFM latents as executable behavioral commands.
+Text-to-Motion Generation.
+Text-to-motion generation has progressed from recurrent and VAE-based models
+[
+2
+,
+10
+,
+26
+]
+to diffusion-based, token-based, and latent generative approaches trained on large-scale datasets such as HumanML3D
+[
+12
+]
+. MotionDiffuse and MDM synthesize motion through conditional denoising
+[
+43
+,
+36
+]
+, while MLD performs diffusion in a learned motion latent space
+[
+7
+]
+. T2M-GPT and MoMask instead rely on discrete motion tokens with autoregressive or masked generation
+[
+42
+,
+22
+]
+.
+Although these methods achieve strong visual quality, they primarily operate in pose space, motion-token space, or kinematic latent spaces. As a result, a single generator must handle semantic interpretation, temporal planning, and low-level physical realization, which can lead to weak long-horizon coherence, unstable contacts, foot sliding, or missing stages in compositional prompts. In contrast, our method generates text-conditioned behavioral programs that are decoded into executable policy latents, delegating low-level motion realization to a pretrained behavioral policy.
+Language-Aligned Latent Motion Generation.
+Cross-modal representation learning has shown that language can semantically organize visual and motion embeddings, as in CLIP-style learning
+[
+29
+]
+, MotionCLIP
+[
+35
+]
+, and TMR
+[
+27
+]
+. Our bottleneck similarly aligns motion programs with text, but keeps the latent space tied to executable policy commands rather than using it only for retrieval or conditioning. Latent generative models improve efficiency by operating on compact representations instead of high-dimensional sequences. VAEs provide a standard framework for stochastic compression
+[
+14
+,
+32
+]
+, while flow matching offers an efficient alternative to diffusion for continuous generation
+[
+17
+,
+18
+,
+3
+]
+. We use flow matching to generate compact text-conditioned behavioral programs in the learned bottleneck space, rather than poses directly.
+Our work combines zero-shot behavioral representations, text-motion alignment, and latent flow-based generation. Unlike prior text-to-motion methods that synthesize poses or long motion-token sequences, our model generates compact, text-aligned behavioral programs that decode into policy latents and are realized through policy rollout.
+Figure 2
+:
+Text2BFM method and its principal diagram components. Shown are the training (steps 1 and 2) and the generation (3) pipelines.
+3
+Method
+Given a natural-language instruction
+[MATH: Y]
+, our goal is to generate a motion trajectory
+[MATH: \tau=\{s_{t}\}_{t=1}^{T}]
+. Rather than synthesizing joint poses directly, we generate motion
+through a frozen Behavioral Foundation Model (BFM), which provides a latent-conditioned policy
+[MATH: a_{t}\sim\pi_{\mathrm{BFM}}(a_{t}\mid s_{t},z_{t}),\qquad s_{t+1}\sim p_{\mathrm{env}}(s_{t+1}\mid s_{t},a_{t}),]
+(1)
+where
+[MATH: s_{t}]
+is the humanoid state,
+[MATH: a_{t}]
+is the control action, and
+[MATH: z_{t}]
+is a local behavioral
+latent. Since actions are applied between consecutive states, the policy-latent sequence has length
+[MATH: T_{z}=T-1]
+. The generative model therefore produces executable behavioral commands
+[MATH: z_{1:T_{z}}]
+, which are rolled out by the pretrained policy
+[MATH: \pi_{\mathrm{BFM}}]
+and environment
+dynamics
+[MATH: p_{\mathrm{env}}]
+.
+For each training motion
+[MATH: \tau^{i}=\{s^{i}_{t}\}_{t=1}^{T}]
+, we infer a corresponding sequence of
+BFM policy latents using the frozen MetaMotivo tracking procedure. Specifically, we apply the
+BFM backward map
+[MATH: B]
+to future states, average the resulting embeddings over a short lookahead
+window, and project them to the normalized policy-latent space:
+[MATH: z^{i}_{t}=\operatorname{Proj}_{z}\left(\frac{1}{H_{t}}\sum_{k=0}^{H_{t}-1}B(s^{i}_{t+1+k})\right),\qquad H_{t}=\min(L,T-t),\qquad t=1,\ldots,T_{z}.]
+(2)
+Thus,
+[MATH: z^{i}_{t}]
+summarizes the future-conditioned behavior to be executed from state
+[MATH: s^{i}_{t}]
+.
+No latent is required after the final state.
+Directly generating the full sequence
+[MATH: z_{1:T_{z}}]
+remains a long-horizon sequence-modeling
+problem. We therefore introduce a compact variational behavioral bottleneck that compresses
+[MATH: z_{1:T_{z}}]
+into a shorter motion program
+[MATH: m_{1:T_{m}}]
+, where
+[MATH: T_{m}<T_{z}]
+. The bottleneck is
+trained to preserve the executable information needed to reconstruct BFM policy latents while also
+aligning the compact program with the input text. This is suitable because BFM latents encode
+behavioral intent rather than frame-level pose details; language-described motions typically consist
+of a small number of semantic phases, making the latent trajectory redundant over time.
+The variational encoder maps the policy-latent trajectory to a posterior distribution over compact
+programs:
+[MATH: q_{\phi}(m_{1:T_{m}}\mid z_{1:T_{z}})=\mathcal{N}\left(\mu_{\phi}(z_{1:T_{z}}),\operatorname{diag}\left(\sigma_{\phi}^{2}(z_{1:T_{z}})\right)\right).]
+(3)
+A compact program
+[MATH: m_{1:T_{m}}]
+is sampled using the reparameterization trick and decoded back
+into executable BFM latents:
+[MATH: \hat{z}_{1:T_{z}}=D_{\theta}(m_{1:T_{m}}).]
+(4)
+The reconstruction loss, which incorporates a policy
+-
+level reconstruction term, is defined as
+[MATH: \mathcal{L}_{\mathrm{rec}}=\frac{1}{T_{z}}\sum_{t=1}^{T_{z}}\|z_{t}-\hat{z}_{t}\|_{2}^{2}+\frac{\lambda_{\pi}}{T_{z}}\sum_{t=1}^{T_{z}}D_{\mathrm{KL}}\left(\pi_{\mathrm{BFM}}(\cdot\mid s_{t},\hat{z}_{t})\,\|\,\pi_{\mathrm{BFM}}(\cdot\mid s_{t},z_{t})\right).]
+(5)
+The compact program space is regularized with a standard Gaussian prior:
+[MATH: \mathcal{L}_{\mathrm{KL}}=D_{\mathrm{KL}}\left(q_{\phi}(m_{1:T_{m}}\mid z_{1:T_{z}})\,\|\,\mathcal{N}(0,I)\right).]
+(6)
+To make the bottleneck language-discriminative, we use a motion-text contrastive objective with
+frame-token matching. Let
+[MATH: m_{i}=\{m_{i,t}\}_{t=1}^{T_{m}}]
+denote the compact program for sample
+[MATH: i]
+, and let
+[MATH: Y_{i}=\{y_{i,k}\}_{k=1}^{K_{i}}]
+denote its token-level text representation. Motion-program
+tokens and text tokens are projected into a shared normalized space:
+[MATH: \tilde{m}_{i,t}=\frac{P_{m}(m_{i,t})}{\|P_{m}(m_{i,t})\|_{2}},\qquad\tilde{y}_{j,k}=\frac{P_{y}(y_{j,k})}{\|P_{y}(y_{j,k})\|_{2}}.]
+(7)
+For each motion-text pair
+[MATH: (i,j)]
+in a batch, we compute a frame-level score by pooling over text
+tokens:
+[MATH: F_{ijt}=\lambda_{\mathrm{tok}}\log\left(\frac{1}{K_{j}}\sum_{k=1}^{K_{j}}\exp\left(\frac{\tilde{m}_{i,t}^{\top}\tilde{y}_{j,k}}{\lambda_{\mathrm{tok}}}\right)\right),]
+(8)
+where
+[MATH: \lambda_{\mathrm{tok}}]
+controls the sharpness of token pooling. The normalization by
+[MATH: K_{j}]
+prevents longer text descriptions from receiving systematically larger scores.
+We then compute frame-importance weights from the frame scores:
+[MATH: w_{ijt}=\frac{\exp(F_{ijt}/\lambda_{\mathrm{frm}})}{\sum_{u=1}^{T_{m}}\exp(F_{iju}/\lambda_{\mathrm{frm}})},]
+(9)
+where
+[MATH: \lambda_{\mathrm{frm}}]
+controls how concentrated the frame weighting is. The final similarity
+between motion program
+[MATH: i]
+and text
+[MATH: j]
+is
+[MATH: R_{ij}=\sum_{t=1}^{T_{m}}w_{ijt}F_{ijt}.]
+(10)
+Let
+[MATH: \gamma=\exp(\alpha)]
+be a positive learnable logit scale. For a batch of
+[MATH: B]
+paired
+motion-text examples, the bidirectional contrastive loss is
+[MATH: \mathcal{L}_{m\rightarrow Y}=-\frac{1}{B}\sum_{i=1}^{B}\log\frac{\exp(\gamma R_{ii})}{\sum_{j=1}^{B}\exp(\gamma R_{ij})},\qquad\mathcal{L}_{Y\rightarrow m}=-\frac{1}{B}\sum_{i=1}^{B}\log\frac{\exp(\gamma R_{ii})}{\sum_{j=1}^{B}\exp(\gamma R_{ji})}.]
+(11)
+The semantic alignment loss is
+[MATH: \mathcal{L}_{\mathrm{sem}}=\frac{1}{2}\left(\mathcal{L}_{m\rightarrow Y}+\mathcal{L}_{Y\rightarrow m}\right).]
+(12)
+This local matching objective encourages the compact program to align with the relevant text tokens
+at different behavioral phases, rather than relying only on a single global text-motion similarity.
+The full bottleneck objective is
+[MATH: \mathcal{L}_{\mathrm{VBB}}=\mathcal{L}_{\mathrm{rec}}+\beta\mathcal{L}_{\mathrm{KL}}+\lambda_{\mathrm{sem}}\mathcal{L}_{\mathrm{sem}}.]
+(13)
+After training the text-aligned behavioral bottleneck, we train a conditional generator in the compact
+program space. For each training pair, we sample a target compact program
+[MATH: m\sim q_{\phi}(m\mid z_{1:T_{z}})]
+and a noise sample
+[MATH: \epsilon\sim\mathcal{N}(0,I)]
+with the same
+shape as
+[MATH: m]
+. We use flow matching with the linear interpolation path
+[MATH: m(r)=(1-r)\epsilon+rm,\qquad r\sim\mathcal{U}(0,1).]
+(14)
+The text-conditioned vector field
+[MATH: v_{\eta}]
+is trained to predict the constant flow from
+[MATH: \epsilon]
+to
+[MATH: m]
+:
+[MATH: \mathcal{L}_{\mathrm{FM}}=\mathbb{E}_{\epsilon,m,r,Y}\left[\left\|v_{\eta}(m(r),r,Y)-(m-\epsilon)\right\|_{2}^{2}\right].]
+(15)
+Thus, the flow model learns to map Gaussian noise to a text-consistent compact behavioral program.
+Training proceeds in three stages. First, we use a pretrained BFM and keep it frozen. Second, for
+each paired text-motion example
+[MATH: (Y^{i},\tau^{i})]
+, we infer the policy-latent trajectory
+[MATH: z^{i}_{1:T_{z}}]
+and train the encoder, decoder, and semantic projection modules using
+[MATH: \mathcal{L}_{\mathrm{VBB}}]
+. Third, we freeze the bottleneck decoder and train the conditional flow
+model using
+[MATH: \mathcal{L}_{\mathrm{FM}}]
+.
+At inference time, given a text instruction
+[MATH: Y]
+and an initial humanoid state
+[MATH: s_{1}]
+fixed by the
+generation protocol, we sample
+[MATH: m(0)\sim\mathcal{N}(0,I)]
+and solve the flow ODE
+[MATH: \frac{dm(r)}{dr}=v_{\eta}(m(r),r,Y),\qquad r\in[0,1],]
+(16)
+to obtain a generated compact program
+[MATH: m(1)]
+. The decoder maps this program to executable policy
+latents
+[MATH: \hat{z}_{1:T_{z}}=D_{\theta}(m(1))]
+. The final motion is produced by rolling out the frozen
+BFM policy using
+[MATH: \hat{z}_{t}]
+at each timestep.
+4
+Experiments
+4.1
+Experimental Setup
+We evaluate
+Text2BFM
+on two standard text-to-motion benchmarks: HumanML3D
+[
+12
+]
+and KIT-ML
+[
+28
+]
+. HumanML3D contains
+[MATH: 14{,}616]
+motion sequences with
+[MATH: 44{,}970]
+text descriptions, and KIT-ML contains
+[MATH: 3{,}911]
+motions with
+[MATH: 6{,}278]
+annotations. We follow the standard train/test splits and evaluation protocol used in prior work
+[
+43
+,
+36
+,
+7
+,
+42
+,
+22
+]
+. For all stochastic evaluations of our method, we report the mean and
+[MATH: 95\%]
+confidence interval over
+[MATH: 20]
+independent evaluation runs with different random seeds.
+We report the standard metrics used in text-to-motion evaluation:
+R-Precision
+for text-motion retrieval accuracy,
+FID
+for distributional similarity to real motions,
+MultiModal Distance
+for text-motion feature alignment, and
+MultiModality
+for generation diversity under the same prompt.
+The BFM policy is pretrained on the HY-Motion dataset
+[
+40
+]
+following the MetaMotivo training procedure
+[
+37
+]
+, and is kept frozen during text-to-motion training. On a single NVIDIA A100 80GB GPU, behavioral bottleneck training takes
+[MATH: 17]
+hours and text-to-plan generator training takes
+[MATH: 28]
+hours. BFM latent extraction time is reported separately once preprocessing is finalized. The full list of hyperparameters and provided in Table
+6
+.
+Table 1
+:
+Quantitative comparison on HumanML3D and KIT-ML datasets. Metrics: R-Precision Top-3 and MultiModality (the higher, the better), FID and MultiModal Distance (the lower, the better). Best values are highlighted in
+blue
+.
+Dataset
+Method
+R-Prec. Top-3
+[MATH: \uparrow]
+FID
+[MATH: \downarrow]
+MM-Dist
+[MATH: \downarrow]
+MultiModality
+[MATH: \uparrow]
+HumanML3D
+TM2T
+[
+13
+]
+[MATH: 0.729{\scriptscriptstyle\pm.002}]
+[MATH: 1.501{\scriptscriptstyle\pm.017}]
+[MATH: 3.467{\scriptscriptstyle\pm.011}]
+[MATH: 2.424{\scriptscriptstyle\pm.093}]
+T2M
+[
+12
+]
+[MATH: 0.736{\scriptscriptstyle\pm.002}]
+[MATH: 1.087{\scriptscriptstyle\pm.021}]
+[MATH: 3.347{\scriptscriptstyle\pm.008}]
+[MATH: 2.219{\scriptscriptstyle\pm.074}]
+MDM
+[
+36
+]
+[MATH: 0.611{\scriptscriptstyle\pm.007}]
+[MATH: 0.544{\scriptscriptstyle\pm.044}]
+[MATH: 5.566{\scriptscriptstyle\pm.027}]
+[MATH: 2.799{\scriptscriptstyle\pm.072}]
+MLD
+[
+7
+]
+[MATH: 0.772{\scriptscriptstyle\pm.002}]
+[MATH: 0.473{\scriptscriptstyle\pm.013}]
+[MATH: 3.196{\scriptscriptstyle\pm.010}]
+[MATH: 2.413{\scriptscriptstyle\pm.079}]
+MotionDiffuse
+[
+43
+]
+[MATH: 0.782{\scriptscriptstyle\pm.001}]
+[MATH: 0.630{\scriptscriptstyle\pm.001}]
+[MATH: 3.113{\scriptscriptstyle\pm.001}]
+[MATH: 1.553{\scriptscriptstyle\pm.042}]
+T2M-GPT
+[
+42
+]
+[MATH: 0.775{\scriptscriptstyle\pm.002}]
+[MATH: 0.141{\scriptscriptstyle\pm.005}]
+[MATH: 3.121{\scriptscriptstyle\pm.009}]
+[MATH: 1.831{\scriptscriptstyle\pm.048}]
+ReMoDiffuse
+[
+44
+]
+[MATH: 0.795{\scriptscriptstyle\pm.004}]
+[MATH: 0.103{\scriptscriptstyle\pm.004}]
+[MATH: 2.974{\scriptscriptstyle\pm.016}]
+[MATH: 1.795{\scriptscriptstyle\pm.043}]
+MoMask
+[
+11
+]
+[MATH: 0.807{\scriptscriptstyle\pm.002}]
+[MATH: 0.045{\scriptscriptstyle\pm.002}]
+[MATH: 2.958{\scriptscriptstyle\pm.008}]
+[MATH: 1.241{\scriptscriptstyle\pm.040}]
+Text2BFM
+[MATH: 0.876{\scriptscriptstyle\pm.005}]
+[MATH: 1.172{\scriptscriptstyle\pm.013}]
+[MATH: 2.498{\scriptscriptstyle\pm.061}]
+[MATH: 1.233{\scriptscriptstyle\pm.085}]
+KIT-ML
+TM2T
+[
+13
+]
+[MATH: 0.587{\scriptscriptstyle\pm.005}]
+[MATH: 3.599{\scriptscriptstyle\pm.153}]
+[MATH: 4.591{\scriptscriptstyle\pm.026}]
+[MATH: 3.292{\scriptscriptstyle\pm.081}]
+T2M
+[
+12
+]
+[MATH: 0.681{\scriptscriptstyle\pm.007}]
+[MATH: 3.022{\scriptscriptstyle\pm.107}]
+[MATH: 3.488{\scriptscriptstyle\pm.028}]
+[MATH: 2.052{\scriptscriptstyle\pm.107}]
+MDM
+[
+36
+]
+[MATH: 0.396{\scriptscriptstyle\pm.004}]
+[MATH: 0.497{\scriptscriptstyle\pm.021}]
+[MATH: 9.191{\scriptscriptstyle\pm.022}]
+[MATH: 1.907{\scriptscriptstyle\pm.214}]
+MLD
+[
+7
+]
+[MATH: 0.734{\scriptscriptstyle\pm.007}]
+[MATH: 0.404{\scriptscriptstyle\pm.027}]
+[MATH: 3.204{\scriptscriptstyle\pm.027}]
+[MATH: 2.192{\scriptscriptstyle\pm.071}]
+MotionDiffuse
+[
+43
+]
+[MATH: 0.739{\scriptscriptstyle\pm.004}]
+[MATH: 1.954{\scriptscriptstyle\pm.062}]
+[MATH: 2.958{\scriptscriptstyle\pm.005}]
+[MATH: 0.730{\scriptscriptstyle\pm.013}]
+T2M-GPT
+[
+42
+]
+[MATH: 0.745{\scriptscriptstyle\pm.006}]
+[MATH: 0.514{\scriptscriptstyle\pm.029}]
+[MATH: 3.007{\scriptscriptstyle\pm.023}]
+[MATH: 1.570{\scriptscriptstyle\pm.039}]
+ReMoDiffuse
+[
+44
+]
+[MATH: 0.765{\scriptscriptstyle\pm.055}]
+[MATH: 0.155{\scriptscriptstyle\pm.006}]
+[MATH: 2.814{\scriptscriptstyle\pm.012}]
+[MATH: 1.239{\scriptscriptstyle\pm.028}]
+MoMask
+[
+11
+]
+[MATH: 0.781{\scriptscriptstyle\pm.005}]
+[MATH: 0.204{\scriptscriptstyle\pm.011}]
+[MATH: 2.779{\scriptscriptstyle\pm.022}]
+[MATH: 1.131{\scriptscriptstyle\pm.043}]
+Text2BFM
+[MATH: 0.901{\scriptscriptstyle\pm.008}]
+[MATH: 1.482{\scriptscriptstyle\pm.098}]
+[MATH: 2.658{\scriptscriptstyle\pm.074}]
+[MATH: 1.367{\scriptscriptstyle\pm.103}]
+4.2
+Main Results
+Table
+1
+compares Text2BFM with representative text-to-motion methods. Prior approaches typically synthesize motion directly in pose space, kinematic latent spaces, or discrete motion-token spaces. In contrast, Text2BFM first generates compact behavioral programs, then decodes them into BFM policy latents, and finally realizes the motion through policy rollout.
+This design decouples high-level semantic planning from low-level motion execution. Generating in the compact program space alleviates the burden of modeling long pose sequences, while the frozen BFM policy provides an executable prior that ensures temporal coherence and supports contact-rich motion. As a result, Text2BFM achieves the best R-Precision and MultiModal Distance scores on both datasets. However, the BFM policy and its environment-specific action space introduce a domain bias; this leads to FID values that are not optimal, as the distribution of the generated motions can deviate from the real motion data distribution.
+4.3
+Compositional Motion Evaluation
+Long prompts often describe sequences of behaviors rather than a single action, e.g., “walk forward, then turn left, then sit down.” To evaluate this setting, we construct compositional prompts from HumanML3D by combining atomic text descriptions into multi-stage prompts. Given
+[MATH: N]
+atomic instructions
+[MATH: \{Y^{(n)}\}_{n=1}^{N}]
+, we form
+[MATH: Y_{\mathrm{comp}}=Y^{(1)}\ \text{then}\ Y^{(2)}\ \text{then}\ \cdots\ \text{then}\ Y^{(N)}.]
+(17)
+We evaluate
+[MATH: N\in\{3,4\}]
+stages and select semantically plausible action sequences, such as walk-turn-sit or reach-pick-place.
+Text2BFM
+generates a single compact program from the full prompt
+[MATH: Y_{\mathrm{comp}}]
+.
+Text2BFM-Compose
+decomposes the prompt into clauses and generates one compact program per clause. For each clause
+[MATH: Y^{(n)}]
+, we sample
+[MATH: \hat{m}^{(n)}\sim p_{\eta}(m\mid Y^{(n)}),\,\hat{z}^{(n)}_{1:T_{n}}=D_{\theta}(\hat{m}^{(n)}).]
+The decoded policy-latent sequences are then concatenated:
+[MATH: \hat{z}^{\mathrm{comp}}_{1:T}=\hat{z}^{(1)}_{1:T_{1}}\oplus\hat{z}^{(2)}_{1:T_{2}}\oplus\cdots\oplus\hat{z}^{(N)}_{1:T_{N}}.]
+(18)
+To reduce discontinuities at clause boundaries, we blend a short overlap of
+[MATH: O]
+latent steps. For the boundary between stages
+[MATH: n]
+and
+[MATH: n+1]
+, the blended overlap is
+[MATH: \tilde{z}_{o}=(1-\rho_{o})\hat{z}^{(n)}_{T_{n}-O+o}+\rho_{o}\hat{z}^{(n+1)}_{o},\qquad\rho_{o}=\frac{o}{O+1},\qquad o=1,\ldots,O.]
+(19)
+The boundary sequence is formed by replacing the overlapping latents with
+[MATH: \{\tilde{z}_{o}\}_{o=1}^{O}]
+before rollout. The final composed latent sequence is executed by the frozen BFM policy. This variant tests whether complex motions can be assembled from local behavior representations rather than generated as a single long pose sequence. To support our findings, we compare proposed approaches with a recent framework Kimodo
+[
+31
+]
+. Figure
+3
+showcases that Kimodo is unable to follow text specification precisely. Text2BFM-Compose covers more prompt stages and produces smoother boundaries in this example, although long
+[MATH: N=4]
+compositions remain challenging quantitatively.
+Kimodo
+Text2BFM
+Text2BFM-Compose
+Figure 3
+:
+Comparison of methods for compositional motion generation. The text prompt is “A person runs forward, then turns left, does a quick, sharp punch, and
+follows it with a kick to the right. After that, he walks forward,
+raises his arms in victory, and finishes by waving happily”.
+To quantitatively measure and compare performances of different methods, we perform the following procedure. Generated motions are divided into
+[MATH: N]
+segments, using known composition boundaries for Text2BFM-Compose and uniform segments otherwise.
+Order Accuracy
+measures whether the best-matching clause for each generated segment follows the correct temporal order. Order Accuracy is computed by embedding each generated segment and each clause using a frozen embedder. For each segment, we assign the clause with the highest similarity. The order is correct if the assigned clause indices are strictly increasing and match the target sequence.
+Transition Score
+measures the smoothness around the action boundaries as the average velocity discontinuity around each clause boundary:
+[MATH: \mathrm{Transition}=\frac{1}{N-1}\sum_{i=1}^{N-1}\left(\|s_{i+1}-s_{i}\|_{2}+\|v_{i+1}-v_{i}\|_{2}\right).]
+(20)
+Table 2
+:
+Evaluation on longer compositional prompts with
+[MATH: N\geq 3]
+stages. Longer prompts test whether the model preserves semantic ordering over extended horizons.
+Method
+[MATH: N]
+Order Acc.
+[MATH: \uparrow]
+MM-Dist
+[MATH: \downarrow]
+Transition
+[MATH: \downarrow]
+Text2BFM
+[MATH: 3]
+0.395
+4.476
+0.222
+Text2BFM-Compose
+[MATH: 3]
+0.671
+3.421
+0.047
+Text2BFM
+[MATH: 4]
+0.322
+6.579
+0.237
+Text2BFM-Compose
+[MATH: 4]
+0.509
+4.61
+0.037
+The compositional benchmark highlights a difference between generating poses and generating executable behavior programs. Pose-space generators must model the full long-horizon trajectory and all transitions directly from a single text embedding. In contrast, Text2BFM represents each phase through local executable latents, making it easier to preserve the identity and order of individual actions. The explicit composition variant further benefits from the modularity of the compact program space: each clause is first mapped to a behavioral program, and the resulting policy-latent sequences are combined before rollout.
+4.4
+Ablation Study
+We ablate the main components of Text2BFM: compression of BFM policy-latent sequences, semantic alignment, and the compact-program generator. All variants use the same frozen BFM policy and differ only in the text-to-program pipeline.
+Latent sequence compression.
+We first study how the BFM latent trajectory
+[MATH: z_{1:T}]
+is compressed into a compact program. We compare four variants: no compression, average pooling, a variational behavioral bottleneck without semantic alignment, and the full text-aligned bottleneck. The average pooling operation directly follows from the conventional BFM objective,
+[MATH: m_{\mathrm{avg}}=1/T\sum_{t=1}^{T}z_{t},]
+which removes temporal ordering. The full model uses the proposed variational bottleneck with KL regularization and motion-text semantic alignment. Table
+3
+shows that preserving temporal structure is important: average pooling performs poorly because it collapses the latent trajectory into an unordered summary. Generating a full latents sequence without compression improves the motion quality, but does not organize the latent space according to language. Adding the variational bottleneck improves performance, and semantic alignment further improves text-motion matching, as reflected by lower MM-Dist and higher R-Precision.
+Table 3
+:
+Ablation on policy-latent sequence compression. All variants use the same frozen BFM policy and the same evaluation protocol. Best values are highlighted in
+blue
+.
+Compression
+FID
+[MATH: \downarrow]
+MM-Dist
+[MATH: \downarrow]
+R-Prec.
+[MATH: \uparrow]
+Average pooling
+[MATH: 2.373\,{\color[rgb]{0.5,0.5,0.5}\scriptstyle\pm.010}]
+[MATH: 3.573\,{\color[rgb]{0.5,0.5,0.5}\scriptstyle\pm.006}]
+[MATH: 0.786\,{\color[rgb]{0.5,0.5,0.5}\scriptstyle\pm.070}]
+No Compression
+[MATH: 1.689\,{\color[rgb]{0.5,0.5,0.5}\scriptstyle\pm.007}]
+[MATH: 2.869\,{\color[rgb]{0.5,0.5,0.5}\scriptstyle\pm.006}]
+[MATH: 0.743\,{\color[rgb]{0.5,0.5,0.5}\scriptstyle\pm.004}]
+VBB w/o semantic loss
+[MATH: 1.272\,{\color[rgb]{0.5,0.5,0.5}\scriptstyle\pm.007}]
+[MATH: 2.832\,{\color[rgb]{0.5,0.5,0.5}\scriptstyle\pm.025}]
+[MATH: 0.863\,{\color[rgb]{0.5,0.5,0.5}\scriptstyle\pm.003}]
+Text-aligned VBB
+[MATH: {{\color[rgb]{0.1172,0.5664,1}1.172}}\,{\color[rgb]{0.5,0.5,0.5}\scriptstyle\pm.013}]
+[MATH: {{\color[rgb]{0.1172,0.5664,1}2.498}}\,{\color[rgb]{0.5,0.5,0.5}\scriptstyle\pm.061}]
+[MATH: {{\color[rgb]{0.1172,0.5664,1}0.877}}\,{\color[rgb]{0.5,0.5,0.5}\scriptstyle\pm.005}]
+Effect of semantic alignment.
+The comparison between VAE compresson w/o semantic loss (
+[MATH: \mathcal{L}_{\text{sem}}]
+) and the full model isolates the role of the motion-text contrastive objective (Table
+3
+). Without this loss, the compact program is optimized mainly to reconstruct BFM latents, but its geometry is not explicitly aligned with text. The full model improves semantic retrieval and text-motion distance, suggesting that language alignment makes behavior representations
+[MATH: \pi_{z}]
+more suitable for text-conditioned generation.
+Compression factors.
+We evaluate how the compression factor of the behavioral encoder affects reconstruction of the BFM policy-latent trajectory. Given
+[MATH: z_{1:T}]
+, the encoder produces a shorter compact program, and the decoder reconstructs
+[MATH: \hat{z}_{1:T}]
+. We compare compression factors
+[MATH: \{4,8,16\}]
+using two metrics: latent reconstruction error and policy-level Action KL. The latter measures whether the reconstructed latents induce similar action distributions under the frozen BFM policy:
+[MATH: \mathrm{ActionKL}=\frac{1}{T}\sum_{t=1}^{T}D_{\mathrm{KL}}\left(\pi_{\mathrm{BFM}}(\cdot\mid s_{t},\hat{z}_{t})\,\|\,\pi_{\mathrm{BFM}}(\cdot\mid s_{t},z_{t})\right).]
+(21)
+Table 4
+:
+Effect of temporal compression on BFM latent reconstruction and policy-level behavior preservation. Lower is better.
+Compression
+Reconstruction
+[MATH: \downarrow]
+Action KL
+[MATH: \downarrow]
+[MATH: 4\times]
+0.187
+1.04
+[MATH: 8\times]
+0.194
+1.05
+[MATH: 16\times]
+0.342
+2.02
+Table
+4
+shows a trade-off between compactness and fidelity. The
+[MATH: 4\times]
+and
+[MATH: 8\times]
+models preserve both latent reconstruction and induced policy behavior, while
+[MATH: 16\times]
+compression substantially increases Action KL. We therefore use the compression factor that best balances compact behaviors
+[MATH: \pi_{z}]
+length and policy-level preservation.
+Flow Matching VS Diffusion.
+Table
+5
+provides comparison of the main generation backbone. Flow matching improves FID and MultiModal Distance and requires fewer sampling steps, while diffusion obtains slightly higher R-Precision.
+Table 5
+:
+Ablation of the choice of the underlying generator. Both variants operate in the learned behavioral bottleneck space.
+Generator
+FID
+[MATH: \downarrow]
+MM-Dist
+[MATH: \downarrow]
+R-Prec.
+[MATH: \uparrow]
+Sampling Steps
+[MATH: \downarrow]
+Diffusion in
+[MATH: \pi_{z}]
+-space
+[MATH: 1.672{\scriptscriptstyle\pm.011}]
+[MATH: 2.617{\scriptscriptstyle\pm.064}]
+[MATH: 0.885{\scriptscriptstyle\pm.003}]
+[MATH: 50]
+Flow matching in
+[MATH: \pi_{z}]
+-space
+[MATH: 1.172{\scriptscriptstyle\pm.013}]
+[MATH: 2.498{\scriptscriptstyle\pm.061}]
+[MATH: 0.8762{\scriptscriptstyle\pm.005}]
+16
+4.5
+Conclusion & Limitations
+In the current work we presented Text2BFM - a text to motion generation model that aligns pretrained BFM policy representation space together with textual descriptions. This enables motion generation for long, composite textual descriptions.
+However, Text2BFM inherits both the strengths and limitations of the pretrained BFM (morphology, simulator dynamics, action space, and training-data bias). If requested behavior is outside the BFM latent space, the text-conditioned generator cannot reliably produce it. Consequently, comparisons to methods trained only on HumanML3D/KIT-ML are not equal-data comparisons. Finally, rare motions, acrobatic actions, and object-dependent interactions remain challenging when they are underrepresented in the motion data or not well captured by the BFM policy. Future work will explore joint refinement of the BFM and text-conditioned generator, explicit object-interaction modeling, and extensions to multi-character motion generation.
+Code and reproducibility.
+We provide our code in the supplementary material. It contains the implementations used for the main experiments reported in the paper and is sufficient to reproduce the presented results.
+Existing assets.
+We use HumanML3D
+[
+12
+]
+, KIT-ML
+[
+28
+]
+,AMASS
+[
+21
+]
+,MotionHub
+[
+16
+]
+and the public Metamotivo
+[
+37
+]
+model according to their official terms of use and cite their original creators. We do not redistribute third-party datasets, baseline code, or checkpoints; baseline numbers are taken from the corresponding papers. Third-party software dependencies are listed in the supplementary code README. We refer to Appendix
+4
+on how exactly dataset used for training was processed.
+Broader impacts.
+Text2BFM may have positive societal impacts by making high-quality character animation more accessible for applications such as virtual avatars, games, education, assistive interfaces, and simulation-based robotics research. By generating motion through executable behavioral policies, it may also support safer prototyping of humanoid behaviors in simulation before physical deployment. Potential negative impacts include deceptive avatar animation and unsafe transfer of simulated behaviors to real robots without validation.
+References
+[1]
+S. Agarwal, H. Sikchi, P. Stone, and A. Zhang
+(2025)
+Proto successor measure: representing the behavior space of an RL agent
+.
+In
+Forty-second International Conference on Machine Learning
+,
+External Links:
+Link
+Cited by:
+§2
+.
+[2]
+C. Ahuja and L. Morency
+(2019)
+Language2pose: natural language grounded pose forecasting
+.
+In
+2019 International conference on 3D vision (3DV)
+,
+pp. 719–728
+.
+Cited by:
+§2
+.
+[3]
+M. S. Albergo, N. M. Boffi, and E. Vanden-Eijnden
+(2023)
+Building normalizing flows with stochastic interpolants
+.
+In
+International Conference on Learning Representations
+,
+Cited by:
+§1
+,
+§2
+.
+[4]
+A. Barreto, W. Dabney, R. Munos, J. J. Hunt, T. Schaul, H. van Hasselt, and D. Silver
+(2017)
+Successor features for transfer in reinforcement learning
+.
+In
+Advances in Neural Information Processing Systems
+,
+Vol.
+30
+.
+Cited by:
+§2
+.
+[5]
+L. Blier, C. Tallec, and Y. Ollivier
+(2021)
+Learning successor states and goal-dependent values: a mathematical viewpoint
+.
+arXiv preprint arXiv:2101.07123
+.
+Cited by:
+§1
+,
+§2
+.
+[6]
+M. Bobrin, I. Zisman, A. Nikulin, V. Kurenkov, and D. V. Dylov
+(2026)
+Zero-shot adaptation of behavioral foundation models to unseen dynamics
+.
+In
+The Fourteenth International Conference on Learning Representations
+,
+External Links:
+Link
+Cited by:
+§1
+.
+[7]
+X. Chen, B. Jiang, W. Liu, Z. Huang, B. Fu, T. Chen, and G. Yu
+(2023)
+Executing your commands via motion diffusion in latent space
+.
+In
+Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition
+,
+pp. 18000–18010
+.
+Cited by:
+§1
+,
+§2
+,
+§4.1
+,
+Table 1
+,
+Table 1
+.
+[8]
+P. Dayan
+(1993)
+Improving generalization for temporal difference learning: the successor representation
+.
+Neural Computation
+5
+(
+4
+),
+pp. 613–624
+.
+Cited by:
+§2
+.
+[9]
+K. Fan, S. Lu, M. Dai, R. Yu, L. Xiao, Z. Dou, J. Dong, L. Ma, and J. Wang
+(2025)
+Go to zero: towards zero-shot motion generation with million-scale data
+.
+In
+Proceedings of the IEEE/CVF International Conference on Computer Vision
+,
+pp. 13336–13348
+.
+Cited by:
+§1
+.
+[10]
+A. Ghosh, N. Cheema, C. Oguz, C. Theobalt, and P. Slusallek
+(2021)
+Synthesis of compositional animations from textual descriptions
+.
+In
+Proceedings of the IEEE/CVF international conference on computer vision
+,
+pp. 1396–1406
+.
+Cited by:
+§2
+.
+[11]
+C. Guo, Y. Mu, M. G. Javed, S. Wang, and L. Cheng
+(2024)
+Momask: generative masked modeling of 3d human motions
+.
+In
+Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition
+,
+pp. 1900–1910
+.
+Cited by:
+Table 1
+,
+Table 1
+.
+[12]
+C. Guo, S. Zou, X. Zuo, S. Wang, W. Ji, X. Li, and L. Cheng
+(2022)
+HumanML3D: a large and diverse 3d human motion-language dataset
+.
+In
+Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition
+,
+pp. 5151–5160
+.
+Cited by:
+§1
+,
+§2
+,
+§4.1
+,
+§4.5
+,
+Table 1
+,
+Table 1
+.
+[13]
+C. Guo, X. Zuo, S. Wang, and L. Cheng
+(2022)
+Tm2t: stochastic and tokenized modeling for the reciprocal generation of 3d human motions and texts
+.
+In
+European Conference on Computer Vision
+,
+pp. 580–597
+.
+Cited by:
+Table 1
+,
+Table 1
+.
+[14]
+D. P. Kingma and M. Welling
+(2014)
+Auto-encoding variational bayes
+.
+In
+International Conference on Learning Representations
+,
+Cited by:
+§1
+,
+§2
+.
+[15]
+Y. Li, Z. Luo, T. Zhang, C. Dai, A. Kanervisto, A. Tirinzoni, H. Weng, K. Kitani, M. Guzek, A. Touati, A. Lazaric, M. Pirotta, and G. Shi
+(2026)
+BFM-zero: a promptable behavioral foundation model for humanoid control using unsupervised reinforcement learning
+.
+In
+The Fourteenth International Conference on Learning Representations
+,
+External Links:
+Link
+Cited by:
+§1
+.
+[16]
+Z. Ling, S. Lu, Y. Zhang,
+et al.
+(2024)
+MotionLLaMA: a unified framework for motion synthesis and comprehension
+.
+arXiv preprint arXiv:2411.17335
+.
+Cited by:
+Figure 4
+,
+Figure 4
+,
+§4.5
+.
+[17]
+Y. Lipman, R. T. Q. Chen, H. Ben-Hamu, M. Nickel, and M. Le
+(2023)
+Flow matching for generative modeling
+.
+arXiv preprint arXiv:2210.02747
+.
+Cited by:
+§1
+,
+§2
+.
+[18]
+X. Liu, C. Gong, and Q. Liu
+(2023)
+Flow straight and fast: learning to generate and transfer data with rectified flow
+.
+In
+International Conference on Learning Representations
+,
+Cited by:
+§1
+,
+§2
+.
+[19]
+Z. Luo, J. Cao, K. Kitani, W. Xu,
+et al.
+(2023)
+Perpetual humanoid control for real-time simulated avatars
+.
+In
+Proceedings of the IEEE/CVF International Conference on Computer Vision
+,
+pp. 10895–10904
+.
+Cited by:
+§2
+.
+[20]
+Z. Luo, H. Yang, X. Wang, and Z. Liu
+(2024)
+Hierarchical motion generation with diffusion transformers
+.
+In
+Advances in Neural Information Processing Systems
+,
+Cited by:
+§1
+.
+[21]
+N. Mahmood, N. Ghorbani, N. F. Troje, G. Pons-Moll, and M. J. Black
+(2019)
+AMASS: archive of motion capture as surface shapes
+.
+In
+International Conference on Computer Vision
+,
+pp. 5442–5451
+.
+Cited by:
+Figure 4
+,
+Figure 4
+,
+§4.5
+.
+[22]
+S. Mo, J. Zhang, Y. Guo, J. Wang, and Q. Liu
+(2023)
+MoMask: hierarchical masked 3d human motion generation
+.
+arXiv preprint arXiv:2312.04561
+.
+Cited by:
+§1
+,
+§2
+,
+§4.1
+.
+[23]
+W. Peebles and S. Xie
+(2023)
+Scalable diffusion models with transformers
+.
+In
+Proceedings of the IEEE/CVF International Conference on Computer Vision
+,
+pp. 4195–4205
+.
+Cited by:
+§1
+.
+[24]
+X. B. Peng, Y. Guo, L. Halper, S. Levine, and S. Fidler
+(2022)
+ASE: large-scale reusable adversarial skill embeddings for physically simulated characters
+.
+ACM Transactions on Graphics
+41
+(
+4
+),
+pp. 94:1–94:17
+.
+Cited by:
+§2
+.
+[25]
+X. B. Peng, Z. Ma, P. Abbeel, S. Levine, and A. Kanazawa
+(2021)
+AMP: adversarial motion priors for stylized physics-based character control
+.
+ACM Transactions on Graphics
+40
+(
+4
+),
+pp. 144:1–144:20
+.
+Cited by:
+§2
+.
+[26]
+M. Petrovich, M. J. Black, and G. Varol
+(2022)
+TEMOS: generating diverse human motions from textual descriptions
+.
+In
+European Conference on Computer Vision
+,
+pp. 480–497
+.
+Cited by:
+§1
+,
+§1
+,
+§2
+.
+[27]
+M. Petrovich, M. J. Black, and G. Varol
+(2023)
+TMR: text-to-motion retrieval using contrastive 3d human motion synthesis
+.
+In
+Proceedings of the IEEE/CVF International Conference on Computer Vision
+,
+pp. 9488–9497
+.
+Cited by:
+§1
+,
+§2
+.
+[28]
+M. Plappert, C. Mandery, and T. Asfour
+(2016)
+The KIT motion-language dataset
+.
+Big Data
+4
+(
+4
+),
+pp. 236–252
+.
+External Links:
+Document
+Cited by:
+§4.1
+,
+§4.5
+.
+[29]
+A. Radford, J. W. Kim, C. Hallacy, A. Ramesh, G. Goh, S. Agarwal, G. Sastry, A. Askell, P. Mishkin, J. Clark, G. Krueger, and I. Sutskever
+(2021)
+Learning transferable visual models from natural language supervision
+.
+In
+International Conference on Machine Learning
+,
+pp. 8748–8763
+.
+Cited by:
+§1
+,
+§2
+.
+[30]
+D. Rempe, T. Birdal, A. Hertzmann, J. Yang, S. Sridhar, and L. J. Guibas
+(2021)
+HuMoR: 3d human motion model for robust pose estimation
+.
+In
+Proceedings of the IEEE/CVF International Conference on Computer Vision
+,
+pp. 11488–11499
+.
+Cited by:
+§1
+.
+[31]
+D. Rempe, M. Petrovich, Y. Yuan, H. Zhang, X. B. Peng, Y. Jiang, T. Wang, U. Iqbal, D. Minor, M. de Ruyter, J. Li, C. Tessler, E. Lim, E. Jeong, S. Wu, E. Hassani, M. Huang, J. Yu, C. Chung, L. Song, O. Dionne, J. Kautz, S. Yuen, and S. Fidler
+(2026)
+Kimodo: scaling controllable human motion generation
+.
+arXiv:2603.15546
+.
+Cited by:
+§4.3
+.
+[32]
+D. J. Rezende, S. Mohamed, and D. Wierstra
+(2014)
+Stochastic backpropagation and approximate inference in deep generative models
+.
+In
+International Conference on Machine Learning
+,
+pp. 1278–1286
+.
+Cited by:
+§1
+,
+§2
+.
+[33]
+H. Sikchi, S. Agarwal, P. Jajoo, S. Parajuli, C. Chuck, M. Rudolph, P. Stone, A. Zhang, and S. Niekum
+(2025)
+RL zero: zero-shot language to behaviors without any supervision
+.
+In
+7th Robot Learning Workshop: Towards Robots with Human-Level Abilities
+,
+External Links:
+Link
+Cited by:
+§1
+,
+§2
+.
+[34]
+C. Tessler, Y. Kasten, Y. Guo, S. Mannor, G. Chechik, and X. B. Peng
+(2023)
+CALM: conditional adversarial latent models for directable virtual characters
+.
+In
+ACM SIGGRAPH Conference Proceedings
+,
+Cited by:
+§1
+,
+§2
+.
+[35]
+G. Tevet, B. Gordon, A. Hertz, A. H. Bermano, and D. Cohen-Or
+(2022)
+MotionCLIP: exposing human motion generation to CLIP space
+.
+In
+European Conference on Computer Vision
+,
+pp. 358–374
+.
+Cited by:
+§1
+,
+§2
+.
+[36]
+G. Tevet, S. Raab, B. Gordon, Y. Shafir, D. Cohen-Or, and A. H. Bermano
+(2023)
+Human motion diffusion model
+.
+In
+International Conference on Learning Representations
+,
+Cited by:
+§1
+,
+§2
+,
+§4.1
+,
+Table 1
+,
+Table 1
+.
+[37]
+A. Tirinzoni, A. Touati, J. Farebrother, M. Guzek, A. Kanervisto, Y. Xu, A. Lazaric, and M. Pirotta
+(2025)
+Zero-shot whole-body humanoid control via behavioral foundation models
+.
+In
+The Thirteenth International Conference on Learning Representations
+,
+External Links:
+Link
+Cited by:
+§1
+,
+§4.1
+,
+§4.5
+.
+[38]
+A. Touati and Y. Ollivier
+(2021)
+Learning one representation to optimize all rewards
+.
+In
+Advances in Neural Information Processing Systems
+,
+Vol.
+34
+,
+pp. 13–24
+.
+Cited by:
+§1
+,
+§2
+.
+[39]
+A. Touati, J. Rapin, and Y. Ollivier
+(2023)
+Does zero-shot reinforcement learning exist?
+.
+In
+The Eleventh International Conference on Learning Representations
+,
+External Links:
+Link
+Cited by:
+§2
+.
+[40]
+Y. Wen, Q. Shuai, D. Kang, J. Li, C. Wen, Y. Qian, N. Jiao, C. Chen, W. Chen, Y. Wang,
+et al.
+(2025)
+HY-motion 1.0: scaling flow matching models for text-to-motion generation
+.
+arXiv preprint arXiv:2512.23464
+.
+Cited by:
+§1
+,
+§4.1
+.
+[41]
+Y. Yuan, J. Song, U. Iqbal, A. Vahdat, and J. Kautz
+(2023)
+PhysDiff: physics-guided human motion diffusion model
+.
+In
+Proceedings of the IEEE/CVF International Conference on Computer Vision
+,
+pp. 16010–16021
+.
+Cited by:
+§1
+.
+[42]
+J. Zhang, Y. Zhang, X. Cun, Y. Zhang, H. Zhao, H. Lu, X. Shen, and Y. Shan
+(2023)
+Generating human motion from textual descriptions with discrete representations
+.
+In
+Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition
+,
+pp. 14730–14740
+.
+Cited by:
+§1
+,
+§1
+,
+§2
+,
+§4.1
+,
+Table 1
+,
+Table 1
+.
+[43]
+M. Zhang, Z. Cai, L. Pan, F. Hong, X. Guo, L. Yang, and Z. Liu
+(2022)
+MotionDiffuse: text-driven human motion generation with diffusion model
+.
+In
+Advances in Neural Information Processing Systems
+,
+Vol.
+35
+,
+pp. 12987–12999
+.
+Cited by:
+§1
+,
+§2
+,
+§4.1
+,
+Table 1
+,
+Table 1
+.
+[44]
+M. Zhang, X. Guo, L. Pan, Z. Cai, F. Hong, H. Li, L. Yang, and Z. Liu
+(2023)
+Remodiffuse: retrieval-augmented motion diffusion model
+.
+In
+Proceedings of the IEEE/CVF International Conference on Computer Vision
+,
+pp. 364–373
+.
+Cited by:
+Table 1
+,
+Table 1
+.
+Appendix A
+Technical Details and Hyperparameters
+Our method is trained in two stages: 1) semantic latent motion VAE pretraining, and 2) text-to-latent generation (
+[MATH: text\rightarrow m\rightarrow z]
+).
+Stage 1: Semantic VAE.
+The backbone is a causal 1D convolutional encoder-decoder with residual temporal blocks and hierarchical downsampling. The temporal axis is compressed by a factor of
+[MATH: 8]
+. The latent sequence
+[MATH: m]
+has stochastic posterior parameterization (
+[MATH: \mu,\log\sigma^{2}]
+) and reparameterized sampling.
+Stage 2: Text-to-latent generator.
+A pretrained FB backbone is adapted to predict latent motion sequences conditioned on text. Optimization uses composite generation/reconstruction losses (including consistency in both
+[MATH: m]
+and
+[MATH: z]
+spaces).
+Compute resources.
+All experiments were run on a single NVIDIA A100 80GB GPU with 32 CPU cores and 256GB system RAM. Offline BFM policy-latent extraction took approximately 3 hours for HumanML3D and 1 hour for KIT-ML. Training the behavioral bottleneck and text-to-plan flow generator took 17 and 28 hours, respectively, and evaluation took approximately 2–3 hours across HumanML3D and KIT-ML, including repeated sampling for confidence intervals. A full reproduction of the main Text2BFM results requires approximately 50 A100 GPU-hours, excluding dataset download and environment setup.
+Table 6
+:
+Core architecture and hyperparameters.
+Category
+Hyperparameter
+Value
+VAE
+Batch size
+256
+VAE
+Input width
+256
+VAE
+Latent dim
+[MATH: d_{m}]
+48
+VAE
+Latent ratio / min / max
+0.25 / 32 / 48
+VAE
+Stride per level
+2
+VAE
+Channel width / residual depth
+256 / 3
+VAE
+Dilation growth rate
+3
+VAE
+Activation / norm
+ReLU / GroupNorm
+VAE
+Residual dropout
+0.1
+VAE
+Padding mode
+replicate
+VAE
+Learning rate / weight decay
+[MATH: 5\times 10^{-5}]
+/
+[MATH: 5\times 10^{-4}]
+VAE
+Loss coef.
+[MATH: \lambda_{\pi}]
+0.1
+VAE
+Loss coef.
+[MATH: \lambda_{\text{sem}}]
+0.35
+VAE
+KL regularization
+[MATH: \beta]
+[MATH: 10^{-4}]
+Generator
+Batch size
+256
+Generator
+Learning rate / weight decay
+[MATH: 3\times 10^{-5}]
+/
+[MATH: 5\times 10^{-4}]
+Generator
+LR warmup / start factor
+2000 / 0.1
+Generator
+Min LR ratio / LR decay steps
+0.1 / 15000
+Generator
+Early stopping patience / min delta
+12 /
+[MATH: 10^{-4}]
+Generator
+Feature width / depth / heads
+512 / 8 / 8
+Generator
+Dropout / MLP ratio
+0.1 / 4.0
+Generator
+MLP activation
+gelu_tanh
+Generator
+QK normalization / QKV bias
+rms
+/ True
+Generator
+Start token / long skip connection
+False / False
+Conditioning
+Text token dim / context dim
+768 / 1024
+Conditioning
+Text adapter (width / depth / heads)
+768 / 2 / 8
+Conditioning
+Text adapter dropout
+0.1
+Conditioning
+Temporal mask type / span
+narrowband
+/ 2.0
+Conditioning
+Condition dropout probability
+0.2
+Conditioning
+RoPE on single branch / time factor
+True / 1.0
+Conditioning
+Null context length
+1
+Sampling
+Guidance scale
+1.5
+Sampling
+Sampling steps / solver
+16 /
+euler
+Appendix B
+Theoretical Motivation for Text-Aligned Behavioral Compression
+This section motivates the compression of BFM policy-latent trajectories into compact text-aligned behavioral programs. The key point is that MetaMotivo-style latents are not arbitrary framewise codes. They are future-conditioned behavioral contexts obtained from a frozen backward representation and then projected to a normalized policy-latent space. Thus, a latent
+[MATH: z_{t}]
+should be interpreted as a local command describing what behavior should unfold from state
+[MATH: s_{t}]
+, rather than as a direct encoding of the current pose.
+For notational simplicity, we denote the policy-latent sequence length by
+[MATH: T]
+. In the main text, this corresponds to
+[MATH: T_{z}=T_{\mathrm{motion}}-1]
+. Given a motion trajectory
+[MATH: s_{0:T}]
+, the tracked BFM pseudo-labels are constructed as
+[MATH: \bar{z}_{t}=\frac{1}{H_{t}}\sum_{k=0}^{H_{t}-1}B_{\psi}(s_{t+1+k}),\qquad H_{t}=\min(L,T-t),]
+followed by projection to the normalized latent sphere:
+[MATH: z_{t}=\operatorname{Proj}_{z}(\bar{z}_{t}),\qquad\operatorname{Proj}_{z}(u)=\sqrt{d_{z}}\frac{u}{\|u\|_{2}}.]
+Hence,
+[MATH: z_{1:T}]
+is a temporally ordered curve on the sphere of radius
+[MATH: \sqrt{d_{z}}]
+. Its complexity is better described by its path length than by the ambient latent dimension. We measure this path length using total variation:
+[MATH: \operatorname{TV}(z_{1:T})=\sum_{t=1}^{T-1}\|z_{t+1}-z_{t}\|_{2}.]
+Low total variation means that behavioral intent changes gradually. Such trajectories are naturally compressible: neighboring latents often communicate nearly identical control information to the frozen BFM policy.
+The future-conditioned construction provides an explicit smoothing mechanism. When
+[MATH: H_{t}=L]
+, adjacent averages satisfy a telescoping identity:
+[MATH: \bar{z}_{t+1}-\bar{z}_{t}=\frac{1}{L}\left(B_{\psi}(s_{t+L+1})-B_{\psi}(s_{t+1})\right).]
+Thus, most intermediate future terms cancel. If
+[MATH: B_{\psi}]
+is
+[MATH: L_{B}]
+-Lipschitz and
+[MATH: \|\bar{z}_{t}\|_{2}\geq\rho>0]
+, then the projection map is
+[MATH: \frac{2\sqrt{d_{z}}}{\rho}]
+-Lipschitz on this region, yielding
+[MATH: \|z_{t+1}-z_{t}\|_{2}\leq\frac{2\sqrt{d_{z}}L_{B}}{\rho L}\|s_{t+L+1}-s_{t+1}\|_{2}.]
+Consequently, if the motion has bounded future-window displacement,
+[MATH: \sum_{t=1}^{T-1}\|s_{t+L+1}-s_{t+1}\|_{2}\leq C_{\mathrm{motion}},]
+then
+[MATH: \operatorname{TV}(z_{1:T})\leq\frac{2\sqrt{d_{z}}L_{B}}{\rho L}C_{\mathrm{motion}}.]
+This shows that BFM latents inherit a smoothing bias from future averaging: rapid pose-level fluctuations are partially averaged out, while persistent changes in behavioral intent remain.
+We now connect latent compression to rollout quality. Let the closed-loop BFM dynamics be
+[MATH: s_{t+1}=F(s_{t},z_{t}),\qquad F(s,z)=f(s,\pi_{\mathrm{BFM}}(s,z)),]
+where
+[MATH: f]
+is the environment dynamics and
+[MATH: \pi_{\mathrm{BFM}}]
+is the frozen BFM policy. Assume
+[MATH: F]
+is Lipschitz:
+[MATH: \|F(s,z)-F(s^{\prime},z^{\prime})\|_{2}\leq L_{s}\|s-s^{\prime}\|_{2}+L_{z}\|z-z^{\prime}\|_{2}.]
+Here,
+[MATH: L_{s}]
+measures closed-loop sensitivity to state perturbations, while
+[MATH: L_{z}]
+measures sensitivity to latent reconstruction error.
+Proposition B.1
+(Compact latent plans yield bounded rollout error)
+.
+Let
+[MATH: z_{1:T}]
+be a BFM policy-latent trajectory with total variation
+[MATH: V=\operatorname{TV}(z_{1:T}).]
+For any
+[MATH: m\geq 2]
+, there exists a piecewise-constant approximation
+[MATH: \tilde{z}_{1:T}]
+with at most
+[MATH: m]
+contiguous segments such that
+[MATH: \max_{t}\|z_{t}-\tilde{z}_{t}\|_{2}\leq\frac{V}{m-1}.]
+Let
+[MATH: s_{1:T}]
+and
+[MATH: \tilde{s}_{1:T}]
+be rollouts from the same initial state using
+[MATH: z_{1:T}]
+and
+[MATH: \tilde{z}_{1:T}]
+, respectively. Then
+[MATH: \|\tilde{s}_{t}-s_{t}\|_{2}\leq L_{z}\frac{V}{m-1}\sum_{j=1}^{t-1}L_{s}^{t-1-j}.]
+In particular, if
+[MATH: L_{s}<1]
+, then
+[MATH: \|\tilde{s}_{t}-s_{t}\|_{2}\leq\frac{L_{z}V}{(m-1)(1-L_{s})}.]
+Proof.
+Let
+[MATH: \delta=\frac{V}{m-1}.]
+Partition the latent sequence into contiguous segments such that the total variation inside each segment is at most
+[MATH: \delta]
+. Define
+[MATH: \tilde{z}_{t}]
+as the first latent vector in the segment containing
+[MATH: t]
+. If the segment begins at index
+[MATH: a]
+, then
+[MATH: \|z_{t}-\tilde{z}_{t}\|_{2}=\|z_{t}-z_{a}\|_{2}\leq\sum_{j=a}^{t-1}\|z_{j+1}-z_{j}\|_{2}\leq\delta.]
+Thus,
+[MATH: \max_{t}\|z_{t}-\tilde{z}_{t}\|_{2}\leq\frac{V}{m-1}.]
+Let
+[MATH: e_{t}=\|\tilde{s}_{t}-s_{t}\|_{2}.]
+Since both rollouts begin from the same initial state,
+[MATH: e_{1}=0]
+. By Lipschitz continuity,
+[MATH: e_{t+1}=\|F(\tilde{s}_{t},\tilde{z}_{t})-F(s_{t},z_{t})\|_{2}\leq L_{s}e_{t}+L_{z}\|\tilde{z}_{t}-z_{t}\|_{2}.]
+Unrolling the recursion gives
+[MATH: e_{t}\leq L_{z}\sum_{j=1}^{t-1}L_{s}^{t-1-j}\|\tilde{z}_{j}-z_{j}\|_{2}.]
+Using the uniform approximation bound yields
+[MATH: e_{t}\leq L_{z}\frac{V}{m-1}\sum_{j=1}^{t-1}L_{s}^{t-1-j}.]
+If
+[MATH: L_{s}<1]
+, the geometric sum is bounded by
+[MATH: \frac{1}{1-L_{s}}]
+, giving
+[MATH: e_{t}\leq\frac{L_{z}V}{(m-1)(1-L_{s})}.]
+∎
+The proposition gives a conservative explanation for why short latent programs can remain executable. The relevant quantity is not the dimensionality of the latent vector, but the temporal variation of the latent curve. If behavioral intent changes slowly and the closed-loop system is stable, then a compressed latent program induces only controlled rollout error. A learned decoder is more expressive than the piecewise-constant construction in the proof: it can generate smooth curves, reuse motifs, model phase structure, and allocate capacity to transitions such as contacts or direction changes.
+The variational behavioral bottleneck can be interpreted as a rate–distortion relaxation. Let
+[MATH: Z=z_{1:T}]
+be the tracked latent trajectory and let
+[MATH: M]
+be the compact behavioral program. An encoder
+[MATH: q_{\phi}(M|Z)]
+and decoder
+[MATH: p_{\theta}(Z|M)]
+optimize a tradeoff of the form
+[MATH: \mathcal{L}_{\mathrm{VBB}}=\mathbb{E}_{q_{\phi}(M|Z)}\left[D(Z,\hat{Z})\right]+\beta D_{\mathrm{KL}}\left(q_{\phi}(M|Z)\|p(M)\right).]
+The reconstruction term preserves the information needed to recover executable BFM latents, while the KL term prevents
+[MATH: M]
+from becoming a framewise copy of
+[MATH: Z]
+. The bottleneck therefore encourages the model to store reusable behavioral factors such as speed, direction, gait, contact structure, and style.
+However, reconstruction alone does not guarantee that the compressed program preserves the aspects of motion that matter for language. A purely reconstructive code may spend capacity on details that improve latent reconstruction but are weakly discriminative under text. Semantic alignment biases the bottleneck toward language-relevant behavioral factors.
+Proposition B.2
+(Semantic alignment preserves text discrimination under a margin)
+.
+Let
+[MATH: e_{Y}]
+be a unit-normalized embedding of the correct text prompt and let
+[MATH: e_{M}]
+be a unit-normalized embedding of the corresponding compact behavioral program. Suppose
+[MATH: 1-e_{Y}^{\top}e_{M}\leq\eta.]
+Let
+[MATH: e_{Y}^{-}]
+be the unit-normalized embedding of an incorrect prompt. If
+[MATH: e_{Y}^{\top}e_{Y}^{-}\leq 1-\Delta]
+and
+[MATH: \Delta>\eta+\sqrt{2\eta},]
+then
+[MATH: e_{M}^{\top}e_{Y}>e_{M}^{\top}e_{Y}^{-}.]
+Proof.
+Since
+[MATH: e_{Y}]
+and
+[MATH: e_{M}]
+are unit-normalized,
+[MATH: \|e_{M}-e_{Y}\|_{2}^{2}=2-2e_{M}^{\top}e_{Y}.]
+The alignment assumption gives
+[MATH: \|e_{M}-e_{Y}\|_{2}\leq\sqrt{2\eta}.]
+For the negative prompt,
+[MATH: e_{M}^{\top}e_{Y}^{-}=e_{Y}^{\top}e_{Y}^{-}+(e_{M}-e_{Y})^{\top}e_{Y}^{-}.]
+By Cauchy–Schwarz,
+[MATH: (e_{M}-e_{Y})^{\top}e_{Y}^{-}\leq\sqrt{2\eta}.]
+Therefore,
+[MATH: e_{M}^{\top}e_{Y}^{-}\leq 1-\Delta+\sqrt{2\eta}.]
+Meanwhile,
+[MATH: e_{M}^{\top}e_{Y}\geq 1-\eta.]
+Hence,
+[MATH: e_{M}^{\top}e_{Y}-e_{M}^{\top}e_{Y}^{-}\geq\Delta-\eta-\sqrt{2\eta}.]
+If
+[MATH: \Delta>\eta+\sqrt{2\eta}]
+, the right-hand side is positive, proving the claim.
+∎
+For multiple negatives
+[MATH: \{e_{Y_{i}^{-}}\}_{i=1}^{N}]
+satisfying
+[MATH: e_{Y}^{\top}e_{Y_{i}^{-}}\leq 1-\Delta,]
+the same argument gives
+[MATH: e_{M}^{\top}e_{Y}-e_{M}^{\top}e_{Y_{i}^{-}}\geq\Delta-\eta-\sqrt{2\eta}.]
+With contrastive logits scaled by temperature
+[MATH: \tau]
+, this implies the lower bound
+[MATH: p(Y|M)\geq\frac{1}{1+N\exp\left(-\frac{\Delta-\eta-\sqrt{2\eta}}{\tau}\right)}.]
+Thus, reducing alignment error increases the contrastive separability of the compact behavioral program.
+Together, these arguments justify text-aligned behavioral compression. Future-conditioned BFM latents form smooth behavioral curves; bounded-variation curves admit compact approximations; stable closed-loop execution converts small latent error into controlled rollout error; and semantic alignment ensures that the compressed program preserves the factors of motion that are discriminative under language. The resulting representation is therefore a compact semantic control program: low-rate enough to compress motion, executable enough to drive the frozen BFM policy, and aligned enough to support text-conditioned generation.
+Appendix C
+Dataset Structure
+Figure 4
+:
+Hierarchical visualization of motion categories in the dataset. The dataset was constructed from the AMASS
+[
+21
+]
+and MotionHub
+[
+16
+]
+datasets. The inner ring represents high-level motion domains, while the outer ring shows their corresponding subcategories. Segment sizes reflect the relative number of motion classes within each subgroup
+Appendix D
+Additional examples of motion generation using our method
+A person gets into a stance and kicks with his right leg. Then the person does a kick spin to the left, then kicks slowly with their left leg.
+A person performing a clean cartwheel. Then a man bends his right leg then kicks it out in the air. Then the person kicking/swinging legs from side to side.
+A standing person performs a cartwheel starting with their right hand, then a person is performing a cartwheels. Then the figure tilts and then kicks the air above knee level with its left leg, it then does a lower kick with its right leg.
+A person throws something with their left hand then kicks with their left foot before catching the object with both hands then a man jumps then kicks the air whilst moving to the opposite end of the room. Then the person takes a few steps forward kicks something with their left foot.

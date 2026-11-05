@@ -1,0 +1,69 @@
+{
+  "key": "emage",
+  "requested_id": "2401.00374",
+  "retrieved_at": "2026-11-04T17:02:06.400813+00:00",
+  "reading_level": "unread",
+  "artifacts": [
+    {
+      "kind": "metadata",
+      "url": "https://arxiv.org/abs/2401.00374",
+      "path": "sources/emage/metadata.html",
+      "sha256": "7205769b88c2a2e5b6067fcb5b8e83443354f2173384ca74d6408aed5eee339a",
+      "bytes": 44061
+    },
+    {
+      "kind": "html",
+      "url": "https://arxiv.org/html/2401.00374",
+      "path": "sources/emage/html.html",
+      "sha256": "7ad718d46c97a54a1342d6ece0513a8447a92a2d3a62eb36a73f5d5cfd042ab6",
+      "bytes": 327408
+    }
+  ],
+  "title": "EMAGE: Towards Unified Holistic Co-Speech Gesture Generation via Expressive Masked Audio Gesture Modeling",
+  "history": "Submission history From: Haiyang Liu [ view email ] [v1] Sun, 31 Dec 2023 02:25:41 UTC (4,339 KB) [v2] Tue, 2 Jan 2024 08:05:02 UTC (4,339 KB) [v3] Mon, 25 Mar 2024 13:01:27 UTC (15,189 KB) [v4] Wed, 27 Mar 2024 04:06:36 UTC (15,189 KB) [v5] Sat, 30 Mar 2024 04:15:34 UTC (15,451 KB)",
+  "canonical_ids": [
+    "2401.00374v5"
+  ],
+  "headings": [
+    "EMAGE: Towards Unified Holistic Co-Speech Gesture Generation via Expressive Masked Audio Gesture Modeling",
+    "1 Introduction",
+    "2 Related Work",
+    "3 BEAT2",
+    "3.1 Body Parameters Initialization via MoSh++",
+    "3.2 Body Parameters Refinement",
+    "3.3 Blendshape Weights to FLAME Parameters",
+    "4 EMAGE",
+    "4.1 Compositional Discrete Face and Body Prior",
+    "4.2 Content and Rhythm Self-Attention",
+    "4.3 Masked Audio-Conditioned Gesture Modeling",
+    "4.4 Face and Translation Decoding",
+    "5 Experiments",
+    "5.1 Dataset Quality Evaluation",
+    "5.2 Model Ability Evaluation",
+    "5.2.1 Quantitative and Qualitative Analysis",
+    "5.2.2 Ablation Analysis",
+    "5.2.3 Ability of Multi-Dataset Training.",
+    "6 Conclusion",
+    "References",
+    "Appendix A Evaluation Metrics",
+    "Fréchet Gesture Distance",
+    "L1 Diversity",
+    "Beat Constancy (BC)",
+    "Appendix B BEAT2 Dataset Details",
+    "Statistics",
+    "Loss Terms of MoSh++",
+    "Details of FLAME Parameter Optimization",
+    "Appendix C Baselines Reproduction Details",
+    "Number of Joints",
+    "Autoregressive Training",
+    "Adversarial Training",
+    "Lower Body VQ-VAE for TalkShow",
+    "Appendix D Settings of EMAGE",
+    "Training",
+    "Structure of VQ-VAE",
+    "Global Motion Predictor",
+    "Appendix E Visualization Blender Add-on",
+    "Appendix F Training time",
+    "Appendix G Importance of lower body motion"
+  ]
+}

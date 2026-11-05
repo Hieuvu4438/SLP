@@ -1,0 +1,230 @@
+[
+  {
+    "venue": "CVPR2026",
+    "title": "Unified Number-Free Text-to-Motion Generation Via Flow Matching",
+    "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Huang_Unified_Number-Free_Text-to-Motion_Generation_Via_Flow_Matching_CVPR_2026_paper.html",
+    "sha256": "759f48ee79b401afc5daf275bf83c9ad1433baafcf020fe5d59473b6d683e1a5",
+    "links": [
+      {
+        "label": "pdf",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/papers/Huang_Unified_Number-Free_Text-to-Motion_Generation_Via_Flow_Matching_CVPR_2026_paper.pdf"
+      },
+      {
+        "label": "arXiv",
+        "url": "https://arxiv.org/abs/2603.27040"
+      }
+    ],
+    "abstract": "Generative models excel at motion synthesis for a fixed number of agents but struggle to generalize with variable agents. Based on limited, domain-specific data, existing methods employ autoregressive models to generate motion recursively, which suffer from inefficiency and error accumulation. We propose Unified Motion Flow (UMF), which consists of Pyramid Motion Flow (P-Flow) and Semi-Noise Motion Flow (S-Flow). UMF decomposes the number-free motion generation into a single-pass motion prior generation stage and multi-pass reaction generation stages. Specifically, UMF utilizes a unified latent space to bridge the distribution gap between heterogeneous motion datasets, enabling effective unified training. For motion prior generation, P-Flow operates on hierarchical resolutions conditioned on different noise levels, thereby mitigating computational overheads. For reaction generation, S-Flow learns a joint probabilistic path that adaptively performs reaction transformation and context reconstruction, alleviating error accumulation. Extensive results and user studies demonstrate UMF's effectiveness as a generalist model for multi-person motion generation from text. Project page: https://githubhgh.github.io/umf/."
+  },
+  {
+    "venue": "CVPR2026",
+    "title": "ParTY: Part-Guidance for Expressive Text-to-Motion Synthesis",
+    "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Heo_ParTY_Part-Guidance_for_Expressive_Text-to-Motion_Synthesis_CVPR_2026_paper.html",
+    "sha256": "38e888972ab26c2ffc070d60860cc131037c07dd01968d784bf3afdd2e137bf1",
+    "links": [
+      {
+        "label": "pdf",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/papers/Heo_ParTY_Part-Guidance_for_Expressive_Text-to-Motion_Synthesis_CVPR_2026_paper.pdf"
+      },
+      {
+        "label": "supp",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/supplemental/Heo_ParTY_Part-Guidance_for_CVPR_2026_supplemental.pdf"
+      },
+      {
+        "label": "arXiv",
+        "url": "https://arxiv.org/abs/2603.09611"
+      }
+    ],
+    "abstract": "Text-to-motion synthesis aims to generate natural and expressive human motions from textual descriptions. While existing approaches primarily focus on generating holistic motions from text descriptions, they struggle to accurately reflect actions involving specific body parts. Recent part-wise motion generation methods attempt to resolve this but face two critical limitations: (i) they lack explicit mechanisms for aligning textual semantics with individual body parts, and (ii) they often generate incoherent full-body motions due to integrating independently generated part motions. To overcome these issues and resolve the fundamental trade-off in existing methods, we propose ParTY, a novel framework that enhances part expressiveness while generating coherent full-body motions. ParTY comprises: (1) Part-Guided Network, which first generates part motions to obtain part guidance, then uses it to generate holistic motions; (2) Part-aware Text Grounding, which diversely transforms text embeddings and appropriately aligns them with each body part; and (3) Holistic-Part Fusion, which adaptively fuses holistic motions and part motions. Extensive experiments, including part-level and coherence-level evaluations, demonstrate that ParTY achieves substantial improvements over previous methods."
+  },
+  {
+    "venue": "CVPR2026",
+    "title": "Next-Scale Autoregressive Models for Text-to-Motion Generation",
+    "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Zheng_Next-Scale_Autoregressive_Models_for_Text-to-Motion_Generation_CVPR_2026_paper.html",
+    "sha256": "8b954aff0e536522f80335028907bb439cb87a89d164f4279c5adb6405431b42",
+    "links": [
+      {
+        "label": "pdf",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/papers/Zheng_Next-Scale_Autoregressive_Models_for_Text-to-Motion_Generation_CVPR_2026_paper.pdf"
+      },
+      {
+        "label": "arXiv",
+        "url": "https://arxiv.org/abs/2604.03799"
+      }
+    ],
+    "abstract": "Autoregressive (AR) models offer stable and efficient training, but standard next-token prediction is not well aligned with the temporal structure required for text-conditioned motion generation. We introduce MoScale, a next-scale AR framework that generates motion hierarchically from coarse to fine temporal resolutions. By providing global semantics at the coarsest scale and refining them progressively, MoScale establishes a causal hierarchy better suited for long-range motion structure. To improve robustness under limited text-motion data, we further incorporate cross-scale hierarchical refinement for improving per-scale initial predictions and in-scale temporal refinement for selective bidirectional re-prediction. MoScale achieves SOTA text-to-motion performance with high training efficiency, scales effectively with model size, and generalizes zero-shot to diverse motion generation and editing tasks. Code and additional materials are available on the webpage."
+  },
+  {
+    "venue": "CVPR2026",
+    "title": "MotionHiFlow: Text-to-Motion via Hierarchical Flow Matching",
+    "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Li_MotionHiFlow_Text-to-Motion_via_Hierarchical_Flow_Matching_CVPR_2026_paper.html",
+    "sha256": "8e9a60497da860114bcf29fa7dec8b739d89a2ed55ed7204fa5c80eb1ec7176c",
+    "links": [
+      {
+        "label": "pdf",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/papers/Li_MotionHiFlow_Text-to-Motion_via_Hierarchical_Flow_Matching_CVPR_2026_paper.pdf"
+      },
+      {
+        "label": "arXiv",
+        "url": "https://arxiv.org/abs/2604.23264"
+      }
+    ],
+    "abstract": "Text-to-motion generation aims to generate 3D human motions that are tightly aligned with the input text while remaining physically plausible and rich in fine-grained detail. Although recent approaches can produce complex and natural movements, they usually operate at only one temporal scale, which limits both semantic alignment and temporal coherence. Inspired by the fact that complex motions are conceptualized hierarchically rather than at a single temporal scale in the human cognitive system, we propose MotionHiFlow, a hierarchical flow matching framework to generate motion progressively by constructing flow path from low to high temporal scales. The flows at lower scales capture high-level semantics and coarse motion structures, while flows at higher scales refine temporal details. To link the flows across scales, we introduce a novel cross-scale transition process, ensuring continuity and preserving noise consistency. Furthermore, by integrating a Text-Motion Diffusion Transformer and a topology-aware Motion VAE, MotionHiFlow explicitly models structural dependencies among joints via joint-aware positional encoding and skeletal topology, enabling precise semantic alignment alongside fine-grained motion details. Extensive experiments on HumanML3D and KIT-ML benchmarks demonstrate state-of-the-art performance, with ablation studies confirming the effectiveness of the hierarchical design and key components."
+  },
+  {
+    "venue": "CVPR2026",
+    "title": "HandX: Scaling Bimanual Motion and Interaction Generation",
+    "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Zhang_HandX_Scaling_Bimanual_Motion_and_Interaction_Generation_CVPR_2026_paper.html",
+    "sha256": "2b15f154d629201d5083eef0166b829cac8e186219c33c1cba4d632095ee08a9",
+    "links": [
+      {
+        "label": "pdf",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/papers/Zhang_HandX_Scaling_Bimanual_Motion_and_Interaction_Generation_CVPR_2026_paper.pdf"
+      },
+      {
+        "label": "supp",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/supplemental/Zhang_HandX_Scaling_Bimanual_CVPR_2026_supplemental.pdf"
+      },
+      {
+        "label": "arXiv",
+        "url": "https://arxiv.org/abs/2603.28766"
+      }
+    ],
+    "abstract": "Synthesizing human motion has advanced rapidly, yet realistic hand motion and bimanual interaction remain underexplored. Whole-body models often miss the fine-grained cues that drive dexterous behavior, finger articulation, contact timing, and inter-hand coordination, and existing resources lack high-fidelity bimanual sequences that capture nuanced finger dynamics and collaboration. To fill this gap, we present HandX, a unified foundation spanning data, annotation, and evaluation. We consolidate and filter existing datasets for quality, and collect a new motion-capture dataset targeting underrepresented bimanual interactions with detailed finger dynamics. For scalable annotation, we introduce a decoupled paradigm that extracts representative motion features, e.g., contact events and finger flexion, and then leverages reasoning from large language models to produce fine-grained, semantically rich descriptions aligned with these features. Building on the resulting data and annotations, we benchmark diffusion and autoregressive models with versatile conditioning modes. Experiments demonstrate high-quality dexterous motion generation, supported by our newly proposed hand-focused metrics. We further observe clear scaling trends: larger models trained on larger, higher-quality datasets produce more semantically coherent bimanual motion. Our dataset is released to support future research."
+  },
+  {
+    "venue": "CVPR2025",
+    "title": "Rethinking Diffusion for Text-Driven Human Motion Generation: Redundant Representations, Evaluation, and Masked Autoregression",
+    "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Meng_Rethinking_Diffusion_for_Text-Driven_Human_Motion_Generation_Redundant_Representations_Evaluation_CVPR_2025_paper.html",
+    "sha256": "77988882b7e35f81ab0348c97c705d46359f72810c2ed469612f5fac76fce072",
+    "links": [
+      {
+        "label": "pdf",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/papers/Meng_Rethinking_Diffusion_for_Text-Driven_Human_Motion_Generation_Redundant_Representations_Evaluation_CVPR_2025_paper.pdf"
+      },
+      {
+        "label": "arXiv",
+        "url": "http://arxiv.org/abs/2411.16575"
+      }
+    ],
+    "abstract": "Since 2023, Vector Quantization (VQ)-based discrete generation methods have rapidly dominated human motion generation, primarily surpassing diffusion-based continuous generation methods in standard performance metrics. However, VQ-based methods have inherent limitations. Representing continuous motion data as limited discrete tokens leads to inevitable information loss, reduces the diversity of generated motions, and restricts their ability to function effectively as motion priors or generation guidance. In contrast, the continuous space generation nature of diffusion-based methods makes them well-suited to address these limitations and with even potential for model scalability. In this work, we systematically investigate why current VQ-based methods perform well and explore the limitations of existing diffusion-based methods from the perspective of motion data representation and distribution. Drawing on these insights, we preserve the inherent strengths of a diffusion-based human motion generation model and gradually optimize it with inspiration from VQ-based approaches. Our approach introduces a human motion diffusion model enabled to perform masked autoregression, optimized with a reformed data representation and distribution. Additionally, we propose a more robust evaluation method to assess different approaches. Extensive experiments on various datasets demonstrate our method outperforms previous methods and achieves state-of-the-art performances."
+  },
+  {
+    "venue": "ICCV2025",
+    "title": "FineMotion: A Dataset and Benchmark with both Spatial and Temporal Annotation for Fine-grained Motion Generation and Editing",
+    "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Wu_FineMotion_A_Dataset_and_Benchmark_with_both_Spatial_and_Temporal_ICCV_2025_paper.html",
+    "sha256": "b18d0221362c020fde94d23f021f071b762a7e49e2bc1a01ad4332549477d573",
+    "links": [
+      {
+        "label": "pdf",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/papers/Wu_FineMotion_A_Dataset_and_Benchmark_with_both_Spatial_and_Temporal_ICCV_2025_paper.pdf"
+      },
+      {
+        "label": "arXiv",
+        "url": "http://arxiv.org/abs/2507.19850"
+      }
+    ],
+    "abstract": "Generating realistic human motions from textual descriptions has undergone significant advancements. However, existing methods often overlook specific body part movements and their timing. In this paper, we address this issue by enriching the textual description with more details. Specifically, we propose the FineMotion dataset, which contains over 442,000 human motion snippets -- short segments of human motion sequences -- and their corresponding detailed descriptions of human body part movements. Additionally, the dataset includes about 95k detailed paragraphs describing the movements of human body parts in entire motion sequences. Experimental results demonstrate the significance of our dataset on the text-driven fine-grained human motion generation task, especially with a remarkable +15.3% improvement in Top-3 accuracy for the MDM model. Notably, we further support a zero-shot pipeline of fine-grained motion editing, which focuses on detailed editing in both spatial and temporal dimensions via text. Dataset and code available at: CVI-SZU/FineMotion"
+  },
+  {
+    "venue": "CVPR2025",
+    "title": "AToM: Aligning Text-to-Motion Model at Event-Level with GPT-4Vision Reward",
+    "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Han_AToM_Aligning_Text-to-Motion_Model_at_Event-Level_with_GPT-4Vision_Reward_CVPR_2025_paper.html",
+    "sha256": "679dfe61bbcbb8827cd474dbf0ff1d2c7fbebc1e3b1aba610d0686c60f642ef7",
+    "links": [
+      {
+        "label": "pdf",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/papers/Han_AToM_Aligning_Text-to-Motion_Model_at_Event-Level_with_GPT-4Vision_Reward_CVPR_2025_paper.pdf"
+      },
+      {
+        "label": "supp",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/supplemental/Han_AToM_Aligning_Text-to-Motion_CVPR_2025_supplemental.pdf"
+      },
+      {
+        "label": "arXiv",
+        "url": "http://arxiv.org/abs/2411.18654"
+      }
+    ],
+    "abstract": "Recently, text-to-motion models open new possibilities for creating realistic human motion with greater efficiency and flexibility. However, aligning motion generation with event-level textual descriptions presents unique challenges due to the complex, nuanced relationship between textual prompts and desired motion outcomes. To address this issue, we introduce AToM, a framework that enhances the alignment between generated motion and text prompts by leveraging reward from GPT-4Vision. AToM comprises three main stages: Firstly, we construct a dataset MotionPrefer that pairs three types of event-level textual prompts with generated motions, which cover the integrity, temporal relationship and the frequency of motion. Secondly, we design a paradigm that utilizes GPT-4Vision for detailed motion annotation, including visual data formatting, task-specific instructions and scoring rules for each sub-task. Finally, we fine-tune an existing text-to-motion model using reinforcement learning guided by this paradigm. Experimental results demonstrate that AToM significantly improves the event-level alignment quality of text-to-motion generation."
+  },
+  {
+    "venue": "ICCV2025",
+    "title": "MotionStreamer: Streaming Motion Generation via Diffusion-based Autoregressive Model in Causal Latent Space",
+    "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Xiao_MotionStreamer_Streaming_Motion_Generation_via_Diffusion-based_Autoregressive_Model_in_Causal_ICCV_2025_paper.html",
+    "sha256": "278e69ddeb9e770fdcb420d1f67a743485e4a62ffdf9a4d4b90de3ef412a9d0d",
+    "links": [
+      {
+        "label": "pdf",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/papers/Xiao_MotionStreamer_Streaming_Motion_Generation_via_Diffusion-based_Autoregressive_Model_in_Causal_ICCV_2025_paper.pdf"
+      },
+      {
+        "label": "supp",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/supplemental/Xiao_MotionStreamer_Streaming_Motion_ICCV_2025_supplemental.pdf"
+      },
+      {
+        "label": "arXiv",
+        "url": "http://arxiv.org/abs/2503.15451"
+      }
+    ],
+    "abstract": "This paper addresses the challenge of text-conditioned streaming motion generation, which requires us to predict the next-step human pose based on variable-length historical motions and incoming texts. Existing methods struggle to achieve streaming motion generation, e.g., diffusion models are constrained by pre-defined motion lengths, while GPT-based methods suffer from delayed response and error accumulation problem due to discretized non-causal tokenization. To solve these problems, we propose MotionStreamer, a novel framework that incorporates a continuous causal latent space into a probabilistic autoregressive model. The continuous latents mitigate information loss caused by discretization and effectively reduce error accumulation during long-term autoregressive generation. In addition, by establishing temporal causal dependencies between current and historical motion latents, our model fully utilizes the available information to achieve accurate online motion decoding. Experiments show that our method outperforms existing approaches while offering more applications, including multi-round generation, long-term generation, and dynamic motion composition. Project Page: https://zju3dv.github.io/MotionStreamer/"
+  },
+  {
+    "venue": "ICCV2025",
+    "title": "SemTalk: Holistic Co-speech Motion Generation with Frame-level Semantic Emphasis",
+    "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Zhang_SemTalk_Holistic_Co-speech_Motion_Generation_with_Frame-level_Semantic_Emphasis_ICCV_2025_paper.html",
+    "sha256": "9f645543877de3206d51e07312896d4427221c036a2fcaf1bf4aa8945f4cea35",
+    "links": [
+      {
+        "label": "pdf",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/papers/Zhang_SemTalk_Holistic_Co-speech_Motion_Generation_with_Frame-level_Semantic_Emphasis_ICCV_2025_paper.pdf"
+      },
+      {
+        "label": "arXiv",
+        "url": "http://arxiv.org/abs/2412.16563"
+      }
+    ],
+    "abstract": "A good co-speech motion generation cannot be achieved without a careful integration of common rhythmic motion and rare yet essential semantic motion. In this work, we propose SemTalk for holistic co-speech motion generation with frame-level semantic emphasis. Our key insight is to separately learn base motions and sparse motions, and then adaptively fuse them. In particular, coarse2fine cross-attention module and rhythmic consistency learning are explored to establish rhythm-related base motion, ensuring a coherent foundation that synchronizes gestures with the speech rhythm. Subsequently, semantic emphasis learning is designed to generate semantic-aware sparse motion, focusing on frame-level semantic cues. Finally, to integrate sparse motion into the base motion and generate semantic-emphasized co-speech gestures, we further leverage a learned semantic score for adaptive synthesis. Qualitative and quantitative comparisons on two public datasets demonstrate that our method outperforms the state-of-the-art, delivering high-quality co-speech motion with enhanced semantic richness over a stable base motion."
+  },
+  {
+    "venue": "ICCV2025",
+    "title": "DisCoRD: Discrete Tokens to Continuous Motion via Rectified Flow Decoding",
+    "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Cho_DisCoRD_Discrete_Tokens_to_Continuous_Motion_via_Rectified_Flow_Decoding_ICCV_2025_paper.html",
+    "sha256": "04ab55b1ce3a262b5270144320de2ddb626606b8c140299ed5e345778a5e8931",
+    "links": [
+      {
+        "label": "pdf",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/papers/Cho_DisCoRD_Discrete_Tokens_to_Continuous_Motion_via_Rectified_Flow_Decoding_ICCV_2025_paper.pdf"
+      },
+      {
+        "label": "supp",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/supplemental/Cho_DisCoRD_Discrete_Tokens_ICCV_2025_supplemental.pdf"
+      },
+      {
+        "label": "arXiv",
+        "url": "http://arxiv.org/abs/2411.19527"
+      }
+    ],
+    "abstract": "Human motion is inherently continuous and dynamic, posing significant challenges for generative models. While discrete generation methods are widely used, they suffer from limited expressiveness and frame-wise noise artifacts. In contrast, continuous approaches produce smoother, more natural motion but often struggle to adhere to conditioning signals due to high-dimensional complexity and limited training data. To resolve this discord between discrete and continuous representations we introduce DisCoRD: Discrete Tokens to Continuous Motion via Rectified Flow Decoding, a novel method that leverages rectified flow to decode discrete motion tokens in the continuous, raw motion space. Our core idea is to frame token decoding as a conditional generation task, ensuring that DisCoRD captures fine-grained dynamics and achieves smoother, more natural motions. Compatible with any discrete-based framework, our method enhances naturalness without compromising faithfulness to the conditioning signals on diverse settings. Extensive evaluations demonstrate that DisCoRD achieves state-of-the-art performance, with FID of 0.032 on HumanML3D and 0.169 on KIT-ML. These results establish DisCoRD as a robust solution for bridging the divide between discrete efficiency and continuous realism. Code and checkpoints will be released."
+  },
+  {
+    "venue": "CVPR2024",
+    "title": "EMAGE: Towards Unified Holistic Co-Speech Gesture Generation via Expressive Masked Audio Gesture Modeling",
+    "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Liu_EMAGE_Towards_Unified_Holistic_Co-Speech_Gesture_Generation_via_Expressive_Masked_CVPR_2024_paper.html",
+    "sha256": "b201d92a95b2e01566cd9bc7be0eb21b25c958e71c4af54a3578c816810c035c",
+    "links": [
+      {
+        "label": "pdf",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/papers/Liu_EMAGE_Towards_Unified_Holistic_Co-Speech_Gesture_Generation_via_Expressive_Masked_CVPR_2024_paper.pdf"
+      },
+      {
+        "label": "supp",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/supplemental/Liu_EMAGE_Towards_Unified_CVPR_2024_supplemental.pdf"
+      },
+      {
+        "label": "arXiv",
+        "url": "http://arxiv.org/abs/2401.00374"
+      }
+    ],
+    "abstract": "We propose EMAGE a framework to generate full-body human gestures from audio and masked gestures encompassing facial local body hands and global movements. To achieve this we first introduce BEAT2 (BEAT-SMPLX-FLAME) a new mesh-level holistic co-speech dataset. BEAT2 combines a MoShed SMPL-X body with FLAME head parameters and further refines the modeling of head neck and finger movements offering a community-standardized high-quality 3D motion captured dataset. EMAGE leverages masked body gesture priors during training to boost inference performance. It involves a Masked Audio Gesture Transformer facilitating joint training on audio-to-gesture generation and masked gesture reconstruction to effectively encode audio and body gesture hints. Encoded body hints from masked gestures are then separately employed to generate facial and body movements. Moreover EMAGE adaptively merges speech features from the audio's rhythm and content and utilizes four compositional VQ-VAEs to enhance the results' fidelity and diversity. Experiments demonstrate that EMAGE generates holistic gestures with state-of-the-art performance and is flexible in accepting predefined spatial-temporal gesture inputs generating complete audio-synchronized results. Our code and dataset are available. https://pantomatrix.github.io/EMAGE/"
+  }
+]

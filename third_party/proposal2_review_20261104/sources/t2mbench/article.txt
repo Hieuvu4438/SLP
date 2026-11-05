@@ -1,0 +1,6197 @@
+T2MBench: A Benchmark for Out-of-Distribution Text-to-Motion Generation
+Bin Yang
+Affiliation:
+The Hong Kong University of Science and Technology (Guangzhou), Guangzhou, China
+Rong Ou
+Affiliation:
+The Hong Kong University of Science and Technology (Guangzhou), Guangzhou, China
+Weisheng Xu
+Affiliation:
+The Hong Kong University of Science and Technology (Guangzhou), Guangzhou, China
+Jiaqi Xiong
+Affiliation:
+University of Oxford, Oxford, United Kingdom
+Xintao Li
+Affiliation:
+The Hong Kong University of Science and Technology (Guangzhou), Guangzhou, China
+Taowen Wang
+Affiliation:
+The Hong Kong University of Science and Technology (Guangzhou), Guangzhou, China
+Luyu Zhu
+Affiliation:
+The Hong Kong University of Science and Technology (Guangzhou), Guangzhou, China
+Xu Jiang
+Affiliation:
+The Hong Kong University of Science and Technology (Guangzhou), Guangzhou, China
+Jing Tan
+Affiliation:
+The Hong Kong University of Science and Technology (Guangzhou), Guangzhou, China
+Renjing Xu
+Affiliation:
+The Hong Kong University of Science and Technology (Guangzhou), Guangzhou, China
+Correspondence to:
+renjingxu@hkust-gz.edu.cn
+Abstract
+Most existing evaluations of text-to-motion generation focus on in-distribution textual inputs and a limited set of evaluation criteria, which restricts their ability to systematically assess model generalization and motion generation capabilities under complex out-of-distribution (OOD) textual conditions. To address this limitation, we propose a benchmark specifically designed for OOD text-to-motion evaluation, which includes a comprehensive analysis of 14 representative baseline models and the two datasets derived from evaluation results. Specifically, we construct an OOD prompt dataset consisting of 1,025 textual descriptions. Based on this prompt dataset, we introduce a unified evaluation framework that integrates LLM-based Evaluation, Multi-factor Motion evaluation, and Fine-grained Accuracy Evaluation. Our experimental results reveal that while different baseline models demonstrate strengths in areas such as text-to-motion semantic alignment, motion generalizability, and physical quality, most models struggle to achieve strong performance with Fine-grained Accuracy Evaluation. These findings highlight the limitations of existing methods in OOD scenarios and offer practical guidance for the design and evaluation of future production-level text-to-motion models.
+Keywords:
+Machine Learning, Text-to-Motion, Humanoid Robots, ICML
+†
+†
+affiliationnotice:
+Equal contribution
+1
+Introduction
+Text-to-motion (T2M) generation aims to generate temporally coherent and semantically aligned human motions from natural language descriptions. It has broad applications in embodied AI, VR/AR, and human–computer interaction.
+As generation quality improves, existing evaluation protocols are no longer sufficient to assess generalization in complex settings.
+Current Limitations in Text-to-Motion Models Evaluation.
+Most existing T2M evaluations focus on in-distribution inputs and a limited set of metrics, making it difficult to systematically evaluate robustness and physical plausibility in OOD datasets. Moreover, OOD datasets are still scarce, limiting the ability to rigorously assess model performance under diverse and complex conditions. These limitations in evaluation frameworks hinder the adoption of T2M methods for production-level generation, where robustness, scalability, and versatility are critical for real-world applications.
+Our Contribution: T2MBench.
+T2MBench addresses the limitations of existing evaluation methods by proposing a multi-dimensional evaluation framework and releasing an out-of-distribution (OOD) text prompt dataset to compensate for the scarcity of OOD data. Additionally, we release two datasets, each exhibiting the best performance in semantic alignment and physical quality, aimed at addressing the limitations of current evaluation frameworks.
+Our OOD text prompt dataset consists of 1,025 prompts, categorized into four main types: Dynamics, Complexity, Interaction, and Accuracy. T2MBench includes three evaluation dimensions: (1) LLM-based evaluation (evaluate rendered motions using LLM and designed system prompts); (2) Multi-factor Motion Evaluation (calculate the semantic alignment, generalizability, and physical quality of motions); (3) Fine-grained Accuracy Evaluation (Measure the numerical accuracy of generated motions). The two released datasets are based on T2MBench evaluation results, selecting the best semantic and physical attribute motions for each prompt across 14 baselines to form the released semantic and physical attribute datasets. we conducted tracking experiments on the physical quality dataset, achieving a tracking success rate of over 90%.
+Our contributions are summarized as follows:
+•
+Multi-Dimensional Benchmark
+. We propose
+T2M-Bench
+, to our knowledge the first comprehensive benchmark for assessing Text-to-Motion models, measuring the semantic alignment, generalizability, physical plausibility, and accuracy of generated motions.
+•
+High-Quality Dataset Release.
+We released a high quality OOD prompt dataset and two datasets that excel in physical and semantic attributes, respectively.
+•
+Systematic Model Evaluation.
+We systematically evaluate state-of-the-art Text-to-Motion models across various dimensions, uncovering limitations, especially in fine-grained accuracy of motion generation.
+•
+Standardized Research Protocols.
+We provide unified evaluation formats and prompt design protocols to support reproducible research and standardized comparison for the future Text-to-Motion models.
+T2MBench
+provides a comprehensive foundation for future research on Text-to-Motion models and offers a standardized platform to evaluate model performance across various dimensions.
+Figure 1
+:
+Overall pipeline of T2MBench.
+2
+Related Works
+2.1
+T2M Models and Datasets.
+Text-to-motion (T2M) generation primarily employs diffusion-based methods
+(
+Tevet et al., 2022
+;
+Shafir et al., 2023
+;
+Yuan et al., 2024
+)
+or VQ-based paradigms
+(
+Guo et al., 2022
+;
+Jiang et al., 2023
+;
+Zhou et al., 2024
+)
+. While diffusion models excel in latent consistency and VQ-based models offer strong semantic diversity, both remain fragile under out-of-distribution (OOD) textual instructions. Foundational datasets like KIT-ML
+(
+Plappert et al., 2016
+)
+, HumanML3D
+(
+Guo et al., 2022
+)
+and Motion-X
+(
+Lin et al., 2024
+)
+have underpinned these models, yet they predominantly focus on In-Distribution (ID) scenarios that mirror training data. Furthermore, reliance on abstract adjectives often results in underspecified kinematic precision.
+2.2
+Evolution of Motion Evaluation.
+Early Text-to-Motion evaluation lacked standardized protocols and relied heavily on qualitative visualization and small-scale user studies, limiting reproducibility and comparability
+(
+Liu et al., 2024
+)
+. With the widespread adoption of large paired datasets such as KIT-ML
+(
+Plappert et al., 2016
+)
+and HumanML3D
+(
+Guo et al., 2022
+)
+, the community converged on automatic, benchmark-style protocols dominated by embedding-space retrieval and distributional similarity: R-Precision measures text–motion alignment via retrieval in a shared latent space, while FID compares feature distributions between generated and real motions; Diversity and Multimodality are often reported to characterize generalizability. This paradigm improves repeatability, yet it is inherently biased toward statistical matching and can under-represent physical feasibility and fine-grained execution constraints.
+As diffusion-based models
+(
+Tevet et al., 2022
+;
+Zhang et al., 2023
+;
+Guo et al., 2024
+)
+improved motion fidelity, evaluation limitations became more pronounced: models can score well on statistical metrics while exhibiting contact and constraint failures such as foot sliding, floating, ground and body penetration. To address these artifacts, evaluation has expanded toward kinematics- and physics-inspired checks
+(
+Tevet et al., 2024
+;
+Lin et al., 2025
+)
+, including
+Foot Sliding
+,
+Foot Floating
+,
+Ground Penetration
+, and
+Jitter Degree
+, and further incorporates manifold- or prior-based measures to quantify
+Pose Quality
+(
+He et al., 2024
+)
+. These metrics are interpretable and diagnostic for contact-related errors, but they often struggle to capture long-horizon temporal logic (e.g., multi-stage ordering) and the alignment between action intensity and textual intent.
+More recently,
+LLM/VLM-as-a-judge
+has introduced semantic reasoning into T2M evaluation by scoring motions against rubric-style criteria, improving coverage for open-vocabulary and compositional prompts
+(
+Liu et al., 2023
+;
+Gu et al., 2025
+)
+. However, such pipelines typically render 3D kinematics into 2D videos/frames, creating a representation gap between 3D geometry and VLM perception
+(
+Cheng et al., 2024
+)
+; text-caption intermediate pipelines can further amplify information loss
+(
+Dong et al., 2019
+)
+, especially for spatial orientation and fine-grained relative pose constraints. Overall, T2M evaluation has progressed from statistical metrics to kinematic checks and LLM-based judging, yet robust measurements for long-term temporal structure and
+intensity–intent
+alignment remain insufficiently standardized.
+3
+T2MBench
+3.1
+OOD Text Prompt Dataset
+Construction Pipeline.
+Our dataset draws on Vimogen-228k, HumanML3D, AMASS, and the Oxford Dictionary
+(
+Lin et al., 2025
+;
+Guo et al., 2022
+;
+Mahmood et al., 2019
+)
+. We initialized the corpus using 450 JSON files from Vimogen-228k and expanded it using LLMs to simulate the creative logic of professional choreographers and martial arts experts . To ensure physical executability and high granularity, we enforce the
+“Clay Figurine Rule”
+: prompts must use precise kinematic language describing spatial displacements of the head, torso, and limbs while strictly avoiding vague abstract adjectives . Except for numerical tasks, the use of Arabic numerals is prohibited, forcing the model to rely on pure spatial directions (e.g., “left”, “up”).
+Dataset Type.
+The dataset comprises 1,025 prompts across 11 subtypes, categorized into four major semantic dimensions: (1)
+Dynamics
+(explosive, dance, martial); (2)
+Complexity
+(balance, multi-stage, asymmetric); (3)
+Interaction
+(intent, invisible); and (4)
+Accuracy
+(numerical, whole-body, body-part) . For the first three dimensions, prompts are further bifurcated into
+long
+and
+short
+sequences, while
+Accuracy
+focuses on short, high-precision descriptions. All prompts underwent LLM-based refinement for linguistic naturalness followed by manual quality filtering .
+OOD Validation.
+To verify the out-of-distribution (OOD) nature of our dataset, we encoded our prompts and the entire HumanML3D corpus using the MotionGPT T5 encoder
+(
+Jiang et al., 2023
+)
+. Dimensionality reduction via t-SNE (Fig.
+2
+) and flow precision analysis (
+[MATH: k=3]
+) reveal an overlap rate of only 3.6098%, confirming strong OOD characteristics compared to existing benchmarks .
+Figure 2
+:
+Comparison of t-SNE results between our OOD prompt dataset and the HumanML3D text dataset.
+Table 1
+:
+Size distribution across all dataset types
+Dimension
+Sub-dimensions
+Long
+Short
+Dynamics
+dance, explosive, martial
+125
+150
+Complexity
+multi-stage, asymmetric, balance
+120
+150
+Interaction
+intent, invisible
+100
+100
+Accuracy
+numerical, whole-body, body part
+NA
+280
+3.2
+Text-to-Motion Baselines
+We evaluated 14 of the most state-of-the-art Text-to-Motion models from the past two years. These models were categorized into two main groups based on their action encoders: Diffusion-based methods and VQ-based Generative Methods.
+•
+Diffusion-based methods:
+include MDM, CLoSD, PriorMDM, MoGenTS, HY-Motion-1.0, and DartControl.
+•
+VQ-based Methods:
+include T2M, MotionGPT, MMM, AvatarGPT, SALAD, MoMask, ViMoGen, and MaskControl.
+3.3
+Evaluation
+3.3.1
+LLM-based Evaluation
+Following the pipeline in Fig.
+3
+, we utilize GPT-5.2 to assess five key dimensions of generated motions:
+Extra Non-Instruction Actions
+,
+Action Completeness
+,
+Multi-Stage Order Correctness
+,
+Body-Part Understanding
+, and
+Physical Plausibility
+. The evaluator outputs scores and auditable explanations in a structured JSON format.
+Motion Rendering and Normalization.
+Generated joint trajectories are rendered via the SMPL body model using an off-screen renderer. To ensure comparability across baselines, we apply a unified coordinate alignment and height normalization. Sequences are captured using a fixed camera with an adaptive viewport, determined by the spatial bounding box of the SMPL mesh to ensure complete motion coverage without viewpoint drift.
+Color-coded Body-Part Strip.
+To bridge the representation gap between 3D kinematics and VLM perception, we implement two strategies:
+•
+Vertex Color-Coding
+: Vertices are assigned high-contrast part labels (e.g., torso, limbs, face) based on their proximity to joint groups. This segmentation remains consistent throughout the sequence to emphasize limb trajectories and multi-stage structures.
+•
+Temporal Evolution Encoding
+: Rendered frames are sampled at a fixed stride and horizontally concatenated to form a single 2D
+Spatial-Temporal Strip
+image. This strip serves as the sole visual input, allowing the LLM to scan temporal transitions and sequential relationships along the horizontal axis.
+During inference, the LLM is instructed to treat the text prompt as a set of kinematic constraints, focusing exclusively on visible human motion while ignoring background or environmental factors. The specific system prompt is shown in appendix
+F
+.
+Figure 3
+:
+The LLM-based evaluation pipeline.
+3.3.2
+Multi-Factor Motion Evaluation
+To provide a multi-factor evaluation of the generated sequences, we assess our model across three key dimensions: semantic alignment, generalizability, and physical quality. Detailed calculation formulas are provided in the Appendix
+C.1
+.
+Dimension 1: Semantic Alignment.
+This dimension measures semantic similarity between text and motion using three metrics:
+1.
+Matching Score
+: Computes the distance between text and motion features in a joint latent space.
+2.
+R-Precision
+: Assesses the ability to retrieve the correct description from a set of motion candidates.
+3.
+Automatic Similarity Recall (ASR)
+: Measures the recall rate of relevant atomic actions based on cosine similarity between atomic-action features from the Ground Truth prompt and the model output prompt, using a fixed similarity threshold.
+Dimension 2: Generalizability.
+This dimension evaluates generalization across varied scenarios via:
+1.
+Multimodality (MM)
+: Measures how distinct multiple generated motion sequences are under the same text input, based on pairwise distances among sampled outputs.
+2.
+Diversity
+: Measures overall dataset-level diversity by averaging distances between randomly sampled motion sequences generated from different text inputs.
+Dimension 3: Physical Quality.
+This dimension evaluates realism and physical plausibility using:
+1.
+Jitter Degree (JD)
+: Quantifies motion jitter via keyframe acceleration statistics, combining global and local components.
+2.
+Ground Penetration (GP)
+: Measures the extent of ground penetration by aggregating keyframes below a tolerance threshold.
+3.
+Foot Floating (FF)
+: Quantifies abnormal foot floating during contact phases based on foot velocity, relative velocity, and contact state, including invalid frames and floating interval durations.
+4.
+Foot Sliding (FS)
+: Measures horizontal foot movement during ground contact by aggregating contact-weighted horizontal velocities for both feet.
+5.
+Dynamic Degree (DD)
+: Measures motion dynamics via joint-velocity magnitudes, combining global and local dynamics after removing root translation.
+6.
+Position Quality (PQ)
+: Evaluates pose plausibility by the distance to the pose manifold predicted by a Neural Distance Field (NRDF) model.
+7.
+Body Penetration (BP)
+: Measures self-penetration using BVH collision detection by counting collision triangle pairs per frame normalized by the SMPL triangle count.
+3.3.3
+Fine-grained Accuracy Evaluation
+For fine-grained evaluation, we construct a test set of 200 text instructions: 100 for whole-body motion and 100 for body-part motion. Whole-body instructions specify global displacement, velocity, or rotation angles (e.g., moving 2.8 meters backward, targeting 2.0 m/s forward speed, or turning left by 100 degrees), while body-part instructions define relative positional constraints between two body parts (e.g., keeping the right hand 15 cm in front of the head). We feed these texts into 14 baseline models to obtain generated motions. Prior to evaluation, we use GPT-5.2 to extract target specifications from the instructions, storing whole-body targets in
+root_move.json
+and body-part targets in
+body_part.json
+. These files serve exclusively as reference data for error computation and are not used as model inputs. Additionally, all data have been manually verified to be consistent with the test texts.
+In Figure
+6
+, we additionally report ”MaskControl with JointControl” as a separate baseline since MaskControl supports both text-only input and text combined with a joint-control trajectory. The joint-control trajectory is generated by GPT-5.2 to provide a physically plausible joint motion sequence, and separating this setting ensures a fair comparison without affecting the score of the standard MaskControl model.
+We adopt two complementary protocols to quantify controllability at global and local levels, reporting Root Mean Square Error (RMSE) for each test case. For a motion clip with
+[MATH: T]
+frames indexed by
+[MATH: t\in\{0,\dots,T-1\}]
+, we set
+[MATH: t_{0}=0]
+and define the evaluation frame
+[MATH: t_{e}]
+using a window length
+[MATH: N]
+(default
+[MATH: N=30]
+); detailed formulas are provided in Appendix
+C.2
+.
+(1) Whole-body motion assessment
+evaluates
+root
+control targets from
+root_move.json
+by recovering root position
+[MATH: p_{t}]
+and root yaw
+[MATH: \psi_{t}]
+(optionally denormalizing HumanML/MDM features
+[MATH: x\in\mathbb{R}^{T\times 263}]
+with
+[MATH: (\mu,\sigma)]
+); since the HumanML/MDM 263-dim representation contains only yaw, we evaluate yaw rotation, directional root velocity (target speed
+[MATH: v^{*}]
+along direction
+[MATH: u]
+over duration
+[MATH: d]
+), and root translation (target displacement
+[MATH: \Delta p^{*}]
+) between
+[MATH: t_{0}]
+and
+[MATH: t_{e}]
+.
+(2) Body-part motion assessment
+evaluates relative translation constraints from
+body_part.json
+by comparing the relative displacement between a
+base
+joint
+[MATH: b]
+and a
+target
+joint
+[MATH: g]
+computed from
+[MATH: J\in\mathbb{R}^{T\times 22\times 3}]
+against the target displacement
+[MATH: \Delta^{*}]
+, and reporting RMSE over the last
+[MATH: N]
+frames (or all frames if
+[MATH: T<N]
+).
+4
+Experiment and Findings
+4.1
+Setup
+Data.
+We evaluate our OOD prompt datasets with 1,025 text prompts grouped into four types
+(
+Dynamics/Complexity/Interaction/Accuracy
+, merged from 11 subtypes); Dynamics/Complexity/Interaction are split into
+long/short
+, while Accuracy contains
+short-only
+prompts.
+Baselines.
+We benchmark 14 representative Text-to-Motion systems, including diffusion-based methods
+(MDM, CLoSD, PriorMDM, MoGenTS, HY-Motion-1.0, DartControl) and VQ-based methods
+(T2M, MotionGPT, MMM, AvatarGPT, SALAD, MoMask, ViMoGen, MaskControl).
+Evaluation.
+we report three evaluation dimensions:
+LLM-Based Evaluation
+,
+Multi-Factor Metrics Evaluation
+, and
+Fine-Grained Accuracy Evaluation
+.
+For LLM-Based evaluation, motions are rendered with
+SMPL
+under unified normalization; we encode kinematics into a
+spatial-temporal strip
+(stride
+[MATH: =3]
+) and use
+GPT-5.2
+to score five designed dimensions with structured outputs. For the Fine‑Grained Accuracy Evaluation, we employ 200 controlled texts: 100 for whole‑body motion and 100 for body‑part motion.
+4.2
+Results and Analysis
+4.2.1
+LLM-Based Evaluation
+To select the Large Language Model (LLM) that best matches human preferences, we evaluated GPT-5.2, Google/Gemini-3-Flash-Preview, Z-AI/GLM-4.6v, NVIDIA/Nemotron-Nano-12B-V2-VL, Qwen/Qwen3-VL-32B-Instruct, and Anthropic/Claude-Opus-4.5 on the long sequence multi-stage category (50 prompts) generated by HY-Motion-1.0. To minimize individual subjectivity in the human preference data, we recruited five raters (aged 20–28) with normal cognitive abilities to independently evaluate the 50 samples. We then averaged the scores across the five raters to obtain the final human preference reference score. For each metric, we compute the absolute difference between each LLM’s scores and human scores, then average across prompts to obtain LLM-based Evaluation scores over five dimensions and an overall score. Table
+2
+shows that GPT-5.2 yields the closest results to human evaluators, and we therefore use GPT-5.2 in our evaluation.
+We report GPT-5.2 total scores for all 14 baselines in Table
+3
+(grouped by dataset type). As shown in Figure
+4
+, we build six radar charts (five metrics plus total score) with 14 axes corresponding to the 14 baselines. We further provide 14 per-baseline radar charts in Appendix
+I
+(Figure
+12
+); each chart includes four curves for the four dataset types: Dynamics, Complexity, Interaction, and Accuracy. For each radar-chart sub-metric, we compute the integer-bounded range over 14 baselines
+[MATH: [\min_{\text{eval}},\max_{\text{eval}}]]
+and apply min–max normalization. For clarity and ease of interpretation in the visualization, we apply reversed normalization to metrics that are originally lower‑is‑better. The full procedure is given in Appendix
+E
+.
+From Figure
+4
+, HY and Vimogen achieve the best overall LLM-Based Evaluation performance across metrics, while CLoSD performs worst. By metric, the Complexity dataset performs best on action_completeness, the Interaction dataset performs best on body_part_understanding, and the Accuracy dataset performs best on the remaining metrics. Table
+3
+further shows that short-sequence Complexity and Accuracy generally score higher, and performance can vary substantially between long and short datasets: most baselines score lower on long sequences, except Dart, which performs better on the long dataset. Finally, Figure
+12
+indicates consistent peaks across baselines: multi_stage_order_correctness on the Accuracy dataset, action_completeness on the Complexity dataset, and body_part_understanding on the Interaction dataset, reflecting stable behavior across dataset types.
+Table 2
+:
+LLM selection Results, The x-axis corresponds to the five LLM-based evaluation criteria, where the abbreviations denote Extra Non-Instruction Actions (ENA), Action Completeness (AC), Multi-Stage Order Correctness (MOC), Body-Part Understanding (BPU), and Physical Plausibility(PP). The bold numbers indicate the smallest discrepancy with the human evaluation results.
+Model
+ENA
+[MATH: \downarrow]
+AC
+[MATH: \downarrow]
+MOC
+[MATH: \downarrow]
+BPU
+[MATH: \downarrow]
+PP
+[MATH: \downarrow]
+GPT-5.2
+1.2800
+3.1600
+1.2400
+1.4400
+1.4800
+Gemini-3
+2.9200
+4.1600
+2.7000
+2.8800
+2.5800
+GLM-4.6v
+2.2045
+3.5909
+2.2500
+2.5909
+2.9545
+Nemotron
+2.0000
+3.7959
+2.2449
+2.5102
+2.8163
+Qwen3
+3.5400
+4.4800
+2.7600
+2.9400
+2.9200
+Claude
+1.3600
+4.3400
+1.6400
+1.9200
+1.6600
+Table 3
+:
+LLM-based evaluation total score results across four dataset types(Dynamics, Complexity, and Interaction for both Long and Short sequences, alongside Accuracy dataset type).
+The best and second-best results are highlighted in red and blue, respectively.
+Method
+Long
+Short
+Accuracy
+Dynamics
+Complexity
+Interaction
+Dynamics
+Complexity
+Interaction
+T2M
+(
+Guo et al., 2022
+)
+38.7049
+38.3606
+38.8800
+38.7484
+42.7601
+41.5467
+40.9556
+MDM
+(
+Tevet et al., 2022
+)
+37.6798
+41.0076
+39.5700
+40.8154
+43.0333
+42.3623
+42.7408
+MotionGPT
+(
+Jiang et al., 2023
+)
+37.7024
+40.1272
+38.8200
+38.3815
+41.2201
+39.6152
+40.4341
+CLoSD
+(
+Tevet et al., 2024
+)
+35.5910
+38.8218
+34.1500
+37.8428
+36.7333
+38.9652
+35.7744
+PriorMDM
+(
+Shafir et al., 2023
+)
+36.0963
+36.4888
+34.8700
+39.0029
+40.9334
+38.6002
+40.2694
+MMM
+(
+Pinyoanuntapong et al., 2024
+)
+36.7275
+38.6776
+36.0300
+39.1680
+42.5667
+42.1245
+41.7803
+AvatarGPT
+(
+Zhou et al., 2024
+)
+40.0096
+41.7138
+39.9200
+40.0738
+42.4800
+41.6151
+41.5049
+Mogent
+(
+Yuan et al., 2024
+)
+39.4167
+39.5521
+38.8800
+40.5346
+41.3067
+41.6969
+41.9625
+Salad
+(
+Hong et al., 2025
+)
+39.9207
+39.3414
+38.7000
+40.8951
+42.1134
+41.4638
+42.1765
+Momask
+(
+Guo et al., 2024
+)
+38.3925
+38.3390
+37.4700
+39.3940
+41.4933
+39.5094
+41.0121
+Dart
+(
+Zhao et al., 2024
+)
+40.6737
+40.8206
+41.6300
+37.2818
+39.7199
+38.4119
+39.5339
+Vimogen
+(
+Lin et al., 2025
+)
+42.6812
+43.5114
+43.8200
+41.5350
+43.7132
+43.0371
+42.4599
+HY
+(
+Wen et al., 2025
+)
+43.8414
+43.3216
+44.3300
+42.0675
+43.8333
+42.8963
+42.2598
+MaskControl
+(
+Pinyoanuntapong et al., 2025
+)
+38.2804
+38.3022
+36.8100
+39.4872
+41.7333
+39.9959
+41.3516
+Figure 4
+:
+LLM-Based Evaluation radar charts by evaluation dimensions
+4.2.2
+Multi-Factor Motion Evaluation
+As shown in Figure
+5
+, we provide 12 radar charts (one per metric), each with 14 axes corresponding to the 14 text-to-motion baselines. Conversely, Figure
+13
+provides 14 radar charts (one per baseline), each with 12 axes corresponding to the 12 Multi-Factor Motion Evaluation metrics. Detailed per-metric results are reported in Appendix
+G
+(Table
+5
+–Table
+18
+).
+For visualization, we normalize each metric using the
+[MATH: \max]
+and
+[MATH: \min]
+computed across the 14 baselines. Five metrics are originally lower-is-better: Jitter Degree, Ground Penetration, Foot Floating, Foot Sliding, and Body Penetration; we convert them to higher-is-better scores via the inverse min–max normalization in Appendix
+E
+.
+Across semantic alignment, SALAD performs well on Matching Score across all dataset types, while MDM and CLoSD are consistently weak; for R-Pre@1, MDM, PriorMDM, and T2M are strong across all types; ASR varies less across baselines, with dataset-type trend Complexity
+[MATH: >]
+Dynamics
+[MATH: >]
+Interaction
+[MATH: >]
+Accuracy. For generalizability, MotionGPT and AvatarGPT achieve strong Multimodality, while MMM, MDM, and MotionGPT perform well on Diversity and Dart is consistently weak. For physical quality, HY and Dart achieve strong Jitter Degree; T2M and ViMoGen perform best on Ground Penetration; MDM, Dart, and CLoSD perform well on Foot Floating whereas PriorMDM and SALAD are weaker; HY is relatively weak on Foot Sliding for the Dynamic dataset; Dart is relatively weak on Dynamic Degree but achieves the best Pose Quality; and CLoSD performs best on Body Penetration. Overall, baselines exhibit distinct strengths and weaknesses across metrics.
+Figure 5
+:
+Multi-Factor Motion Evaluation radar charts by metrics
+4.2.3
+Fine-Grained Accuracy Evaluation
+The results of fine-grained accuracy evaluation for both whole-body motion and body-part motion are shown in Fig.
+6
+and Table
+20
+.
+In terms of the whole-body motion, specifically for Root Rotation, Hunyuan performs the best among all compared algorithms, though its advantage is not substantial.
+Note that MaskControl (with JointControl) is evaluated under an auxiliary control setting: it consumes an explicit joint-trajectory condition, which is not required by text-only baselines. Since our benchmark inputs are text-only, we obtain this trajectory by a fixed prompt-to-trajectory parsing pipeline from the same instruction (offline), i.e., it does not introduce additional semantic information beyond the text. Therefore, the JointControl results should be interpreted as controllability under stronger structured conditioning rather than a strictly apples-to-apples comparison to pure text-conditioned generators.
+For Root Velocity, Root Translation, and Body-part Translation, MaskControl (with JointControl) exhibits a significant advantage.
+However, empirical results show that the method often produces implausible motions while trying to hit the target positions, suggesting that its overall performance still requires further improvement. Ultimately, this happens because MaskControl applies test-time gradient optimization to discrete token logits/embeddings to minimize the joint-trajectory control loss
+(
+Pinyoanuntapong et al., 2025
+)
+, which effectively prioritizes trajectory matching over the generative motion prior; if the prior or physical-plausibility constraints are not sufficiently weighted during optimization, the model will trade realism for tighter trajectory adherence. When only text input is provided, the performance of MaskControl shows no significant difference from other algorithms, and its overall effectiveness on the task remains mediocre.
+Figure 6
+:
+Fine-grained Accuracy Evaluation
+4.3
+SOTA datasets
+We selected 745 prompts from the Dynamics, Complexity, and Interaction datasets and constructed two datasets: a Physical Attribute Dataset and a Semantic Attribute Dataset. For each text prompt, we chose (from 14 actions generated by 14 baseline models) the action with the highest Physical Attributes Score and the action with the highest Semantic Attributes Score, respectively. We initially planned to select a dataset from the Accuracy dataset using the fine-grained accuracy evaluation dimension. However, except for MaskControl, all baselines performed poorly on this dimension. Although MaskControl achieved better performance in this dimension, expert evaluation indicated its actions lacked naturalness. Therefore, current T2M models cannot generate precise actions suitable for production use, so we did not include any precision-related datasets.
+We split our metrics into physical and semantic attributes, and designed two scoring tables (Physical and Semantic Attributes Score) to select the top-scoring action per prompt for each dataset.
+For physical attributes, we used Physical Plausibility from the LLM-Based evaluation, and the Physical Quality dimension from the Multi-Factor Motion Evaluation, which includes: JD, GP, FF, FS, DD, PQ, and BP. The physical quality scoring formula is provided in Appendix
+D
+.
+To validate the Physical Attributes Dataset, for each prompt we also randomly sampled one motion from a T2M baseline to build a random dataset of the same size. We tracked both datasets using the PHC+
+(
+Luo et al., 2023
+)
+tracker, with results in Table
+4
+and in Table
+19
+. Across all categories, selection by Physical Attributes Score improves tracking success rate by over 20% compared to random selection; in Interaction it reaches 98%. We further report mpjpe_g, mpjpe_l, mpjpe_pa, accel_dist, and vel_dist during tracking in the appendix.
+Table 4
+:
+PHC+
+(
+Luo et al., 2023
+)
+Tracking Success Rate(%)
+Dataset
+Dynamics
+Complexity
+Interaction
+ours
+91.0(
++22.1
+)
+93.8(
++21.9
+)
+98.0(
++24.0
+)
+random
+68.9
+71.9
+74.0
+For semantic attributes, we used Extra Non-Instruction Actions, Action Completeness, Multi-Stage Order Correctness, and Body-Part Understanding from the LLM-Based Evaluation, together with matching score, R-Precision@1, R-Precision@2, R-Precision@3, and ASR from the Multi-Factor Motion Evaluation. We normalize the LLM-Based metrics, apply Formula 23 for smaller-is-better metrics and Formula 24 for larger-is-better metrics, then compute a weighted sum with weights: Extra Non-Instruction Actions 0.1, Action Completeness 0.1, Multi-Stage Order Correctness 0.1, Body-Part Understanding 0.1, Matching score 0.1, R-Precision@1 0.1, R-Precision@2 0.1, R-Precision@3 0.1, and ASR 0.2.
+Finally, we provide a qualitative comparison on one prompt between the top-scoring semantic sample and a randomly selected baseline (Figure
+7
+), showing markedly improved semantic consistency.
+Figure 7
+:
+Semantic alignment comparison between our dataset and random dataset
+5
+Conclusion
+We propose a comprehensive benchmark for OOD text-to-motion evaluation, build a high-granularity prompt dataset and multi-dimensional evaluation framework, and conduct a systematic analysis of 14 representative models.
+Current Text-to-Motion models exhibit competent performance in semantic-alignment and physical quality. However, future improvements in fine-grained accuracy and generalization to multi-factor OOD instructions (dynamics/complexity/interaction) would substantially enhance their applicability in animation design, film production, and robotic control. By enabling the generation of large volumes of high-quality motions, such advancements could also significantly boost productivity across these domains.
+Future work will expand cross-domain datasets to better support production-level Text-to-Motion model design and iteration.
+Impact Statement
+This paper presents work whose goal is to advance the field of Machine
+Learning. There are many potential societal consequences of our work, none
+which we feel must be specifically highlighted here.
+References
+Cheng
+et al.
+(2024)
+A. Cheng, H. Yin, Y. Fu, Q. Guo, R. Yang, J. Kautz, X. Wang, and S. Liu
+SpatialRGPT: grounded spatial reasoning in vision language models
+.
+External Links:
+2406.01584
+,
+Link
+Cited by:
+§2.2
+.
+Dong
+et al.
+(2019)
+J. Dong, K. Gao, X. Chen, J. Guo, J. Cao, and Y. Zhang
+Not all words are equal: video-specific information loss for video captioning
+.
+External Links:
+1901.00097
+,
+Link
+Cited by:
+§2.2
+.
+Gu
+et al.
+(2025)
+J. Gu, X. Jiang, Z. Shi, H. Tan, X. Zhai, C. Xu, W. Li, Y. Shen, S. Ma, H. Liu, S. Wang, K. Zhang, Y. Wang, W. Gao, L. Ni, and J. Guo
+A survey on llm-as-a-judge
+.
+External Links:
+2411.15594
+,
+Link
+Cited by:
+§2.2
+.
+Guo
+et al.
+(2024)
+C. Guo, Y. Mu, M. G. Javed, S. Wang, and L. Cheng
+Momask: generative masked modeling of 3d human motions
+.
+In
+Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition
+,
+pp. 1900–1910
+.
+Cited by:
+§2.2
+,
+Table 3
+.
+Guo
+et al.
+(2022)
+C. Guo, S. Zou, X. Zuo, S. Wang, W. Ji, X. Li, and L. Cheng
+Generating diverse and natural 3d human motions from text
+.
+In
+Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)
+,
+pp. 5152–5161
+.
+Cited by:
+§2.1
+,
+§2.2
+,
+§3.1
+,
+Table 3
+.
+He
+et al.
+(2024)
+Y. He, G. Tiwari, T. Birdal, J. E. Lenssen, and G. Pons-Moll
+NRDF: neural riemannian distance fields for learning articulated pose priors
+.
+External Links:
+2403.03122
+,
+Link
+Cited by:
+§2.2
+.
+Hong
+et al.
+(2025)
+S. Hong, C. Kim, S. Yoon, J. Nam, S. Cha, and J. Noh
+SALAD: skeleton-aware latent diffusion for text-driven motion generation and editing
+.
+In
+Proceedings of the Computer Vision and Pattern Recognition Conference
+,
+pp. 7158–7168
+.
+Cited by:
+Table 3
+.
+Jiang
+et al.
+(2023)
+B. Jiang, X. Chen, W. Liu, J. Yu, G. Yu, and T. Chen
+Motiongpt: human motion as a foreign language
+.
+Advances in Neural Information Processing Systems
+36
+,
+pp. 20067–20079
+.
+Cited by:
+§2.1
+,
+§3.1
+,
+Table 3
+.
+Lin
+et al.
+(2025)
+J. Lin, R. Wang, J. Lu, Z. Huang, G. Song, A. Zeng, X. Liu, C. Wei, W. Yin, Q. Sun,
+et al.
+The quest for generalizable motion generation: data, model, and evaluation
+.
+arXiv preprint arXiv:2510.26794
+.
+Cited by:
+§2.2
+,
+§3.1
+,
+Table 3
+.
+Lin
+et al.
+(2024)
+J. Lin, A. Zeng, S. Lu, Y. Cai, R. Zhang, H. Wang, and L. Zhang
+Motion-x: a large-scale 3d expressive whole-body human motion dataset
+.
+External Links:
+2307.00818
+,
+Link
+Cited by:
+§2.1
+.
+Liu
+et al.
+(2024)
+X. Liu, Y. Li, A. Zeng, Z. Zhou, Y. You, and C. Lu
+Bridging the gap between human motion and action semantics via kinematic phrases
+.
+External Links:
+2310.04189
+,
+Link
+Cited by:
+§2.2
+.
+Liu
+et al.
+(2023)
+Y. Liu, D. Iter, Y. Xu, S. Wang, R. Xu, and C. Zhu
+G-eval: nlg evaluation using gpt-4 with better human alignment
+.
+External Links:
+2303.16634
+,
+Link
+Cited by:
+§2.2
+.
+Luo
+et al.
+(2023)
+Z. Luo, J. Cao, K. Kitani, W. Xu,
+et al.
+Perpetual humanoid control for real-time simulated avatars
+.
+In
+Proceedings of the IEEE/CVF International Conference on Computer Vision
+,
+pp. 10895–10904
+.
+Cited by:
+§4.3
+,
+Table 4
+,
+Table 4
+.
+Mahmood
+et al.
+(2019)
+N. Mahmood, N. Ghorbani, N. F. Troje, G. Pons-Moll, and M. J. Black
+AMASS: archive of motion capture as surface shapes
+.
+In
+Proceedings of the IEEE/CVF International Conference on Computer Vision (ICCV)
+,
+Cited by:
+§3.1
+.
+Pinyoanuntapong
+et al.
+(2025)
+E. Pinyoanuntapong, M. Saleem, K. Karunratanakul, P. Wang, H. Xue, C. Chen, C. Guo, J. Cao, J. Ren, and S. Tulyakov
+Maskcontrol: spatio-temporal control for masked motion synthesis
+.
+In
+Proceedings of the IEEE/CVF International Conference on Computer Vision
+,
+pp. 9955–9965
+.
+Cited by:
+§4.2.3
+,
+Table 3
+.
+Pinyoanuntapong
+et al.
+(2024)
+E. Pinyoanuntapong, P. Wang, M. Lee, and C. Chen
+Mmm: generative masked motion model
+.
+In
+Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition
+,
+pp. 1546–1555
+.
+Cited by:
+Table 3
+.
+Plappert
+et al.
+(2016)
+M. Plappert, C. Mandery, and T. Asfour
+The kit motion-language dataset
+.
+Big Data
+4
+(
+4
+),
+pp. 236–252
+.
+External Links:
+ISSN 2167-647X
+,
+Link
+,
+Document
+Cited by:
+§2.1
+,
+§2.2
+.
+Shafir
+et al.
+(2023)
+Y. Shafir, G. Tevet, R. Kapon, and A. H. Bermano
+Human motion diffusion as a generative prior
+.
+arXiv preprint arXiv:2303.01418
+.
+Cited by:
+§2.1
+,
+Table 3
+.
+Tevet
+et al.
+(2024)
+G. Tevet, S. Raab, S. Cohan, D. Reda, Z. Luo, X. B. Peng, A. H. Bermano, and M. van de Panne
+Closd: closing the loop between simulation and diffusion for multi-task character control
+.
+arXiv preprint arXiv:2410.03441
+.
+Cited by:
+§2.2
+,
+Table 3
+.
+Tevet
+et al.
+(2022)
+G. Tevet, S. Raab, B. Gordon, Y. Shafir, D. Cohen-Or, and A. H. Bermano
+Human motion diffusion model
+.
+arXiv preprint arXiv:2209.14916
+.
+Cited by:
+§2.1
+,
+§2.2
+,
+Table 3
+.
+Wen
+et al.
+(2025)
+Y. Wen, Q. Shuai, D. Kang, J. Li, C. Wen, Y. Qian, N. Jiao, C. Chen, W. Chen, Y. Wang, J. Guo, D. An, H. Liu, Y. Tong, C. Zhang, Q. Guo, J. Chen, Q. Zhang, Y. Zhang, Z. Yao, C. Zhang, H. Duan, X. Wu, Q. Chen, F. Cheng, L. Dong, P. He, H. Zhang, J. Lin, C. Zhang, Z. Fan, Y. Li, Z. Hu, Y. Liu, Linus, J. Jiang, X. Li, and L. Bao
+HY-motion 1.0: scaling flow matching models for text-to-motion generation
+.
+External Links:
+2512.23464
+,
+Link
+Cited by:
+Table 3
+.
+Yuan
+et al.
+(2024)
+W. Yuan, Y. He, W. Shen, Y. Dong, X. Gu, Z. Dong, L. Bo, and Q. Huang
+Mogents: motion generation based on spatial-temporal joint modeling
+.
+Advances in Neural Information Processing Systems
+37
+,
+pp. 130739–130763
+.
+Cited by:
+§2.1
+,
+Table 3
+.
+Zhang
+et al.
+(2023)
+J. Zhang, Y. Zhang, X. Cun, S. Huang, Y. Zhang, H. Zhao, H. Lu, and X. Shen
+T2M-gpt: generating human motion from textual descriptions with discrete representations
+.
+External Links:
+2301.06052
+,
+Link
+Cited by:
+§2.2
+.
+Zhao
+et al.
+(2024)
+K. Zhao, G. Li, and S. Tang
+DartControl: a diffusion-based autoregressive motion model for real-time text-driven motion control
+.
+arXiv preprint arXiv:2410.05260
+.
+Cited by:
+Table 3
+.
+Zhou
+et al.
+(2024)
+Z. Zhou, Y. Wan, and B. Wang
+Avatargpt: all-in-one framework for motion understanding planning generation and beyond
+.
+In
+Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition
+,
+pp. 1357–1366
+.
+Cited by:
+§2.1
+,
+Table 3
+.
+Appendix A
+System Prompt for LLM-Based Generation of the OOD Text Prompt Dataset
+The following prompts are used for LLM-based dataset generation of eight long sequence subtypes .
+Appendix B
+OOD Text Prompt Dataset Cloud Picture
+Figure 8
+:
+Complexity type dataset cloud picture
+Figure 9
+:
+Dynamic type dataset cloud picture
+Figure 10
+:
+Interaction type dataset cloud picture
+Figure 11
+:
+Accuracy type dataset cloud picture
+Appendix C
+Evaluation methodology details
+C.1
+Multi-Factor Motion Evaluation
+To provide a multi-factor evaluation of the generated sequences, we assess our model across three key dimensions: semantic alignment, generalizability, and physical quality.
+Dimension 1: Semantic Alignment.
+This dimension measures the semantic similarity between text and motion, evaluated through the following three metrics:
+1.
+Matching Score
+: Calculates the Euclidean distance between text and motion features in a joint latent space.
+[MATH: \text{Matching Score}=\|\mathbf{t}-\mathbf{a}\|_{2}]
+(1)
+Here,
+[MATH: \mathbf{t}]
+represents the feature vector of the text, and
+[MATH: \mathbf{a}]
+represents the feature vector of the motion. The notation
+[MATH: \|\cdot\|_{2}]
+denotes the L2-norm (Euclidean norm), which calculates the distance between the two feature vectors.
+2.
+R-Precision
+: Assesses the model’s ability to retrieve the correct description from a set of motion candidates.
+3.
+Automatic Similarity Recall(ASR)
+measures the recall rate of relevant atomic actions based on cosine similarity. The calculation process is as follows:
+[MATH: \text{ASR}=\frac{1}{N}\sum_{i=1}^{N}\mathbb{I}\left(\text{Cosine Similarity}(A_{i},B_{i})>0.6\right)]
+(2)
+Where:
+•
+[MATH: A_{i}]
+and
+[MATH: B_{i}]
+are the feature vectors of the
+[MATH: i]
+-th atomic action from the Ground Truth prompt and the model output prompt, respectively.
+•
+[MATH: \mathbb{I}(\cdot)]
+is the indicator function, which returns 1 if the cosine similarity exceeds 0.5, and 0 otherwise.
+•
+[MATH: N]
+is the total number of atomic actions.
+Dimension 2: Generalizability.
+This dimension evaluates the model’s ability to generalize across a variety of scenarios by assessing two key aspects:
+1.
+Multimodality(MM):
+measures the model’s ability to generate multiple distinct motions based on the same text input. Suppose we have a text input
+[MATH: T]
+, and the model generates
+[MATH: K]
+different motion sequences
+[MATH: A_{1},A_{2},\dots,A_{K}]
+as outputs. The measurement of multimodality can be done by calculating the Euclidean distance between these output sequences and then averaging these distances. The formula for multimodality is as follows:
+[MATH: \text{MM}=\frac{1}{M}\sum_{m=1}^{M}\text{Euclidean Distance}(A_{i_{m}},A_{j_{m}})]
+(3)
+Where
+[MATH: A_{i_{m}}]
+and
+[MATH: A_{j_{m}}]
+are two different motion sequences randomly selected from the
+[MATH: K]
+generated sequences, and
+[MATH: \text{Euclidean Distance}(A_{i_{m}},A_{j_{m}})]
+calculates the Euclidean distance between these two motion sequences, indicating the degree of difference between them.
+2.
+Diversity:
+measures the overall diversity of motions generated from the dataset. Suppose the model generates
+[MATH: N]
+different motion sequences
+[MATH: A_{1},A_{2},\dots,A_{N}]
+from different text inputs. The diversity is measured as follows:
+1.
+Randomly select
+[MATH: M]
+motion sequences from the
+[MATH: N]
+sequences as the first group
+[MATH: \{A_{i_{1}},A_{i_{2}},\dots,A_{i_{m}}\}]
+.
+2.
+Randomly select
+[MATH: M]
+motion sequences from the
+[MATH: N]
+sequences as the second group
+[MATH: \{A_{j_{1}},A_{j_{2}},\dots,A_{j_{m}}\}]
+.
+3.
+Compute the Euclidean distance between the
+[MATH: M]
+motion sequences from both groups.
+4.
+Take the average of these distances as the diversity metric.
+The formula for diversity is:
+[MATH: \text{Diversity}=\frac{1}{M}\sum_{m=1}^{M}\|A_{i_{m}}-A_{j_{m}}\|_{2}]
+(4)
+Where
+[MATH: \|A_{i_{m}}-A_{j_{m}}\|_{2}]
+represents the Euclidean distance between two motion sequences. A higher diversity value indicates more diverse generated motions.
+Dimension 3: Physical Quality.
+This dimension evaluates the realism and physical plausibility of the generated motions.
+1.
+Jitter Degree(JD)
+measures the amount of jitter in the generated motion sequence. It is calculated by evaluating the acceleration of keyframes and removing the jitter from local motion and global motion. The calculation of jitter degree is as follows:
+[MATH: \text{JD}=\frac{1}{(T-2)\times J}\sum_{t=1}^{T-2}\sum_{j=1}^{J}\left(\left\|\mathbf{a}_{t,j}^{\text{global}}\right\|_{2}+\left\|\mathbf{a}_{t,j}^{\text{local}}\right\|_{2}\right)]
+(5)
+Where
+[MATH: \mathbf{a}_{t,j}^{\text{global}}=\mathbf{v}_{t+1,j}^{\text{global}}-\mathbf{v}_{t,j}^{\text{global}}]
+and
+[MATH: \mathbf{a}_{t,j}^{\text{local}}=\mathbf{v}_{t+1,j}^{\text{local}}-\mathbf{v}_{t,j}^{\text{local}}]
+represent the global and local velocity of the
+[MATH: j]
+-th keyframe, respectively,
+[MATH: \mathbf{v}_{t,j}]
+is the velocity at the
+[MATH: t]
+-th frame, and
+[MATH: \mathbf{p}_{t,j}]
+is the position of the
+[MATH: j]
+-th keyframe.
+[MATH: T]
+is the total number of frames and
+[MATH: J]
+is the total number of keyframes. A smaller jitter degree indicates smoother motion.
+2.
+Ground Penetration(GP)
+measures the extent to which parts of the motion sequence penetrate the ground. The calculation of ground penetration is as follows:
+[MATH: \text{GP}=\frac{1}{N}\sum_{i=1}^{N}|h_{i}|\quad\text{where}\quad h_{i}<\delta]
+(6)
+Where
+[MATH: h_{i}=z_{i}-z_{\text{floor}}]
+represents the height of the
+[MATH: i]
+-th keyframe from the ground,
+[MATH: z_{\text{floor}}=0]
+is the ground height,
+[MATH: \delta=0.005]
+(5mm) is the tolerance value, and
+[MATH: N]
+is the total number of keyframes. A smaller ground penetration value indicates better physical plausibility of the generated motion.
+3.
+Foot Floating(FF)
+measures the degree of foot floating during the contact phase. It determines whether the foot is abnormally floating by detecting foot velocity, relative velocity, and contact state. The formula for calculating floating degree is as follows:
+[MATH: \text{FF}=\frac{1}{T}\left(N_{\text{invalid}}+\frac{1}{2}\sum_{r}L_{r}+\sum_{m}L_{m}\right)]
+(7)
+Where
+[MATH: N_{\text{invalid}}]
+is the number of invalid frames detected (based on foot velocity ratio
+[MATH: r_{t}=\frac{\|\mathbf{v}_{t}^{\text{rel}}\|_{2}}{\|\mathbf{v}_{t}^{\text{root}}\|_{2}+\epsilon}]
+and contact state),
+[MATH: L_{r}]
+is the duration of floating intervals in the sequence,
+[MATH: L_{m}]
+is the duration of mass floating intervals, and
+[MATH: T]
+is the total number of frames. A smaller floating degree value indicates more reasonable foot-ground contact.
+4.
+Foot Sliding(FS)
+measures the extent of foot sliding on the ground. It quantifies the horizontal movement of the foot when in contact with the ground. The formula for calculating foot sliding is as follows:
+[MATH: \text{FS}=\frac{1}{2}\left(\frac{\sum_{t=1}^{T}\|\mathbf{v}_{t,xy}^{\text{left}}\|_{2}\cdot c_{t}^{\text{left}}}{\sum_{t=1}^{T}c_{t}^{\text{left}}+\epsilon}+\frac{\sum_{t=1}^{T}\|\mathbf{v}_{t,xy}^{\text{right}}\|_{2}\cdot c_{t}^{\text{right}}}{\sum_{t=1}^{T}c_{t}^{\text{right}}+\epsilon}\right)]
+(8)
+Where
+[MATH: \mathbf{v}_{t,xy}]
+represents the horizontal velocity of the foot at frame
+[MATH: t]
+(considering only the x and y directions),
+[MATH: c_{t}\in\{0,1\}]
+indicates the contact state, and
+[MATH: \epsilon=10^{-6}]
+is a numerical stability term. A smaller foot sliding value indicates more stable foot contact.
+5.
+Dynamic Degree(DD)
+measures the dynamic nature of the generated motion. It is quantified by calculating the
+[MATH: L_{2}]
+norm of the joint velocities, including both global dynamics and local dynamics after removing the global translation. The formula for dynamic degree is as follows:
+[MATH: \text{DD}=\frac{1}{(T-1)\times J}\sum_{t=1}^{T-1}\sum_{j=1}^{J}\left(\|\mathbf{v}_{t,j}^{\text{global}}\|_{2}+\|\mathbf{v}_{t,j}^{\text{local}}\|_{2}\right)]
+(9)
+Where
+[MATH: \mathbf{v}_{t,j}^{\text{global}}=\mathbf{p}_{t+1,j}-\mathbf{p}_{t,j}]
+and
+[MATH: \mathbf{v}_{t,j}^{\text{local}}=\mathbf{p}_{t+1,j}^{\text{local}}-\mathbf{p}_{t,j}^{\text{local}}]
+represent the global velocity and local velocity of the
+[MATH: j]
+-th joint at frame
+[MATH: t]
+, respectively (with the local velocity based on the joint position after removing the root translation),
+[MATH: T]
+is the total number of frames, and
+[MATH: J]
+is the number of joints. A larger dynamic degree value indicates that the motion is more dynamic.
+6.
+Position Quality(PQ)
+measures the plausibility and naturalness of the generated poses. It is quantified by evaluating the distance from the pose parameters to the pose manifold using a Neural Distance Field (NRDF) model. The formula for pose quality is as follows:
+[MATH: \text{PQ}=10\times\frac{1}{T}\sum_{t=1}^{T}d_{\text{NRDF}}(\mathbf{q}_{t})]
+(10)
+Where
+[MATH: d_{\text{NRDF}}(\mathbf{q}_{t})]
+represents the distance predicted by the NRDF model for the pose quaternion
+[MATH: \mathbf{q}_{t}]
+at frame
+[MATH: t]
+(converted from the axis-angle
+[MATH: \mathbf{p}_{t}]
+), and
+[MATH: T]
+is the total number of frames. A higher pose quality value indicates that the pose is more natural and plausible.
+7.
+Body Penetration(BP)
+measures the degree of penetration between different parts of the body. It is calculated by using the BVH (Bounding Volume Hierarchy) collision detection algorithm to detect collisions and overlaps between body parts. The formula for body penetration is as follows:
+[MATH: \text{BP}=\frac{1}{T}\sum_{t=1}^{T}\frac{N_{t}^{\text{collision}}}{N^{\text{triangles}}}\times 100\%]
+(11)
+Where
+[MATH: N_{t}^{\text{collision}}]
+represents the number of collision triangle pairs detected at frame
+[MATH: t]
+through BVH,
+[MATH: N^{\text{triangles}}]
+is the total number of triangles in the SMPL model (a fixed value), and
+[MATH: T]
+is the total number of frames. A smaller body penetration value indicates less self-collision in the body.
+C.2
+Fine-grained accuracy evaluation
+For a motion clip with
+[MATH: T]
+frames indexed by
+[MATH: t\in\{0,\dots,T-1\}]
+, we define the start frame
+[MATH: t_{0}=0]
+and the evaluation frame
+[MATH: t_{e}=\min\left(T-1,\ \max(0,\ T-N)\right),]
+(12)
+where
+[MATH: N]
+denotes the window length (we use
+[MATH: N=30]
+by default).
+(1) Whole-body motion assessment.
+This protocol evaluates whether the generated motion satisfies a specified
+root
+control target from
+root_move.json
+. We recover the root position sequence
+[MATH: p_{t}\in\mathbb{R}^{3}]
+and the root yaw angle
+[MATH: \psi_{t}\in\mathbb{R}]
+(rotation about the
+[MATH: Y]
+axis) from the motion representation. For models outputting normalized HumanML/MDM features
+[MATH: x\in\mathbb{R}^{T\times 263}]
+, we optionally denormalize using mean
+[MATH: \mu]
+and standard deviation
+[MATH: \sigma]
+:
+[MATH: \tilde{x}=x\odot\sigma+\mu,]
+(13)
+where
+[MATH: \odot]
+is element-wise multiplication. Note that the HumanML/MDM 263-dim representation models root rotation with one degree of freedom (yaw); pitch/roll are not available and thus not evaluated.
+Root rotation (yaw).
+Given a target yaw change
+[MATH: \psi^{*}]
+(in radians), we compute
+[MATH: \Delta\psi=\mathrm{wrap}_{[-\pi,\pi)}(\psi_{t_{e}}-\psi_{t_{0}}),]
+(14)
+and form the yaw rotation matrix
+[MATH: R_{y}(\theta)=\begin{bmatrix}\cos\theta&0&\sin\theta\\
+0&1&0\\
+-\sin\theta&0&\cos\theta\end{bmatrix}.]
+(15)
+We define the rotation error as the Frobenius distance between
+[MATH: R_{y}(\Delta\psi)]
+and
+[MATH: R_{y}(\psi^{*})]
+:
+[MATH: e_{\mathrm{rot}}=\left\lVert R_{y}(\Delta\psi)-R_{y}(\psi^{*})\right\rVert_{F}.]
+(16)
+Directional root velocity.
+Given a target speed
+[MATH: v^{*}]
+(m/s) along a unit direction
+[MATH: u]
+for duration
+[MATH: d]
+seconds, we estimate per-frame velocity using the frame rate
+[MATH: \mathrm{fps}]
+:
+[MATH: v_{t}=(p_{t+1}-p_{t})\cdot\mathrm{fps},]
+(17)
+set
+[MATH: t_{d}=\min\left(T-1,\mathrm{round}(d\cdot\mathrm{fps})\right)]
+, and compute the mean projected speed
+[MATH: \hat{v}=\frac{1}{t_{d}}\sum_{t=0}^{t_{d}-1}\langle v_{t},\ u\rangle.]
+(18)
+The velocity error is
+[MATH: e_{\mathrm{vel}}=\left|\hat{v}-v^{*}\right|.]
+(19)
+Root translation.
+Given a target displacement
+[MATH: \Delta p^{*}\in\mathbb{R}^{3}]
+(m), we compute
+[MATH: \Delta p=p_{t_{e}}-p_{t_{0}}]
+and report a 3D RMSE over xyz:
+[MATH: e_{\mathrm{trans}}=\sqrt{\frac{(\Delta p_{x}-\Delta p^{*}_{x})^{2}+(\Delta p_{y}-\Delta p^{*}_{y})^{2}+(\Delta p_{z}-\Delta p^{*}_{z})^{2}}{3}}.]
+(20)
+(2) Body-part motion assessment.
+This protocol evaluates the relative translation between a
+base
+joint
+[MATH: b]
+and a
+target
+joint
+[MATH: g]
+specified in
+body_part.json
+. Given absolute joint coordinates
+[MATH: J\in\mathbb{R}^{T\times 22\times 3}]
+, the per-frame relative displacement is
+[MATH: \Delta_{t}=J_{t,g}-J_{t,b}\in\mathbb{R}^{3},]
+(21)
+with target displacement
+[MATH: \Delta^{*}\in\mathbb{R}^{3}]
+. We compute
+[MATH: e_{t}=\Delta_{t}-\Delta^{*}]
+and report the RMSE over the last
+[MATH: N]
+frames
+[MATH: \mathcal{W}=\{T-N,\dots,T-1\}]
+(or all frames if
+[MATH: T<N]
+):
+[MATH: \mathrm{RMSE}=\sqrt{\frac{1}{|\mathcal{W}|}\sum_{t\in\mathcal{W}}\lVert e_{t}\rVert_{2}^{2}}.]
+(22)
+Appendix D
+The physical quality scoring formula
+For the LLM-based metric Physical Plausibility, we first normalize the value as
+[MATH: g=\frac{x}{\text{max\_score}}]
+, where
+[MATH: \text{max\_score}=10]
+.
+For metrics that are better when smaller (e.g., Jitter Degree, Ground Penetration):
+[MATH: g=\text{clip}\left(\frac{P95-x}{P95-P5},0,1\right)]
+(23)
+For metrics that are better when larger (e.g., Dynamic Degree):
+[MATH: g=\text{clip}\left(\frac{x-P5}{P95-P5},0,1\right)]
+(24)
+Where
+[MATH: P5]
+is the 5th percentile of all baselines under this metric,
+[MATH: P95]
+is the 95th percentile of all baselines under this metric and
+[MATH: x]
+is the metric value of the sample.
+The total score is calculated as:
+[MATH: \text{Total}=\exp\left(\sum_{j}w_{j}\log(g_{j}+\epsilon)\right)]
+Where
+[MATH: w_{j}]
+is the weight of the
+[MATH: j]
+-th metric,
+[MATH: g_{j}]
+is the normalized value of the
+[MATH: j]
+-th metric and
+[MATH: \epsilon=10^{-6}]
+(to avoid log(0)).
+The weight
+[MATH: w]
+allocation for each metric is as follows: Ground Penetration: 0.15, Foot Sliding: 0.15, Body Penetration: 0.15, Jitter Degree: 0.15, Foot Floating: 0.10, Pose Quality: 0.10, Dynamic Degree: 0.10 and Physical Plausibility from LLM-Based Evaluation: 0.10.
+Appendix E
+Normalization Details
+For each radar chart, we apply min–max normalization:
+[MATH: \mathrm{norm}(v)=\frac{v-\min}{\max-\min}.]
+(25)
+For the remaining higher-is-better metrics, we use the reversed normalization:
+[MATH: \mathrm{norm}(v)=\frac{\max-v}{\max-\min}.]
+(26)
+For each sub-metric, we first determine the integer-bounded range over the 14 baselines,
+[MATH: [\,\min_{\text{eval}},\max_{\text{eval}}\,]]
+, and compute:
+[MATH: \mathrm{norm}(v)=\frac{v-\min_{\text{eval}}}{\max_{\text{eval}}-\min_{\text{eval}}}.]
+(27)
+Appendix F
+LLM Evaluation Prompt
+The following prompt is used for LLM-based evaluation of motion-text alignment. It guides the model to analyze sampled video frames and output a structured assessment in JSON format.
+Appendix G
+Multi-Factor Motion Evaluation Detailed Results
+Table 5
+:
+The multi-factor motion evaluation results in the Semantic Alignment dimension. The metrics in this table represent the matching scores for 14 baseline models across the Dynamics, Complexity, and Interaction types, as well as the Accuracy type
+Method
+Long
+Short
+Accuracy
+Dynamics
+Complexity
+Interaction
+Dynamics
+Complexity
+Interaction
+T2M
+5.0418
+[MATH: \pm]
+0.0000
+4.8300
+[MATH: \pm]
+0.0000
+4.4902
+[MATH: \pm]
+0.0000
+4.5640
+[MATH: \pm]
+0.0000
+3.7252
+[MATH: \pm]
+0.0000
+4.0692
+[MATH: \pm]
+0.0000
+6.6895
+[MATH: \pm]
+0.0000
+MDM
+5.2138
+[MATH: \pm]
+0.0000
+4.5922
+[MATH: \pm]
+0.0000
+4.6730
+[MATH: \pm]
+0.0000
+4.0671
+[MATH: \pm]
+0.0000
+3.4628
+[MATH: \pm]
+0.0000
+4.1929
+[MATH: \pm]
+0.0000
+3.6187
+[MATH: \pm]
+0.0000
+MotionGPT
+6.5503
+[MATH: \pm]
+0.0000
+6.0366
+[MATH: \pm]
+0.0000
+6.0473
+[MATH: \pm]
+0.0000
+5.3995
+[MATH: \pm]
+0.0000
+5.0574
+[MATH: \pm]
+0.0000
+4.9788
+[MATH: \pm]
+0.0000
+7.7820
+[MATH: \pm]
+0.0000
+CLoSD
+5.7995
+[MATH: \pm]
+0.0000
+6.0593
+[MATH: \pm]
+0.0000
+4.5988
+[MATH: \pm]
+0.0000
+5.1634
+[MATH: \pm]
+0.0000
+5.3394
+[MATH: \pm]
+0.0000
+5.1380
+[MATH: \pm]
+0.0000
+5.7772
+[MATH: \pm]
+0.0000
+PriorMDM
+4.3948
+[MATH: \pm]
+0.0000
+4.4662
+[MATH: \pm]
+0.0000
+4.6379
+[MATH: \pm]
+0.0000
+4.6881
+[MATH: \pm]
+0.0000
+4.3193
+[MATH: \pm]
+0.0000
+4.9758
+[MATH: \pm]
+0.0000
+7.8064
+[MATH: \pm]
+0.0000
+MMM
+5.4966
+[MATH: \pm]
+0.0000
+4.8933
+[MATH: \pm]
+0.0000
+4.6808
+[MATH: \pm]
+0.0000
+6.3011
+[MATH: \pm]
+0.0000
+7.7051
+[MATH: \pm]
+0.0000
+7.0791
+[MATH: \pm]
+0.0000
+6.3699
+[MATH: \pm]
+0.0000
+AvatarGPT
+8.8530
+[MATH: \pm]
+0.0000
+9.1317
+[MATH: \pm]
+0.0000
+7.8761
+[MATH: \pm]
+0.0000
+10.6632
+[MATH: \pm]
+0.0000
+9.2705
+[MATH: \pm]
+0.0000
+8.0676
+[MATH: \pm]
+0.0000
+8.9530
+[MATH: \pm]
+0.0000
+Mogent
+9.0660
+[MATH: \pm]
+0.0000
+9.2064
+[MATH: \pm]
+0.0000
+7.9573
+[MATH: \pm]
+0.0000
+10.6679
+[MATH: \pm]
+0.0000
+9.2550
+[MATH: \pm]
+0.0000
+8.2126
+[MATH: \pm]
+0.0000
+9.0780
+[MATH: \pm]
+0.0000
+Salad
+9.0183
+[MATH: \pm]
+0.0000
+9.1966
+[MATH: \pm]
+0.0000
+7.8879
+[MATH: \pm]
+0.0000
+10.6496
+[MATH: \pm]
+0.0000
+9.2774
+[MATH: \pm]
+0.0000
+8.1153
+[MATH: \pm]
+0.0000
+5.4607
+[MATH: \pm]
+0.0000
+Momask
+8.9607
+[MATH: \pm]
+0.0000
+9.2234
+[MATH: \pm]
+0.0000
+8.0139
+[MATH: \pm]
+0.0000
+10.7979
+[MATH: \pm]
+0.0000
+9.3066
+[MATH: \pm]
+0.0000
+8.2379
+[MATH: \pm]
+0.0000
+9.1173
+[MATH: \pm]
+0.0000
+Dart
+8.5231
+[MATH: \pm]
+0.0000
+8.8860
+[MATH: \pm]
+0.0000
+7.4521
+[MATH: \pm]
+0.0000
+10.2572
+[MATH: \pm]
+0.0000
+8.9925
+[MATH: \pm]
+0.0000
+7.7778
+[MATH: \pm]
+0.0000
+8.7389
+[MATH: \pm]
+0.0000
+Vimogen
+7.8239
+[MATH: \pm]
+0.0000
+7.8120
+[MATH: \pm]
+0.0000
+6.2506
+[MATH: \pm]
+0.0000
+9.5702
+[MATH: \pm]
+0.0000
+8.4403
+[MATH: \pm]
+0.0000
+7.0386
+[MATH: \pm]
+0.0000
+6.2190
+[MATH: \pm]
+0.0000
+HY
+6.8234
+[MATH: \pm]
+0.0000
+7.3276
+[MATH: \pm]
+0.0000
+6.1270
+[MATH: \pm]
+0.0000
+6.6704
+[MATH: \pm]
+0.0000
+6.8121
+[MATH: \pm]
+0.0000
+5.9780
+[MATH: \pm]
+0.0000
+7.1168
+[MATH: \pm]
+0.0000
+MaskControl
+9.0331
+[MATH: \pm]
+0.0000
+9.2354
+[MATH: \pm]
+0.0000
+8.0614
+[MATH: \pm]
+0.0000
+10.7983
+[MATH: \pm]
+0.0000
+9.3437
+[MATH: \pm]
+0.0000
+8.2438
+[MATH: \pm]
+0.0000
+5.6512
+[MATH: \pm]
+0.0000
+Table 6
+:
+The multi-factor motion evaluation results in the Semantic Alignment dimension. The metrics in this table represent the R-Precision@1 for 14 baseline models across the Dynamics, Complexity, and Interaction types, as well as the Accuracy type
+Method
+Long
+Short
+Accuracy
+Dynamics
+Complexity
+Interaction
+Dynamics
+Complexity
+Interaction
+T2M
+0.4138
+[MATH: \pm]
+0.0101
+0.5452
+[MATH: \pm]
+0.0115
+0.4424
+[MATH: \pm]
+0.0111
+0.5969
+[MATH: \pm]
+0.0080
+0.7395
+[MATH: \pm]
+0.0087
+0.6690
+[MATH: \pm]
+0.0117
+0.4097
+[MATH: \pm]
+0.0079
+MDM
+0.4211
+[MATH: \pm]
+0.0099
+0.5653
+[MATH: \pm]
+0.0107
+0.4684
+[MATH: \pm]
+0.0114
+0.6245
+[MATH: \pm]
+0.0105
+0.7887
+[MATH: \pm]
+0.0097
+0.6887
+[MATH: \pm]
+0.0111
+0.7474
+[MATH: \pm]
+0.0077
+MotionGPT
+0.3196
+[MATH: \pm]
+0.0098
+0.4592
+[MATH: \pm]
+0.0119
+0.3647
+[MATH: \pm]
+0.0095
+0.4733
+[MATH: \pm]
+0.0096
+0.5811
+[MATH: \pm]
+0.0103
+0.5673
+[MATH: \pm]
+0.0122
+0.4331
+[MATH: \pm]
+0.0072
+CLoSD
+0.3293
+[MATH: \pm]
+0.0103
+0.3897
+[MATH: \pm]
+0.0121
+0.4536
+[MATH: \pm]
+0.0121
+0.5195
+[MATH: \pm]
+0.0101
+0.5056
+[MATH: \pm]
+0.0117
+0.5263
+[MATH: \pm]
+0.0147
+0.4983
+[MATH: \pm]
+0.0077
+PriorMDM
+0.4420
+[MATH: \pm]
+0.0087
+0.5302
+[MATH: \pm]
+0.0121
+0.3587
+[MATH: \pm]
+0.0117
+0.5138
+[MATH: \pm]
+0.0106
+0.6527
+[MATH: \pm]
+0.0099
+0.5403
+[MATH: \pm]
+0.0106
+0.4216
+[MATH: \pm]
+0.0069
+MMM
+0.3531
+[MATH: \pm]
+0.0101
+0.5182
+[MATH: \pm]
+0.0108
+0.3957
+[MATH: \pm]
+0.0112
+0.2669
+[MATH: \pm]
+0.0104
+0.3049
+[MATH: \pm]
+0.0114
+0.2717
+[MATH: \pm]
+0.0092
+0.4712
+[MATH: \pm]
+0.0099
+AvatarGPT
+0.2880
+[MATH: \pm]
+0.0056
+0.2864
+[MATH: \pm]
+0.0079
+0.2717
+[MATH: \pm]
+0.0070
+0.2896
+[MATH: \pm]
+0.0057
+0.3145
+[MATH: \pm]
+0.0057
+0.2917
+[MATH: \pm]
+0.0080
+0.3153
+[MATH: \pm]
+0.0066
+Mogent
+0.2740
+[MATH: \pm]
+0.0055
+0.2818
+[MATH: \pm]
+0.0068
+0.2813
+[MATH: \pm]
+0.0068
+0.2907
+[MATH: \pm]
+0.0057
+0.3289
+[MATH: \pm]
+0.0069
+0.3116
+[MATH: \pm]
+0.0073
+0.3114
+[MATH: \pm]
+0.0061
+Salad
+0.2922
+[MATH: \pm]
+0.0059
+0.2990
+[MATH: \pm]
+0.0068
+0.2880
+[MATH: \pm]
+0.0063
+0.2864
+[MATH: \pm]
+0.0053
+0.3149
+[MATH: \pm]
+0.0062
+0.2900
+[MATH: \pm]
+0.0069
+0.5745
+[MATH: \pm]
+0.0082
+Momask
+0.2869
+[MATH: \pm]
+0.0052
+0.2657
+[MATH: \pm]
+0.0066
+0.2960
+[MATH: \pm]
+0.0076
+0.2805
+[MATH: \pm]
+0.0060
+0.3056
+[MATH: \pm]
+0.0067
+0.3010
+[MATH: \pm]
+0.0083
+0.3033
+[MATH: \pm]
+0.0058
+Dart
+0.2873
+[MATH: \pm]
+0.0079
+0.2741
+[MATH: \pm]
+0.0078
+0.2757
+[MATH: \pm]
+0.0064
+0.2840
+[MATH: \pm]
+0.0058
+0.3131
+[MATH: \pm]
+0.0070
+0.3024
+[MATH: \pm]
+0.0083
+0.3230
+[MATH: \pm]
+0.0060
+Vimogen
+0.2807
+[MATH: \pm]
+0.0058
+0.3030
+[MATH: \pm]
+0.0071
+0.2817
+[MATH: \pm]
+0.0079
+0.2616
+[MATH: \pm]
+0.0063
+0.2684
+[MATH: \pm]
+0.0071
+0.2837
+[MATH: \pm]
+0.0089
+0.4463
+[MATH: \pm]
+0.0077
+HY
+0.3051
+[MATH: \pm]
+0.0073
+0.3122
+[MATH: \pm]
+0.0089
+0.2713
+[MATH: \pm]
+0.0076
+0.3547
+[MATH: \pm]
+0.0082
+0.4011
+[MATH: \pm]
+0.0083
+0.3911
+[MATH: \pm]
+0.0124
+0.3803
+[MATH: \pm]
+0.0075
+MaskControl
+0.2807
+[MATH: \pm]
+0.0051
+0.2679
+[MATH: \pm]
+0.0072
+0.2984
+[MATH: \pm]
+0.0072
+0.2838
+[MATH: \pm]
+0.0057
+0.3209
+[MATH: \pm]
+0.0070
+0.3110
+[MATH: \pm]
+0.0093
+0.5490
+[MATH: \pm]
+0.0081
+Table 7
+:
+The multi-factor motion evaluation results in the Semantic Alignment dimension. The metrics in this table represent the R-Precision@2 for 14 baseline models across the Dynamics, Complexity, and Interaction types, as well as the Accuracy type
+Method
+Long
+Short
+Accuracy
+Dynamics
+Complexity
+Interaction
+Dynamics
+Complexity
+Interaction
+T2M
+0.6764
+[MATH: \pm]
+0.0099
+0.8002
+[MATH: \pm]
+0.0095
+0.6990
+[MATH: \pm]
+0.0120
+0.8213
+[MATH: \pm]
+0.0080
+0.9184
+[MATH: \pm]
+0.0066
+0.8677
+[MATH: \pm]
+0.0078
+0.6625
+[MATH: \pm]
+0.0059
+MDM
+0.6629
+[MATH: \pm]
+0.0084
+0.7987
+[MATH: \pm]
+0.0098
+0.7347
+[MATH: \pm]
+0.0095
+0.8542
+[MATH: \pm]
+0.0077
+0.9447
+[MATH: \pm]
+0.0059
+0.8946
+[MATH: \pm]
+0.0082
+0.9332
+[MATH: \pm]
+0.0040
+MotionGPT
+0.5791
+[MATH: \pm]
+0.0097
+0.6984
+[MATH: \pm]
+0.0094
+0.6286
+[MATH: \pm]
+0.0096
+0.7282
+[MATH: \pm]
+0.0084
+0.7891
+[MATH: \pm]
+0.0093
+0.7780
+[MATH: \pm]
+0.0104
+0.6825
+[MATH: \pm]
+0.0055
+CLoSD
+0.5996
+[MATH: \pm]
+0.0108
+0.6739
+[MATH: \pm]
+0.0118
+0.7074
+[MATH: \pm]
+0.0096
+0.7725
+[MATH: \pm]
+0.0080
+0.7882
+[MATH: \pm]
+0.0101
+0.8060
+[MATH: \pm]
+0.0114
+0.7759
+[MATH: \pm]
+0.0074
+PriorMDM
+0.7211
+[MATH: \pm]
+0.0090
+0.7746
+[MATH: \pm]
+0.0094
+0.6326
+[MATH: \pm]
+0.0126
+0.7635
+[MATH: \pm]
+0.0079
+0.8726
+[MATH: \pm]
+0.0072
+0.7640
+[MATH: \pm]
+0.0106
+0.6671
+[MATH: \pm]
+0.0054
+MMM
+0.6082
+[MATH: \pm]
+0.0109
+0.7659
+[MATH: \pm]
+0.0094
+0.6750
+[MATH: \pm]
+0.0116
+0.5031
+[MATH: \pm]
+0.0114
+0.5457
+[MATH: \pm]
+0.0095
+0.5323
+[MATH: \pm]
+0.0097
+0.7140
+[MATH: \pm]
+0.0081
+AvatarGPT
+0.5313
+[MATH: \pm]
+0.0064
+0.5517
+[MATH: \pm]
+0.0089
+0.5363
+[MATH: \pm]
+0.0084
+0.5627
+[MATH: \pm]
+0.0068
+0.5760
+[MATH: \pm]
+0.0075
+0.5556
+[MATH: \pm]
+0.0085
+0.5878
+[MATH: \pm]
+0.0072
+Mogent
+0.5260
+[MATH: \pm]
+0.0067
+0.5330
+[MATH: \pm]
+0.0073
+0.5433
+[MATH: \pm]
+0.0090
+0.5551
+[MATH: \pm]
+0.0067
+0.6131
+[MATH: \pm]
+0.0081
+0.5720
+[MATH: \pm]
+0.0107
+0.5823
+[MATH: \pm]
+0.0069
+Salad
+0.5533
+[MATH: \pm]
+0.0063
+0.5507
+[MATH: \pm]
+0.0073
+0.5500
+[MATH: \pm]
+0.0075
+0.5584
+[MATH: \pm]
+0.0061
+0.5989
+[MATH: \pm]
+0.0067
+0.5647
+[MATH: \pm]
+0.0086
+0.8152
+[MATH: \pm]
+0.0060
+Momask
+0.5331
+[MATH: \pm]
+0.0065
+0.5330
+[MATH: \pm]
+0.0092
+0.5427
+[MATH: \pm]
+0.0077
+0.5547
+[MATH: \pm]
+0.0065
+0.5718
+[MATH: \pm]
+0.0064
+0.5767
+[MATH: \pm]
+0.0090
+0.5758
+[MATH: \pm]
+0.0066
+Dart
+0.5396
+[MATH: \pm]
+0.0079
+0.5170
+[MATH: \pm]
+0.0091
+0.5353
+[MATH: \pm]
+0.0083
+0.5571
+[MATH: \pm]
+0.0062
+0.5891
+[MATH: \pm]
+0.0072
+0.5754
+[MATH: \pm]
+0.0088
+0.5845
+[MATH: \pm]
+0.0068
+Vimogen
+0.5344
+[MATH: \pm]
+0.0061
+0.5829
+[MATH: \pm]
+0.0080
+0.5343
+[MATH: \pm]
+0.0098
+0.5220
+[MATH: \pm]
+0.0071
+0.5338
+[MATH: \pm]
+0.0072
+0.5376
+[MATH: \pm]
+0.0086
+0.7137
+[MATH: \pm]
+0.0079
+HY
+0.5602
+[MATH: \pm]
+0.0083
+0.5631
+[MATH: \pm]
+0.0094
+0.5400
+[MATH: \pm]
+0.0095
+0.6360
+[MATH: \pm]
+0.0086
+0.6735
+[MATH: \pm]
+0.0074
+0.6535
+[MATH: \pm]
+0.0111
+0.6583
+[MATH: \pm]
+0.0070
+MaskControl
+0.5291
+[MATH: \pm]
+0.0062
+0.5425
+[MATH: \pm]
+0.0069
+0.5454
+[MATH: \pm]
+0.0093
+0.5545
+[MATH: \pm]
+0.0064
+0.5911
+[MATH: \pm]
+0.0065
+0.5820
+[MATH: \pm]
+0.0080
+0.8139
+[MATH: \pm]
+0.0064
+Table 8
+:
+The multi-factor motion evaluation results in the Semantic Alignment dimension. The metrics in this table represent the R-Precision@3 for 14 baseline models across the Dynamics, Complexity, and Interaction types, as well as the Accuracy type
+Method
+Long
+Short
+Accuracy
+Dynamics
+Complexity
+Interaction
+Dynamics
+Complexity
+Interaction
+T2M
+0.8544
+[MATH: \pm]
+0.0072
+0.9245
+[MATH: \pm]
+0.0064
+0.8846
+[MATH: \pm]
+0.0080
+0.9313
+[MATH: \pm]
+0.0051
+0.9789
+[MATH: \pm]
+0.0038
+0.9584
+[MATH: \pm]
+0.0056
+0.8457
+[MATH: \pm]
+0.0050
+MDM
+0.8567
+[MATH: \pm]
+0.0064
+0.9308
+[MATH: \pm]
+0.0066
+0.9070
+[MATH: \pm]
+0.0068
+0.9571
+[MATH: \pm]
+0.0046
+0.9918
+[MATH: \pm]
+0.0028
+0.9764
+[MATH: \pm]
+0.0050
+0.9823
+[MATH: \pm]
+0.0019
+MotionGPT
+0.7987
+[MATH: \pm]
+0.0079
+0.8576
+[MATH: \pm]
+0.0088
+0.8213
+[MATH: \pm]
+0.0069
+0.8824
+[MATH: \pm]
+0.0063
+0.9164
+[MATH: \pm]
+0.0060
+0.8930
+[MATH: \pm]
+0.0066
+0.8539
+[MATH: \pm]
+0.0048
+CLoSD
+0.8167
+[MATH: \pm]
+0.0079
+0.8571
+[MATH: \pm]
+0.0085
+0.8677
+[MATH: \pm]
+0.0074
+0.9115
+[MATH: \pm]
+0.0043
+0.9316
+[MATH: \pm]
+0.0054
+0.9510
+[MATH: \pm]
+0.0077
+0.9221
+[MATH: \pm]
+0.0048
+PriorMDM
+0.9009
+[MATH: \pm]
+0.0070
+0.9049
+[MATH: \pm]
+0.0064
+0.8534
+[MATH: \pm]
+0.0090
+0.9096
+[MATH: \pm]
+0.0061
+0.9622
+[MATH: \pm]
+0.0043
+0.8983
+[MATH: \pm]
+0.0076
+0.8566
+[MATH: \pm]
+0.0043
+MMM
+0.8224
+[MATH: \pm]
+0.0076
+0.9059
+[MATH: \pm]
+0.0081
+0.8673
+[MATH: \pm]
+0.0085
+0.7458
+[MATH: \pm]
+0.0107
+0.7650
+[MATH: \pm]
+0.0092
+0.7663
+[MATH: \pm]
+0.0095
+0.8554
+[MATH: \pm]
+0.0065
+AvatarGPT
+0.7671
+[MATH: \pm]
+0.0053
+0.7739
+[MATH: \pm]
+0.0087
+0.7810
+[MATH: \pm]
+0.0057
+0.7931
+[MATH: \pm]
+0.0066
+0.7962
+[MATH: \pm]
+0.0061
+0.7860
+[MATH: \pm]
+0.0084
+0.8215
+[MATH: \pm]
+0.0051
+Mogent
+0.7671
+[MATH: \pm]
+0.0054
+0.7719
+[MATH: \pm]
+0.0071
+0.7810
+[MATH: \pm]
+0.0070
+0.7824
+[MATH: \pm]
+0.0069
+0.8242
+[MATH: \pm]
+0.0065
+0.7927
+[MATH: \pm]
+0.0082
+0.7993
+[MATH: \pm]
+0.0060
+Salad
+0.7847
+[MATH: \pm]
+0.0062
+0.7819
+[MATH: \pm]
+0.0091
+0.7763
+[MATH: \pm]
+0.0071
+0.7951
+[MATH: \pm]
+0.0055
+0.8169
+[MATH: \pm]
+0.0063
+0.8000
+[MATH: \pm]
+0.0082
+0.9384
+[MATH: \pm]
+0.0035
+Momask
+0.7651
+[MATH: \pm]
+0.0057
+0.7728
+[MATH: \pm]
+0.0078
+0.7690
+[MATH: \pm]
+0.0074
+0.7800
+[MATH: \pm]
+0.0065
+0.7969
+[MATH: \pm]
+0.0059
+0.8056
+[MATH: \pm]
+0.0075
+0.8015
+[MATH: \pm]
+0.0052
+Dart
+0.7698
+[MATH: \pm]
+0.0064
+0.7583
+[MATH: \pm]
+0.0082
+0.7677
+[MATH: \pm]
+0.0075
+0.7702
+[MATH: \pm]
+0.0051
+0.8124
+[MATH: \pm]
+0.0065
+0.8010
+[MATH: \pm]
+0.0087
+0.8106
+[MATH: \pm]
+0.0055
+Vimogen
+0.7720
+[MATH: \pm]
+0.0051
+0.7992
+[MATH: \pm]
+0.0074
+0.7724
+[MATH: \pm]
+0.0078
+0.7778
+[MATH: \pm]
+0.0067
+0.7707
+[MATH: \pm]
+0.0074
+0.7683
+[MATH: \pm]
+0.0089
+0.8795
+[MATH: \pm]
+0.0053
+HY
+0.7878
+[MATH: \pm]
+0.0068
+0.7793
+[MATH: \pm]
+0.0083
+0.7833
+[MATH: \pm]
+0.0088
+0.8467
+[MATH: \pm]
+0.0075
+0.8636
+[MATH: \pm]
+0.0071
+0.8550
+[MATH: \pm]
+0.0089
+0.8561
+[MATH: \pm]
+0.0058
+MaskControl
+0.7633
+[MATH: \pm]
+0.0064
+0.7687
+[MATH: \pm]
+0.0064
+0.7747
+[MATH: \pm]
+0.0079
+0.7773
+[MATH: \pm]
+0.0055
+0.8002
+[MATH: \pm]
+0.0071
+0.7980
+[MATH: \pm]
+0.0071
+0.9377
+[MATH: \pm]
+0.0032
+Table 9
+:
+The multi-factor motion evaluation results in the Semantic Alignment dimension. The metrics in this table represent the ASR for 14 baseline models across the Dynamics, Complexity, and Interaction types, as well as the Accuracy type
+Method
+Long
+Short
+Accuracy
+Dynamics
+Complexity
+Interaction
+Dynamics
+Complexity
+Interaction
+T2M
+0.7395
+[MATH: \pm]
+0.2722
+0.7618
+[MATH: \pm]
+0.3028
+0.5783
+[MATH: \pm]
+0.3747
+0.1467
+[MATH: \pm]
+0.3458
+0.2867
+[MATH: \pm]
+0.4552
+0.0500
+[MATH: \pm]
+0.2077
+0.1964
+[MATH: \pm]
+0.3193
+MDM
+0.7420
+[MATH: \pm]
+0.2918
+0.7465
+[MATH: \pm]
+0.3077
+0.6258
+[MATH: \pm]
+0.3675
+0.1600
+[MATH: \pm]
+0.3616
+0.3267
+[MATH: \pm]
+0.4686
+0.1000
+[MATH: \pm]
+0.2647
+0.2393
+[MATH: \pm]
+0.3572
+MotionGPT
+0.6581
+[MATH: \pm]
+0.3021
+0.7361
+[MATH: \pm]
+0.2973
+0.6116
+[MATH: \pm]
+0.4031
+0.1467
+[MATH: \pm]
+0.3400
+0.2800
+[MATH: \pm]
+0.4509
+0.0500
+[MATH: \pm]
+0.1515
+0.2232
+[MATH: \pm]
+0.3393
+CLoSD
+0.6760
+[MATH: \pm]
+0.2767
+0.6736
+[MATH: \pm]
+0.3494
+0.6250
+[MATH: \pm]
+0.4119
+0.1467
+[MATH: \pm]
+0.3256
+0.2200
+[MATH: \pm]
+0.3895
+0.0900
+[MATH: \pm]
+0.2559
+0.1896
+[MATH: \pm]
+0.3156
+PriorMDM
+0.7544
+[MATH: \pm]
+0.2848
+0.7944
+[MATH: \pm]
+0.2612
+0.5492
+[MATH: \pm]
+0.4245
+0.2067
+[MATH: \pm]
+0.3813
+0.2867
+[MATH: \pm]
+0.4513
+0.1000
+[MATH: \pm]
+0.2647
+0.2036
+[MATH: \pm]
+0.3306
+MMM
+0.7665
+[MATH: \pm]
+0.2674
+0.7660
+[MATH: \pm]
+0.2839
+0.6150
+[MATH: \pm]
+0.3527
+0.2067
+[MATH: \pm]
+0.3899
+0.2933
+[MATH: \pm]
+0.4526
+0.1000
+[MATH: \pm]
+0.2647
+0.2107
+[MATH: \pm]
+03169
+AvatarGPT
+0.7325
+[MATH: \pm]
+0.2723
+0.7833
+[MATH: \pm]
+0.2887
+0.5816
+[MATH: \pm]
+0.4118
+0.1333
+[MATH: \pm]
+0.3190
+0.2933
+[MATH: \pm]
+0.4591
+0.1200
+[MATH: \pm]
+0.3140
+0.1964
+[MATH: \pm]
+0.3094
+Mogent
+0.7621
+[MATH: \pm]
+0.2713
+0.7833
+[MATH: \pm]
+0.2778
+0.5750
+[MATH: \pm]
+0.3743
+0.1400
+[MATH: \pm]
+0.3304
+0.3067
+[MATH: \pm]
+0.4636
+0.1200
+[MATH: \pm]
+0.3010
+0.2411
+[MATH: \pm]
+0.3592
+Salad
+0.7792
+[MATH: \pm]
+0.2601
+0.7972
+[MATH: \pm]
+0.2827
+0.5950
+[MATH: \pm]
+0.4198
+0.1600
+[MATH: \pm]
+0.3437
+0.2933
+[MATH: \pm]
+0.4591
+0.1200
+[MATH: \pm]
+0.2799
+0.2357
+[MATH: \pm]
+0.3742
+Momask
+0.7603
+[MATH: \pm]
+0.2841
+0.7694
+[MATH: \pm]
+0.3164
+0.6417
+[MATH: \pm]
+0.3937
+0.1267
+[MATH: \pm]
+0.3339
+0.3067
+[MATH: \pm]
+0.4650
+0.0600
+[MATH: \pm]
+0.2222
+0.1929
+[MATH: \pm]
+0.3186
+Dart
+0.7147
+[MATH: \pm]
+0.2806
+0.7674
+[MATH: \pm]
+0.2871
+0.6216
+[MATH: \pm]
+0.4001
+0.1000
+[MATH: \pm]
+0.2893
+0.2333
+[MATH: \pm]
+0.4223
+0.0200
+[MATH: \pm]
+0.0989
+0.1607
+[MATH: \pm]
+0.3166
+Vimogen
+0.7588
+[MATH: \pm]
+0.2609
+0.7542
+[MATH: \pm]
+0.2962
+0.5616
+[MATH: \pm]
+0.3347
+0.1533
+[MATH: \pm]
+0.3485
+0.3467
+[MATH: \pm]
+0.4803
+0.1000
+[MATH: \pm]
+0.2841
+0.2446
+[MATH: \pm]
+0.3559
+HY
+0.7751
+[MATH: \pm]
+0.2363
+0.8125
+[MATH: \pm]
+0.2789
+0.6392
+[MATH: \pm]
+0.3856
+0.2000
+[MATH: \pm]
+0.3831
+0.2933
+[MATH: \pm]
+0.4598
+0.0752
+[MATH: \pm]
+0.2409
+0.1982
+[MATH: \pm]
+0.3346
+MaskControl
+0.7969
+[MATH: \pm]
+0.2369
+0.8000
+[MATH: \pm]
+0.2669
+0.5975
+[MATH: \pm]
+0.3898
+0.1667
+[MATH: \pm]
+0.3563
+0.2800
+[MATH: \pm]
+0.4488
+0.0800
+[MATH: \pm]
+0.2460
+0.2161
+[MATH: \pm]
+0.3362
+Table 10
+:
+The multi-factor motion evaluation results in the Generalizability dimension. The metrics in this table represent the multimodality for 14 baseline models across the Dynamics, Complexity, and Interaction types, as well as the Accuracy type
+Method
+Long
+Short
+Accuracy
+Dynamics
+Complexity
+Interaction
+Dynamics
+Complexity
+Interaction
+T2M
+2.9352
+[MATH: \pm]
+0.0974
+3.0402
+[MATH: \pm]
+0.1070
+2.5601
+[MATH: \pm]
+0.0797
+3.3040
+[MATH: \pm]
+0.0889
+3.3372
+[MATH: \pm]
+0.0884
+3.4207
+[MATH: \pm]
+0.0941
+2.7628
+[MATH: \pm]
+0.0860
+MDM
+2.5017
+[MATH: \pm]
+0.0850
+2.8831
+[MATH: \pm]
+0.1039
+2.3213
+[MATH: \pm]
+0.0713
+3.1636
+[MATH: \pm]
+0.0800
+3.0491
+[MATH: \pm]
+0.0834
+3.3417
+[MATH: \pm]
+0.0920
+2.0420
+[MATH: \pm]
+0.0632
+MotionGPT
+5.9299
+[MATH: \pm]
+0.2122
+5.3763
+[MATH: \pm]
+0.1909
+5.5518
+[MATH: \pm]
+0.2152
+3.6639
+[MATH: \pm]
+0.1204
+3.4587
+[MATH: \pm]
+0.1146
+3.8737
+[MATH: \pm]
+0.1201
+5.0421
+[MATH: \pm]
+0.1748
+CLoSD
+2.3604
+[MATH: \pm]
+0.0754
+1.9826
+[MATH: \pm]
+0.0681
+2.2837
+[MATH: \pm]
+0.0722
+3.0562
+[MATH: \pm]
+0.0836
+2.8389
+[MATH: \pm]
+0.0752
+2.8386
+[MATH: \pm]
+0.0760
+2.1370
+[MATH: \pm]
+0.0661
+PriorMDM
+2.7868
+[MATH: \pm]
+0.0963
+2.5319
+[MATH: \pm]
+0.0866
+3.2992
+[MATH: \pm]
+0.0890
+3.1942
+[MATH: \pm]
+0.0886
+3.2740
+[MATH: \pm]
+0.0858
+3.6233
+[MATH: \pm]
+0.0910
+2.8958
+[MATH: \pm]
+0.0811
+MMM
+1.9071
+[MATH: \pm]
+0.0596
+2.3130
+[MATH: \pm]
+0.0825
+2.2922
+[MATH: \pm]
+0.0733
+2.9123
+[MATH: \pm]
+0.0744
+2.8336
+[MATH: \pm]
+0.0784
+2.7275
+[MATH: \pm]
+0.0719
+2.1521
+[MATH: \pm]
+0.0597
+AvatarGPT
+2.6664
+[MATH: \pm]
+0.1196
+4.0477
+[MATH: \pm]
+0.1619
+4.5186
+[MATH: \pm]
+0.1533
+2.8391
+[MATH: \pm]
+0.1152
+3.3097
+[MATH: \pm]
+0.1358
+4.5187
+[MATH: \pm]
+0.1533
+2.9940
+[MATH: \pm]
+0.1180
+Mogent
+0.6697
+[MATH: \pm]
+0.0335
+0.6355
+[MATH: \pm]
+0.0324
+0.5121
+[MATH: \pm]
+0.0244
+2.6432
+[MATH: \pm]
+0.1205
+2.5903
+[MATH: \pm]
+0.1208
+2.7607
+[MATH: \pm]
+0.1313
+0.9871
+[MATH: \pm]
+0.0488
+Salad
+0.6908
+[MATH: \pm]
+0.0222
+0.5589
+[MATH: \pm]
+0.0165
+0.5891
+[MATH: \pm]
+0.0181
+2.2421
+[MATH: \pm]
+0.0667
+2.0698
+[MATH: \pm]
+0.0627
+2.3974
+[MATH: \pm]
+0.0820
+0.7321
+[MATH: \pm]
+0.0217
+Momask
+0.8892
+[MATH: \pm]
+0.0384
+0.9272
+[MATH: \pm]
+0.0493
+0.5251
+[MATH: \pm]
+0.0227
+2.7028
+[MATH: \pm]
+0.1080
+2.7319
+[MATH: \pm]
+0.1233
+2.7807
+[MATH: \pm]
+0.1177
+1.0361
+[MATH: \pm]
+0.0482
+Dart
+1.9461
+[MATH: \pm]
+0.0620
+2.0776
+[MATH: \pm]
+0.0696
+2.5796
+[MATH: \pm]
+0.1180
+2.0346
+[MATH: \pm]
+0.0615
+2.3957
+[MATH: \pm]
+0.0757
+1.5979
+[MATH: \pm]
+0.0484
+1.7578
+[MATH: \pm]
+0.0625
+Vimogen
+1.5159
+[MATH: \pm]
+0.0427
+1.4609
+[MATH: \pm]
+0.0499
+1.1261
+[MATH: \pm]
+0.0312
+1.4201
+[MATH: \pm]
+0.0397
+1.4192
+[MATH: \pm]
+0.0448
+1.1203
+[MATH: \pm]
+0.0313
+1.4952
+[MATH: \pm]
+0.0391
+HY
+1.1208
+[MATH: \pm]
+0.0377
+0.5941
+[MATH: \pm]
+0.0194
+0.7560
+[MATH: \pm]
+0.0250
+1.5471
+[MATH: \pm]
+0.0488
+0.7461
+[MATH: \pm]
+0.0252
+0.9628
+[MATH: \pm]
+0.0301
+0.6362
+[MATH: \pm]
+0.0218
+MaskControl
+0.8772
+[MATH: \pm]
+0.0379
+0.9607
+[MATH: \pm]
+0.0516
+0.5269
+[MATH: \pm]
+0.0215
+2.1488
+[MATH: \pm]
+0.0851
+2.8983
+[MATH: \pm]
+0.1105
+2.8263
+[MATH: \pm]
+0.0985
+1.0623
+[MATH: \pm]
+0.0467
+Table 11
+:
+The multi-factor motion evaluation results in the Generalizability dimension. The metrics in this table represent the diversity for 14 baseline models across the Dynamics, Complexity, and Interaction types, as well as the Accuracy type
+Method
+Long
+Short
+Accuracy
+Dynamics
+Complexity
+Interaction
+Dynamics
+Complexity
+Interaction
+T2M
+5.3956
+[MATH: \pm]
+0.1293
+6.8108
+[MATH: \pm]
+0.1995
+5.2286
+[MATH: \pm]
+0.1223
+7.2323
+[MATH: \pm]
+0.1263
+7.8616
+[MATH: \pm]
+0.1577
+6.2809
+[MATH: \pm]
+0.1528
+3.2387
+[MATH: \pm]
+0.0722
+MDM
+6.5693
+[MATH: \pm]
+0.1640
+7.0042
+[MATH: \pm]
+0.1706
+7.1154
+[MATH: \pm]
+0.1777
+5.1184
+[MATH: \pm]
+0.1115
+8.9342
+[MATH: \pm]
+0.1994
+5.9357
+[MATH: \pm]
+0.1778
+8.9097
+[MATH: \pm]
+0.1722
+MotionGPT
+7.7573
+[MATH: \pm]
+0.2240
+8.3491
+[MATH: \pm]
+0.1815
+7.9223
+[MATH: \pm]
+0.1760
+7.7850
+[MATH: \pm]
+0.1534
+8.5559
+[MATH: \pm]
+0.1725
+7.7001
+[MATH: \pm]
+0.1956
+3.0275
+[MATH: \pm]
+0.0733
+CLoSD
+4.6157
+[MATH: \pm]
+0.1178
+5.0038
+[MATH: \pm]
+0.1467
+4.8469
+[MATH: \pm]
+0.1292
+6.2406
+[MATH: \pm]
+0.1301
+6.4810
+[MATH: \pm]
+0.1347
+5.8160
+[MATH: \pm]
+0.1592
+6.0418
+[MATH: \pm]
+0.1090
+PriorMDM
+5.2105
+[MATH: \pm]
+0.1424
+6.1256
+[MATH: \pm]
+0.1893
+5.4950
+[MATH: \pm]
+0.1595
+6.4080
+[MATH: \pm]
+0.1364
+6.9921
+[MATH: \pm]
+0.1545
+7.0518
+[MATH: \pm]
+0.1595
+2.6231
+[MATH: \pm]
+0.0768
+MMM
+5.0604
+[MATH: \pm]
+0.1337
+6.1839
+[MATH: \pm]
+0.1617
+5.8877
+[MATH: \pm]
+0.1804
+1.4552
+[MATH: \pm]
+0.0484
+6.2352
+[MATH: \pm]
+0.1406
+1.0665
+[MATH: \pm]
+0.0280
+8.4176
+[MATH: \pm]
+0.1457
+AvatarGPT
+1.6607
+[MATH: \pm]
+0.0870
+0.9446
+[MATH: \pm]
+0.0463
+1.1291
+[MATH: \pm]
+0.0258
+1.3151
+[MATH: \pm]
+0.0511
+1.2942
+[MATH: \pm]
+0.0557
+1.2047
+[MATH: \pm]
+0.0543
+1.1845
+[MATH: \pm]
+0.0433
+Mogent
+1.3393
+[MATH: \pm]
+0.0603
+1.1663
+[MATH: \pm]
+0.0553
+1.0990
+[MATH: \pm]
+0.0480
+1.3254
+[MATH: \pm]
+0.0440
+1.4622
+[MATH: \pm]
+0.0728
+1.0335
+[MATH: \pm]
+0.0313
+1.1845
+[MATH: \pm]
+0.0404
+Salad
+1.1558
+[MATH: \pm]
+0.0326
+0.9006
+[MATH: \pm]
+0.0251
+1.0459
+[MATH: \pm]
+0.0283
+1.1858
+[MATH: \pm]
+0.0435
+1.0924
+[MATH: \pm]
+0.0456
+1.1421
+[MATH: \pm]
+0.0327
+5.6588
+[MATH: \pm]
+0.1106
+Momask
+1.6219
+[MATH: \pm]
+0.0686
+1.6402
+[MATH: \pm]
+0.0766
+1.1420
+[MATH: \pm]
+0.0370
+1.3595
+[MATH: \pm]
+0.0428
+1.4873
+[MATH: \pm]
+0.0585
+1.1287
+[MATH: \pm]
+0.0367
+1.0450
+[MATH: \pm]
+0.0296
+Dart
+0.9947
+[MATH: \pm]
+0.0415
+0.6505
+[MATH: \pm]
+0.0192
+0.5748
+[MATH: \pm]
+0.0223
+0.8979
+[MATH: \pm]
+0.0303
+0.7252
+[MATH: \pm]
+0.0257
+0.6399
+[MATH: \pm]
+0.0382
+0.6297
+[MATH: \pm]
+0.0178
+Vimogen
+1.3654
+[MATH: \pm]
+0.0365
+1.4038
+[MATH: \pm]
+0.0386
+1.5231
+[MATH: \pm]
+0.0439
+1.6118
+[MATH: \pm]
+0.0341
+1.6524
+[MATH: \pm]
+0.0498
+1.6433
+[MATH: \pm]
+0.0374
+5.4882
+[MATH: \pm]
+0.1462
+HY
+3.2903
+[MATH: \pm]
+0.1388
+2.9222
+[MATH: \pm]
+0.1131
+2.9099
+[MATH: \pm]
+0.1119
+4.6197
+[MATH: \pm]
+0.1151
+3.1782
+[MATH: \pm]
+0.0900
+3.0222
+[MATH: \pm]
+0.1090
+2.8880
+[MATH: \pm]
+0.0806
+MaskControl
+1.6145
+[MATH: \pm]
+0.0684
+1.6045
+[MATH: \pm]
+0.0652
+1.0831
+[MATH: \pm]
+0.0424
+7.8735
+[MATH: \pm]
+0.1645
+1.4596
+[MATH: \pm]
+0.0585
+8.3909
+[MATH: \pm]
+0.2147
+5.9217
+[MATH: \pm]
+0.1245
+Table 12
+:
+The multi-factor motion evaluation results in the Physical Quality dimension. The metrics in this table represent the Jitter Degree for 14 baseline models across the Dynamics, Complexity, and Interaction types, as well as the Accuracy type
+Method
+Long
+Short
+Accuracy
+Dynamics
+Complexity
+Interaction
+Dynamics
+Complexity
+Interaction
+T2M
+0.0046
+[MATH: \pm]
+0.0011
+0.0042
+[MATH: \pm]
+0.0009
+0.0042
+[MATH: \pm]
+0.0013
+0.0077
+[MATH: \pm]
+0.0025
+0.0059
+[MATH: \pm]
+0.0022
+0.0046
+[MATH: \pm]
+0.0019
+0.0067
+[MATH: \pm]
+0.0029
+MDM
+0.0153
+[MATH: \pm]
+0.0071
+0.0081
+[MATH: \pm]
+0.0053
+0.0119
+[MATH: \pm]
+0.0093
+0.0186
+[MATH: \pm]
+0.0090
+0.0099
+[MATH: \pm]
+0.0049
+0.0063
+[MATH: \pm]
+0.0048
+0.0092
+[MATH: \pm]
+0.0042
+MotionGPT
+0.0144
+[MATH: \pm]
+0.0044
+0.0133
+[MATH: \pm]
+0.0057
+0.0138
+[MATH: \pm]
+0.0064
+0.0206
+[MATH: \pm]
+0.0081
+0.0154
+[MATH: \pm]
+0.0054
+0.0120
+[MATH: \pm]
+0.0048
+0.0127
+[MATH: \pm]
+0.0045
+CLoSD
+0.0136
+[MATH: \pm]
+0.0056
+0.0090
+[MATH: \pm]
+0.0046
+0.0134
+[MATH: \pm]
+0.0092
+0.0180
+[MATH: \pm]
+0.0077
+0.0142
+[MATH: \pm]
+0.0065
+0.0119
+[MATH: \pm]
+0.0083
+0.0148
+[MATH: \pm]
+0.0066
+PriorMDM
+0.0077
+[MATH: \pm]
+0.0055
+0.0056
+[MATH: \pm]
+0.0039
+0.0070
+[MATH: \pm]
+0.0064
+0.0229
+[MATH: \pm]
+0.0127
+0.0106
+[MATH: \pm]
+0.0074
+0.0083
+[MATH: \pm]
+0.0070
+0.0128
+[MATH: \pm]
+0.0068
+MMM
+0.0185
+[MATH: \pm]
+0.0053
+0.0145
+[MATH: \pm]
+0.0043
+0.0135
+[MATH: \pm]
+0.0051
+0.0201
+[MATH: \pm]
+0.0068
+0.0135
+[MATH: \pm]
+0.0053
+0.0097
+[MATH: \pm]
+0.0047
+0.0115
+[MATH: \pm]
+0.0041
+AvatarGPT
+0.0121
+[MATH: \pm]
+0.0033
+0.0084
+[MATH: \pm]
+0.0023
+0.0112
+[MATH: \pm]
+0.0051
+0.0201
+[MATH: \pm]
+0.0085
+0.0137
+[MATH: \pm]
+0.0048
+0.0086
+[MATH: \pm]
+0.0040
+0.0116
+[MATH: \pm]
+0.0037
+Mogent
+0.0133
+[MATH: \pm]
+0.0047
+0.0102
+[MATH: \pm]
+0.0039
+0.0090
+[MATH: \pm]
+0.0057
+0.0184
+[MATH: \pm]
+0.0064
+0.0111
+[MATH: \pm]
+0.0042
+0.0084
+[MATH: \pm]
+0.0052
+0.0113
+[MATH: \pm]
+0.0043
+Salad
+0.0165
+[MATH: \pm]
+0.0037
+0.0115
+[MATH: \pm]
+0.0031
+0.0129
+[MATH: \pm]
+0.0045
+0.0169
+[MATH: \pm]
+0.0050
+0.0125
+[MATH: \pm]
+0.0034
+0.0100
+[MATH: \pm]
+0.0043
+0.0125
+[MATH: \pm]
+0.0029
+Momask
+0.0194
+[MATH: \pm]
+0.0061
+0.0126
+[MATH: \pm]
+0.0042
+0.0105
+[MATH: \pm]
+0.0068
+0.0203
+[MATH: \pm]
+0.0062
+0.0133
+[MATH: \pm]
+0.0049
+0.0103
+[MATH: \pm]
+0.0062
+0.0137
+[MATH: \pm]
+0.0048
+Dart
+0.0053
+[MATH: \pm]
+0.0015
+0.0047
+[MATH: \pm]
+0.0010
+0.0038
+[MATH: \pm]
+0.0011
+0.0075
+[MATH: \pm]
+0.0028
+0.0053
+[MATH: \pm]
+0.0022
+0.0034
+[MATH: \pm]
+0.0017
+0.0051
+[MATH: \pm]
+0.0019
+Vimogen
+0.0155
+[MATH: \pm]
+0.0026
+0.0136
+[MATH: \pm]
+0.0026
+0.0126
+[MATH: \pm]
+0.0038
+0.0164
+[MATH: \pm]
+0.0025
+0.0154
+[MATH: \pm]
+0.0025
+0.0152
+[MATH: \pm]
+0.0031
+0.0139
+[MATH: \pm]
+0.0024
+HY
+0.0082
+[MATH: \pm]
+0.0057
+0.0036
+[MATH: \pm]
+0.0035
+0.0040
+[MATH: \pm]
+0.0033
+0.0185
+[MATH: \pm]
+0.0135
+0.0049
+[MATH: \pm]
+0.0026
+0.0037
+[MATH: \pm]
+0.0029
+0.0061
+[MATH: \pm]
+0.0042
+MaskControl
+0.0207
+[MATH: \pm]
+0.0052
+0.0164
+[MATH: \pm]
+0.0046
+0.0135
+[MATH: \pm]
+0.0059
+0.0222
+[MATH: \pm]
+0.0059
+0.0155
+[MATH: \pm]
+0.0053
+0.0124
+[MATH: \pm]
+0.0061
+0.0139
+[MATH: \pm]
+0.0042
+Table 13
+:
+The multi-factor motion evaluation results in the Physical Quality dimension. The metrics in this table represent the Ground Penetration for 14 baseline models across the Dynamics, Complexity, and Interaction types, as well as the Accuracy type
+Method
+Long
+Short
+Accuracy
+Dynamics
+Complexity
+Interaction
+Dynamics
+Complexity
+Interaction
+T2M
+0.0395
+[MATH: \pm]
+0.0480
+0.0416
+[MATH: \pm]
+0.0463
+0.0340
+[MATH: \pm]
+0.0489
+0.0806
+[MATH: \pm]
+0.1078
+0.1167
+[MATH: \pm]
+0.2102
+0.0364
+[MATH: \pm]
+0.0795
+0.0869
+[MATH: \pm]
+0.1031
+MDM
+0.1649
+[MATH: \pm]
+0.1337
+0.0752
+[MATH: \pm]
+0.0898
+0.1135
+[MATH: \pm]
+0.1700
+0.2347
+[MATH: \pm]
+0.2790
+0.1355
+[MATH: \pm]
+0.1899
+0.0887
+[MATH: \pm]
+0.1883
+0.1104
+[MATH: \pm]
+0.1857
+MotionGPT
+0.1633
+[MATH: \pm]
+0.1736
+0.1168
+[MATH: \pm]
+0.1235
+0.2009
+[MATH: \pm]
+0.2797
+0.1937
+[MATH: \pm]
+0.1774
+0.1564
+[MATH: \pm]
+0.1638
+0.1864
+[MATH: \pm]
+0.2537
+0.1328
+[MATH: \pm]
+0.1375
+CLoSD
+0.1273
+[MATH: \pm]
+0.2055
+0.0762
+[MATH: \pm]
+0.1411
+0.1085
+[MATH: \pm]
+0.2435
+0.2225
+[MATH: \pm]
+0.3232
+0.2160
+[MATH: \pm]
+0.3624
+0.1040
+[MATH: \pm]
+0.2963
+0.1485
+[MATH: \pm]
+0.3053
+PriorMDM
+0.1578
+[MATH: \pm]
+0.1469
+0.1189
+[MATH: \pm]
+0.0794
+0.0959
+[MATH: \pm]
+0.1401
+0.1977
+[MATH: \pm]
+0.1424
+0.1406
+[MATH: \pm]
+0.1825
+0.0911
+[MATH: \pm]
+0.1571
+0.1896
+[MATH: \pm]
+0.2247
+MMM
+0.1350
+[MATH: \pm]
+0.1161
+0.0764
+[MATH: \pm]
+0.0823
+0.0444
+[MATH: \pm]
+0.0777
+0.2007
+[MATH: \pm]
+0.1603
+0.1193
+[MATH: \pm]
+0.1431
+0.0510
+[MATH: \pm]
+0.0669
+0.0817
+[MATH: \pm]
+0.1030
+AvatarGPT
+0.4377
+[MATH: \pm]
+0.2441
+0.2389
+[MATH: \pm]
+0.1044
+0.1888
+[MATH: \pm]
+0.1575
+0.1790
+[MATH: \pm]
+0.2156
+0.1818
+[MATH: \pm]
+0.2512
+0.1266
+[MATH: \pm]
+0.1536
+0.0835
+[MATH: \pm]
+0.1117
+Mogent
+0.1352
+[MATH: \pm]
+0.1164
+0.1114
+[MATH: \pm]
+0.0675
+0.0757
+[MATH: \pm]
+0.0613
+0.1522
+[MATH: \pm]
+0.1277
+0.1010
+[MATH: \pm]
+0.0914
+0.0730
+[MATH: \pm]
+0.1162
+0.0775
+[MATH: \pm]
+0.0817
+Salad
+0.1568
+[MATH: \pm]
+0.1061
+0.1297
+[MATH: \pm]
+0.0961
+0.1019
+[MATH: \pm]
+0.0832
+0.1571
+[MATH: \pm]
+0.1097
+0.1365
+[MATH: \pm]
+0.1235
+0.0885
+[MATH: \pm]
+0.0985
+0.0900
+[MATH: \pm]
+0.1029
+Momask
+0.1759
+[MATH: \pm]
+0.0961
+0.1216
+[MATH: \pm]
+0.0895
+0.0781
+[MATH: \pm]
+0.0902
+0.1968
+[MATH: \pm]
+0.1996
+0.1322
+[MATH: \pm]
+0.1379
+0.1186
+[MATH: \pm]
+0.1596
+0.0911
+[MATH: \pm]
+0.0834
+Dart
+0.2694
+[MATH: \pm]
+0.4843
+0.2165
+[MATH: \pm]
+0.1897
+0.1600
+[MATH: \pm]
+0.2527
+0.1342
+[MATH: \pm]
+0.1781
+0.0675
+[MATH: \pm]
+0.1376
+0.0146
+[MATH: \pm]
+0.0298
+0.0759
+[MATH: \pm]
+0.0985
+Vimogen
+0.0045
+[MATH: \pm]
+0.0032
+0.0045
+[MATH: \pm]
+0.0030
+0.0051
+[MATH: \pm]
+0.0046
+0.0052
+[MATH: \pm]
+0.0040
+0.0051
+[MATH: \pm]
+0.0043
+0.0040
+[MATH: \pm]
+0.0039
+0.0041
+[MATH: \pm]
+0.0033
+HY
+0.1453
+[MATH: \pm]
+0.0903
+0.0910
+[MATH: \pm]
+0.0647
+0.0709
+[MATH: \pm]
+0.0572
+0.1500
+[MATH: \pm]
+0.0728
+0.0939
+[MATH: \pm]
+0.0613
+0.0562
+[MATH: \pm]
+0.0490
+0.1051
+[MATH: \pm]
+0.1149
+MaskControl
+0.1578
+[MATH: \pm]
+0.0810
+0.1216
+[MATH: \pm]
+0.0829
+0.0903
+[MATH: \pm]
+0.0979
+0.1843
+[MATH: \pm]
+0.1609
+0.1192
+[MATH: \pm]
+0.1313
+0.1056
+[MATH: \pm]
+0.1462
+0.1153
+[MATH: \pm]
+0.1118
+Table 14
+:
+The multi-factor motion evaluation results in the Physical Quality dimension. The metrics in this table represent the Foot Floating for 14 baseline models across the Dynamics, Complexity, and Interaction types, as well as the Accuracy type
+Method
+Long
+Short
+Accuracy
+Dynamics
+Complexity
+Interaction
+Dynamics
+Complexity
+Interaction
+T2M
+0.1296
+[MATH: \pm]
+0.0512
+0.1487
+[MATH: \pm]
+0.0624
+0.1040
+[MATH: \pm]
+0.0535
+0.1384
+[MATH: \pm]
+0.0489
+0.1401
+[MATH: \pm]
+0.0801
+0.1058
+[MATH: \pm]
+0.0456
+0.1038
+[MATH: \pm]
+0.0450
+MDM
+0.0877
+[MATH: \pm]
+0.0427
+0.0743
+[MATH: \pm]
+0.0392
+0.0570
+[MATH: \pm]
+0.0452
+0.0809
+[MATH: \pm]
+0.0422
+0.0601
+[MATH: \pm]
+0.0354
+0.0340
+[MATH: \pm]
+0.0298
+0.0799
+[MATH: \pm]
+0.0421
+MotionGPT
+0.2621
+[MATH: \pm]
+0.0848
+0.2439
+[MATH: \pm]
+0.0935
+0.2232
+[MATH: \pm]
+0.0948
+0.2503
+[MATH: \pm]
+0.0851
+0.2264
+[MATH: \pm]
+0.0932
+0.2087
+[MATH: \pm]
+0.0996
+0.1958
+[MATH: \pm]
+0.0770
+CLoSD
+0.0337
+[MATH: \pm]
+0.0258
+0.0240
+[MATH: \pm]
+0.0140
+0.0290
+[MATH: \pm]
+0.0225
+0.0479
+[MATH: \pm]
+0.0294
+0.0403
+[MATH: \pm]
+0.0331
+0.0336
+[MATH: \pm]
+0.0497
+0.0429
+[MATH: \pm]
+0.0324
+PriorMDM
+0.1764
+[MATH: \pm]
+0.0760
+0.1958
+[MATH: \pm]
+0.0831
+0.1442
+[MATH: \pm]
+0.0812
+0.1413
+[MATH: \pm]
+0.0842
+0.1395
+[MATH: \pm]
+0.0694
+0.0935
+[MATH: \pm]
+0.0556
+0.1230
+[MATH: \pm]
+0.0650
+MMM
+0.2066
+[MATH: \pm]
+0.0532
+0.2129
+[MATH: \pm]
+0.0629
+0.1704
+[MATH: \pm]
+0.0605
+0.1671
+[MATH: \pm]
+0.0523
+0.1732
+[MATH: \pm]
+0.0695
+0.1398
+[MATH: \pm]
+0.0648
+0.1429
+[MATH: \pm]
+0.0569
+AvatarGPT
+0.2739
+[MATH: \pm]
+0.0509
+0.2817
+[MATH: \pm]
+0.0562
+0.2185
+[MATH: \pm]
+0.0796
+0.1974
+[MATH: \pm]
+0.0626
+0.1899
+[MATH: \pm]
+0.0816
+0.1832
+[MATH: \pm]
+0.1015
+0.1709
+[MATH: \pm]
+0.0634
+Mogent
+0.2176
+[MATH: \pm]
+0.0661
+0.2350
+[MATH: \pm]
+0.0821
+0.1602
+[MATH: \pm]
+0.0721
+0.1917
+[MATH: \pm]
+0.0806
+0.1590
+[MATH: \pm]
+0.0715
+0.1603
+[MATH: \pm]
+0.0944
+0.1525
+[MATH: \pm]
+0.0660
+Salad
+0.3079
+[MATH: \pm]
+0.0694
+0.3622
+[MATH: \pm]
+0.0875
+0.2883
+[MATH: \pm]
+0.0983
+0.2894
+[MATH: \pm]
+0.0766
+0.3117
+[MATH: \pm]
+0.0893
+0.3395
+[MATH: \pm]
+0.0982
+0.3057
+[MATH: \pm]
+0.0678
+Momask
+0.3028
+[MATH: \pm]
+0.0902
+0.2448
+[MATH: \pm]
+0.0862
+0.1776
+[MATH: \pm]
+0.0874
+0.1955
+[MATH: \pm]
+0.0666
+0.1545
+[MATH: \pm]
+0.0638
+0.1265
+[MATH: \pm]
+0.0708
+0.1729
+[MATH: \pm]
+0.0713
+Dart
+0.0909
+[MATH: \pm]
+0.0278
+0.0986
+[MATH: \pm]
+0.0293
+0.0596
+[MATH: \pm]
+0.0233
+0.1080
+[MATH: \pm]
+0.0640
+0.0848
+[MATH: \pm]
+0.0406
+0.0527
+[MATH: \pm]
+0.0309
+0.0722
+[MATH: \pm]
+0.0377
+Vimogen
+0.1898
+[MATH: \pm]
+0.0510
+0.2119
+[MATH: \pm]
+0.0498
+0.1911
+[MATH: \pm]
+0.0632
+0.2447
+[MATH: \pm]
+0.0722
+0.2408
+[MATH: \pm]
+0.0786
+0.2525
+[MATH: \pm]
+0.0847
+0.2558
+[MATH: \pm]
+0.0666
+HY
+0.2398
+[MATH: \pm]
+0.1070
+0.1945
+[MATH: \pm]
+0.0995
+0.2306
+[MATH: \pm]
+0.1513
+0.4003
+[MATH: \pm]
+0.1266
+0.2835
+[MATH: \pm]
+0.1442
+0.2178
+[MATH: \pm]
+0.1586
+0.1847
+[MATH: \pm]
+0.0936
+MaskControl
+0.3125
+[MATH: \pm]
+0.0901
+0.2621
+[MATH: \pm]
+0.0838
+0.2005
+[MATH: \pm]
+0.0676
+0.2176
+[MATH: \pm]
+0.0719
+0.1923
+[MATH: \pm]
+0.0707
+0.1631
+[MATH: \pm]
+0.0784
+0.2095
+[MATH: \pm]
+0.0734
+Table 15
+:
+The multi-factor motion evaluation results in the Physical Quality dimension. The metrics in this table represent the Foot Sliding for 14 baseline models across the Dynamics, Complexity, and Interaction types, as well as the Accuracy type
+Method
+Long
+Short
+Accuracy
+Dynamics
+Complexity
+Interaction
+Dynamics
+Complexity
+Interaction
+T2M
+0.0030
+[MATH: \pm]
+0.0012
+0.0032
+[MATH: \pm]
+0.0015
+0.0022
+[MATH: \pm]
+0.0009
+0.0045
+[MATH: \pm]
+0.0023
+0.0043
+[MATH: \pm]
+0.0029
+0.0026
+[MATH: \pm]
+0.0013
+0.0039
+[MATH: \pm]
+0.0024
+MDM
+0.0069
+[MATH: \pm]
+0.0049
+0.0045
+[MATH: \pm]
+0.0043
+0.0047
+[MATH: \pm]
+0.0049
+0.0092
+[MATH: \pm]
+0.0094
+0.0043
+[MATH: \pm]
+0.0039
+0.0022
+[MATH: \pm]
+0.0025
+0.0034
+[MATH: \pm]
+0.0025
+MotionGPT
+0.0065
+[MATH: \pm]
+0.0032
+0.0064
+[MATH: \pm]
+0.0042
+0.0067
+[MATH: \pm]
+0.0055
+0.0099
+[MATH: \pm]
+0.0061
+0.0075
+[MATH: \pm]
+0.0040
+0.0057
+[MATH: \pm]
+0.0040
+0.0057
+[MATH: \pm]
+0.0030
+CLoSD
+0.0030
+[MATH: \pm]
+0.0023
+0.0020
+[MATH: \pm]
+0.0015
+0.0027
+[MATH: \pm]
+0.0028
+0.0048
+[MATH: \pm]
+0.0038
+0.0035
+[MATH: \pm]
+0.0028
+0.0022
+[MATH: \pm]
+0.0018
+0.0032
+[MATH: \pm]
+0.0028
+PriorMDM
+0.0059
+[MATH: \pm]
+0.0053
+0.0041
+[MATH: \pm]
+0.0030
+0.0037
+[MATH: \pm]
+0.0048
+0.0111
+[MATH: \pm]
+0.0092
+0.0059
+[MATH: \pm]
+0.0064
+0.0032
+[MATH: \pm]
+0.0033
+0.0072
+[MATH: \pm]
+0.0060
+MMM
+0.0090
+[MATH: \pm]
+0.0056
+0.0060
+[MATH: \pm]
+0.0035
+0.0040
+[MATH: \pm]
+0.0017
+0.0101
+[MATH: \pm]
+0.0060
+0.0063
+[MATH: \pm]
+0.0037
+0.0037
+[MATH: \pm]
+0.0022
+0.0049
+[MATH: \pm]
+0.0032
+AvatarGPT
+0.0064
+[MATH: \pm]
+0.0030
+0.0041
+[MATH: \pm]
+0.0013
+0.0047
+[MATH: \pm]
+0.0030
+0.0092
+[MATH: \pm]
+0.0066
+0.0062
+[MATH: \pm]
+0.0033
+0.0036
+[MATH: \pm]
+0.0021
+0.0043
+[MATH: \pm]
+0.0019
+Mogent
+0.0073
+[MATH: \pm]
+0.0034
+0.0067
+[MATH: \pm]
+0.0041
+0.0037
+[MATH: \pm]
+0.0024
+0.0091
+[MATH: \pm]
+0.0047
+0.0058
+[MATH: \pm]
+0.0042
+0.0039
+[MATH: \pm]
+0.0027
+0.0049
+[MATH: \pm]
+0.0031
+Salad
+0.0117
+[MATH: \pm]
+0.0055
+0.0080
+[MATH: \pm]
+0.0041
+0.0063
+[MATH: \pm]
+0.0037
+0.0085
+[MATH: \pm]
+0.0059
+0.0069
+[MATH: \pm]
+0.0028
+0.0044
+[MATH: \pm]
+0.0018
+0.0073
+[MATH: \pm]
+0.0031
+Momask
+0.0129
+[MATH: \pm]
+0.0069
+0.0076
+[MATH: \pm]
+0.0053
+0.0041
+[MATH: \pm]
+0.0031
+0.0088
+[MATH: \pm]
+0.0055
+0.0065
+[MATH: \pm]
+0.0042
+0.0041
+[MATH: \pm]
+0.0026
+0.0059
+[MATH: \pm]
+0.0036
+Dart
+0.0030
+[MATH: \pm]
+0.0020
+0.0030
+[MATH: \pm]
+0.0014
+0.0019
+[MATH: \pm]
+0.0012
+0.0058
+[MATH: \pm]
+0.0041
+0.0040
+[MATH: \pm]
+0.0036
+0.0014
+[MATH: \pm]
+0.0009
+0.0032
+[MATH: \pm]
+0.0017
+Vimogen
+0.0076
+[MATH: \pm]
+0.0024
+0.0079
+[MATH: \pm]
+0.0029
+0.0065
+[MATH: \pm]
+0.0026
+0.0105
+[MATH: \pm]
+0.0032
+0.0099
+[MATH: \pm]
+0.0030
+0.0082
+[MATH: \pm]
+0.0025
+0.0101
+[MATH: \pm]
+0.0033
+HY
+0.0099
+[MATH: \pm]
+0.0065
+0.0048
+[MATH: \pm]
+0.0030
+0.0054
+[MATH: \pm]
+0.0057
+0.0196
+[MATH: \pm]
+0.0162
+0.0066
+[MATH: \pm]
+0.0042
+0.0043
+[MATH: \pm]
+0.0049
+0.0047
+[MATH: \pm]
+0.0037
+MaskControl
+0.0121
+[MATH: \pm]
+0.0061
+0.0093
+[MATH: \pm]
+0.0060
+0.0050
+[MATH: \pm]
+0.0041
+0.0099
+[MATH: \pm]
+0.0062
+0.0070
+[MATH: \pm]
+0.0053
+0.0043
+[MATH: \pm]
+0.0022
+0.0058
+[MATH: \pm]
+0.0033
+Table 16
+:
+The multi-factor motion evaluation results in the Physical Quality dimension. The metrics in this table represent the Dynamic Degree for 14 baseline models across the Dynamics, Complexity, and Interaction types, as well as the Accuracy type
+Method
+Long
+Short
+Accuracy
+Dynamics
+Complexity
+Interaction
+Dynamics
+Complexity
+Interaction
+T2M
+0.0171
+[MATH: \pm]
+0.0046
+0.0153
+[MATH: \pm]
+0.0042
+0.0143
+[MATH: \pm]
+0.0050
+0.0257
+[MATH: \pm]
+0.0078
+0.0213
+[MATH: \pm]
+0.0079
+0.0171
+[MATH: \pm]
+0.0078
+0.0233
+[MATH: \pm]
+0.0088
+MDM
+0.0355
+[MATH: \pm]
+0.0122
+0.0225
+[MATH: \pm]
+0.0093
+0.0285
+[MATH: \pm]
+0.0159
+0.0433
+[MATH: \pm]
+0.0167
+0.0296
+[MATH: \pm]
+0.0111
+0.0192
+[MATH: \pm]
+0.0111
+0.0259
+[MATH: \pm]
+0.0092
+MotionGPT
+0.0293
+[MATH: \pm]
+0.0100
+0.0272
+[MATH: \pm]
+0.0116
+0.0288
+[MATH: \pm]
+0.0144
+0.0409
+[MATH: \pm]
+0.0177
+0.0325
+[MATH: \pm]
+0.0118
+0.0268
+[MATH: \pm]
+0.0132
+0.0295
+[MATH: \pm]
+0.0111
+CLoSD
+0.0248
+[MATH: \pm]
+0.0099
+0.0170
+[MATH: \pm]
+0.0085
+0.0234
+[MATH: \pm]
+0.0164
+0.0330
+[MATH: \pm]
+0.0141
+0.0283
+[MATH: \pm]
+0.0143
+0.0224
+[MATH: \pm]
+0.0162
+0.0304
+[MATH: \pm]
+0.0144
+PriorMDM
+0.0221
+[MATH: \pm]
+0.0113
+0.0187
+[MATH: \pm]
+0.0102
+0.0208
+[MATH: \pm]
+0.0125
+0.0525
+[MATH: \pm]
+0.0220
+0.0297
+[MATH: \pm]
+0.0151
+0.0249
+[MATH: \pm]
+0.0168
+0.0374
+[MATH: \pm]
+0.0152
+MMM
+0.0365
+[MATH: \pm]
+0.0100
+0.0298
+[MATH: \pm]
+0.0080
+0.0268
+[MATH: \pm]
+0.0096
+0.0394
+[MATH: \pm]
+0.0120
+0.0300
+[MATH: \pm]
+0.0103
+0.0214
+[MATH: \pm]
+0.0105
+0.0264
+[MATH: \pm]
+0.0096
+AvatarGPT
+0.0253
+[MATH: \pm]
+0.0065
+0.0177
+[MATH: \pm]
+0.0045
+0.0233
+[MATH: \pm]
+0.0122
+0.0408
+[MATH: \pm]
+0.0177
+0.0308
+[MATH: \pm]
+0.0111
+0.0183
+[MATH: \pm]
+0.0097
+0.0277
+[MATH: \pm]
+0.0098
+Mogent
+0.0370
+[MATH: \pm]
+0.0107
+0.0294
+[MATH: \pm]
+0.0087
+0.0238
+[MATH: \pm]
+0.0110
+0.0438
+[MATH: \pm]
+0.0127
+0.0315
+[MATH: \pm]
+0.0098
+0.0236
+[MATH: \pm]
+0.0120
+0.0309
+[MATH: \pm]
+0.0109
+Salad
+0.0390
+[MATH: \pm]
+0.0086
+0.0301
+[MATH: \pm]
+0.0082
+0.0288
+[MATH: \pm]
+0.0102
+0.0392
+[MATH: \pm]
+0.0104
+0.0320
+[MATH: \pm]
+0.0093
+0.0234
+[MATH: \pm]
+0.0104
+0.0299
+[MATH: \pm]
+0.0079
+Momask
+0.0408
+[MATH: \pm]
+0.0121
+0.0295
+[MATH: \pm]
+0.0098
+0.0222
+[MATH: \pm]
+0.0132
+0.0460
+[MATH: \pm]
+0.0131
+0.0328
+[MATH: \pm]
+0.0117
+0.0263
+[MATH: \pm]
+0.0165
+0.0326
+[MATH: \pm]
+0.0124
+Dart
+0.0133
+[MATH: \pm]
+0.0047
+0.0116
+[MATH: \pm]
+0.0030
+0.0091
+[MATH: \pm]
+0.0035
+0.0214
+[MATH: \pm]
+0.0088
+0.0156
+[MATH: \pm]
+0.0073
+0.0081
+[MATH: \pm]
+0.0062
+0.0148
+[MATH: \pm]
+0.0067
+Vimogen
+0.0302
+[MATH: \pm]
+0.0053
+0.0280
+[MATH: \pm]
+0.0053
+0.0227
+[MATH: \pm]
+0.0068
+0.0319
+[MATH: \pm]
+0.0048
+0.0290
+[MATH: \pm]
+0.0049
+0.0264
+[MATH: \pm]
+0.0056
+0.0261
+[MATH: \pm]
+0.0052
+HY
+0.0233
+[MATH: \pm]
+0.0089
+0.0129
+[MATH: \pm]
+0.0062
+0.0136
+[MATH: \pm]
+0.0089
+0.0435
+[MATH: \pm]
+0.0200
+0.0181
+[MATH: \pm]
+0.0075
+0.0139
+[MATH: \pm]
+0.0096
+0.0174
+[MATH: \pm]
+0.0087
+MaskControl
+0.0420
+[MATH: \pm]
+0.0111
+0.0346
+[MATH: \pm]
+0.0103
+0.0268
+[MATH: \pm]
+0.0119
+0.0480
+[MATH: \pm]
+0.0129
+0.0350
+[MATH: \pm]
+0.0119
+0.0281
+[MATH: \pm]
+0.0160
+0.0339
+[MATH: \pm]
+0.0115
+Table 17
+:
+The multi-factor motion evaluation results in the Physical Quality dimension. The metrics in this table represent the pose quality for 14 baseline models across the Dynamics, Complexity, and Interaction types, as well as the Accuracy type
+Method
+Long
+Short
+Accuracy
+Dynamics
+Complexity
+Interaction
+Dynamics
+Complexity
+Interaction
+T2M
+2.0667
+[MATH: \pm]
+0.1894
+1.9423
+[MATH: \pm]
+0.1653
+2.0374
+[MATH: \pm]
+0.1972
+2.1909
+[MATH: \pm]
+0.2206
+2.0441
+[MATH: \pm]
+0.2580
+1.9433
+[MATH: \pm]
+0.2080
+2.0737
+[MATH: \pm]
+0.1594
+MDM
+2.3354
+[MATH: \pm]
+0.3272
+2.0269
+[MATH: \pm]
+0.2092
+2.4132
+[MATH: \pm]
+0.4034
+2.1770
+[MATH: \pm]
+0.2566
+2.0185
+[MATH: \pm]
+0.2460
+2.1223
+[MATH: \pm]
+0.4816
+1.8929
+[MATH: \pm]
+0.2113
+MotionGPT
+2.3042
+[MATH: \pm]
+0.3033
+2.2648
+[MATH: \pm]
+0.2994
+2.3872
+[MATH: \pm]
+0.4741
+2.4127
+[MATH: \pm]
+0.3249
+2.1749
+[MATH: \pm]
+0.2965
+2.1551
+[MATH: \pm]
+0.3139
+2.0752
+[MATH: \pm]
+0.2581
+CLoSD
+1.8286
+[MATH: \pm]
+0.1480
+1.6683
+[MATH: \pm]
+0.1276
+1.8133
+[MATH: \pm]
+0.1655
+1.7840
+[MATH: \pm]
+0.1870
+1.6804
+[MATH: \pm]
+0.1901
+1.7963
+[MATH: \pm]
+0.2339
+1.6374
+[MATH: \pm]
+0.1332
+PriorMDM
+2.7155
+[MATH: \pm]
+0.2903
+2.6538
+[MATH: \pm]
+0.3414
+2.4847
+[MATH: \pm]
+0.3638
+2.5735
+[MATH: \pm]
+0.2967
+2.3386
+[MATH: \pm]
+0.2998
+2.2188
+[MATH: \pm]
+0.3828
+2.2444
+[MATH: \pm]
+0.2176
+MMM
+2.1417
+[MATH: \pm]
+0.1881
+2.0483
+[MATH: \pm]
+0.1578
+2.1479
+[MATH: \pm]
+0.3096
+2.2049
+[MATH: \pm]
+0.2236
+2.0271
+[MATH: \pm]
+0.2288
+1.9730
+[MATH: \pm]
+0.2721
+1.9563
+[MATH: \pm]
+0.1894
+AvatarGPT
+2.1451
+[MATH: \pm]
+0.2068
+1.9888
+[MATH: \pm]
+0.1967
+2.2132
+[MATH: \pm]
+0.3913
+2.2723
+[MATH: \pm]
+0.3358
+2.0981
+[MATH: \pm]
+0.3258
+2.0284
+[MATH: \pm]
+0.4334
+1.9960
+[MATH: \pm]
+0.2807
+Mogent
+2.4895
+[MATH: \pm]
+0.2200
+2.3929
+[MATH: \pm]
+0.2423
+2.4316
+[MATH: \pm]
+0.3516
+2.4091
+[MATH: \pm]
+0.2874
+2.2051
+[MATH: \pm]
+0.2941
+2.1532
+[MATH: \pm]
+0.3136
+1.9875
+[MATH: \pm]
+0.1929
+Salad
+2.6171
+[MATH: \pm]
+0.2348
+2.2139
+[MATH: \pm]
+0.2276
+2.4996
+[MATH: \pm]
+0.3153
+2.3332
+[MATH: \pm]
+0.2934
+2.1310
+[MATH: \pm]
+0.2209
+2.1906
+[MATH: \pm]
+0.3404
+2.0110
+[MATH: \pm]
+0.1851
+Momask
+2.5119
+[MATH: \pm]
+0.2348
+2.3773
+[MATH: \pm]
+0.2795
+2.3395
+[MATH: \pm]
+0.3685
+2.3481
+[MATH: \pm]
+0.2668
+2.1446
+[MATH: \pm]
+0.2975
+2.0739
+[MATH: \pm]
+0.3131
+2.0940
+[MATH: \pm]
+0.2769
+Dart
+3.3518
+[MATH: \pm]
+0.1531
+3.2598
+[MATH: \pm]
+0.1284
+3.3950
+[MATH: \pm]
+0.1740
+3.5097
+[MATH: \pm]
+0.1843
+3.4433
+[MATH: \pm]
+0.1913
+3.3956
+[MATH: \pm]
+0.2037
+3.3429
+[MATH: \pm]
+0.1366
+Vimogen
+2.8190
+[MATH: \pm]
+0.1467
+2.6615
+[MATH: \pm]
+0.1412
+2.7540
+[MATH: \pm]
+0.2762
+2.8800
+[MATH: \pm]
+0.1500
+2.8024
+[MATH: \pm]
+0.1516
+2.7597
+[MATH: \pm]
+0.2222
+2.5419
+[MATH: \pm]
+0.1527
+HY
+2.5910
+[MATH: \pm]
+0.2041
+2.2355
+[MATH: \pm]
+0.1639
+2.4452
+[MATH: \pm]
+0.2285
+2.6578
+[MATH: \pm]
+0.2671
+2.2754
+[MATH: \pm]
+0.2879
+2.5052
+[MATH: \pm]
+0.4399
+2.1158
+[MATH: \pm]
+0.2174
+MaskControl
+2.4824
+[MATH: \pm]
+0.2096
+2.3788
+[MATH: \pm]
+0.2570
+2.3182
+[MATH: \pm]
+0.3736
+2.3876
+[MATH: \pm]
+0.2680
+2.1713
+[MATH: \pm]
+0.3068
+2.1004
+[MATH: \pm]
+0.2959
+2.0625
+[MATH: \pm]
+0.2590
+Table 18
+:
+The multi-factor motion evaluation results in the Physical Quality dimension. The metrics in this table represent the body penetration for 14 baseline models across the Dynamics, Complexity, and Interaction types, as well as the Accuracy type
+Method
+Long
+Short
+Accuracy
+Dynamics
+Complexity
+Interaction
+Dynamics
+Complexity
+Interaction
+T2M
+0.6351
+[MATH: \pm]
+0.2381
+0.5959
+[MATH: \pm]
+0.1731
+0.6566
+[MATH: \pm]
+0.2912
+0.7744
+[MATH: \pm]
+0.2296
+0.9430
+[MATH: \pm]
+0.2751
+0.9689
+[MATH: \pm]
+0.5013
+1.1542
+[MATH: \pm]
+0.2424
+MDM
+1.0152
+[MATH: \pm]
+0.3299
+0.8719
+[MATH: \pm]
+0.3178
+1.3737
+[MATH: \pm]
+0.7549
+0.9723
+[MATH: \pm]
+0.3081
+1.1572
+[MATH: \pm]
+0.3436
+1.2857
+[MATH: \pm]
+0.6559
+1.1375
+[MATH: \pm]
+0.2625
+MotionGPT
+1.0051
+[MATH: \pm]
+0.3536
+1.1743
+[MATH: \pm]
+0.4768
+1.1491
+[MATH: \pm]
+0.4595
+1.2211
+[MATH: \pm]
+0.4397
+1.3208
+[MATH: \pm]
+0.4572
+1.2759
+[MATH: \pm]
+0.5751
+1.3313
+[MATH: \pm]
+0.3392
+CLoSD
+0.7123
+[MATH: \pm]
+0.1830
+0.8175
+[MATH: \pm]
+0.1659
+0.7368
+[MATH: \pm]
+0.1900
+0.9820
+[MATH: \pm]
+0.2114
+1.0226
+[MATH: \pm]
+0.2412
+1.0370
+[MATH: \pm]
+0.4297
+1.1126
+[MATH: \pm]
+0.1711
+PriorMDM
+1.2310
+[MATH: \pm]
+0.3618
+1.3722
+[MATH: \pm]
+0.4260
+1.1266
+[MATH: \pm]
+0.4573
+1.2064
+[MATH: \pm]
+0.2909
+1.1387
+[MATH: \pm]
+0.3453
+1.2649
+[MATH: \pm]
+0.5788
+1.2994
+[MATH: \pm]
+0.3111
+MMM
+0.7064
+[MATH: \pm]
+0.2045
+0.7240
+[MATH: \pm]
+0.1983
+0.8215
+[MATH: \pm]
+0.2921
+0.9219
+[MATH: \pm]
+0.2216
+1.1022
+[MATH: \pm]
+0.3608
+1.3214
+[MATH: \pm]
+0.6261
+1.2084
+[MATH: \pm]
+0.3030
+AvatarGPT
+1.3163
+[MATH: \pm]
+0.2847
+1.3720
+[MATH: \pm]
+0.2396
+1.3620
+[MATH: \pm]
+0.6736
+1.1199
+[MATH: \pm]
+0.2946
+1.2966
+[MATH: \pm]
+0.4039
+1.4851
+[MATH: \pm]
+0.6674
+1.4226
+[MATH: \pm]
+0.4125
+Mogent
+1.0407
+[MATH: \pm]
+0.3844
+0.9922
+[MATH: \pm]
+0.2801
+1.4445
+[MATH: \pm]
+0.7385
+1.3049
+[MATH: \pm]
+0.3443
+1.2789
+[MATH: \pm]
+0.3449
+1.4798
+[MATH: \pm]
+0.7504
+1.5315
+[MATH: \pm]
+0.4429
+Salad
+1.2600
+[MATH: \pm]
+0.3610
+1.0602
+[MATH: \pm]
+0.3427
+1.3942
+[MATH: \pm]
+0.7246
+1.3252
+[MATH: \pm]
+0.4106
+1.3215
+[MATH: \pm]
+0.4275
+1.5561
+[MATH: \pm]
+0.7961
+1.3684
+[MATH: \pm]
+0.3598
+Momask
+0.9611
+[MATH: \pm]
+0.3193
+0.7902
+[MATH: \pm]
+0.2846
+1.2879
+[MATH: \pm]
+0.7569
+1.1458
+[MATH: \pm]
+0.3363
+1.1175
+[MATH: \pm]
+0.3051
+1.4171
+[MATH: \pm]
+0.7959
+1.3472
+[MATH: \pm]
+0.3529
+Dart
+1.5524
+[MATH: \pm]
+0.2903
+1.4158
+[MATH: \pm]
+0.2842
+1.5046
+[MATH: \pm]
+0.3763
+1.3854
+[MATH: \pm]
+0.3881
+1.6936
+[MATH: \pm]
+0.4689
+1.9970
+[MATH: \pm]
+0.5237
+1.5495
+[MATH: \pm]
+0.3481
+Vimogen
+1.1247
+[MATH: \pm]
+0.3912
+1.2131
+[MATH: \pm]
+0.3484
+1.3998
+[MATH: \pm]
+0.6030
+1.1241
+[MATH: \pm]
+0.3610
+1.2679
+[MATH: \pm]
+0.4192
+1.2410
+[MATH: \pm]
+0.5968
+1.4497
+[MATH: \pm]
+0.3510
+HY
+1.4784
+[MATH: \pm]
+0.4847
+1.2824
+[MATH: \pm]
+0.4059
+1.2479
+[MATH: \pm]
+0.7941
+0.7187
+[MATH: \pm]
+0.2941
+0.9361
+[MATH: \pm]
+0.5012
+1.1749
+[MATH: \pm]
+0.9201
+1.1359
+[MATH: \pm]
+0.3957
+MaskControl
+0.9412
+[MATH: \pm]
+0.2785
+0.8157
+[MATH: \pm]
+0.2651
+1.1104
+[MATH: \pm]
+0.5600
+1.1597
+[MATH: \pm]
+0.2833
+1.1364
+[MATH: \pm]
+0.3266
+1.2935
+[MATH: \pm]
+0.5870
+1.3121
+[MATH: \pm]
+0.3138
+Appendix H
+Detailed results of the PHC+ tracking on the released physical attribute dataset
+Table 19
+:
+PHC+ Tracking Detailed Results
+Datasets
+mpjpe_g
+mpjpe_l
+mpjpe_pa
+accel_dist
+vel_dist
+Dynamic
+ours
+47.6132
+29.6650
+23.0038
+6.0149
+7.9921
+random
+95.5738
+58.0841
+44.2800
+13.8798
+15.5182
+Complexity
+ours
+42.8946
+27.1455
+21.2742
+4.0562
+5.9683
+random
+80.2622
+49.2710
+37.8636
+10.4957
+11.9227
+Interaction
+ours
+33.7148
+22.3178
+18.3362
+3.1600
+4.6883
+random
+81.3070
+50.8462
+40.5505
+11.1762
+12.0857
+Appendix I
+Radar charts by baselines
+Figure 12
+:
+LLM-Based radar charts by baseline
+Figure 13
+:
+Multi-Factor Motion Evaluation radar charts by baseline
+Table 20
+:
+Fine-grained accuracy assessments: mean RMSE (
+[MATH: \downarrow]
+) across baselines.
+Method
+Whole-body motion
+Body-part motion
+Root Rotation
+Root Velocity
+Root Translation
+Body-part Translation
+T2M
+1.8055
+5.7159
+15.6568
+0.5504
+MDM
+1.9690
+3.2875
+8.8904
+0.5392
+MotionGPT
+1.5386
+12.4603
+17.2727
+0.5568
+CLoSD
+1.7394
+11.0345
+14.0019
+0.5446
+PriorMDM
+1.9986
+2.2728
+9.1077
+0.6435
+MMM
+1.7370
+8.7938
+23.8026
+0.5576
+AvatarGPT
+1.6213
+3.1517
+8.4948
+0.5682
+MOGENT
+1.7218
+2.9884
+8.5591
+0.5707
+SALAD
+1.7075
+3.0097
+9.0302
+0.5736
+MOMASK
+1.5300
+2.9283
+8.4809
+0.5311
+DART
+1.5580
+3.4739
+8.6864
+0.5383
+ViMoGen
+1.7080
+3.3874
+8.2046
+0.5033
+HY
+1.2818
+2.3291
+8.5777
+0.5510
+MaskControl
+1.4947
+2.9176
+8.4974
+0.5457
+MaskControl_with_JointControl
+1.6815
+0.1244
+0.1042
+0.1020

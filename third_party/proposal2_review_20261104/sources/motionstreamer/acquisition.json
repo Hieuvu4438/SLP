@@ -1,0 +1,52 @@
+{
+  "key": "motionstreamer",
+  "requested_id": "2503.15451",
+  "retrieved_at": "2026-11-04T17:02:05.867563+00:00",
+  "reading_level": "unread",
+  "artifacts": [
+    {
+      "kind": "metadata",
+      "url": "https://arxiv.org/abs/2503.15451",
+      "path": "sources/motionstreamer/metadata.html",
+      "sha256": "002f7c8c91f8cc8133c62c0be55b05e03387e1aaed6ad9d052fbd828f8bab44e",
+      "bytes": 42647
+    },
+    {
+      "kind": "html",
+      "url": "https://arxiv.org/html/2503.15451",
+      "path": "sources/motionstreamer/html.html",
+      "sha256": "a3c38cd49d94b87856b640b031c24aa6025613dfd109ba9820a56697dfb22e32",
+      "bytes": 332019
+    }
+  ],
+  "title": "MotionStreamer: Streaming Motion Generation via Diffusion-based Autoregressive Model in Causal Latent Space",
+  "history": "Submission history From: Lixing Xiao [ view email ] [v1] Wed, 19 Mar 2025 17:32:24 UTC (4,629 KB) [v2] Wed, 16 Apr 2025 12:35:53 UTC (4,629 KB) [v3] Thu, 7 Aug 2025 05:21:41 UTC (2,592 KB)",
+  "canonical_ids": [
+    "2503.15451v3"
+  ],
+  "headings": [
+    "MotionStreamer: Streaming Motion Generation via Diffusion-based Autoregressive Model in Causal Latent Space",
+    "1 Introduction",
+    "2 Related Work",
+    "3 Method",
+    "3.1 Problem Formulation",
+    "3.2 Causal Temporal AutoEncoder",
+    "3.3 MotionStreamer",
+    "4 Experiment",
+    "4.1 Experimental Setup",
+    "4.2 Quantitative Results",
+    "4.3 Qualitative Results",
+    "4.4 Ablation Study",
+    "4.5 Applications",
+    "5 Conclusion",
+    "Acknowledgement",
+    "References",
+    "Appendix of “MotionStreamer: Streaming Motion Generation via Diffusion-based Autoregressive Model in Causal Latent Space”",
+    "A Implementation Details",
+    "B Causal TAE Architecture",
+    "C AR Model Architecture",
+    "D Classifier-free guidance",
+    "E Failure of Inverse Kinematics",
+    "F Limitations and Future work"
+  ]
+}

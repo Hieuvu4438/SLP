@@ -1,0 +1,281 @@
+0001 [# ] SignFLIP: A Unified Model for Sign Language Translation and Generation via Stage-wise Alignment at Scale
+0002 [# ] Abstract
+0003 [TEXT abstract1.1] Sign language translation and generation share the goal of bidirectional alignment between text and sign representations. However, existing approaches either treat them as isolated tasks or are only verified on limited datasets, limiting effective modeling between modalities. In this paper, we propose SignFLIP, a unified LLM-centered framework for translation and generation. To enable bidirectional mapping between text and sign, SignFLIP adopts a symmetric architecture together with a stage-wise training strategy built on large-scale data. The shared sign–text representation is progressively refined: pre-alignment facilitates subsequent SLT, while the SLT-adapted representation further benefits SLG. Extensive experiments on multiple benchmarks show that SignFLIP shows competitive performance compared with task-specific models on both translation and generation tasks, as well as strong transferability to sign language recognition.
+0004 [# ] 1 Introduction
+0005 [TEXT ] Figure 1: Framework of SignFLIP, a unified model for SLT and SLG. A shared encoder learns joint representations from sign features and text inputs, which are then used by task-specific decoders to generate spoken text and sign poses. SignFLIP provides a unified framework for SLT and SLG while achieving competitive performance on both tasks.
+0006 [TEXT S1.p1.1] Constructing unified representations across modalities is central to multimodal alignment and plays a crucial role in enabling downstream models, which also holds for sign language processing (SLP). However, in contrast to the rapid progress in broader multimodal learning, unified representation for sign languages (SLs) and texts remains relatively underexplored Hwang et al. (2025a) . Most existing studies treat sign-to-text mapping, e.g. , sign language translation (SLT) Camgoz et al. (2018) ; Tan et al. (2025) and sign language recognition (SLR) Chen et al. (2022b) ; Zuo and Mak (2022) , and text-to-sign mapping, e.g. , sign language generation (SLG) Yin et al. (2024) ; Zuo et al. (2024) , as individual problems. This separation is partly driven by the distinct modeling requirements of the two directions, where task-specific architectures are often designed to optimize performance for each individual task Moryossef and Goldberg (2021) . Such task-specific designs, however, lead to repeated modeling effort and cannot fully benefit from the inherent duality in SLT and SLG.
+0007 [TEXT S1.p2.1] Meanwhile, advances in large language models (LLMs) Brown et al. (2020) ; Yang et al. (2025) have reshaped a wide range of tasks, opening new possibilities for SLT and SLG. Trained on massive general-purpose corpora, these models encode rich knowledge and strong reasoning capabilities. Although SLs remain underrepresented in such pretraining corpora, recent studies have adapted general-purpose models to the SL domain through fine-tuning Wong et al. (2024) ; Zhang et al. (2024) ; Hwang et al. (2025b) and prompt engineering An and Kawakami (2025) , improving performance while reducing reliance on heavily task-specific designs Li et al. (2025) . These advances suggest that pretrained general-purpose models may serve as a shared foundation for SLP, naturally raising the question: Can we leverage a general LLM to build unified model that serve both SLT and SLG? If so, how?
+0008 [TEXT S1.p3.1] In this paper, we propose SignFLIP which adopts a unified architecture (§ 3.1 ) together with stage-wise training at scale using 600K $\sim$ 700K samples (§ 3.2 ). The stages progressively refine a shared sign–text representation: pre-alignment facilitates SLT, while the SLT-adapted representation further benefits SLG. Extensive experiments demonstrate that SignFLIP consistently achieves competitive results on both SLT and SLG across multiple main benchmarks, including CSL-Daily Zhou et al. (2021) and How2Sign Duarte et al. (2021) . We further evaluate the transferability of the learned representations on downstream SLR tasks, including isolated and continuous SLR. Our main contributions are as follows:
+0009 [TEXT S1.I1.i1.p1.1] We propose SignFLIP, a framework for learning sign–text mappings within the latent space of a general LLM through large-scale training.
+0010 [TEXT S1.I1.i2.p1.1] We introduce a stage-wise alignment strategy that progressively refines shared sign–text representations, enabling knowledge learned in earlier stages to benefit subsequent tasks.
+0011 [TEXT S1.I1.i3.p1.1] We show that SignFLIP achieves competitive performance on both SLT and SLG, while learning transferable representations that further benefit downstream isolated and continuous SLR.
+0012 [TEXT ] Figure 2: SignFLIP is trained in three stages. Stage 1 performs pretraining to align sign and text embeddings through reconstruction and contrastive learning. Stages 2 and 3 focus on downstream SLT and SLG tasks, respectively. In particular, Stage 1 unfreezes the pose encoder and pose decoder. Stage 2 trains the pose encoder together with mT5 for text generation. Stage 3 then optimizes the mT5 encoder, projector, and pose decoder for sign generation.
+0013 [# ] 2 Related Work
+0014 [# ] 2.1 Sign Language Pretraining
+0015 [TEXT S2.SS1.p1.1] In SLP, pretraining has primarily targeted SLU tasks. Earlier work, constrained by limited data, often relied on self-supervised pretraining ( e.g. , SignBERT and SignBERT+ Hu et al. (2023a) ; Hu et al. (2021) ) or weakly supervised pretraining Zhou et al. (2023) on relatively small SL corpora. More recently, SLP has increasingly adopted a paradigm similar to that in speech and vision–language modeling: (pre-) training modern models on large (but often noisy) out-of-domain datasets, followed by fine-tuning on smaller in-domain datasets. For instance, Jiang et al. (2024) performed contrastive vision–language pretraining on a multilingual SL dictionary, Spreadthesign 1 1 1 https://www.spreadthesign.com/ . The use of the data is under a license granted by Spreadthesign. , and achieved competitive performance on in-domain sign retrieval as well as out-of-domain isolated SLR tasks. Inspired by self-supervised speech pretraining, Gueuwou et al. (2025) proposed ShuBERT for American Sign Language (ASL). Zhang et al. (2024) scaled SLT through cross-lingual and cross-modal transfer. Concurrently, Uni-Sign Li et al. (2025) , a supervised pretrained model trained on large ASL and Chinese Sign Language (CSL) corpora, has been applied to a range of SLU tasks. Nevertheless, these advances predominantly benefit SLU, and pretraining that directly supports SLT and SLG remains underexplored. This gap motivates increasing interest in bridging SLU and SLG within a unified framework.
+0016 [# ] 2.2 Sign Language Translation
+0017 [# ] Gloss-based
+0018 [TEXT S2.SS2.SSS0.Px1.p1.1] method introduces gloss as intermediate supervision to facilitate downstream text generation 2 2 2 Gloss is another written form of text in sign language order . SLRT Camgoz et al. (2020) was among the first to introduce a Transformer-based encoder–decoder framework for SLT, incorporating gloss-level supervision into the encoder with a CTC loss, while SLTUNET Zhang et al. (2023) , scaledSLT Zhang et al. (2024) , and MMTLB Chen et al. (2022a) explore the use of large-scale external text corpora and pretrained language models to enhance translation quality. While gloss-based approaches have shown promising results, they are fundamentally constrained by the limited availability of paired sign–gloss–text data, which restricts their scalability across multiple downstream tasks.
+0019 [# ] Gloss-free.
+0020 [TEXT S2.SS2.SSS0.Px2.p1.1] In contrast, gloss-free SLT directly converts SLs into spoken texts, but it underperformed cascading SLT due to the challenging sign-text alignment. Recent work further advanced gloss-free SLT. YouTube-ASL Uthus et al. (2023) uses a language modeling objective for large-scale pretraining, showing the potential of generative pretraining and the value of scaling up datasets. Jang et al. (2025) leveraged additional contextual cues together with the SL videos to improve translation. SignFLIP focuses on gloss-free SLT, pretrained on large-scale data.
+0021 [# ] 2.3 Sign Language Generation
+0022 [TEXT S2.SS3.p1.1] Similar to the translation task, SLG studies are also categorized into gloss-based and gloss-free models. An early gloss-based model is Progressive Transformer Saunders et al. (2020) , which adopts transformer architecture to generate gloss from text, then pose from gloss. Huang et al. (2022) present a semi-supervised two-stage SLG framework that reduces gloss annotation requirements but is still constrained by the initial and pseudo gloss quality. Recently, more researchers have shifted toward gloss-free methods that require no extra supervision Khan et al. (2025) . These approaches have begun to achieve results comparable to gloss-based ones, particularly with the integration of LLMs An and Kawakami (2025) ; Zuo et al. (2025) .
+0023 [TEXT S2.SS3.p2.1] Despite these advancements and the integration of LLMs, few studies have explored how to jointly design translation and generation modules. USLNet Guo et al. (2024) , an unsupervised model for SLT and SLG, achieves a translation performance of BLEU 6.30 and a generation performance of FVD 390.5 on OpenASL. UniGloR Hwang et al. (2025a) explores spatio-temporal features as an alternative to glosses for SLT and SLG. Along this direction, SignFLIP advances unified SLT and SLG by introducing an LLM-centered architecture trained on large datasets, enabling bidirectional sign–text modeling and systematic evaluation across multiple datasets.
+0024 [# ] 3 SignFLIP
+0025 [TEXT S3.p1.1] SignFLIP provides a unified framework for SLT and SLG, with its overall three-stage training pipeline illustrated in Figure 2 . In Stage 1, the model is pretrained to align sign and text representations while reconstructing sign poses from masked pose sequences. Stage 2 adapts the model to the downstream SLT task, and Stage 3 further trains it for sign pose generation.
+0026 [# ] 3.1 Model Architecture
+0027 [TEXT S3.SS1.p1.1] Overall, SignFLIP consists of a sign pose encoder, an mT5 encoder that processes both text inputs and pose-derived features, a pose decoder that mirrors the architecture of the pose encoder, and an mT5 decoder for text generation.
+0028 [# ] SignFLIP for translation
+0029 [TEXT S3.SS1.SSS0.Px1.p1.1] comprises a sign pose encoder and an mT5 encoder-decoder model Xue et al. (2021) . Given 133 keypoints, we selectively retain 69 of them, including 21 keypoints for each hand, 9 for the body, and 18 for the face. The keypoint sequence of the group $i$ is denoted by $P_{i}$ , where $i\in\{h,b,f\}$ . Specifically, the keypoint sequence $P_{i}$ is first encoded by a three-layer spatial GCN, yielding pose features $\mathcal{F}^{P}_{i}\in\mathbb{R}^{L\times N_{i}\times C}$ , where $L$ is the temporal length of the keypoint sequence, $N_{i}$ is the number of keypoints in group $i$ , and $C$ is the feature dimension. These pose features are subsequently projected to the hidden dimension of mT5 and are then fed into mT5 for autoregressive text generation.
+0030 [# ] SignFLIP for generation
+0031 [TEXT S3.SS1.SSS0.Px2.p1.1] involves an mT5 encoder for text processing and a non-autoregressive transformer for feature alignment, as well as a pretrained pose decoder for generating poses from features. Given the input spoken sentence $T_{i}$ with $U$ tokens, the mT5 encoder processes it into text features $\mathcal{F}^{T}_{i}\in\mathbb{R}^{U_{i}\times D}$ , where $U_{i}$ denotes the token length of the input sentence and $D$ denotes the hidden dimension of the mT5 encoder. Since the frame length of the pose sequence is generally longer than the length of text tokens, in the non-autoregressive transformer, we first predict the sequence length from text feature input, then employ learnable initial tokens to interact with the text feature via cross-attention. From the generated pose feature, we decode it into the final pose sequence with the pose decoder.
+0032 [# ] 3.2 Stage 1: Pretraining
+0033 [TEXT S3.SS2.p1.1] In Stage 1, we train SignFLIP’s pose encoder and pose decoder, which are fully symmetric in architecture: a three-layer spatial GCN. As they can operate directly on human skeletons in non-Euclidean space, preserving the physical topology of SLs. We optimize their parameters by two objectives: semantic-aware pose reconstruction and sign–text pre-alignment.
+0034 [# ] Semantic-aware Pose Reconstruction.
+0035 [TEXT S3.SS2.SSS0.Px1.p1.1] To ensure the extracted features capture semantic information, we randomly mask $n$ consecutive frames out of a 24-frames window using a learnable mask token. This requires the pose encoder and decoder to not only learn kinematic information but also infer features at the masked positions based on the surrounding context, thereby improving the model’s contextual modeling ability and robustness. We chose this masking strategy because, in SLP tasks where inter-frame variations are small, a model can easily recover a single missing frame through simple linear interpolation. By masking several consecutive frames, the model is forced to interact with the context to infer the missing sign information, ensuring that the generated pose features carry semantic meaning. This process can be formulated as:
+0036 [TABLE_ROW ] | $\displaystyle\hat{p}$ | $\displaystyle=\mathcal{D}(\mathcal{E}(p_{\text{mask}})),$ | | (1)
+0037 [TABLE_ROW ] | $\displaystyle\mathcal{L}_{\text{recon}}$ | $\displaystyle=\text{SmoothL1}(\hat{p},p),$ | | (2)
+0038 [TEXT S3.SS2.SSS0.Px1.p1.2] where $p,p_{\text{mask}},\hat{p}$ denote for input pose sequence, masked pose and reconstructed pose respectively, while $\mathcal{D},\mathcal{E}$ represent the pose encoder and decoder.
+0039 [# ] Sign–Text Pre-alignment.
+0040 [TEXT S3.SS2.SSS0.Px2.p1.1] While the reconstruction task embeds semantic information into pose features, they still lie in a different manifold with the LLM-derived text features. We regard the text features from the LLM as anchors, as it has been pretrained on trillion scale data, and adopt contrastive learning to perform alignment at the initial stage and reduces the difficulty of downstream tasks. The overall pretraining loss is defined as:
+0041 [TABLE_ROW ] | $\displaystyle\mathcal{L}_{\text{align}}$ | $\displaystyle=-\log\frac{\exp(\mathrm{cos}(s_{i},t_{i})/\tau)}{\sum_{j=1}^{N}\exp(\mathrm{cos}(s_{i},t_{j})/\tau)},$ | | (3)
+0042 [TABLE_ROW ] | $\displaystyle\mathcal{L}_{\text{Pretrain}}$ | $\displaystyle=\mathcal{L}_{\text{recon}}+\alpha\mathcal{L}_{\text{align}},$ | | (4)
+0043 [TEXT S3.SS2.SSS0.Px2.p1.2] where the $(s_{i},t_{i})$ denotes the sign-text pair and $\tau$ means the temperature. The values of $\alpha$ and following hyperparameters that we adopt at training are shown in Appendix A .
+0044 [# ] 3.3 Training on Downstream Task
+0045 [TEXT S3.SS3.p1.1] Stage 2: SLT training. In this stage, we unfreeze both the pose encoder and the language model (shown in Figure 2 , Stage 2). The goal is to maintain the strong translation capability of SignFLIP while allowing the mT5 encoder to adapt to pose features through task-specific training, thereby preparing it for the subsequent generation stage. To this end, we first train SignFLIP on a large-scale corpus with noise and then fine-tune it on the target dataset. Accordingly, we optimize the model with the standard autoregressive text generation objective, defined as follows:
+0046 [TABLE_ROW ] | $\mathcal{L}_{\text{SLT}}=-\sum_{u=1}^{U}\log p\left(t_{u}\mid t_{<u},\mathcal{F}^{P}_{i}\right),$ | | (5)
+0047 [TEXT S3.SS3.p1.2] where $U$ denotes the length of the target text sequence, $t_{u}$ is the $u$ -th target token, $t_{<u}$ represents all previously generated target tokens before step $u$ , and $\mathcal{F}^{P}_{i}$ denotes the pose feature from the pose encoder.
+0048 [# ] Stage 3: SLG training.
+0049 [TEXT S3.SS3.SSS0.Px1.p1.1] In contrast to the autoregressive generation common in decoder-only LLMs, we argue that a non-autoregressive (NAR) approach, which produces the entire sequence in a single pass, is better suited for sign language since the model can consider the global information as well as SL’s grammar to arrange output. In our SLG framework, the text and prompt are first processed by an mT5 encoder to extract global semantic features. These features are then used to predict the pose sequence length through a MLP. Subsequently, learnable pose tokens with predicted length interact with the text features via cross-attention to generate pose features, which are decoded into the final pose sequence. Leveraging the scale of current sign language datasets, we avoid designing alignment modules with heavy inductive bias, instead allowing the attention mechanism and the LLM to learn the cross-modal mapping directly.
+0050 [TEXT S3.SS3.SSS0.Px1.p2.1] However, we find that the text features generated by the LLM encoder often lack sufficient granularity. As a result, after interacting with these features, tokens struggle to reconstruct the fine-grained details of pose features, such as finger movements, and instead collapse toward the mean value. To address this, besides the standard Smooth L1 reconstruction loss, we use the pose encoder pretrained on the reconstruction task to supervise the output of the alignment module through feature distillation. This guides the generated features to align with the ideal pose representations. Additionally, we incorporate a hand-specific loss in relative coordinates to increase the penalty for hand errors. The total loss for SLG is formulated as follows:
+0051 [TABLE_ROW ] | $\displaystyle\mathcal{L}_{\text{Distill}}$ | $\displaystyle=(1-\cos(\hat{F}_{i}^{P},F_{i}^{P}))+\text{L2}(\hat{F}_{i}^{P},F_{i}^{P})$ | | (6)
+0052 [TABLE_ROW ] | $\displaystyle\mathcal{L}_{\text{Hand}}$ | $\displaystyle=\text{SmoothL1}\bigl((\hat{P}^{\text{hand}}_{k}-\hat{P}^{\text{wrist}})$ |
+0053 [TABLE_ROW ] | | $\displaystyle\quad-(P^{\text{hand}}_{k}-P^{\text{wrist}})\bigr)$ | | (7)
+0054 [TABLE_ROW ] | $\displaystyle\mathcal{L}_{\text{SLG}}$ | $\displaystyle=\mathcal{L}_{\text{Recon}}+\beta\cdot\mathcal{L}_{\text{Distill}}+\gamma\cdot\mathcal{L}_{\text{Hand}},$ | | (8)
+0055 [TEXT S3.SS3.SSS0.Px1.p3.1] where $\hat{F_{i}^{P}}$ and $F_{i}^{P}$ denote the pose feature from NAR transformer and pose encoder respectively, $P_{k}^{\text{hand}}$ represents the keypoint joints of the hand part and $k\in[1,K]$ is the keypoint id of hands. When training on the SLG task, we set the learning rate of mT5 encoder and pose decoder as $1\%$ of the NAR transformer’s lr to prevent feature shift, also to minimize performance degradation for SLT.
+0056 [# ] 4 Experiments
+0057 [# ] 4.1 Implementations and Preprocessing
+0058 [TEXT S4.SS1.p1.1] For large-scale pretraining, we adopt CSL-News Li et al. (2025) and YouTubeASL Uthus et al. (2023) for Chinese Sign Language and American Sign Language, respectively. For pose extraction, we employ RTMPose-x Jiang et al. (2023) , implemented in MMPose 3 3 3 https://github.com/open-mmlab/mmpose/tree/main/projects/rtmpose , to obtain whole-body keypoints from original RGB videos. We use mT5-Base Xue et al. (2021) as the pretrained LLM and conduct all experiments on four NVIDIA H100 GPUs. The training recipes of each stage are shown in Appendix A .
+0059 [TABLE_ROW S4.T1.2.1.1] Method | Modality | Dev | Test
+0060 [TABLE_ROW S4.T1.2.1.2] Pose | RGB | BLEU-4 $\uparrow$ | ROUGE $\uparrow$ | BLEU-4 $\uparrow$ | ROUGE $\uparrow$
+0061 [TABLE_ROW S4.T1.2.1.3] Gloss-based
+0062 [TABLE_ROW S4.T1.2.1.4] SLRT † Camgoz et al. (2020) | | ✓ | 11.88 | 37.96 | 11.79 | 36.74
+0063 [TABLE_ROW S4.T1.2.1.5] MMTLB Chen et al. (2022a) | | ✓ | 24.42 | 53.38 | 23.92 | 53.25
+0064 [TABLE_ROW S4.T1.2.1.6] TS-SLT Chen et al. (2022b) | ✓ | ✓ | 25.76 | 55.10 | 25.79 | 55.72
+0065 [TABLE_ROW S4.T1.2.1.7] SLTUNET Zhang et al. (2023) | | ✓ | 23.99 | 53.58 | 25.01 | 54.08
+0066 [TABLE_ROW S4.T1.2.1.8] Gloss-free
+0067 [TABLE_ROW S4.T1.2.1.9] SLRT ‡ Camgoz et al. (2020) | | ✓ | 4.04 | 20.51 | 3.03 | 19.67
+0068 [TABLE_ROW S4.T1.2.1.10] GF-SLT Zhou et al. (2023) | | ✓ | 11.07 | 36.70 | 11.00 | 36.44
+0069 [TABLE_ROW S4.T1.2.1.11] SignLLM Gong et al. (2024) | | ✓ | 12.23 | 39.18 | 15.75 | 39.91
+0070 [TABLE_ROW S4.T1.2.1.12] C 2 RL Chen et al. (2024a) | | ✓ | – | – | 21.61 | 48.21
+0071 [TABLE_ROW S4.T1.2.1.13] MSLU Zhou et al. (2025) | ✓ | | 10.27 | 33.13 | 11.42 | 33.80
+0072 [TABLE_ROW S4.T1.2.1.14] Sign2GPT Wong et al. (2024) | | ✓ | – | – | 22.52 | 48.90
+0073 [TABLE_ROW S4.T1.2.1.15] SpaMo Hwang et al. (2025b) | | ✓ | – | – | 20.55 | 47.46
+0074 [TABLE_ROW S4.T1.2.1.16] Uni-Sign Li et al. (2025) | ✓ | | 25.27 | 54.34 | 25.61 | 54.92
+0075 [TABLE_ROW S4.T1.2.1.17] Uni-Sign Li et al. (2025) | ✓ | ✓ | 26.25 | 56.03 | 26.36 | 56.51
+0076 [TABLE_ROW S4.T1.2.1.18] Geo-Sign Fish and Bowden (2025) | ✓ | | 27.05 | 57.27 | 27.42 | 57.95
+0077 [TABLE_ROW S4.T1.2.1.19] Unified | | | | | |
+0078 [TABLE_ROW S4.T1.2.1.20] SignFLIP (Ours) | ✓ | | 25.71 | 54.67 | 26.10 | 55.24
+0079 [TEXT ] Table 1: SLT results on the CSL-Daily dataset. $\dagger$ and $\ddagger$ denote results reproduced by Zhou et al. (2021) and Zhou et al. (2023) , respectively. Underlined results indicate the best performance among gloss-based SLT methods, Blue and Green denote the best results of previous methods and ours, respectively. SignFLIP achieves competitive performance among pose-only methods and remains competitive with RGB-based and multimodal approaches.
+0080 [TABLE_ROW S4.T2.2.1.1] Method | Modality | Test
+0081 [TABLE_ROW S4.T2.2.1.2] Pose | RGB | BLEU-4 $\uparrow$ | ROUGE $\uparrow$ | BLEURT $\uparrow$
+0082 [TABLE_ROW S4.T2.2.1.3] How2Sign
+0083 [TABLE_ROW S4.T2.2.1.4] GloFE-VN Lin et al. (2023) | ✓ | | 2.2 | 12.6 | 31.7
+0084 [TABLE_ROW S4.T2.2.1.5] YouTube-ASL Uthus et al. (2023) | ✓ | | 12.4 | – | 46.6
+0085 [TABLE_ROW S4.T2.2.1.6] MSLU Zhou et al. (2025) | ✓ | | 2.4 | 17.2 | –
+0086 [TABLE_ROW S4.T2.2.1.7] C 2 RL Chen et al. (2024a) | | ✓ | 9.4 | 27.0 | –
+0087 [TABLE_ROW S4.T2.2.1.8] FLa-LLM Chen et al. (2024b) | | ✓ | 9.7 | 27.8 | –
+0088 [TABLE_ROW S4.T2.2.1.9] SSVP-SLT Rust et al. (2024) | | ✓ | 15.5 | 38.4 | 49.6
+0089 [TABLE_ROW S4.T2.2.1.10] ShuBERT Gueuwou et al. (2025) | ✓ | ✓ | 16.2 | – | 49.9
+0090 [TABLE_ROW S4.T2.2.1.11] Uni-Sign Li et al. (2025) | ✓ | | 14.5 | 34.3 | 48.6
+0091 [TABLE_ROW S4.T2.2.1.12] Uni-Sign Li et al. (2025) | ✓ | ✓ | 14.9 | 36.0 | 49.4
+0092 [TABLE_ROW S4.T2.2.1.13] Geo-Sign Fish and Bowden (2025) | ✓ | | 15.1 | 35.4 | –
+0093 [TABLE_ROW S4.T2.2.1.14] Unified | | | | |
+0094 [TABLE_ROW S4.T2.2.1.15] UniGloR Hwang et al. (2025a) | ✓ | | 2.22 | 12.98 | –
+0095 [TABLE_ROW S4.T2.2.1.16] SignFLIP (Ours) | ✓ | | 15.1 | 36.8 | 49.8
+0096 [TEXT ] Table 2: SLT results on How2Sign. SignFLIP continues to outperform existing pose-only methods on How2Sign dataset.
+0097 [# ] 4.2 Datasets and Evaluations
+0098 [# ] Datasets.
+0099 [TEXT S4.SS2.SSS0.Px1.p1.1] We evaluate SignFLIP on CSL-Daily Zhou et al. (2021) , OpenASL Shi et al. (2022) , How2Sign Duarte et al. (2021) , and WLASL100 Li et al. (2020) to demonstrate the effectiveness and transferability of our unified modeling framework. Dataset statistics are provided in Appendix B .
+0100 [# ] Evaluation metrics.
+0101 [TEXT S4.SS2.SSS0.Px2.p1.1] For SLT, following previous work Camgoz et al. (2020) ; Zhang et al. (2024) , we adopt BLEU Papineni et al. (2002) , computed with SacreBLEU Post (2018) , and ROUGE-L Lin (2004) as evaluation metrics. For ASL datasets, we additionally report BLEURT Sellam et al. (2020) scores using the BLEURT-20 checkpoint. For SLG, at pose level, we report Dynamic Time Warping and Mean Joint Error scores. For the evaluation of semantic accuracy, following previous work Saunders et al. (2020) , we report the back-translation scores of BLEU-4.
+0102 [TEXT S4.SS2.SSS0.Px2.p2.1] For SLG, we further conducted human evaluations with 2 professional ASL and CSL signers, who were asked to rate the generated sign poses from SignFLIP on a 1–5 scale in terms of both semantic accuracy and kinematic quality. The latter was further assessed along three dimensions: motion smoothness, anatomical plausibility, and hand clarity. Specifically, 15 generated sign samples were provided for evaluation. The full evaluation questionnaire is provided in Appendix H .
+0103 [# ] 4.3 Comparison with Methods
+0104 [# ] Results on SLT.
+0105 [TEXT S4.SS3.SSS0.Px1.p1.1] Using pose data only, SignFLIP achieves a test BLEU-4 of 26.10 and a ROUGE score of 55.24 on CSL-Daily, a test BLEU-4 of 15.1 and a BLEURT score of 49.8 on How2Sign, and a test BLEU-4 of 19.77 and a BLEURT score of 59.35 on OpenASL (Appendix C ). Tables 1 and 2 show that, under the pose-only setting, SignFLIP sets a new state of the art on How2Sign while remaining competitive on CSL-Daily. Notably, despite the performance drop caused by the later SLG finetuning stage, it still delivers strong results across all datasets and outperforms several RGB-based or multimodal-based SLT methods, demonstrating the benefits of large-scale pretraining.
+0106 [TABLE_ROW S4.T3.2.1] Method | DTW $\downarrow$ | DTW–MJE $\downarrow$ | BLEU-4 $\uparrow$
+0107 [TABLE_ROW S4.T3.2.2] How2Sign
+0108 [TABLE_ROW S4.T3.2.3] Progressive Transformer | | |
+0109 [TABLE_ROW S4.T3.2.4] Saunders et al. (2020) | 0.397 | 8.98e–4 | 1.63
+0110 [TABLE_ROW S4.T3.2.5] Teach Me Sign | | |
+0111 [TABLE_ROW S4.T3.2.6] An and Kawakami (2025) | 0.345 | 7.20e–4 | 3.95
+0112 [TABLE_ROW S4.T3.2.7] Unified | | |
+0113 [TABLE_ROW S4.T3.2.8] SignFLIP (Ours) | 0.248 | 5.28e–4 | 7.10
+0114 [TABLE_ROW S4.T3.2.9] CSL-Daily
+0115 [TABLE_ROW S4.T3.2.10] Progressive Transformer | | |
+0116 [TABLE_ROW S4.T3.2.11] Saunders et al. (2020) | 0.048 | 1.16e–4 | 2.42
+0117 [TABLE_ROW S4.T3.2.12] Teach Me Sign | | |
+0118 [TABLE_ROW S4.T3.2.13] An and Kawakami (2025) | 0.035 | 8.86e–5 | 4.87
+0119 [TABLE_ROW S4.T3.2.14] Unified | | |
+0120 [TABLE_ROW S4.T3.2.15] SignFLIP (Ours) | 0.025 | 6.15e–5 | 9.75
+0121 [TEXT ] Table 3: SLG results on the How2Sign and CSL-Daily datasets. Metric scales differ across datasets due to variations in generation difficulty and keypoint ranges.
+0122 [TEXT ] Figure 3: Qualitative results on both How2Sign (left) and CSL-Daily (right) datasets. While the arm movements of the poses generated by our proposed SignFLIP are closer to the Ground Truth, our generated hand motions are also more natural than those from previous methods, by leveraging the feature distillation loss and hand-specific loss.
+0123 [TABLE_ROW S4.T4.2.1.1] Method | How2Sign | CSL-Daily
+0124 [TABLE_ROW S4.T4.2.1.2] SignFLIP (Ours) | 1.69 | 1.94
+0125 [TABLE_ROW S4.T4.2.1.3] GT motions | 3.48 | 3.44
+0126 [TEXT ] Table 4: Human evaluation scores for generated poses on How2Sign and CSL-Daily datasets.
+0127 [# ] Results on SLG.
+0128 [TEXT S4.SS3.SSS0.Px2.p1.1] Given that SLG previous works generate various modalities of sign language videos, such as 2D poses, 3D poses, and 3D meshes, we select Progressive Transformer Saunders et al. (2020) and Teach Me Sign An and Kawakami (2025) for comparison, as they both produce 2D poses as our model. We retrained these models on the CSL and ASL datasets. Quantitative results are tabulated in Table 3 . We observe that the proposed model outperforms previous work at both the kinematic and semantic levels of the generated poses. Note that since the scale of DTW and MJE metrics is heavily influenced by the scale of the original keypoint data and normalization, cross-model comparisons can be challenging unless the models are trained on the same data. A qualitative comparison is displayed in Figure 3 . The keypoint videos generated by SignFLIP align more closely with the ground truth in terms of general movements, especially arm trajectories. While synthesizing fine-grained details like finger motions remains a challenge, our model demonstrates better generation accuracy compared to existing methods. More qualitative results and video samples can be found in Appendix G .
+0129 [TEXT S4.SS3.SSS0.Px2.p2.1] At semantic level, our model also delivers higher BLEU-4 score, while for human evaluation, as shown in Table 4 , we report the average scores across five questions in the questionnaire H from ASL and CSL signers, respectively, on How2Sign and CSL-Daily. A higher average score means better quality. The poses generated by SignFLIP receive average scores of 1.69 and 1.94 on How2Sign and CSL-Daily datasets, respectively, while GT poses get scores of 3.48 and 3.44. Notably, the ground-truth motions themselves also receive moderate ratings. This observation suggests an inherent limitation of 2D pose keypoints, which may not be sufficiently comprehensible for SL users. It also suggests the importance of finger movements in conveying precise meanings in SL communication. The generation of such fine-grained features remains a subject for future research.
+0130 [# ] Transferability to SLR.
+0131 [TEXT S4.SS3.SSS0.Px3.p1.1] Unlike prior unified SL models that are typically trained from scratch and evaluated primarily on the tasks seen during training, SignFLIP builds on a general-purpose LLM and is pretrained on over 600K paired sign–text samples. As illustrated in Figure 4 , this pretraining encourages sign and text inputs to form a shared, semantically structured representation space. We therefore investigate whether the learned representations can transfer beyond SLT and SLG to Sign Language Recognition (SLR). Specifically, we consider both Continuous SLR (CSLR), which maps continuous sign videos to gloss sequences, and Isolated SLR (ISLR) on WLASL100, which classifies individual signs. We freeze the encoders in SignFLIP and attach task-specific decoders for the recognition tasks. As shown in Tables 5 and 6 , SignFLIP achieves a test WER of 28.8 on CSL-Daily and a Top-1 accuracy of 88.87 P-I and 89.16 P-C on WLASL100. These results suggest that its pretrained representations capture transferable linguistic information and can serve as a versatile backbone for a broader range of SLP tasks.
+0132 [TABLE_ROW S4.T5.2.1.1] Method | Modality | WER $\downarrow$
+0133 [TABLE_ROW S4.T5.2.1.2] Pose | RGB | Dev | Test
+0134 [TABLE_ROW S4.T5.2.1.3] SignBT ( Zhou et al., 2021 ) | | ✓ | 33.2 | 33.2
+0135 [TABLE_ROW S4.T5.2.1.4] SEN ( Hu et al., 2023c ) | | ✓ | 31.1 | 30.7
+0136 [TABLE_ROW S4.T5.2.1.5] CorrNet ( Hu et al., 2023b ) | | ✓ | 30.6 | 30.1
+0137 [TABLE_ROW S4.T5.2.1.6] MSLU ( Zhou et al., 2025 ) | ✓ | | 28.6 | 27.9
+0138 [TABLE_ROW S4.T5.2.1.7] Uni-Sign ( Li et al., 2025 ) | ✓ | | 28.2 | 27.4
+0139 [TABLE_ROW S4.T5.2.1.8] SignFLIP (Frozen) | ✓ | | 29.3 | 28.8
+0140 [TEXT ] Table 5: CSLR results on the CSL-Daily dataset with WER scores. SignFLIP demonstrates its strong transferability on CSLR task even with encoders frozen.
+0141 [TABLE_ROW S4.T6.2.1.1] Method | Modality | WLASL100
+0142 [TABLE_ROW S4.T6.2.1.2] Pose | RGB | P-I | P-C
+0143 [TABLE_ROW S4.T6.2.1.3] BEST Zhao et al. (2023) | ✓ | | 77.91 | 77.83
+0144 [TABLE_ROW S4.T6.2.1.4] SignBERT+ Hu et al. (2023a) | ✓ | | 79.84 | 80.72
+0145 [TABLE_ROW S4.T6.2.1.5] MSLU Zhou et al. (2025) | ✓ | | 88.76 | 89.25
+0146 [TABLE_ROW S4.T6.2.1.6] NLA-SLR Zuo et al. (2023) | ✓ | ✓ | 91.47 | 92.17
+0147 [TABLE_ROW S4.T6.2.1.7] SignFLIP (Frozen) | ✓ | | 88.87 | 89.16
+0148 [TEXT ] Table 6: ISLR results on the WLASL100 dataset under the frozen setting. Without task-specific fine-tuning of SignFLIP encoders, the model achieves promising performance, demonstrating the transferability of its learned shared representations to downstream tasks.
+0149 [# ] 4.4 Ablation Study
+0150 [TEXT ] Figure 4: We visualize sign and text embeddings before and after SigFLIP, showing that initially separated feature distributions become closely aligned after training. Black-circled points and connecting lines indicate randomly selected sign–text pairs.
+0151 [# ] Stage-wise Alignment
+0152 [TEXT S4.SS4.SSS0.Px1.p1.1] is a crucial component of SignFLIP, as it balances the pretraining as well as two downstream tasks, while preventing too much degradation for SLT. To examine its effect, we evaluate SignFLIP without pre-stages on translation and generation tasks. For SLT, we conduct experiments on CSL-News and YouTube-ASL, two more challenging and noisier datasets, to better understand the performance limits of SignFLIP and to assess the extent to which pretraining benefits more difficult settings. While for SLG, we prove the importance of pretraining and SLT training by showing how much performance gain is brought by them individually on CSL-Daily dataset.
+0153 [TEXT S4.SS4.SSS0.Px1.p2.1] As shown in Table 7 , the setting with pretraining delivers quality gains of $+$ 3.37 BLEU-4 on CSL-News and $+$ 4.26 BLEU-4 on YouTube ASL. These findings demonstrate that the proposed pretraining effectively benefits subsequent downstream tasks. The larger gains on challenging datasets further indicate that the pretraining helps the model better address the cross-modal gap between sign and text, enabling more robust learning under noisy and difficult conditions.
+0154 [TABLE_ROW S4.T7.2.1.1] Setting | CSL-News | YouTube-ASL
+0155 [TABLE_ROW S4.T7.2.1.2] BLEU-4 | BLEU-4
+0156 [TABLE_ROW S4.T7.2.1.3] w/o Pretraining | 18.24 | 4.17
+0157 [TABLE_ROW S4.T7.2.1.4] SignFLIP | 21.61 | 8.43
+0158 [TEXT ] Table 7: Ablation study on stage design for SLT task.
+0159 [TEXT S4.SS4.SSS0.Px1.p3.1] The results of generation task are delivered in Table 8 . Pretraining and SLT training improved DTW performance by 11% and 16%, respectively. This demonstrates that the design generates high-quality joint sign-text representations from previous stages, enhancing SLG accuracy.
+0160 [TABLE_ROW S4.T8.2.1.1] Setting | DTW | DTW-MJE
+0161 [TABLE_ROW S4.T8.2.1.2] w/o Pretraining & SLT | 0.034 | 8.44e-5
+0162 [TABLE_ROW S4.T8.2.1.3] w/o SLT | 0.030 | 7.37e-5
+0163 [TABLE_ROW S4.T8.2.1.4] SignFLIP | 0.025 | 6.15e-5
+0164 [TEXT ] Table 8: Ablation study on stage design for SLG task.
+0165 [# ] Choice of LLM.
+0166 [TEXT S4.SS4.SSS0.Px2.p1.1] Recently, decoder-only LLMs have become the dominant architecture in generative tasks such as text and video generation, demonstrating remarkable performance. To investigate their potential in sign language, we conducted experiments to evaluate the performance of a widely used decoder-only LLM on SLT tasks. The results are summarized in Table 9 . To ensure a fair comparison, all results in the table were obtained by training exclusively on the CSL-News dataset for SLT while only varying the LLM backbone. Specifically, SignFLIP did not undergo pretraining.
+0167 [TABLE_ROW S4.T9.2.1.1] Setting | CSL-News | CSL-News
+0168 [TABLE_ROW S4.T9.2.1.2] BLEU-4 | ROUGE
+0169 [TABLE_ROW S4.T9.2.1.3] Qwen3 Yang et al. (2025) | 5.19 | 20.07
+0170 [TABLE_ROW S4.T9.2.1.4] mT5 (dec only) | 3.10 | 19.61
+0171 [TABLE_ROW S4.T9.2.1.5] mT5 (enc-dec, w/o stage1) | 18.24 | 39.13
+0172 [TEXT ] Table 9: Ablation study of LLM choices for SLT on CSL-News dataset.
+0173 [TEXT S4.SS4.SSS0.Px2.p2.1] The interesting finding is that the performance of the decoder-only LLM does not outperform mT5-based settings, which aligns with the observations in SpaMo Hwang et al. (2025b) . These results suggest that, despite decoder-only models’ powerful general capabilities, a significant gap remains between the data distributions and prompt formats of pretrained decoder-only LLMs and those of sign language data. For more capable models such as the Qwen series, this discrepancy may manifest as a stronger " Resistance to Alignment " Ji et al. (2025) , hindering the models from reaching their full potential. This implies that applying powerful decoder-only LLMs to sign language tasks still requires specialized designs to counteract this resistance while adapting their abilities and knowledge for sign language processing. Ablation studies on SLG losses and the masking window size used during pretraining are provided in the Appendix.
+0174 [# ] 5 Conclusion
+0175 [TEXT S5.p1.1] In this paper, we present SignFLIP, a large-scale unified framework for sign language translation and generation that leverages a pretrained LLM and is trained on 600 $\sim$ 700K sign–text samples. The experimental results demonstrate that the stage-wise training enhances translation and generation performance, delivering competitive results on several benchmarks. Beyond the original tasks, SignFLIP also demonstrates promising transferability to downstream recognition tasks, including continuous and isolated sign language recognition. These results suggest that SignFLIP learns generalizable sign representations and has potential as a foundation model for sign language processing. We believe SignFLIP will inspire future research toward more scalable and general-purpose sign language models.
+0176 [# ] Limitations
+0177 [TEXT Sx1.p1.1] Our work has several limitations. First, most existing sign language datasets are not primarily based on Deaf and hard-of-hearing signers. For example, CSL-Daily is produced by sign language interpreters, meaning that the text serves as the original source. This limits its applicability to real-world scenarios and makes it less representative of real-world sign language use. Second, in our human evaluation, even the ground-truth samples received relatively low linguistic accuracy scores, suggesting that 2D pose representations may not be sufficiently understandable for sign language users. To enable more effective and accessible pose generation, we plan to explore the use of 3D avatars in future work. Finally, although sign language generation performance has improved, the generated hand movements still exhibit limited amplitude and tend to collapse toward mean poses. This may be partly attributed to the LLM itself, which can bias the outputs toward overly smooth and averaged motion patterns.
+0178 [# ] Acknowledgments
+0179 [TEXT Sx2.p1.1] This work was supported by KAKENHI 26H02525, ROIS NII Open Collaborative Research 261S04-24183, JST BOOST (Japan Grant Number JPMJBS2430) and the Science Tokyo Support Program for Doctoral Students, funded by the Universities for International Research Excellence. This study was carried out using the TSUBAME4.0 supercomputer at Institute of Science Tokyo. We also thank the anonymous reviewers for their constructive feedback, which improved the quality of this work.
+0180 [# ] References
+0181 [# ] Appendix A Training Recipe of Each Stage
+0182 [TEXT A1.p1.1] Table A presents the recipes of each training stage.
+0183 [TABLE_ROW A1.T10.2.1.1] Config | Stage 1 | Stage 2 | Stage 3
+0184 [TABLE_ROW A1.T10.2.1.2] batch size | 256 | 128 | 64
+0185 [TABLE_ROW A1.T10.2.1.3] optimizer | AdamW
+0186 [TABLE_ROW A1.T10.2.1.4] learning rate | $3\times 10^{-4}$
+0187 [TABLE_ROW A1.T10.2.1.5] weight decay | $1\times 10^{-4}$
+0188 [TABLE_ROW A1.T10.2.1.6] optimizer momentum | $\beta_{1},\beta_{2}=0.9,0.999$
+0189 [TABLE_ROW A1.T10.2.1.7] learning rate schedule | cosine decay
+0190 [TABLE_ROW A1.T10.2.1.8] training epochs | 20 | 50 | 50
+0191 [TEXT ] Table 10: Training recipe of each stage.
+0192 [TEXT A1.p2.1] While the hyperparameters that we adopt for loss weights are: $\alpha=0.05$ , $\beta=1.0$ , $\gamma=0.5$
+0193 [# ] Appendix B Statistics of Experimental Datasets
+0194 [TEXT A2.p1.1] Table 11 summarizes the statistics of the experimental datasets used in this work, including the language, sentence sample numbers, vocabulary size, recording hours, and data source.
+0195 [TABLE_ROW A2.T11.2.1.1] Name | Language | Samples | Vocab. | Hours | Source
+0196 [TABLE_ROW A2.T11.2.1.2] YouTube-ASL Uthus et al. (2023) | ASL | $\sim$ 610K | 60K | 984 | Web
+0197 [TABLE_ROW A2.T11.2.1.3] How2Sign Duarte et al. (2021) | ASL | 33K | 16K | 79 | Lab
+0198 [TABLE_ROW A2.T11.2.1.4] OpenASL Shi et al. (2022) | ASL | 97K | 33K | 288 | Web
+0199 [TABLE_ROW A2.T11.2.1.5] WLASL Li et al. (2020) | ASL | 2,038 | 100 | Web |
+0200 [TABLE_ROW A2.T11.2.1.6] CSL-News Li et al. (2025) | CSL | $\sim$ 700K | 5K | 1,985 | TV
+0201 [TABLE_ROW A2.T11.2.1.7] CSL-Daily Zhou et al. (2021) | CSL | 20K | 2K | 23 | Lab
+0202 [TEXT ] Table 11: Selected ASL and CSL datasets.
+0203 [# ] Appendix C SLT result on OpenASL
+0204 [TEXT A3.p1.1] Table 12 presents the performance of SignFLIP on OpenASL after Stage-2 fine-tuning.
+0205 [TABLE_ROW A3.T12.2.1.1] Method | Gloss | Visual | BLEU-4 | ROUGE-L | BLEURT
+0206 [TABLE_ROW A3.T12.2.1.2] OpenASL
+0207 [TABLE_ROW A3.T12.2.1.3] GloFE-VN Lin et al. (2023) | ✓ | | 7.06 | 21.75 | 36.35
+0208 [TABLE_ROW A3.T12.2.1.4] Conv-GRU † Camgoz et al. (2018) | | ✓ | 4.58 | 16.10 | 25.65
+0209 [TABLE_ROW A3.T12.2.1.5] I3D-transformer Shi et al. (2022) | | ✓ | 5.66 | 18.64 | 28.82
+0210 [TABLE_ROW A3.T12.2.1.6] OpenASL Shi et al. (2022) | | ✓ | 8.59 | 21.02 | 31.09
+0211 [TABLE_ROW A3.T12.2.1.7] C 2 RL Chen et al. (2024a) | | ✓ | 13.21 | 31.36 | –
+0212 [TABLE_ROW A3.T12.2.1.8] ShuBERT Gueuwou et al. (2025) | ✓ | ✓ | 23.20 | – | 60.60
+0213 [TABLE_ROW A3.T12.2.1.9] Uni-Sign Li et al. (2025) | ✓ | | 22.67 | 42.77 | 60.08
+0214 [TABLE_ROW A3.T12.2.1.10] Uni-Sign Li et al. (2025) | ✓ | ✓ | 23.14 | 43.22 | 60.40
+0215 [TABLE_ROW A3.T12.2.1.11] SignFLIP (Ours) | ✓ | | 19.77 | 41.56 | 59.35
+0216 [TEXT ] Table 12: SignFLIP SLT performance on OpenASL after Stage-2 fine-tuning.
+0217 [# ] Appendix D Ablation Study: MPM Window Size Impact
+0218 [TEXT A4.p1.1] In the pretraining stage, we randomly mask $n$ consecutive frames within a 24-frame window to help pose features capture semantic context. Table 13 presents an ablation study on the impact of this window size.
+0219 [TABLE_ROW A4.T13.2.1.1] Setting | DTW | DTW-MJE | $\mathcal{L}_{\text{align}}$
+0220 [TABLE_ROW A4.T13.2.1.2] 16-frame | 0.30 | 6.1e–4 | 0.17
+0221 [TABLE_ROW A4.T13.2.1.3] 24-frame | 0.12 | 2.7e–4 | 0.10
+0222 [TABLE_ROW A4.T13.2.1.4] 32-frame | 0.31 | 7.2e–4 | 0.15
+0223 [TEXT ] Table 13: Ablation study with MPM window size on CSL-News dataset.
+0224 [TEXT A4.p2.1] Results show that a 24-frame MPM window achieves optimal loss convergence and reconstruction results. This size balances sign reconstruction with broader semantic context, while other sizes overemphasize one objective and lead to suboptimal performance.
+0225 [# ] Appendix E Ablation Study: Loss for SLG
+0226 [TEXT A5.p1.1] We further performed ablation studies to investigate the impact of the feature distillation and hand losses used in the SLG training. Results are summarized in Table 14 .
+0227 [TEXT A5.p2.1] From the results, we notice that $L_{\text{distill}}$ yields a more pronounced improvement in generation performance. This is likely because, although the hand loss is more intuitive, optimization solely at the output pose level is too coarse-grained for the overall objective, making it difficult for the model to converge. In contrast, feature-level distillation provides supervision from multiple perspectives, helping the model establish clearer optimization targets and focus specifically on refining the nar transformer.
+0228 [TABLE_ROW A5.T14.2.1.1] Setting | DTW | DTW-MJE
+0229 [TABLE_ROW A5.T14.2.1.2] w/o $\mathcal{L}_{\text{hand}}$ and $\mathcal{L}_{\text{distill}}$ | 0.044 | 1.19e–4
+0230 [TABLE_ROW A5.T14.2.1.3] w/o $\mathcal{L}_{\text{hand}}$ | 0.029 | 7.84e–5
+0231 [TABLE_ROW A5.T14.2.1.4] w/o $\mathcal{L}_{\text{distill}}$ | 0.037 | 1.02e–4
+0232 [TABLE_ROW A5.T14.2.1.5] Ours | 0.025 | 6.15e–5
+0233 [TEXT ] Table 14: Ablation study with SLG losses on CSL-Daily dataset.
+0234 [# ] Appendix F Case Study of Translation
+0235 [TEXT A6.p1.1] Case studies of translation outputs on CSL-Daily, How2Sign, and OpenASL are shown in Table 15 . All examples are taken from the test sets. Sentences in brackets denote our approximate English translations.
+0236 [# ] Appendix G Case Study of Generation
+0237 [TEXT A7.p1.1] We provide more cases on CSL-Daily and How2Sign as shown in Figure 5 . Readers may also refer to the Google Drive link for video samples: https://drive.google.com/drive/folders/1pZrFySsy-vEgrD7hkMC2KfDoZlRyVdpc?usp=sharing
+0238 [TEXT ] Figure 5: Qualitative results on both How2Sign (left) and CSL-Daily (right) datasets.
+0239 [TABLE_ROW A7.T15.2.1.1] Systems | Translation Output
+0240 [TABLE_ROW A7.T15.2.1.2] Examples from CSL-Daily
+0241 [TABLE_ROW A7.T15.2.1.3] Reference | 你 和 小 张 什 么 时 候 认 识 的 ?
+0242 [TABLE_ROW A7.T15.2.1.4] (When did you and Zhang meet?)
+0243 [TABLE_ROW A7.T15.2.1.5] SignFLIP | 你 的 小 张 什 么 时 候 认 识 的 ?
+0244 [TABLE_ROW A7.T15.2.1.6] (When did you meet your Zhang?)
+0245 [TABLE_ROW A7.T15.2.1.7] Reference | 我 不 去 爬 山 , 我 有 事 。
+0246 [TABLE_ROW A7.T15.2.1.8] (I’m not going hiking; I have something to do.)
+0247 [TABLE_ROW A7.T15.2.1.9] SignFLIP | 我 不 去 爬 山 , 我 有 些 事 。
+0248 [TABLE_ROW A7.T15.2.1.10] (I’m not going hiking; I have a few things to do.)
+0249 [TABLE_ROW A7.T15.2.1.11] Reference | 你 喜 欢 这 条 裙 子 , 我 可 以 拿 一 件 给 你 试 穿 。
+0250 [TABLE_ROW A7.T15.2.1.12] (If you like this dress, I can get one for you to try on.)
+0251 [TABLE_ROW A7.T15.2.1.13] SignFLIP | 你 喜 欢 穿 这 条 裙 子 , 我 可 以 给 你 穿 。
+0252 [TABLE_ROW A7.T15.2.1.14] (If you like wearing this dress, I can help you put it on.)
+0253 [TABLE_ROW A7.T15.2.1.15] Examples from How2Sign
+0254 [TABLE_ROW A7.T15.2.1.16] Reference | I call it painting the wall.
+0255 [TABLE_ROW A7.T15.2.1.17] SignFLIP | And what this is, it’s called painting the tool.
+0256 [TABLE_ROW A7.T15.2.1.18] Reference | You need to be very careful when cleaning their cages if these birds are flighted.
+0257 [TABLE_ROW A7.T15.2.1.19] SignFLIP | So you have to be careful with that, because you don’t have to worry about another thing.
+0258 [TABLE_ROW A7.T15.2.1.20] Examples from OpenASL
+0259 [TABLE_ROW A7.T15.2.1.21] Reference | I’ve been staying home in self-quarantine and practicing social distancing.
+0260 [TABLE_ROW A7.T15.2.1.22] SignFLIP | For the past few years, we have been staying home, self-quarantining within ourselves and social distancing.
+0261 [TABLE_ROW A7.T15.2.1.23] Reference | I transferred to Ohio state school and stayed there for two years.
+0262 [TABLE_ROW A7.T15.2.1.24] SignFLIP | I transferred to Ohio for educational school two years ago.
+0263 [TEXT ] Table 15: Case study of translation outputs on CSL-Daily, How2Sign, and OpenASL. Examples are taken from the test sets. Sentences in brackets are our approximate English translations.
+0264 [# ] Appendix H Human Evaluation Questionnaire
+0265 [TEXT A8.p1.1] We provide the questionnaire used in our human evaluation. Participants were asked to assess generated sign pose sequences on a 1–5 Likert scale.
+0266 [# ] Evaluation criteria.
+0267 [TEXT A8.SS0.SSS0.Px1.p1.1] The evaluation covered the following aspects: (1) Semantic accuracy, (2) Motion smoothness, (3) Anatomical plausibility, and (4) Hand clarity.
+0268 [# ] Scale definition.
+0269 [TEXT A8.SS0.SSS0.Px2.p1.1] For all questions, a score of 1 indicates very poor quality, while a score of 5 indicates excellent quality.
+0270 [# ] Instructions to participants.
+0271 [TEXT A8.SS0.SSS0.Px3.p1.1] Participants were asked to watch each generated sign sequence and rate it according to the criteria above.
+0272 [# ] Questionnaire items.
+0273 [TEXT A8.I1.i1.p1.1] Without knowing the original sentence, can you understand this sign language video?
+0274 [TEXT A8.I1.i2.p1.1] Please use a few keywords or a sentence to write down what you think this video means.
+0275 [TEXT A8.I1.i3.p1.1] Compared to the reference text, does the motion accurately convey the original meaning?
+0276 [TEXT A8.I1.i4.p1.1] Is the skeleton motion continuous?
+0277 [TEXT A8.I1.i5.p1.1] Does the skeleton posture follow human physical laws?
+0278 [TEXT A8.I1.i6.p1.1] Are the finger motions and hand shapes clear?
+0279 [TEXT A8.SS0.SSS0.Px4.p1.1] Participants were instructed to watch each generated sign video without first seeing the reference text and then assess its comprehensibility on a five-point scale.
+0280 [# ] Appendix I Potential Risks
+0281 [TEXT A9.p1.1] While we envision the advancements in LLMs and VLMs fostering global inclusivity, current SLP research remains constrained by limitations in data diversity and modeling accuracy. Users should exercise caution regarding the inherent risks of current translation and generation models, as potential inaccuracies or misinterpretations could lead to unintended negative social impacts.

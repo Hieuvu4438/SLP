@@ -1,0 +1,16 @@
+{
+  "key": "fgdm",
+  "requested_id": "CVPR2026-Yu-FGDM",
+  "retrieved_at": "2026-11-05T01:32:04.684876+00:00",
+  "reading_level": "unread",
+  "title": "Focal-General Diffusion Model with Semantic Consistent Guidance for Sign Language Production",
+  "canonical_ids": [],
+  "artifacts": [
+    {
+      "kind": "official_pdf",
+      "url": "https://openaccess.thecvf.com/content/CVPR2026/papers/Yu_Focal-General_Diffusion_Model_with_Semantic_Consistent_Guidance_for_Sign_Language_CVPR_2026_paper.pdf",
+      "sha256": "367980f2edda72d0d98c1322a111f0780e2063675b11ea4e30112f3242b3144c",
+      "path": "sources/fgdm/paper.pdf"
+    }
+  ]
+}

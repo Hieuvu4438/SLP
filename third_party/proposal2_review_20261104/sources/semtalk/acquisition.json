@@ -1,0 +1,44 @@
+{
+  "key": "semtalk",
+  "requested_id": "2412.16563",
+  "retrieved_at": "2026-11-04T17:02:05.921660+00:00",
+  "reading_level": "unread",
+  "artifacts": [
+    {
+      "kind": "metadata",
+      "url": "https://arxiv.org/abs/2412.16563",
+      "path": "sources/semtalk/metadata.html",
+      "sha256": "a70daa0e741461777978e5b29c3a5ecb337d98aa39d5a69b3aab28050e5c38ea",
+      "bytes": 44125
+    },
+    {
+      "kind": "html",
+      "url": "https://arxiv.org/html/2412.16563",
+      "path": "sources/semtalk/html.html",
+      "sha256": "f383df381be8f87393554cae1ca529b0521185c7e10f046ed91798786b241c84",
+      "bytes": 209265
+    }
+  ],
+  "title": "SemTalk: Holistic Co-speech Motion Generation with Frame-level Semantic Emphasis",
+  "history": "Submission history From: Xiangyue Zhang [ view email ] [v1] Sat, 21 Dec 2024 10:16:07 UTC (42,278 KB) [v2] Wed, 15 Jan 2025 13:34:12 UTC (29,441 KB) [v3] Tue, 11 Mar 2025 13:04:35 UTC (39,155 KB) [v4] Sun, 16 Aug 2026 15:36:15 UTC (39,154 KB)",
+  "canonical_ids": [
+    "2412.16563v4"
+  ],
+  "headings": [
+    "SemTalk: Holistic Co-speech Motion Generation with Frame-level Semantic Emphasis",
+    "1 Introduction",
+    "2 Related Work",
+    "3 Method",
+    "3.1 Preliminary on RVQ-VAE",
+    "3.2 Overview",
+    "3.3 Generating Rhythm-related Base Motion",
+    "3.4 Generating Semantic-aware Sparse Motion",
+    "3.5 Semantic Score-based motion fusion",
+    "4 Experiments",
+    "4.1 Experimental Setup",
+    "4.2 Qualitative Results",
+    "4.3 Quantitative Results",
+    "5 Conclusion",
+    "References"
+  ]
+}

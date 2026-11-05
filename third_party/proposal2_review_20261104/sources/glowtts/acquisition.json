@@ -1,0 +1,55 @@
+{
+  "key": "glowtts",
+  "requested_id": "2005.11129",
+  "retrieved_at": "2026-11-05T00:57:54.846605+00:00",
+  "reading_level": "unread",
+  "artifacts": [
+    {
+      "kind": "metadata",
+      "url": "https://arxiv.org/abs/2005.11129",
+      "path": "sources/glowtts/metadata.html",
+      "sha256": "ba9c81bd1c0dd58e39688faa9d700beccc683b54df4643dcd4b5d9cd2b223987",
+      "bytes": 40496
+    },
+    {
+      "kind": "html",
+      "url": "https://arxiv.org/html/2005.11129",
+      "path": "sources/glowtts/html.html",
+      "sha256": "73b3acb065264bdffabadb55a288e741ed9e9b8581d48243bf4574d2d1de30de",
+      "bytes": 186501
+    }
+  ],
+  "title": "Glow-TTS: A Generative Flow for Text-to-Speech via Monotonic Alignment Search",
+  "history": "Submission history From: Sungwon Kim [ view email ] [v1] Fri, 22 May 2020 12:06:46 UTC (1,022 KB) [v2] Fri, 23 Oct 2020 01:53:58 UTC (814 KB)",
+  "canonical_ids": [
+    "2005.11129v2"
+  ],
+  "headings": [
+    "Glow-TTS: A Generative Flow for Text-to-Speech via Monotonic Alignment Search",
+    "1 Introduction",
+    "2 Related Work",
+    "3 Glow-TTS",
+    "3.1 Training and Inference Procedures",
+    "3.2 Monotonic Alignment Search",
+    "3.3 Model Architecture",
+    "Decoder.",
+    "Encoder and Duration Predictor.",
+    "4 Experiments",
+    "5 Results",
+    "5.1 Audio Quality",
+    "5.2 Sampling Speed and Robustness",
+    "5.3 Diversity and Controllability",
+    "5.4 Multi-Speaker TTS",
+    "6 Conclusion",
+    "Broader Impact",
+    "Acknowledgments",
+    "References",
+    "Appendix A",
+    "A.1. Details of the Model Architecture",
+    "A.2. Hyper-parameters",
+    "Appendix B",
+    "B.1. Attention Error Analysis",
+    "B.2. Side-by-side Evaluation between Glow-TTS and Tacotron 2",
+    "B.3. Voice Conversion Method"
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "key": "soke",
+  "requested_id": "2411.17799",
+  "retrieved_at": "2026-11-05T01:07:57.032584+00:00",
+  "reading_level": "unread",
+  "artifacts": [
+    {
+      "kind": "metadata",
+      "url": "https://arxiv.org/abs/2411.17799",
+      "path": "sources/soke/metadata.html",
+      "sha256": "684b72ecd549670b287323b0c47aafa4fcc246d172e15442b10ced94839079a1",
+      "bytes": 42139
+    },
+    {
+      "kind": "html",
+      "url": "https://arxiv.org/html/2411.17799",
+      "path": "sources/soke/html.html",
+      "sha256": "68601100dfa348168d397aaaaf2594e159320980f333a5ddb33e286afe44ecf5",
+      "bytes": 359722
+    }
+  ],
+  "title": "Signs as Tokens: A Retrieval-Enhanced Multilingual Sign Language Generator",
+  "history": "Submission history From: Ronglai Zuo [ view email ] [v1] Tue, 26 Nov 2024 18:28:09 UTC (4,155 KB) [v2] Sat, 8 Mar 2025 16:19:35 UTC (4,333 KB) [v3] Tue, 29 Jul 2025 07:20:47 UTC (4,335 KB)",
+  "canonical_ids": [
+    "2411.17799v3"
+  ],
+  "headings": [
+    "Signs as Tokens: A Retrieval-Enhanced Multilingual Sign Language Generator",
+    "1 Introduction",
+    "2 Related Work",
+    "3 Methodology",
+    "3.1 Data Preparation",
+    "3.2 Decoupled Tokenizer",
+    "3.3 Autoregressive Multilingual Generator",
+    "3.4 Retrieval-Enhanced SLG",
+    "4 Experiments",
+    "4.1 Comparison with State-of-the-Art Methods",
+    "4.2 Ablation Study",
+    "4.3 User Study",
+    "5 Conclusion",
+    "References",
+    "Appendix A Curating SMPL-X Poses",
+    "Appendix B Additional Qualitative Results",
+    "Appendix C Additional Quantitative Results",
+    "Appendix D Illustration of Decoupled Tokenizer",
+    "Appendix E Discussion"
+  ]
+}

@@ -1,0 +1,2836 @@
+[
+  {
+    "venue": "CVPR2026",
+    "url": "https://openaccess.thecvf.com/CVPR2026?day=all",
+    "sha256": "8af49e25ae802a5150596890723adbca037730365503682aa4cb1b3735ab6c74",
+    "total_titles": 4042,
+    "records": [
+      {
+        "venue": "CVPR2026",
+        "title": "Ultra Diffusion Poser: Diffusion-Based Human Motion Tracking from Sparse Inertial Sensors and Ranging-based Between-sensor Distances",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Hollidt_Ultra_Diffusion_Poser_Diffusion-Based_Human_Motion_Tracking_from_Sparse_Inertial_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "Beyond Mimicry: Learning Whole-Body Human-Humanoid Interaction from Human-Human Demonstrations",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Huang_Beyond_Mimicry_Learning_Whole-Body_Human-Humanoid_Interaction_from_Human-Human_Demonstrations_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "Hierarchical Enhancement of Semantic Priors for Disentangled Text-Driven Motion Generation",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Lv_Hierarchical_Enhancement_of_Semantic_Priors_for_Disentangled_Text-Driven_Motion_Generation_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "FlowMotion: Training-Free Flow Guidance for Video Motion Transfer",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Wang_FlowMotion_Training-Free_Flow_Guidance_for_Video_Motion_Transfer_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "MAMMA: Markerless Accurate Multi-person Motion Acquisition",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Velasquez_MAMMA_Markerless_Accurate_Multi-person_Motion_Acquisition_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "MoCoDiff: A Controllable Autoregressive Diffusion Model for Expressive Motion Generation",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Song_MoCoDiff_A_Controllable_Autoregressive_Diffusion_Model_for_Expressive_Motion_Generation_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "SHARP: Short-Window Streaming for Accurate and Robust Prediction in Motion Forecasting",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Prutsch_SHARP_Short-Window_Streaming_for_Accurate_and_Robust_Prediction_in_Motion_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "Dark3R: Learning Structure from Motion in the Dark",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Guo_Dark3R_Learning_Structure_from_Motion_in_the_Dark_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "AnyLift: Scaling Motion Reconstruction from Internet Videos via 2D Diffusion",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Li_AnyLift_Scaling_Motion_Reconstruction_from_Internet_Videos_via_2D_Diffusion_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "PAM: A Pose-Appearance-Motion Engine for Sim-to-Real HOI Video Generation",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Gao_PAM_A_Pose-Appearance-Motion_Engine_for_Sim-to-Real_HOI_Video_Generation_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "Human Geometry Distribution for 3D Animation Generation",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Tang_Human_Geometry_Distribution_for_3D_Animation_Generation_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "Moving Border Ownership for Event-based Motion Segmentation",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Hua_Moving_Border_Ownership_for_Event-based_Motion_Segmentation_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "Towards Motion Turing Test: Evaluating Human-Likeness in Humanoid Robots",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Li_Towards_Motion_Turing_Test_Evaluating_Human-Likeness_in_Humanoid_Robots_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "End-to-End Language-Action Model for Humanoid Whole Body Control",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Wang_End-to-End_Language-Action_Model_for_Humanoid_Whole_Body_Control_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "Multi-level Causal LLM-based Text-to-Motion Generation with Human Alignment",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Chen_Multi-level_Causal_LLM-based_Text-to-Motion_Generation_with_Human_Alignment_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "BiMotion: B-spline Motion for Text-guided Dynamic 3D Character Generation",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Wang_BiMotion_B-spline_Motion_for_Text-guided_Dynamic_3D_Character_Generation_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "ReMoRa: Multimodal Large Language Model based on Refined Motion Representation for Long-Video Understanding",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Yashima_ReMoRa_Multimodal_Large_Language_Model_based_on_Refined_Motion_Representation_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "Humanoid Generative Pre-Training for Zero-Shot Motion Tracking",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Qi_Humanoid_Generative_Pre-Training_for_Zero-Shot_Motion_Tracking_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "Improving Motion in Image-to-Video Models via Adaptive Low-Pass Guidance",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Choi_Improving_Motion_in_Image-to-Video_Models_via_Adaptive_Low-Pass_Guidance_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "Sketch2Colab: Sketch-Conditioned Multi-Human Animation via Controllable Flow Distillation",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Daiya_Sketch2Colab_Sketch-Conditioned_Multi-Human_Animation_via_Controllable_Flow_Distillation_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "Geometric Neural Distance Fields for Learning Human Motion Priors",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Yu_Geometric_Neural_Distance_Fields_for_Learning_Human_Motion_Priors_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "Cross-Modal Emotion Transfer for Emotion Editing in Talking Face Video",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Choi_Cross-Modal_Emotion_Transfer_for_Emotion_Editing_in_Talking_Face_Video_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "Motion 3-to-4: 3D Motion Reconstruction for 4D Synthesis",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Chen_Motion_3-to-4_3D_Motion_Reconstruction_for_4D_Synthesis_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "I'm a Map! Interpretable Motion-Attentive Maps: Spatio-Temporally Localizing Concepts in Video Diffusion Transformers",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Jun_Im_a_Map_Interpretable_Motion-Attentive_Maps_Spatio-Temporally_Localizing_Concepts_in_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "MSCD-GS: Motion-Separated Cooperative Deblurring Dynamic Reconstruction via Gaussian Splatting",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Liao_MSCD-GS_Motion-Separated_Cooperative_Deblurring_Dynamic_Reconstruction_via_Gaussian_Splatting_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "FisherPoser: Human Motion Estimation from Sparse Observations with Hierarchical Region-Wise Fisher-Matrix Uncertainty Modeling",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Xia_FisherPoser_Human_Motion_Estimation_from_Sparse_Observations_with_Hierarchical_Region-Wise_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "LiveGesture: Streamable Co-Speech Gesture Generation Model",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Saleem_LiveGesture_Streamable_Co-Speech_Gesture_Generation_Model_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "Breaking Smooth-Motion Assumptions: A UAV Benchmark for Multi-Object Tracking in Complex and Adverse Conditions",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Ye_Breaking_Smooth-Motion_Assumptions_A_UAV_Benchmark_for_Multi-Object_Tracking_in_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "MotionEdit: Benchmarking and Learning Motion-Centric Image Editing",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Wan_MotionEdit_Benchmarking_and_Learning_Motion-Centric_Image_Editing_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "Beyond the Golden Data: Resolving the Motion-Vision Quality Dilemma via Timestep Selective Training",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Luo_Beyond_the_Golden_Data_Resolving_the_Motion-Vision_Quality_Dilemma_via_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "Stability-Driven Motion Generation for Object-Guided Human-Human Co-Manipulation",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Xu_Stability-Driven_Motion_Generation_for_Object-Guided_Human-Human_Co-Manipulation_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "BoostSLT: Boosting Sign Language Translation via a Plug-and-Play Diffusion-Based Semantic Enhancer",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Han_BoostSLT_Boosting_Sign_Language_Translation_via_a_Plug-and-Play_Diffusion-Based_Semantic_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "PAMotion: Physics-Aware Motion Generation for Full-Body Interaction with Multiple Objects",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Di_PAMotion_Physics-Aware_Motion_Generation_for_Full-Body_Interaction_with_Multiple_Objects_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "OpenT2M: No-frill Motion Generation with Open-source, Large-scale, High-quality Data",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Cao_OpenT2M_No-frill_Motion_Generation_with_Open-source_Large-scale_High-quality_Data_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "MotionEnhancer: Leveraging Video Diffusion for Motion-Enhanced Vision-Language Models",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Xu_MotionEnhancer_Leveraging_Video_Diffusion_for_Motion-Enhanced_Vision-Language_Models_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "Cross-Axis Feature Fusion with Joint-Wise Motion Difference Prediction for Text-Based 3D Human Motion Editing",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Han_Cross-Axis_Feature_Fusion_with_Joint-Wise_Motion_Difference_Prediction_for_Text-Based_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "Open the Motion Door: Atomic Motion Decomposition and Recomposition for Open-Vocabulary Motion Generation",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Fan_Open_the_Motion_Door_Atomic_Motion_Decomposition_and_Recomposition_for_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "LumiMotion: Improving Gaussian Relighting with Scene Dynamics",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Kaleta_LumiMotion_Improving_Gaussian_Relighting_with_Scene_Dynamics_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "SpeeDe3DGS: Speedy Deformable 3D Gaussian Splatting with Temporal Pruning and Motion Grouping",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Tu_SpeeDe3DGS_Speedy_Deformable_3D_Gaussian_Splatting_with_Temporal_Pruning_and_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "Nano-EmoX: Unifying Multimodal Emotional Intelligence from Perception to Empathy",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Huang_Nano-EmoX_Unifying_Multimodal_Emotional_Intelligence_from_Perception_to_Empathy_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "MotionHiFlow: Text-to-Motion via Hierarchical Flow Matching",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Li_MotionHiFlow_Text-to-Motion_via_Hierarchical_Flow_Matching_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "Ground Reaction Inertial Poser: Physics-based Human Motion Capture from Sparse IMUs and Insole Pressure Sensors",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Hori_Ground_Reaction_Inertial_Poser_Physics-based_Human_Motion_Capture_from_Sparse_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "SyncMos: Scalable Motion Synchronisation for Multi-Agent Scene Interaction",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Li_SyncMos_Scalable_Motion_Synchronisation_for_Multi-Agent_Scene_Interaction_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "MaskAdapt: Learning Flexible Motion Adaptation via Mask-Invariant Prior for Physics-Based Characters",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Park_MaskAdapt_Learning_Flexible_Motion_Adaptation_via_Mask-Invariant_Prior_for_Physics-Based_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "MoRel: Long-Range Flicker-Free 4D Motion Modeling via Anchor Relay-based Bidirectioanl Blending with Hierarchical Densification",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Kwak_MoRel_Long-Range_Flicker-Free_4D_Motion_Modeling_via_Anchor_Relay-based_Bidirectioanl_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "Seeing Depth Through Frequency and Motion: A Progressive Training Paradigm for Monocular Depth Estimation",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Li_Seeing_Depth_Through_Frequency_and_Motion_A_Progressive_Training_Paradigm_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "Mocap-2-to-3: Multi-view Lifting for Monocular Motion Recovery with 2D Pretraining",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Wang_Mocap-2-to-3_Multi-view_Lifting_for_Monocular_Motion_Recovery_with_2D_Pretraining_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "MoCapAnything: Unified 3D Motion Capture for Arbitrary Skeletons from Monocular Videos",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Gong_MoCapAnything_Unified_3D_Motion_Capture_for_Arbitrary_Skeletons_from_Monocular_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "FloodDiffusion: Tailored Diffusion Forcing for Streaming Motion Generation",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Cai_FloodDiffusion_Tailored_Diffusion_Forcing_for_Streaming_Motion_Generation_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "DeX-Portrait: Disentangled and Expressive Portrait Animation via Explicit and Latent Motion Representations",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Shi_DeX-Portrait_Disentangled_and_Expressive_Portrait_Animation_via_Explicit_and_Latent_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "Causal Motion Diffusion Models for Autoregressive Motion Generation",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Yu_Causal_Motion_Diffusion_Models_for_Autoregressive_Motion_Generation_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "MoRGS: Efficient Per-Gaussian Motion Reasoning for Streamable Dynamic 3D Scenes",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Lee_MoRGS_Efficient_Per-Gaussian_Motion_Reasoning_for_Streamable_Dynamic_3D_Scenes_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "AudioAvatar: Personalized Audio-driven Whole-body Talking Avatars",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Lee_AudioAvatar_Personalized_Audio-driven_Whole-body_Talking_Avatars_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "MotionCrafter: Dense Geometry and Motion Reconstruction with a 4D VAE",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Zhu_MotionCrafter_Dense_Geometry_and_Motion_Reconstruction_with_a_4D_VAE_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "SMRABooth: Subject and Motion Representation Alignment for Customized Video Generation",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Xu_SMRABooth_Subject_and_Motion_Representation_Alignment_for_Customized_Video_Generation_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "4DEquine: Disentangling Motion and Appearance for 4D Equine Reconstruction from Monocular Video",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Lyu_4DEquine_Disentangling_Motion_and_Appearance_for_4D_Equine_Reconstruction_from_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "Next-Scale Autoregressive Models for Text-to-Motion Generation",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Zheng_Next-Scale_Autoregressive_Models_for_Text-to-Motion_Generation_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "StaMo: Unsupervised Learning of Generalizable Robot Motion from Compact State Representation",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Liu_StaMo_Unsupervised_Learning_of_Generalizable_Robot_Motion_from_Compact_State_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "RAM: Recover Any 3D Human Motion in-the-Wild",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Jia_RAM_Recover_Any_3D_Human_Motion_in-the-Wild_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "HSI-GPT2: A Dual-Granularity Large Motion Reasoning Model with Diffusion Refinement for Human-Scene Interaction",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Wang_HSI-GPT2_A_Dual-Granularity_Large_Motion_Reasoning_Model_with_Diffusion_Refinement_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "LLaMo: Scaling Pretrained Language Models for Unified Motion Understanding and Generation with Continuous Autoregressive Tokens",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Li_LLaMo_Scaling_Pretrained_Language_Models_for_Unified_Motion_Understanding_and_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "Spatio-Temporal Difference Guided Motion Deblurring with the Complementary Vision Sensor",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Meng_Spatio-Temporal_Difference_Guided_Motion_Deblurring_with_the_Complementary_Vision_Sensor_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "EmoThinker: Advancing Visual-Acoustic Emotion Analysis via Structural Token Selection and Chain-of-Thought Reasoning",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Xu_EmoThinker_Advancing_Visual-Acoustic_Emotion_Analysis_via_Structural_Token_Selection_and_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "OSMO: Open-vocabulary Self-eMOtion Tracking",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Abdelfattah_OSMO_Open-vocabulary_Self-eMOtion_Tracking_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "DyaDiT: A Multi-Modal Diffusion Transformer for Socially Favorable Dyadic Gesture Generation",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Peng_DyaDiT_A_Multi-Modal_Diffusion_Transformer_for_Socially_Favorable_Dyadic_Gesture_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "SceMoS: Scene-Aware 3D Human Motion Synthesis by Planning with Geometry-Grounded Tokens",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Ghosh_SceMoS_Scene-Aware_3D_Human_Motion_Synthesis_by_Planning_with_Geometry-Grounded_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "SymphoMotion: Joint Control of Camera Motion and Object Dynamics for Coherent Video Generation",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Zhang_SymphoMotion_Joint_Control_of_Camera_Motion_and_Object_Dynamics_for_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "MoRe: Motion-aware Feed-forward 4D Reconstruction Transformer",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Fang_MoRe_Motion-aware_Feed-forward_4D_Reconstruction_Transformer_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "Omni-Supervised Motion Editing: Balancing Change and Invariance through Positive-Negative Learning",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Shi_Omni-Supervised_Motion_Editing_Balancing_Change_and_Invariance_through_Positive-Negative_Learning_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "OMG-Bench: A New Challenging Benchmark for Skeleton-based Online Micro Hand Gesture Recognition",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Chang_OMG-Bench_A_New_Challenging_Benchmark_for_Skeleton-based_Online_Micro_Hand_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "MoBind: Motion Binding for Fine-Grained IMU-Video Pose Alignment",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Nguyen_MoBind_Motion_Binding_for_Fine-Grained_IMU-Video_Pose_Alignment_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "Training-free Motion Factorization for Compositional Video Generation",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Wang_Training-free_Motion_Factorization_for_Compositional_Video_Generation_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "Let Your Image Move with Your Motion! -- Implicit Multi-Object Multi-Motion Transfer",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Li_Let_Your_Image_Move_with_Your_Motion_--_Implicit_Multi-Object_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "Focal-General Diffusion Model with Semantic Consistent Guidance for Sign Language Production",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Yu_Focal-General_Diffusion_Model_with_Semantic_Consistent_Guidance_for_Sign_Language_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "ProjFlow: Projection Sampling with Flow Matching for Zero-Shot Exact Spatial Motion Control",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Watanabe_ProjFlow_Projection_Sampling_with_Flow_Matching_for_Zero-Shot_Exact_Spatial_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "Generative Video Motion Editing with 3D Point Tracks",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Lee_Generative_Video_Motion_Editing_with_3D_Point_Tracks_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "LaMoGen: Language to Motion Generation Through LLM-Guided Symbolic Inference",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Jiang_LaMoGen_Language_to_Motion_Generation_Through_LLM-Guided_Symbolic_Inference_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "Local Motion Matters: A Deconstruct-Recompose Paradigm for Reinforcement Learning Pre-training from Videos",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Wang_Local_Motion_Matters_A_Deconstruct-Recompose_Paradigm_for_Reinforcement_Learning_Pre-training_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "SIMSPINE: A Biomechanics-Aware Simulation Framework for 3D Spine Motion Annotation and Benchmarking",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Khan_SIMSPINE_A_Biomechanics-Aware_Simulation_Framework_for_3D_Spine_Motion_Annotation_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "IMU-HOI: A Symbiotic Framework for Coherent Human-Object Interaction and Motion Capture via Contact-Conscious Inertial Fusion",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Lin_IMU-HOI_A_Symbiotic_Framework_for_Coherent_Human-Object_Interaction_and_Motion_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "Towards Storytelling Animations: Joint Synthesis of Human and Camera Motions",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Cheng_Towards_Storytelling_Animations_Joint_Synthesis_of_Human_and_Camera_Motions_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "Space-Time Forecasting of Dynamic Scenes with Motion-aware Gaussian Grouping",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Lee_Space-Time_Forecasting_of_Dynamic_Scenes_with_Motion-aware_Gaussian_Grouping_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "Motion-Aware Animatable Gaussian Avatars Deblurring",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Niu_Motion-Aware_Animatable_Gaussian_Avatars_Deblurring_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "Learning to Generate Highly Dynamic Videos using Synthetic Motion Data",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Jin_Learning_to_Generate_Highly_Dynamic_Videos_using_Synthetic_Motion_Data_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "MoReGen: Multi-Agent Motion-Reasoning Engine for Code-based Text-to-Video Synthesis",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Bai_MoReGen_Multi-Agent_Motion-Reasoning_Engine_for_Code-based_Text-to-Video_Synthesis_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "Towards Highly-Constrained Human Motion Generation with Retrieval-Guided Diffusion Noise Optimization",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Liu_Towards_Highly-Constrained_Human_Motion_Generation_with_Retrieval-Guided_Diffusion_Noise_Optimization_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "Deformable Gaussian Occupancy: Decoupling Rigid and Nonrigid Motion with Factorized Distillation",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Gao_Deformable_Gaussian_Occupancy_Decoupling_Rigid_and_Nonrigid_Motion_with_Factorized_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "ReMoT: Reinforcement Learning with Motion Contrast Triplets",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Wan_ReMoT_Reinforcement_Learning_with_Motion_Contrast_Triplets_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "Text-Driven 3D Hand Motion Generation from Sign Language Data",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Bensabath_Text-Driven_3D_Hand_Motion_Generation_from_Sign_Language_Data_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "EmoTaG: Emotion-Aware Talking Head Synthesis on Gaussian Splatting with Few-Shot Personalization",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Xu_EmoTaG_Emotion-Aware_Talking_Head_Synthesis_on_Gaussian_Splatting_with_Few-Shot_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "Enhancing Hands in 3D Whole-Body Pose Estimation with Conditional Hands Modulator",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Moon_Enhancing_Hands_in_3D_Whole-Body_Pose_Estimation_with_Conditional_Hands_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "Unsupervised 3d Motion Estimation Using Event Camera",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Han_Unsupervised_3d_Motion_Estimation_Using_Event_Camera_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "PRISM: Video Dataset Condensation with Progressive Refinement and Insertion for Sparse Motion",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Choi_PRISM_Video_Dataset_Condensation_with_Progressive_Refinement_and_Insertion_for_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "WorldReel: 4D Video Generation with Consistent Geometry and Motion Modeling",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Fang_WorldReel_4D_Video_Generation_with_Consistent_Geometry_and_Motion_Modeling_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "ReFlow: Self-correction Motion Learning for Dynamic Scene Reconstruction",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Liang_ReFlow_Self-correction_Motion_Learning_for_Dynamic_Scene_Reconstruction_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "Gallant: Voxel Grid-based Humanoid Locomotion and Local-navigation across 3-D Constrained Terrains",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Ben_Gallant_Voxel_Grid-based_Humanoid_Locomotion_and_Local-navigation_across_3-D_Constrained_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "PAD-Hand: Physics-Aware Diffusion for Hand Motion Recovery",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Ismayilzada_PAD-Hand_Physics-Aware_Diffusion_for_Hand_Motion_Recovery_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "MAPo: Motion-Aware Partitioning of Deformable 3D Gaussian Splatting for High-Fidelity Dynamic Scene Reconstruction",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Jiao_MAPo_Motion-Aware_Partitioning_of_Deformable_3D_Gaussian_Splatting_for_High-Fidelity_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "WAM-Flow: Parallel Coarse-to-Fine Motion Planning via Discrete Flow Matching for Autonomous Driving",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Xu_WAM-Flow_Parallel_Coarse-to-Fine_Motion_Planning_via_Discrete_Flow_Matching_for_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "Ani3DHuman: Photorealistic 3D Human Animation with Self-guided Stochastic Sampling",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Sun_Ani3DHuman_Photorealistic_3D_Human_Animation_with_Self-guided_Stochastic_Sampling_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "Learning to Control Physically-simulated 3D Characters via Generating and Mimicking 2D Motions",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Li_Learning_to_Control_Physically-simulated_3D_Characters_via_Generating_and_Mimicking_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "DuoMo: Dual Motion Diffusion for World-Space Human Reconstruction",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Wang_DuoMo_Dual_Motion_Diffusion_for_World-Space_Human_Reconstruction_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "Towards Decompositional Human Motion Generation with Energy-Based Diffusion Models",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Zhang_Towards_Decompositional_Human_Motion_Generation_with_Energy-Based_Diffusion_Models_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "Unified Number-Free Text-to-Motion Generation Via Flow Matching",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Huang_Unified_Number-Free_Text-to-Motion_Generation_Via_Flow_Matching_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "SynMotion: Semantic-Visual Adaptation for Motion Customized Video Generation",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Tan_SynMotion_Semantic-Visual_Adaptation_for_Motion_Customized_Video_Generation_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "MoVieS: Motion-Aware 4D Dynamic View Synthesis in One Second",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Lin_MoVieS_Motion-Aware_4D_Dynamic_View_Synthesis_in_One_Second_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "Gaussian-Mixture Latent Flow for Stochastic 3D Human Motion Prediction",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Ma_Gaussian-Mixture_Latent_Flow_for_Stochastic_3D_Human_Motion_Prediction_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "HiF-VLA: Hindsight, Insight and Foresight through Motion Representation for Vision-Language-Action Models",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Lin_HiF-VLA_Hindsight_Insight_and_Foresight_through_Motion_Representation_for_Vision-Language-Action_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "Global Structure-from-Motion Meets Feedforward Reconstruction",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Pan_Global_Structure-from-Motion_Meets_Feedforward_Reconstruction_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "MotionScale: Reconstructing Appearance, Geometry, and Motion of Dynamic Scenes with Scalable 4D Gaussian Splatting",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Zhou_MotionScale_Reconstructing_Appearance_Geometry_and_Motion_of_Dynamic_Scenes_with_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "PhyCo: Learning Controllable Physical Priors for Generative Motion",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Narayanan_PhyCo_Learning_Controllable_Physical_Priors_for_Generative_Motion_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "Real-Time Multimodal Fingertip Contact Detection via Depth and Motion Fusion for Vision-Based Human-Computer Interaction",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Toshpulatov_Real-Time_Multimodal_Fingertip_Contact_Detection_via_Depth_and_Motion_Fusion_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "Learning Effective Sign Features without Text for Gloss-free Sign Language Translation",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Gan_Learning_Effective_Sign_Features_without_Text_for_Gloss-free_Sign_Language_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "Tracking-Guided 4D Generation: Foundation-Tracker Motion Priors for 3D Model Animation",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Sun_Tracking-Guided_4D_Generation_Foundation-Tracker_Motion_Priors_for_3D_Model_Animation_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "Vanast: Virtual Try-On with Human Image Animation via Synthetic Triplet Supervision",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Cha_Vanast_Virtual_Try-On_with_Human_Image_Animation_via_Synthetic_Triplet_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "ParticleGS: Learning Neural Gaussian Particle Dynamics from Videos for Prior-free Physical Motion Extrapolation",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Quan_ParticleGS_Learning_Neural_Gaussian_Particle_Dynamics_from_Videos_for_Prior-free_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "MotionMaster: Generalizable Text-Driven Motion Generation and Editing",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Jiang_MotionMaster_Generalizable_Text-Driven_Motion_Generation_and_Editing_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "Soul: Breathe Life into Digital Human for High-fidelity Long-term Multimodal Animation",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Zhang_Soul_Breathe_Life_into_Digital_Human_for_High-fidelity_Long-term_Multimodal_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "Learnable Motion-Focused Tokenization for Effective and Efficient Video Unsupervised Domain Adaptation",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Liu_Learnable_Motion-Focused_Tokenization_for_Effective_and_Efficient_Video_Unsupervised_Domain_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "3D-Aware Implicit Motion Control for View-Adaptive Human Video Generation",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Fang_3D-Aware_Implicit_Motion_Control_for_View-Adaptive_Human_Video_Generation_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "SPOT: Spatiotemporal Prompt Optimization for Motion-Stabilized MLLM-Guided Video Segmentation",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Fan_SPOT_Spatiotemporal_Prompt_Optimization_for_Motion-Stabilized_MLLM-Guided_Video_Segmentation_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "Learning Long-term Motion Embeddings for Efficient Kinematics Generation",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Stracke_Learning_Long-term_Motion_Embeddings_for_Efficient_Kinematics_Generation_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "PromptStereo: Zero-Shot Stereo Matching via Structure and Motion Prompts",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Wang_PromptStereo_Zero-Shot_Stereo_Matching_via_Structure_and_Motion_Prompts_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "Bezier Degradation Modeling for LiDAR-based Human Motion Capture",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/An_Bezier_Degradation_Modeling_for_LiDAR-based_Human_Motion_Capture_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "Bi-directional Autoregressive Diffusion for Large Complex Motion Interpolation",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Ma_Bi-directional_Autoregressive_Diffusion_for_Large_Complex_Motion_Interpolation_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "F^2HDR: Two-Stage HDR Video Reconstruction via Flow Adapter and Physical Motion Modeling",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Yue_F2HDR_Two-Stage_HDR_Video_Reconstruction_via_Flow_Adapter_and_Physical_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "EMO-R3: Reflective Reinforcement Learning for Emotional Reasoning in Multimodal Large Language Models",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Fang_EMO-R3_Reflective_Reinforcement_Learning_for_Emotional_Reasoning_in_Multimodal_Large_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "CIGPose: Causal Intervention Graph Neural Network for Whole-Body Pose Estimation",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Li_CIGPose_Causal_Intervention_Graph_Neural_Network_for_Whole-Body_Pose_Estimation_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "MoLingo: Motion-Language Alignment for Text-to-Human Motion Generation",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/He_MoLingo_Motion-Language_Alignment_for_Text-to-Human_Motion_Generation_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "Lighting in Motion: Spatiotemporal HDR Lighting Estimation",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Bolduc_Lighting_in_Motion_Spatiotemporal_HDR_Lighting_Estimation_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "CoordSpeaker: Exploiting Gesture Captioning for Coordinated Caption-Empowered Co-Speech Gesture Generation",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Fang_CoordSpeaker_Exploiting_Gesture_Captioning_for_Coordinated_Caption-Empowered_Co-Speech_Gesture_Generation_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "FlashMotion: Few-Step Controllable Video Generation with Trajectory Guidance",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Li_FlashMotion_Few-Step_Controllable_Video_Generation_with_Trajectory_Guidance_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "LAMP: Language-Assisted Motion Planning for Controllable Video Generation",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Kizil_LAMP_Language-Assisted_Motion_Planning_for_Controllable_Video_Generation_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "AnthroTAP: Learning Point Tracking with Real-World Motion",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Kim_AnthroTAP_Learning_Point_Tracking_with_Real-World_Motion_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "MIBURI: Towards Expressive Interactive Gesture Synthesis",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Mughal_MIBURI_Towards_Expressive_Interactive_Gesture_Synthesis_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "ParTY: Part-Guidance for Expressive Text-to-Motion Synthesis",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Heo_ParTY_Part-Guidance_for_Expressive_Text-to-Motion_Synthesis_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "CoMo: Learning Continuous Latent Motion from Internet Videos for Scalable Robot Learning",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Yang_CoMo_Learning_Continuous_Latent_Motion_from_Internet_Videos_for_Scalable_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "Seeing Motion Through Polarity for Event-based Action Recognition",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Cao_Seeing_Motion_Through_Polarity_for_Event-based_Action_Recognition_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "Chain of World: World Model Thinking in Latent Motion",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Yang_Chain_of_World_World_Model_Thinking_in_Latent_Motion_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "EmoDiffTalk: Emotion-aware Diffusion for Editable 3D Gaussian Talking Head",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Liu_EmoDiffTalk_Emotion-aware_Diffusion_for_Editable_3D_Gaussian_Talking_Head_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "MAD: Motion Appearance Decoupling for efficient Driving World Models",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Rahimi_MAD_Motion_Appearance_Decoupling_for_efficient_Driving_World_Models_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "HUMAPS-4D: A Multimodal Dataset for HUman Motion Analysis with Physiological and Semantic informations",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Dabrowski_HUMAPS-4D_A_Multimodal_Dataset_for_HUman_Motion_Analysis_with_Physiological_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "NEC-Diff: Noise-Robust Event-RAW Complementary Diffusion for Seeing Motion in Extreme Darkness",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Liu_NEC-Diff_Noise-Robust_Event-RAW_Complementary_Diffusion_for_Seeing_Motion_in_Extreme_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "ClipGStream: Clip-Stream Gaussian Splatting for Any Length and Any Motion Multi-View Dynamic Scene Reconstruction",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Liang_ClipGStream_Clip-Stream_Gaussian_Splatting_for_Any_Length_and_Any_Motion_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "Active Inference for Micro-Gesture Recognition: EFE-Guided Temporal Sampling and Adaptive Learning",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Feng_Active_Inference_for_Micro-Gesture_Recognition_EFE-Guided_Temporal_Sampling_and_Adaptive_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "FlashCap: Millisecond-Accurate Human Motion Capture via Flashing LEDs and Event-Based Vision",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Wu_FlashCap_Millisecond-Accurate_Human_Motion_Capture_via_Flashing_LEDs_and_Event-Based_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "RoMo: A Large-Scale, Richly Organized Dataset and Semantic Taxonomy for Human Motion Generation",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Zhang_RoMo_A_Large-Scale_Richly_Organized_Dataset_and_Semantic_Taxonomy_for_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "FrankenMotion: Part-level Human Motion Generation and Composition",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Li_FrankenMotion_Part-level_Human_Motion_Generation_and_Composition_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "Event-Based Motion Deblurring Using Task-Oriented 3D Gaussian Event Representations",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Xue_Event-Based_Motion_Deblurring_Using_Task-Oriented_3D_Gaussian_Event_Representations_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "SignPR: A Progressive Vector-Quantized Diffusion Framework for Sign Language Production",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Liu_SignPR_A_Progressive_Vector-Quantized_Diffusion_Framework_for_Sign_Language_Production_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "EgoPoseFormer v2: Accurate Egocentric Human Motion Estimation for AR/VR",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Li_EgoPoseFormer_v2_Accurate_Egocentric_Human_Motion_Estimation_for_ARVR_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "InterPhys: Physics-aware Human Motion Synthesis in a Dynamic Scene",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Xing_InterPhys_Physics-aware_Human_Motion_Synthesis_in_a_Dynamic_Scene_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "SHands: A Multi-View Dataset and Benchmark for Surgical Hand-Gesture and Error Recognition Toward Medical Training",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Ma_SHands_A_Multi-View_Dataset_and_Benchmark_for_Surgical_Hand-Gesture_and_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "Superman: Unifying Skeleton and Vision for Human Motion Perception and Generation",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Wang_Superman_Unifying_Skeleton_and_Vision_for_Human_Motion_Perception_and_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "InfinityHuman: Towards Long-Term Audio-Driven Human Animation",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Li_InfinityHuman_Towards_Long-Term_Audio-Driven_Human_Animation_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "RigMo: Unifying Rig and Motion Learning for Generative Animation",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Zhang_RigMo_Unifying_Rig_and_Motion_Learning_for_Generative_Animation_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "Pixel Motion Diffusion is What We Need for Robot Control",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Nguyen_Pixel_Motion_Diffusion_is_What_We_Need_for_Robot_Control_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "Self-Consistency for LLM-Based Motion Trajectory Generation and Verification",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Ma_Self-Consistency_for_LLM-Based_Motion_Trajectory_Generation_and_Verification_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "Scalable Trajectory Generation for Whole-Body Mobile Manipulation",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Niu_Scalable_Trajectory_Generation_for_Whole-Body_Mobile_Manipulation_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "GeoMotion: Rethinking Motion Segmentation via Latent 4D Geometry",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/He_GeoMotion_Rethinking_Motion_Segmentation_via_Latent_4D_Geometry_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "Unlocking Motion from Large Vision Models with a Semantic and Kinematic Duality for Gait Recognition",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Huang_Unlocking_Motion_from_Large_Vision_Models_with_a_Semantic_and_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "Event-based Motion Deblurring with Unpaired Data",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Cho_Event-based_Motion_Deblurring_with_Unpaired_Data_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "Progressive Guessing to Fixed Point: Rethinking Human Motion Prediction with Deep Equilibrium Models",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Wei_Progressive_Guessing_to_Fixed_Point_Rethinking_Human_Motion_Prediction_with_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "EgoFlow: Gradient-Guided Flow Matching for Egocentric 6DoF Object Motion Generation",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Saroha_EgoFlow_Gradient-Guided_Flow_Matching_for_Egocentric_6DoF_Object_Motion_Generation_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "Pressure2Motion: Hierarchical Human Motion Reconstruction from Ground Pressure with Text Guidance",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Li_Pressure2Motion_Hierarchical_Human_Motion_Reconstruction_from_Ground_Pressure_with_Text_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "Do You Have Freestyle? Expressive Humanoid Locomotion via Audio Control",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Li_Do_You_Have_Freestyle_Expressive_Humanoid_Locomotion_via_Audio_Control_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "OMoBlur: An Object Motion Blur Dataset and Benchmark for Real-World Local Motion Deblurring",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Yu_OMoBlur_An_Object_Motion_Blur_Dataset_and_Benchmark_for_Real-World_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "Beyond Missing Modalities: Hypergraph Conditioned Diffusion for Uncertainty-Aware Multimodal Emotion Recognition",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Qiu_Beyond_Missing_Modalities_Hypergraph_Conditioned_Diffusion_for_Uncertainty-Aware_Multimodal_Emotion_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "HandX: Scaling Bimanual Motion and Interaction Generation",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Zhang_HandX_Scaling_Bimanual_Motion_and_Interaction_Generation_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "Do You See What I Am Pointing At? Gesture-Based Egocentric Video Question Answering",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Choi_Do_You_See_What_I_Am_Pointing_At_Gesture-Based_Egocentric_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "Iterative Closed-Loop Motion Synthesis for Scaling the Capabilities of Humanoid Control",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Xu_Iterative_Closed-Loop_Motion_Synthesis_for_Scaling_the_Capabilities_of_Humanoid_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "EmoStyle: Emotion-Driven Image Stylization",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Yang_EmoStyle_Emotion-Driven_Image_Stylization_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "Prospective Dynamic 3D MRI Reconstruction via Latent-Space Motion Tracking from Single Measurement",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Chen_Prospective_Dynamic_3D_MRI_Reconstruction_via_Latent-Space_Motion_Tracking_from_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "Natural Human Motion Recovery by Aligning High-Order Temporal Dynamics from Monocular Videos",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Wei_Natural_Human_Motion_Recovery_by_Aligning_High-Order_Temporal_Dynamics_from_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "MoVie: Broaden Your Views with Human Motion for Action Detection",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Yang_MoVie_Broaden_Your_Views_with_Human_Motion_for_Action_Detection_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "Learning Explicit Continuous Motion Representation for Dynamic Gaussian Splatting from Monocular Videos",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Zhang_Learning_Explicit_Continuous_Motion_Representation_for_Dynamic_Gaussian_Splatting_from_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "MotionV2V: Editing Motion in a Video",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Burgert_MotionV2V_Editing_Motion_in_a_Video_CVPR_2026_paper.html"
+      },
+      {
+        "venue": "CVPR2026",
+        "title": "E3AD: An Emotion-Aware Vision-Language-Action Model for Human-Centric End-to-End Autonomous Driving",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Tang_E3AD_An_Emotion-Aware_Vision-Language-Action_Model_for_Human-Centric_End-to-End_Autonomous_Driving_CVPR_2026_paper.html"
+      }
+    ]
+  },
+  {
+    "venue": "CVPR2025",
+    "url": "https://openaccess.thecvf.com/CVPR2025?day=all",
+    "sha256": "2f08dc191b870530993ba6a5a79e8c8ae812f158b6a30b21a96f3b190af96bfa",
+    "total_titles": 2871,
+    "records": [
+      {
+        "venue": "CVPR2025",
+        "title": "The Language of Motion: Unifying Verbal and Non-verbal Language of 3D Human Motion",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Chen_The_Language_of_Motion_Unifying_Verbal_and_Non-verbal_Language_of_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "Estimating Body and Hand Motion in an Ego-sensed World",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Yi_Estimating_Body_and_Hand_Motion_in_an_Ego-sensed_World_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "Exploring Timeline Control for Facial Motion Generation",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Ma_Exploring_Timeline_Control_for_Facial_Motion_Generation_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "A Polarization-Aided Transformer for Image Deblurring via Motion Vector Decomposition",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Chen_A_Polarization-Aided_Transformer_for_Image_Deblurring_via_Motion_Vector_Decomposition_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "CocoER: Aligning Multi-Level Feature by  Competition and Coordination for Emotion Recognition",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Shen_CocoER_Aligning_Multi-Level_Feature_by__Competition_and_Coordination_for_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "BiM-VFI: Bidirectional Motion Field-Guided Frame Interpolation for Video with Non-uniform Motions",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Seo_BiM-VFI_Bidirectional_Motion_Field-Guided_Frame_Interpolation_for_Video_with_Non-uniform_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "FRAME: Floor-aligned Representation for Avatar Motion from Egocentric Video",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Camiletto_FRAME_Floor-aligned_Representation_for_Avatar_Motion_from_Egocentric_Video_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "EDEN: Enhanced Diffusion for High-quality Large-motion Video Frame Interpolation",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Zhang_EDEN_Enhanced_Diffusion_for_High-quality_Large-motion_Video_Frame_Interpolation_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "REWIND: Real-Time Egocentric Whole-Body Motion Diffusion with Exemplar-Based Identity Conditioning",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Lee_REWIND_Real-Time_Egocentric_Whole-Body_Motion_Diffusion_with_Exemplar-Based_Identity_Conditioning_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "Disco4D: Disentangled 4D Human Generation and Animation from a Single Image",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Pang_Disco4D_Disentangled_4D_Human_Generation_and_Animation_from_a_Single_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "Gaussian Splashing: Unified Particles for Versatile Motion Synthesis and Rendering",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Feng_Gaussian_Splashing_Unified_Particles_for_Versatile_Motion_Synthesis_and_Rendering_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "Neural Motion Simulator Pushing the Limit of World Models in Reinforcement Learning",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Hao_Neural_Motion_Simulator_Pushing_the_Limit_of_World_Models_in_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "SALAD: Skeleton-aware Latent Diffusion for Text-driven Motion Generation and Editing",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Hong_SALAD_Skeleton-aware_Latent_Diffusion_for_Text-driven_Motion_Generation_and_Editing_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "TimeTracker: Event-based Continuous Point Tracking for Video Frame Interpolation with Non-linear Motion",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Liu_TimeTracker_Event-based_Continuous_Point_Tracking_for_Video_Frame_Interpolation_with_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "Shading Meets Motion: Self-supervised Indoor 3D Reconstruction Via Simultaneous Shape-from-Shading and Structure-from-Motion",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Lu_Shading_Meets_Motion_Self-supervised_Indoor_3D_Reconstruction_Via_Simultaneous_Shape-from-Shading_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "MotionStone: Decoupled Motion Intensity Modulation with Diffusion Transformer for Image-to-Video Generation",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Shi_MotionStone_Decoupled_Motion_Intensity_Modulation_with_Diffusion_Transformer_for_Image-to-Video_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "Rethinking Diffusion for Text-Driven Human Motion Generation: Redundant Representations, Evaluation, and Masked Autoregression",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Meng_Rethinking_Diffusion_for_Text-Driven_Human_Motion_Generation_Redundant_Representations_Evaluation_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "Physical Plausibility-aware Trajectory Prediction via Locomotion Embodiment",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Taketsugu_Physical_Plausibility-aware_Trajectory_Prediction_via_Locomotion_Embodiment_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "Free-viewpoint Human Animation with Pose-correlated Reference Selection",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Hong_Free-viewpoint_Human_Animation_with_Pose-correlated_Reference_Selection_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "Ges3ViG : Incorporating Pointing Gestures into Language-Based 3D Visual Grounding for Embodied Reference Understanding",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Mane_Ges3ViG__Incorporating_Pointing_Gestures_into_Language-Based_3D_Visual_Grounding_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "HumanMM: Global Human Motion Recovery from Multi-shot Videos",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Zhang_HumanMM_Global_Human_Motion_Recovery_from_Multi-shot_Videos_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "ColabSfM: Collaborative Structure-from-Motion by Point Cloud Registration",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Edstedt_ColabSfM_Collaborative_Structure-from-Motion_by_Point_Cloud_Registration_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "Nonisotropic Gaussian Diffusion for Realistic 3D Human Motion Prediction",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Curreli_Nonisotropic_Gaussian_Diffusion_for_Realistic_3D_Human_Motion_Prediction_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "Through-The-Mask: Mask-based Motion Trajectories for Image-to-Video Generation",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Yariv_Through-The-Mask_Mask-based_Motion_Trajectories_for_Image-to-Video_Generation_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "Vision-Guided Action: Enhancing 3D Human Motion Prediction with Gaze-informed Affordance in 3D Scenes",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Yu_Vision-Guided_Action_Enhancing_3D_Human_Motion_Prediction_with_Gaze-informed_Affordance_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "Lost in Translation, Found in Context: Sign Language Translation with Contextual Cues",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Jang_Lost_in_Translation_Found_in_Context_Sign_Language_Translation_with_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "GEM: A Generalizable Ego-Vision Multimodal World Model for Fine-Grained Ego-Motion, Object Dynamics, and Scene Composition Control",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Hassan_GEM_A_Generalizable_Ego-Vision_Multimodal_World_Model_for_Fine-Grained_Ego-Motion_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "Go-with-the-Flow: Motion-Controllable Video Diffusion Models Using Real-Time Warped Noise",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Burgert_Go-with-the-Flow_Motion-Controllable_Video_Diffusion_Models_Using_Real-Time_Warped_Noise_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "Motion-Grounded Video Reasoning: Understanding and Perceiving Motion at Pixel Level",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Deng_Motion-Grounded_Video_Reasoning_Understanding_and_Perceiving_Motion_at_Pixel_Level_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "Dyn-HaMR: Recovering 4D Interacting Hand Motion from a Dynamic Camera",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Yu_Dyn-HaMR_Recovering_4D_Interacting_Hand_Motion_from_a_Dynamic_Camera_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "EmoEdit: Evoking Emotions through Image Manipulation",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Yang_EmoEdit_Evoking_Emotions_through_Image_Manipulation_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "Joint Optimization of Neural Radiance Fields and Continuous Camera Motion from a Monocular Video",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Nguyen_Joint_Optimization_of_Neural_Radiance_Fields_and_Continuous_Camera_Motion_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "InterMimic: Towards Universal Whole-Body Control for Physics-Based Human-Object Interactions",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Xu_InterMimic_Towards_Universal_Whole-Body_Control_for_Physics-Based_Human-Object_Interactions_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "Teller: Real-Time Streaming Audio-Driven Portrait Animation with Autoregressive Motion Generation",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Zhen_Teller_Real-Time_Streaming_Audio-Driven_Portrait_Animation_with_Autoregressive_Motion_Generation_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "LatentHOI: On the Generalizable Hand Object Motion Generation with Latent Hand Diffusion.",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Li_LatentHOI_On_the_Generalizable_Hand_Object_Motion_Generation_with_Latent_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "Full-DoF Egomotion Estimation for Event Cameras Using Geometric Solvers",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Zhao_Full-DoF_Egomotion_Estimation_for_Event_Cameras_Using_Geometric_Solvers_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "HOP: Heterogeneous Topology-based Multimodal Entanglement for Co-Speech Gesture Generation",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Cheng_HOP_Heterogeneous_Topology-based_Multimodal_Entanglement_for_Co-Speech_Gesture_Generation_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "MoDec-GS: Global-to-Local Motion Decomposition and Temporal Interval Adjustment for Compact Dynamic 3D Gaussian Splatting",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Kwak_MoDec-GS_Global-to-Local_Motion_Decomposition_and_Temporal_Interval_Adjustment_for_Compact_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "EnvPoser: Environment-aware Realistic Human Motion Estimation from Sparse Observations with Uncertainty Modeling",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Xia_EnvPoser_Environment-aware_Realistic_Human_Motion_Estimation_from_Sparse_Observations_with_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "MixerMDM: Learnable Composition of Human Motion Diffusion Models",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Ruiz-Ponce_MixerMDM_Learnable_Composition_of_Human_Motion_Diffusion_Models_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "Supervising Sound Localization by In-the-wild Egomotion",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Min_Supervising_Sound_Localization_by_In-the-wild_Egomotion_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "DynaMoDe-NeRF: Motion-aware Deblurring Neural Radiance Field for Dynamic Scenes",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Kumar_DynaMoDe-NeRF_Motion-aware_Deblurring_Neural_Radiance_Field_for_Dynamic_Scenes_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "MVPortrait: Text-Guided Motion and Emotion Control for Multi-view Vivid Portrait Animation",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Lin_MVPortrait_Text-Guided_Motion_and_Emotion_Control_for_Multi-view_Vivid_Portrait_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "Decoupled Motion Expression Video Segmentation",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Fang_Decoupled_Motion_Expression_Video_Segmentation_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "Motions as Queries: One-Stage Multi-Person Holistic Human Motion Capture",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Liu_Motions_as_Queries_One-Stage_Multi-Person_Holistic_Human_Motion_Capture_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "HiMoR: Monocular Deformable Gaussian Reconstruction with Hierarchical Motion Representation",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Liang_HiMoR_Monocular_Deformable_Gaussian_Reconstruction_with_Hierarchical_Motion_Representation_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "HSI-GPT: A General-Purpose Large Scene-Motion-Language Model for Human Scene Interaction",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Wang_HSI-GPT_A_General-Purpose_Large_Scene-Motion-Language_Model_for_Human_Scene_Interaction_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "EnliveningGS: Active Locomotion of 3DGS",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Shen_EnliveningGS_Active_Locomotion_of_3DGS_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "Knowledge-Aligned Counterfactual-Enhancement Diffusion Perception for Unsupervised Cross-Domain Visual Emotion Recognition",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Yin_Knowledge-Aligned_Counterfactual-Enhancement_Diffusion_Perception_for_Unsupervised_Cross-Domain_Visual_Emotion_Recognition_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "H-MoRe: Learning Human-centric Motion Representation for Action Analysis",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Huang_H-MoRe_Learning_Human-centric_Motion_Representation_for_Action_Analysis_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "Dense-SfM: Structure from Motion with Dense Consistent Matching",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Lee_Dense-SfM_Structure_from_Motion_with_Dense_Consistent_Matching_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "TIMotion: Temporal and Interactive Framework for Efficient Human-Human Motion Generation",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Wang_TIMotion_Temporal_and_Interactive_Framework_for_Efficient_Human-Human_Motion_Generation_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "Co-Speech Gesture Video Generation with Implicit Motion-Audio Entanglement",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Li_Co-Speech_Gesture_Video_Generation_with_Implicit_Motion-Audio_Entanglement_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "LesionLocator: Zero-Shot Universal Tumor Segmentation and Tracking in 3D Whole-Body Imaging",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Rokuss_LesionLocator_Zero-Shot_Universal_Tumor_Segmentation_and_Tracking_in_3D_Whole-Body_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "Synergizing Motion and Appearance: Multi-Scale Compensatory Codebooks for Talking Head Video Generation",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Zhao_Synergizing_Motion_and_Appearance_Multi-Scale_Compensatory_Codebooks_for_Talking_Head_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "SMILE: Infusing Spatial and Motion Semantics in Masked Video Learning",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Thoker_SMILE_Infusing_Spatial_and_Motion_Semantics_in_Masked_Video_Learning_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "Lifting Motion to the 3D World via 2D Diffusion",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Li_Lifting_Motion_to_the_3D_World_via_2D_Diffusion_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "SplineGS: Robust Motion-Adaptive Spline for Real-Time Dynamic 3D Gaussians from Monocular Video",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Park_SplineGS_Robust_Motion-Adaptive_Spline_for_Real-Time_Dynamic_3D_Gaussians_from_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "Diffusion-based Realistic Listening Head Generation via Hybrid Motion Modeling",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Wang_Diffusion-based_Realistic_Listening_Head_Generation_via_Hybrid_Motion_Modeling_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "VideoSPatS: Video SPatiotemporal Splines for Disentangled Occlusion, Appearance and Motion Modeling and Editing",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Gonzalez_VideoSPatS_Video_SPatiotemporal_Splines_for_Disentangled_Occlusion_Appearance_and_Motion_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "Motion Modes: What Could Happen Next?",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Pandey_Motion_Modes_What_Could_Happen_Next_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "ConMo: Controllable Motion Disentanglement and Recomposition for Zero-Shot Motion Transfer",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Gao_ConMo_Controllable_Motion_Disentanglement_and_Recomposition_for_Zero-Shot_Motion_Transfer_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "VideoMage: Multi-Subject and Motion Customization of Text-to-Video Diffusion Models",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Huang_VideoMage_Multi-Subject_and_Motion_Customization_of_Text-to-Video_Diffusion_Models_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "PersonaBooth: Personalized Text-to-Motion Generation",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Kim_PersonaBooth_Personalized_Text-to-Motion_Generation_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "EgoLM: Multi-Modal Language Model of Egocentric Motions",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Hong_EgoLM_Multi-Modal_Language_Model_of_Egocentric_Motions_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "MotionBench: Benchmarking and Improving Fine-grained Video Motion Understanding for Vision Language Models",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Hong_MotionBench_Benchmarking_and_Improving_Fine-grained_Video_Motion_Understanding_for_Vision_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "MotionPro: A Precise Motion Controller for Image-to-Video Generation",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Zhang_MotionPro_A_Precise_Motion_Controller_for_Image-to-Video_Generation_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "AnyMap: Learning a General Camera Model for Structure-from-Motion with Unknown Distortion in Dynamic Scenes",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Dal_Cin_AnyMap_Learning_a_General_Camera_Model_for_Structure-from-Motion_with_Unknown_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "IM-Zero: Instance-level Motion Controllable Video Generation in a Zero-shot Manner",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Huang_IM-Zero_Instance-level_Motion_Controllable_Video_Generation_in_a_Zero-shot_Manner_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "HuPerFlow: A Comprehensive Benchmark for Human vs. Machine Motion Estimation Comparison",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Yang_HuPerFlow_A_Comprehensive_Benchmark_for_Human_vs._Machine_Motion_Estimation_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "EchoWorld: Learning Motion-Aware World Models for Echocardiography Probe Guidance",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Yue_EchoWorld_Learning_Motion-Aware_World_Models_for_Echocardiography_Probe_Guidance_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "SemGeoMo: Dynamic Contextual Human Motion Generation with Semantic and Geometric Guidance",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Cong_SemGeoMo_Dynamic_Contextual_Human_Motion_Generation_with_Semantic_and_Geometric_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "HuMoCon: Concept Discovery for Human Motion Understanding",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Fang_HuMoCon_Concept_Discovery_for_Human_Motion_Understanding_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "POMP: Physics-consistent Motion Generative Model through Phase Manifolds",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Ji_POMP_Physics-consistent_Motion_Generative_Model_through_Phase_Manifolds_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "HaWoR: World-Space Hand Motion Reconstruction from Egocentric Videos",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Zhang_HaWoR_World-Space_Hand_Motion_Reconstruction_from_Egocentric_Videos_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "MegaSaM: Accurate, Fast and Robust Structure and Motion from Casual Dynamic Videos",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Li_MegaSaM_Accurate_Fast_and_Robust_Structure_and_Motion_from_Casual_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "DiET-GS: Diffusion Prior and Event Stream-Assisted Motion Deblurring 3D Gaussian Splatting",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Lee_DiET-GS_Diffusion_Prior_and_Event_Stream-Assisted_Motion_Deblurring_3D_Gaussian_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "MG-MotionLLM: A Unified Framework for Motion Comprehension and Generation across Multiple Granularities",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Wu_MG-MotionLLM_A_Unified_Framework_for_Motion_Comprehension_and_Generation_across_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "Cross-Modal Distillation for 2D/3D Multi-Object Discovery from 2D Motion",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Lahlali_Cross-Modal_Distillation_for_2D3D_Multi-Object_Discovery_from_2D_Motion_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "Layered Motion Fusion: Lifting Motion Segmentation to 3D in Egocentric Videos",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Tschernezki_Layered_Motion_Fusion_Lifting_Motion_Segmentation_to_3D_in_Egocentric_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "MotiF: Making Text Count in Image Animation with Motion Focal Loss",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Wang_MotiF_Making_Text_Count_in_Image_Animation_with_Motion_Focal_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "Retrieving Semantics from the Deep: an RAG Solution for Gesture Synthesis",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Mughal_Retrieving_Semantics_from_the_Deep_an_RAG_Solution_for_Gesture_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "Synthetic-to-Real Self-supervised Robust Depth Estimation via Learning with Motion and Structure Priors",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Yan_Synthetic-to-Real_Self-supervised_Robust_Depth_Estimation_via_Learning_with_Motion_and_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "StickMotion: Generating 3D Human Motions by Drawing a Stickman",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Wang_StickMotion_Generating_3D_Human_Motions_by_Drawing_a_Stickman_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "StableAnimator: High-Quality Identity-Preserving Human Image Animation",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Tu_StableAnimator_High-Quality_Identity-Preserving_Human_Image_Animation_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "Segment Any Motion in Videos",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Huang_Segment_Any_Motion_in_Videos_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "EnergyMoGen: Compositional Human Motion Generation with Energy-Based Diffusion Model in Latent Space",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Zhang_EnergyMoGen_Compositional_Human_Motion_Generation_with_Energy-Based_Diffusion_Model_in_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "Stochastic Human Motion Prediction with Memory of Action Transition and Action Characteristic",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Tang_Stochastic_Human_Motion_Prediction_with_Memory_of_Action_Transition_and_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "X-Dyna: Expressive Dynamic Human Image Animation",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Chang_X-Dyna_Expressive_Dynamic_Human_Image_Animation_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "AnyMoLe: Any Character Motion In-betweening Leveraging Video Diffusion Models",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Yun_AnyMoLe_Any_Character_Motion_In-betweening_Leveraging_Video_Diffusion_Models_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "Continuous Space-Time Video Resampling with  Invertible Motion Steganography",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Zhang_Continuous_Space-Time_Video_Resampling_with__Invertible_Motion_Steganography_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "SimMotionEdit: Text-Based Human Motion Editing with Motion Similarity Prediction",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Li_SimMotionEdit_Text-Based_Human_Motion_Editing_with_Motion_Similarity_Prediction_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "AToM: Aligning Text-to-Motion Model at Event-Level with GPT-4Vision Reward",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Han_AToM_Aligning_Text-to-Motion_Model_at_Event-Level_with_GPT-4Vision_Reward_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "Spk2SRImgNet: Super-Resolve Dynamic Scene from Spike Stream via Motion Aligned Collaborative Filtering",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Wang_Spk2SRImgNet_Super-Resolve_Dynamic_Scene_from_Spike_Stream_via_Motion_Aligned_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "Dynamic Motion Blending for Versatile Motion Editing",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Jiang_Dynamic_Motion_Blending_for_Versatile_Motion_Editing_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "MAC-Ego3D: Multi-Agent Gaussian Consensus for Real-Time Collaborative Ego-Motion and Photorealistic 3D Reconstruction",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Xu_MAC-Ego3D_Multi-Agent_Gaussian_Consensus_for_Real-Time_Collaborative_Ego-Motion_and_Photorealistic_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "UMotion: Uncertainty-driven Human Motion Estimation from Inertial and Ultra-wideband Units",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Liu_UMotion_Uncertainty-driven_Human_Motion_Estimation_from_Inertial_and_Ultra-wideband_Units_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "MODA: Motion-Drift Augmentation for Inertial Human Motion Analysis",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Wu_MODA_Motion-Drift_Augmentation_for_Inertial_Human_Motion_Analysis_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "ALIEN: Implicit Neural Representations for Human Motion Prediction under Arbitrary Latency",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Wei_ALIEN_Implicit_Neural_Representations_for_Human_Motion_Prediction_under_Arbitrary_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "Parameterized Blur Kernel Prior Learning for Local Motion Deblurring",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Fang_Parameterized_Blur_Kernel_Prior_Learning_for_Local_Motion_Deblurring_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "Dynamic Content Prediction with Motion-aware Priors for Blind Face Video Restoration",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Xie_Dynamic_Content_Prediction_with_Motion-aware_Priors_for_Blind_Face_Video_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "AniMo: Species-Aware Model for Text-Driven Animal Motion Generation",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Wang_AniMo_Species-Aware_Model_for_Text-Driven_Animal_Motion_Generation_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "TokenMotion: Decoupled Motion Control via Token Disentanglement for Human-centric Video Generation",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Li_TokenMotion_Decoupled_Motion_Control_via_Token_Disentanglement_for_Human-centric_Video_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "SplatFlow: Self-Supervised Dynamic Gaussian Splatting in Neural Motion Flow Field for Autonomous Driving",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Sun_SplatFlow_Self-Supervised_Dynamic_Gaussian_Splatting_in_Neural_Motion_Flow_Field_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "Structure-from-Motion with a Non-Parametric Camera Model",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Wang_Structure-from-Motion_with_a_Non-Parametric_Camera_Model_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "LAL: Enhancing 3D Human Motion Prediction with Latency-aware Auxiliary Learning",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Sun_LAL_Enhancing_3D_Human_Motion_Prediction_with_Latency-aware_Auxiliary_Learning_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "Shape My Moves: Text-Driven Shape-Aware Synthesis of Human Motions",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Liao_Shape_My_Moves_Text-Driven_Shape-Aware_Synthesis_of_Human_Motions_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "Uncertain Multimodal Intention and Emotion Understanding in the Wild",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Yang_Uncertain_Multimodal_Intention_and_Emotion_Understanding_in_the_Wild_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "Discrete to Continuous: Generating Smooth Transition Poses from Sign Language Observations",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Tang_Discrete_to_Continuous_Generating_Smooth_Transition_Poses_from_Sign_Language_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "Human Motion Instruction Tuning",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Li_Human_Motion_Instruction_Tuning_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "Ego4o: Egocentric Human Motion Capture and Understanding from Multi-Modal Input",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Wang_Ego4o_Egocentric_Human_Motion_Capture_and_Understanding_from_Multi-Modal_Input_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "EchoMimicV2: Towards Striking, Simplified, and Semi-Body Human Animation",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Meng_EchoMimicV2_Towards_Striking_Simplified_and_Semi-Body_Human_Animation_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "Video Motion Transfer with Diffusion Transformers",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Pondaven_Video_Motion_Transfer_with_Diffusion_Transformers_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "Move-in-2D: 2D-Conditioned Human Motion Generation",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Huang_Move-in-2D_2D-Conditioned_Human_Motion_Generation_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "EMOE: Modality-Specific Enhanced Dynamic Emotion Experts",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Fang_EMOE_Modality-Specific_Enhanced_Dynamic_Emotion_Experts_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "SocialGesture: Delving into Multi-person Gesture Understanding",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Cao_SocialGesture_Delving_into_Multi-person_Gesture_Understanding_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "Phoenix: A Motion-based Self-Reflection Framework for Fine-grained Robotic Action Correction",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Xia_Phoenix_A_Motion-based_Self-Reflection_Framework_for_Fine-grained_Robotic_Action_Correction_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "MotionMap: Representing Multimodality in Human Pose Forecasting",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Hosseininejad_MotionMap_Representing_Multimodality_in_Human_Pose_Forecasting_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "ModeSeq: Taming Sparse Multimodal Motion Prediction with Sequential Mode Modeling",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Zhou_ModeSeq_Taming_Sparse_Multimodal_Motion_Prediction_with_Sequential_Mode_Modeling_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "MoSca: Dynamic Gaussian Fusion from Casual Videos via 4D Motion Scaffolds",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Lei_MoSca_Dynamic_Gaussian_Fusion_from_Casual_Videos_via_4D_Motion_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "ScaMo: Exploring the Scaling Law in Autoregressive Motion Generation Model",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Lu_ScaMo_Exploring_the_Scaling_Law_in_Autoregressive_Motion_Generation_Model_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "From Sparse Signal to Smooth Motion: Real-Time Motion Generation with Rolling Prediction Models",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Barquero_From_Sparse_Signal_to_Smooth_Motion_Real-Time_Motion_Generation_with_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "EMOVA: Empowering Language Models to See, Hear and Speak with Vivid Emotions",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Chen_EMOVA_Empowering_Language_Models_to_See_Hear_and_Speak_with_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "MP-SfM: Monocular Surface Priors for Robust Structure-from-Motion",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Pataki_MP-SfM_Monocular_Surface_Priors_for_Robust_Structure-from-Motion_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "Deterministic-to-Stochastic Diverse Latent Feature Mapping for Human Motion Synthesis",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Hua_Deterministic-to-Stochastic_Diverse_Latent_Feature_Mapping_for_Human_Motion_Synthesis_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "MotionPRO: Exploring the Role of Pressure in Human MoCap and Beyond",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Ren_MotionPRO_Exploring_the_Role_of_Pressure_in_Human_MoCap_and_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "Motion Prompting: Controlling Video Generation with Motion Trajectories",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Geng_Motion_Prompting_Controlling_Video_Generation_with_Motion_Trajectories_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "Efficient Motion-Aware Video MLLM",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Zhao_Efficient_Motion-Aware_Video_MLLM_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "EmotiveTalk: Expressive Talking Head Generation through Audio Information Decoupling and Emotional Video Diffusion",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Wang_EmotiveTalk_Expressive_Talking_Head_Generation_through_Audio_Information_Decoupling_and_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "HumanDreamer: Generating Controllable Human-Motion Videos via Decoupled Generation",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Wang_HumanDreamer_Generating_Controllable_Human-Motion_Videos_via_Decoupled_Generation_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "SpectroMotion: Dynamic 3D Reconstruction of Specular Scenes",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Fan_SpectroMotion_Dynamic_3D_Reconstruction_of_Specular_Scenes_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "DiffusionSfM: Predicting Structure and Motion via Ray Origin and Endpoint Diffusion",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Zhao_DiffusionSfM_Predicting_Structure_and_Motion_via_Ray_Origin_and_Endpoint_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "MoEE: Mixture of Emotion Experts for Audio-Driven Portrait Animation",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Liu_MoEE_Mixture_of_Emotion_Experts_for_Audio-Driven_Portrait_Animation_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "How Do I Do That? Synthesizing 3D Hand Motion and Contacts for Everyday Interactions",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Prakash_How_Do_I_Do_That_Synthesizing_3D_Hand_Motion_and_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "EmoDubber: Towards High Quality and Emotion Controllable Movie Dubbing",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Cong_EmoDubber_Towards_High_Quality_and_Emotion_Controllable_Movie_Dubbing__CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "VSNet: Focusing on the Linguistic Characteristics of Sign Language",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Li_VSNet_Focusing_on_the_Linguistic_Characteristics_of_Sign_Language_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "Extrapolating and Decoupling Image-to-Video Generation Models: Motion Modeling is Easier Than You Think",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Tian_Extrapolating_and_Decoupling_Image-to-Video_Generation_Models_Motion_Modeling_is_Easier_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "Light3R-SfM: Towards Feed-forward Structure-from-Motion",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Elflein_Light3R-SfM_Towards_Feed-forward_Structure-from-Motion_CVPR_2025_paper.html"
+      },
+      {
+        "venue": "CVPR2025",
+        "title": "Consistent and Controllable Image Animation with Motion Diffusion Models",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Ma_Consistent_and_Controllable_Image_Animation_with_Motion_Diffusion_Models_CVPR_2025_paper.html"
+      }
+    ]
+  },
+  {
+    "venue": "ICCV2025",
+    "url": "https://openaccess.thecvf.com/ICCV2025?day=all",
+    "sha256": "e684fe760c417a35c2f1e9a5acb3015a192fce10e566086e2d4bf7f78cbb97fe",
+    "total_titles": 2701,
+    "records": [
+      {
+        "venue": "ICCV2025",
+        "title": "SyncDiff: Synchronized Motion Diffusion for Multi-Body Human-Object Interaction Synthesis",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/He_SyncDiff_Synchronized_Motion_Diffusion_for_Multi-Body_Human-Object_Interaction_Synthesis_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "RapVerse: Coherent Vocals and Whole-Body Motion Generation from Text",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Chen_RapVerse_Coherent_Vocals_and_Whole-Body_Motion_Generation_from_Text_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "UniEgoMotion: A Unified Model for Egocentric Motion Reconstruction, Forecasting, and Generation",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Patel_UniEgoMotion_A_Unified_Model_for_Egocentric_Motion_Reconstruction_Forecasting_and_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "E-NeMF: Event-based Neural Motion Field for Novel Space-time View Synthesis of Dynamic Scenes",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Liu_E-NeMF_Event-based_Neural_Motion_Field_for_Novel_Space-time_View_Synthesis_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "EMoTive: Event-guided Trajectory Modeling for 3D Motion Estimation",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Wan_EMoTive_Event-guided_Trajectory_Modeling_for_3D_Motion_Estimation_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "SemGes: Semantics-aware Co-Speech Gesture Generation using Semantic Coherence and Relevance Learning",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Liu_SemGes_Semantics-aware_Co-Speech_Gesture_Generation_using_Semantic_Coherence_and_Relevance_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "From Sharp to Blur: Unsupervised Domain Adaptation for 2D Human Pose Estimation Under Extreme Motion Blur Using Event Cameras",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Kim_From_Sharp_to_Blur_Unsupervised_Domain_Adaptation_for_2D_Human_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "MonSTeR: a Unified Model for Motion, Scene, Text Retrieval",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Collorone_MonSTeR_a_Unified_Model_for_Motion_Scene_Text_Retrieval_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "Probabilistic Inertial Poser (ProbIP): Uncertainty-aware Human Motion Modeling from Sparse Inertial Sensors",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Kim_Probabilistic_Inertial_Poser_ProbIP_Uncertainty-aware_Human_Motion_Modeling_from_Sparse_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "REDUCIO! Generating 1K Video within 16 Seconds using Extremely Compressed Motion Latents",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Tian_REDUCIO_Generating_1K_Video_within_16_Seconds_using_Extremely_Compressed_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "Global Motion Corresponder for 3D Point-Based Scene Interpolation under Large Motion",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Lin_Global_Motion_Corresponder_for_3D_Point-Based_Scene_Interpolation_under_Large_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "PINO: Person-Interaction Noise Optimization for Long-Duration and Customizable Motion Generation of Arbitrary-Sized Groups",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Ota_PINO_Person-Interaction_Noise_Optimization_for_Long-Duration_and_Customizable_Motion_Generation_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "FineMotion: A Dataset and Benchmark with both Spatial and Temporal Annotation for Fine-grained Motion Generation and Editing",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Wu_FineMotion_A_Dataset_and_Benchmark_with_both_Spatial_and_Temporal_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "Decouple and Track: Benchmarking and Improving Video Diffusion Transformers For Motion Transfer",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Shi_Decouple_and_Track_Benchmarking_and_Improving_Video_Diffusion_Transformers_For_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "MaskControl: Spatio-Temporal Control for Masked Motion Synthesis",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Pinyoanuntapong_MaskControl_Spatio-Temporal_Control_for_Masked_Motion_Synthesis_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "Cross-View Isolated Sign Language Recognition via View Synthesis and Feature Disentanglement",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Shen_Cross-View_Isolated_Sign_Language_Recognition_via_View_Synthesis_and_Feature_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "Image as an IMU: Estimating Camera Motion from a Single Motion-Blurred Image",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Chen_Image_as_an_IMU_Estimating_Camera_Motion_from_a_Single_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "AnyI2V: Animating Any Conditional Image with Motion Control",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Li_AnyI2V_Animating_Any_Conditional_Image_with_Motion_Control_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "GENMO: A GENeralist Model for Human MOtion",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Li_GENMO_A_GENeralist_Model_for_Human_MOtion_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "Privacy-centric Deep Motion Retargeting for Anonymization of Skeleton-Based Motion Visualization",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Carr_Privacy-centric_Deep_Motion_Retargeting_for_Anonymization_of_Skeleton-Based_Motion_Visualization_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "Gaussian-based World Model: Gaussian Priors for Voxel-Based Occupancy Prediction and Future Motion Prediction",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Feng_Gaussian-based_World_Model_Gaussian_Priors_for_Voxel-Based_Occupancy_Prediction_and_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "MBTI: Masked Blending Transformers with Implicit Positional Encoding for Frame-rate Agnostic Motion Estimation",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Huh_MBTI_Masked_Blending_Transformers_with_Implicit_Positional_Encoding_for_Frame-rate_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "Signs as Tokens: A Retrieval-Enhanced Multilingual Sign Language Generator",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Zuo_Signs_as_Tokens_A_Retrieval-Enhanced_Multilingual_Sign_Language_Generator_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "Simultaneous Motion And Noise Estimation with Event Cameras",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Shiba_Simultaneous_Motion_And_Noise_Estimation_with_Event_Cameras_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "A Plug-and-Play Physical Motion Restoration Approach for In-the-Wild High-Difficulty Motions",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Zhang_A_Plug-and-Play_Physical_Motion_Restoration_Approach_for_In-the-Wild_High-Difficulty_Motions_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "EmotiCrafter: Text-to-Emotional-Image Generation based on Valence-Arousal Model",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Dang_EmotiCrafter_Text-to-Emotional-Image_Generation_based_on_Valence-Arousal_Model_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "Less is More: Improving Motion Diffusion Models with Sparse Keyframes",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Bae_Less_is_More_Improving_Motion_Diffusion_Models_with_Sparse_Keyframes_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "AR-VRM: Imitating Human Motions for Visual Robot Manipulation with Analogical Reasoning",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Yang_AR-VRM_Imitating_Human_Motions_for_Visual_Robot_Manipulation_with_Analogical_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "MotionStreamer: Streaming Motion Generation via Diffusion-based Autoregressive Model in Causal Latent Space",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Xiao_MotionStreamer_Streaming_Motion_Generation_via_Diffusion-based_Autoregressive_Model_in_Causal_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "FLOAT: Generative Motion Latent Flow Matching for Audio-driven Talking Portrait",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Ki_FLOAT_Generative_Motion_Latent_Flow_Matching_for_Audio-driven_Talking_Portrait_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "Uncalibrated Structure from Motion on a Sphere",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Ventura_Uncalibrated_Structure_from_Motion_on_a_Sphere_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "Video Motion Graphs",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Liu_Video_Motion_Graphs_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "StyleMotif: Multi-Modal Motion Stylization using Style-Content Cross Fusion",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Guo_StyleMotif_Multi-Modal_Motion_Stylization_using_Style-Content_Cross_Fusion_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "Motion-2-to-3: Leveraging 2D Motion Data for 3D Motion Generations",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Guo_Motion-2-to-3_Leveraging_2D_Motion_Data_for_3D_Motion_Generations_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "Foresight in Motion: Reinforcing Trajectory Prediction with Reward Heuristics",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Pei_Foresight_in_Motion_Reinforcing_Trajectory_Prediction_with_Reward_Heuristics_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "SpatialTrackerV2: Advancing 3D Point Tracking with Explicit Camera Motion",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Xiao_SpatialTrackerV2_Advancing_3D_Point_Tracking_with_Explicit_Camera_Motion_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "InfiniDreamer: Arbitrarily Long Human Motion Generation via Segment Score Distillation",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Zhuo_InfiniDreamer_Arbitrarily_Long_Human_Motion_Generation_via_Segment_Score_Distillation_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "Skeleton Motion Words for Unsupervised Skeleton-Based Temporal Action Segmentation",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Gokay_Skeleton_Motion_Words_for_Unsupervised_Skeleton-Based_Temporal_Action_Segmentation_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "Multi-Object Sketch Animation by Scene Decomposition and Motion Planning",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Liu_Multi-Object_Sketch_Animation_by_Scene_Decomposition_and_Motion_Planning_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "KinMo: Kinematic-aware Human Motion Understanding and Generation",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Zhang_KinMo_Kinematic-aware_Human_Motion_Understanding_and_Generation_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "OmniHuman-1: Rethinking the Scaling-Up of One-Stage Conditioned Human Animation Models",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Lin_OmniHuman-1_Rethinking_the_Scaling-Up_of_One-Stage_Conditioned_Human_Animation_Models_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "Multi-identity Human Image Animation with Structural Video Diffusion",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Wang_Multi-identity_Human_Image_Animation_with_Structural_Video_Diffusion_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "DPoser-X: Diffusion Model as Robust 3D Whole-body Human Pose Prior",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Lu_DPoser-X_Diffusion_Model_as_Robust_3D_Whole-body_Human_Pose_Prior_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "FlowSeek: Optical Flow Made Easier with Depth Foundation Models and Motion Bases",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Poggi_FlowSeek_Optical_Flow_Made_Easier_with_Depth_Foundation_Models_and_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "Humans as Checkerboards: Calibrating Camera Motion Scale for World-Coordinate Human Mesh Recovery",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Yang_Humans_as_Checkerboards_Calibrating_Camera_Motion_Scale_for_World-Coordinate_Human_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "Separation for Better Integration: Disentangling Edge and Motion in Event-based Deblurring",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Zhu_Separation_for_Better_Integration_Disentangling_Edge_and_Motion_in_Event-based_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "Bitrate-Controlled Diffusion for Disentangling Motion and Content in Video",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Li_Bitrate-Controlled_Diffusion_for_Disentangling_Motion_and_Content_in_Video_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "GReg: Geometry-Aware Region Refinement for Sign Language Video Generation",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Shi_GReg_Geometry-Aware_Region_Refinement_for_Sign_Language_Video_Generation_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "EMD: Explicit Motion Modeling for High-Quality Street Gaussian Splatting",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Wei_EMD_Explicit_Motion_Modeling_for_High-Quality_Street_Gaussian_Splatting_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "MOVE: Motion-Guided Few-Shot Video Object Segmentation",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Ying_MOVE_Motion-Guided_Few-Shot_Video_Object_Segmentation_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "Dual Reciprocal Learning of Language-based Human Motion Understanding and Generation",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Liang_Dual_Reciprocal_Learning_of_Language-based_Human_Motion_Understanding_and_Generation_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "EfficientMT: Efficient Temporal Adaptation for Motion Transfer in Text-to-Video Diffusion Models",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Cai_EfficientMT_Efficient_Temporal_Adaptation_for_Motion_Transfer_in_Text-to-Video_Diffusion_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "Understanding Co-speech Gestures in-the-wild",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Hegde_Understanding_Co-speech_Gestures_in-the-wild_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "GestureHYDRA: Semantic Co-speech Gesture Synthesis via Hybrid Modality Diffusion Transformer and Cascaded-Synchronized Retrieval-Augmented Generation",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Yang_GestureHYDRA_Semantic_Co-speech_Gesture_Synthesis_via_Hybrid_Modality_Diffusion_Transformer_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "A Linear N-Point Solver for Structure and Motion from Asynchronous Tracks",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Su_A_Linear_N-Point_Solver_for_Structure_and_Motion_from_Asynchronous_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "Perception-as-Control: Fine-grained Controllable Image Animation with 3D-aware Motion Representation",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Chen_Perception-as-Control_Fine-grained_Controllable_Image_Animation_with_3D-aware_Motion_Representation_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "MagShield: Towards Better Robustness in Sparse Inertial Motion Capture Under Magnetic Disturbances",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Shao_MagShield_Towards_Better_Robustness_in_Sparse_Inertial_Motion_Capture_Under_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "Continuous-Time Human Motion Field from Event Cameras",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Wang_Continuous-Time_Human_Motion_Field_from_Event_Cameras_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "MikuDance: Animating Character Art with Mixed Motion Dynamics",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Zhang_MikuDance_Animating_Character_Art_with_Mixed_Motion_Dynamics_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "PriorMotion: Generative Class-Agnostic Motion Prediction with Raster-Vector Motion Field Priors",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Qian_PriorMotion_Generative_Class-Agnostic_Motion_Prediction_with_Raster-Vector_Motion_Field_Priors_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "MotionCtrl: A Real-time Controllable Vision-Language-Motion Model",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Cao_MotionCtrl_A_Real-time_Controllable_Vision-Language-Motion_Model_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "A Unified Framework for Motion Reasoning and Generation in Human Interaction",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Park_A_Unified_Framework_for_Motion_Reasoning_and_Generation_in_Human_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "Future-Aware Interaction Network For Motion Forecasting",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Li_Future-Aware_Interaction_Network_For_Motion_Forecasting_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "Temporal Rate Reduction Clustering for Human Motion Segmentation",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Meng_Temporal_Rate_Reduction_Clustering_for_Human_Motion_Segmentation_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "MGSfM: Multi-Camera Geometry Driven Global Structure-from-Motion",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Tao_MGSfM_Multi-Camera_Geometry_Driven_Global_Structure-from-Motion_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "VideoVAE+: Large Motion Video Autoencoding with Cross-modal Video VAE",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Xing_VideoVAE_Large_Motion_Video_Autoencoding_with_Cross-modal_Video_VAE_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "MotionDiff: Training-free Zero-shot Interactive Motion Editing via Flow-assisted Multi-view Diffusion",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Ma_MotionDiff_Training-free_Zero-shot_Interactive_Motion_Editing_via_Flow-assisted_Multi-view_Diffusion_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "Long-term Traffic Simulation with Interleaved Autoregressive Motion and Scenario Generation",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Yang_Long-term_Traffic_Simulation_with_Interleaved_Autoregressive_Motion_and_Scenario_Generation_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "VMBench: A Benchmark for Perception-Aligned Video Motion Generation",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Ling_VMBench_A_Benchmark_for_Perception-Aligned_Video_Motion_Generation_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "Music-Aligned Holistic 3D Dance Generation via Hierarchical Motion Modeling",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Li_Music-Aligned_Holistic_3D_Dance_Generation_via_Hierarchical_Motion_Modeling_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "Proxy-Bridged Game Transformer for Interactive Extreme Motion Prediction",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Fang_Proxy-Bridged_Game_Transformer_for_Interactive_Extreme_Motion_Prediction_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "SemTalk: Holistic Co-speech Motion Generation with Frame-level Semantic Emphasis",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Zhang_SemTalk_Holistic_Co-speech_Motion_Generation_with_Frame-level_Semantic_Emphasis_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "DreamActor-M1: Holistic, Expressive and Robust Human Image Animation with Hybrid Guidance",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Luo_DreamActor-M1_Holistic_Expressive_and_Robust_Human_Image_Animation_with_Hybrid_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "Estimating 2D Camera Motion with Hybrid Motion Basis",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Li_Estimating_2D_Camera_Motion_with_Hybrid_Motion_Basis_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "SceneMI: Motion In-betweening for Modeling Human-Scene Interaction",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Hwang_SceneMI_Motion_In-betweening_for_Modeling_Human-Scene_Interaction_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "DiffPCI: Large Motion Point Cloud frame Interpolation with Diffusion Model",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Zhang_DiffPCI_Large_Motion_Point_Cloud_frame_Interpolation_with_Diffusion_Model_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "Free-Form Motion Control: Controlling the 6D Poses of Camera and Objects in Video Generation",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Shuai_Free-Form_Motion_Control_Controlling_the_6D_Poses_of_Camera_and_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "What If: Understanding Motion Through Sparse Interactions",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Baumann_What_If_Understanding_Motion_Through_Sparse_Interactions_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "Interaction-Merged Motion Planning: Effectively Leveraging Diverse Motion Datasets for Robust Planning",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Lee_Interaction-Merged_Motion_Planning_Effectively_Leveraging_Diverse_Motion_Datasets_for_Robust_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "Tracking Tiny Drones against Clutter: Large-Scale Infrared Benchmark with Motion-Centric Adaptive Algorithm",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Zhang_Tracking_Tiny_Drones_against_Clutter_Large-Scale_Infrared_Benchmark_with_Motion-Centric_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "Splat-based 3D Scene Reconstruction with Extreme Motion-blur",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Jang_Splat-based_3D_Scene_Reconstruction_with_Extreme_Motion-blur_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "ContextFace: Generating Facial Expressions from Emotional Contexts",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Kim_ContextFace_Generating_Facial_Expressions_from_Emotional_Contexts_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "DualReal: Adaptive Joint Training for Lossless Identity-Motion Fusion in Video Customization",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Wang_DualReal_Adaptive_Joint_Training_for_Lossless_Identity-Motion_Fusion_in_Video_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "Flow4Agent: Long-form Video Understanding via Motion Prior from Optical Flow",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Liu_Flow4Agent_Long-form_Video_Understanding_via_Motion_Prior_from_Optical_Flow_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "Moto: Latent Motion Token as the Bridging Language for Learning Robot Manipulation from Videos",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Chen_Moto_Latent_Motion_Token_as_the_Bridging_Language_for_Learning_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "MotionFollower: Editing Video Motion via Score-Guided Diffusion",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Tu_MotionFollower_Editing_Video_Motion_via_Score-Guided_Diffusion_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "Easi3R: Estimating Disentangled Motion from DUSt3R Without Training",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Chen_Easi3R_Estimating_Disentangled_Motion_from_DUSt3R_Without_Training_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "Sequential Gaussian Avatars with Hierarchical Motion Context",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Xu_Sequential_Gaussian_Avatars_with_Hierarchical_Motion_Context_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "SMGDiff: Soccer Motion Generation using Diffusion Probabilistic Models",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Yang_SMGDiff_Soccer_Motion_Generation_using_Diffusion_Probabilistic_Models_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "Shape of Motion: 4D Reconstruction from a Single Video",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Wang_Shape_of_Motion_4D_Reconstruction_from_a_Single_Video_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "MotionAgent: Fine-grained Controllable Video Generation via Motion Field Agent",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Liao_MotionAgent_Fine-grained_Controllable_Video_Generation_via_Motion_Field_Agent_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "MotionShot: Adaptive Motion Transfer across Arbitrary Objects for Text-to-Video Generation",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Liu_MotionShot_Adaptive_Motion_Transfer_across_Arbitrary_Objects_for_Text-to-Video_Generation_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "InterSyn: Interleaved Learning for Dynamic Motion Synthesis in the Wild",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Ma_InterSyn_Interleaved_Learning_for_Dynamic_Motion_Synthesis_in_the_Wild_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "Diffusion-based 3D Hand Motion Recovery with Intuitive Physics",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Zhang_Diffusion-based_3D_Hand_Motion_Recovery_with_Intuitive_Physics_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "MoSiC: Optimal-Transport Motion Trajectory for Dense Self-Supervised Learning",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Salehi_MoSiC_Optimal-Transport_Motion_Trajectory_for_Dense_Self-Supervised_Learning_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "Make Me Happier: Evoking Emotions Through Image Diffusion Models",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Lin_Make_Me_Happier_Evoking_Emotions_Through_Image_Diffusion_Models_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "GenM3: Generative Pretrained Multi-path Motion Model for Text Conditional Human Motion Generation",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Shi_GenM3_Generative_Pretrained_Multi-path_Motion_Model_for_Text_Conditional_Human_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "Ponimator: Unfolding Interactive Pose for Versatile Human-human Interaction Animation",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Liu_Ponimator_Unfolding_Interactive_Pose_for_Versatile_Human-human_Interaction_Animation_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "Text-to-Any-Skeleton Motion Generation Without Retargeting",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Liu_Text-to-Any-Skeleton_Motion_Generation_Without_Retargeting_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "Towards Immersive Human-X Interaction: A Real-Time Framework for Physically Plausible Motion Synthesis",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Ji_Towards_Immersive_Human-X_Interaction_A_Real-Time_Framework_for_Physically_Plausible_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "A Structure-aware and Motion-adaptive Framework for 3D Human Pose Estimation with Mamba",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Lu_A_Structure-aware_and_Motion-adaptive_Framework_for_3D_Human_Pose_Estimation_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "FED-PsyAU: Privacy-Preserving Micro-Expression Recognition via Psychological AU Coordination and Dynamic Facial Motion Modeling",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Li_FED-PsyAU_Privacy-Preserving_Micro-Expression_Recognition_via_Psychological_AU_Coordination_and_Dynamic_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "ClearSight: Human Vision-Inspired Solutions for Event-Based Motion Deblurring",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Lin_ClearSight_Human_Vision-Inspired_Solutions_for_Event-Based_Motion_Deblurring_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "DIMO: Diverse 3D Motion Generation for Arbitrary Objects",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Mou_DIMO_Diverse_3D_Motion_Generation_for_Arbitrary_Objects_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "Democratizing High-Fidelity Co-Speech Gesture Video Generation",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Yang_Democratizing_High-Fidelity_Co-Speech_Gesture_Video_Generation_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "You Think, You ACT: The New Task of Arbitrary Text to Motion Generation",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Wang_You_Think_You_ACT_The_New_Task_of_Arbitrary_Text_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "STaR: Seamless Spatial-Temporal Aware Motion Retargeting with Penetration and Consistency Constraints",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Yang_STaR_Seamless_Spatial-Temporal_Aware_Motion_Retargeting_with_Penetration_and_Consistency_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "Puppet-Master: Scaling Interactive Video Generation as a Motion Prior for Part-Level Dynamics",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Li_Puppet-Master_Scaling_Interactive_Video_Generation_as_a_Motion_Prior_for_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "EgoMusic-driven Human Dance Motion Estimation with Skeleton Mamba",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Nguyen_EgoMusic-driven_Human_Dance_Motion_Estimation_with_Skeleton_Mamba_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "Context-Aware Academic Emotion Dataset and Benchmark",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Zhao_Context-Aware_Academic_Emotion_Dataset_and_Benchmark_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "I2VControl: Disentangled and Unified Video Motion Synthesis Control",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Feng_I2VControl_Disentangled_and_Unified_Video_Motion_Synthesis_Control_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "POMATO: Marrying Pointmap Matching with Temporal Motions for Dynamic 3D Reconstruction",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Zhang_POMATO_Marrying_Pointmap_Matching_with_Temporal_Motions_for_Dynamic_3D_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "Learning Large Motion Estimation from Intermediate Representations with a High-Resolution Optical Flow Dataset Featuring Long-Range Dynamic Motion",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Cho_Learning_Large_Motion_Estimation_from_Intermediate_Representations_with_a_High-Resolution_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "Go to Zero: Towards Zero-shot Motion Generation with Million-scale Data",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Fan_Go_to_Zero_Towards_Zero-shot_Motion_Generation_with_Million-scale_Data_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "Punching Bag vs. Punching Person: Motion Transferability in Videos",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Abdullah_Punching_Bag_vs._Punching_Person_Motion_Transferability_in_Videos_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "PUMPS: Skeleton-Agnostic Point-based Universal Motion Pre-Training for Synthesis in Human Motion Tasks",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Mo_PUMPS_Skeleton-Agnostic_Point-based_Universal_Motion_Pre-Training_for_Synthesis_in_Human_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "Efficient Multi-Person Motion Prediction by Lightweight Spatial and Temporal Interactions",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Zheng_Efficient_Multi-Person_Motion_Prediction_by_Lightweight_Spatial_and_Temporal_Interactions_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "IMoRe: Implicit Program-Guided Reasoning for Human Motion Q&A",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Li_IMoRe_Implicit_Program-Guided_Reasoning_for_Human_Motion_QA_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "CoMoGaussian: Continuous Motion-Aware Gaussian Splatting from Motion-Blurred Images",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Lee_CoMoGaussian_Continuous_Motion-Aware_Gaussian_Splatting_from_Motion-Blurred_Images_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "MVTrajecter: Multi-View Pedestrian Tracking with Trajectory Motion Cost and Trajectory Appearance Cost",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Yamane_MVTrajecter_Multi-View_Pedestrian_Tracking_with_Trajectory_Motion_Cost_and_Trajectory_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "MotionLab: Unified Human Motion Generation and Editing via the Motion-Condition-Motion Paradigm",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Guo_MotionLab_Unified_Human_Motion_Generation_and_Editing_via_the_Motion-Condition-Motion_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "DisCoRD: Discrete Tokens to Continuous Motion via Rectified Flow Decoding",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Cho_DisCoRD_Discrete_Tokens_to_Continuous_Motion_via_Rectified_Flow_Decoding_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "Motion Synthesis with Sparse and Flexible Keyjoint Control",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Hwang_Motion_Synthesis_with_Sparse_and_Flexible_Keyjoint_Control_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "HumanSAM: Classifying Human-centric Forgery Videos in Human Spatial, Appearance, and Motion Anomaly",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Liu_HumanSAM_Classifying_Human-centric_Forgery_Videos_in_Human_Spatial_Appearance_and_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "Morph: A Motion-free Physics Optimization Framework for Human Motion Generation",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Li_Morph_A_Motion-free_Physics_Optimization_Framework_for_Human_Motion_Generation_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "Leveraging the Power of MLLMs for Gloss-Free Sign Language Translation",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Kim_Leveraging_the_Power_of_MLLMs_for_Gloss-Free_Sign_Language_Translation_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "GestureLSM: Latent Shortcut based Co-Speech Gesture Generation with Spatial-Temporal Modeling",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Liu_GestureLSM_Latent_Shortcut_based_Co-Speech_Gesture_Generation_with_Spatial-Temporal_Modeling_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "MATE: Motion-Augmented Temporal Consistency for Event-based Point Tracking",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Han_MATE_Motion-Augmented_Temporal_Consistency_for_Event-based_Point_Tracking_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "MoMaps: Semantics-Aware Scene Motion Generation with Motion Maps",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Lei_MoMaps_Semantics-Aware_Scene_Motion_Generation_with_Motion_Maps_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "AccidentalGS: 3D Gaussian Splatting from Accidental Camera Motion",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Mao_AccidentalGS_3D_Gaussian_Splatting_from_Accidental_Camera_Motion_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "RoMo: Robust Motion Segmentation Improves Structure from Motion",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Goli_RoMo_Robust_Motion_Segmentation_Improves_Structure_from_Motion_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "MagicMotion: Controllable Video Generation with Dense-to-Sparse Trajectory Guidance",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Li_MagicMotion_Controllable_Video_Generation_with_Dense-to-Sparse_Trajectory_Guidance_ICCV_2025_paper.html"
+      },
+      {
+        "venue": "ICCV2025",
+        "title": "PERSONA: Personalized Whole-Body 3D Avatar with Pose-Driven Deformations from a Single Image",
+        "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Sim_PERSONA_Personalized_Whole-Body_3D_Avatar_with_Pose-Driven_Deformations_from_a_ICCV_2025_paper.html"
+      }
+    ]
+  },
+  {
+    "venue": "ECCV2024",
+    "url": "https://openaccess.thecvf.com/ECCV2024?day=all",
+    "error": "HTTP 404",
+    "total_titles": 0,
+    "records": []
+  },
+  {
+    "venue": "CVPR2024",
+    "url": "https://openaccess.thecvf.com/CVPR2024?day=all",
+    "sha256": "720265923ad5cc65224d2ce1cd9cea868c6e4589ae51c05d1493f1f9d9aea03c",
+    "total_titles": 2716,
+    "records": [
+      {
+        "venue": "CVPR2024",
+        "title": "Programmable Motion Generation for Open-Set Motion Control Tasks",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Liu_Programmable_Motion_Generation_for_Open-Set_Motion_Control_Tasks_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "Self-Supervised Class-Agnostic Motion Prediction with Spatial and Temporal Consistency Regularizations",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Wang_Self-Supervised_Class-Agnostic_Motion_Prediction_with_Spatial_and_Temporal_Consistency_Regularizations_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "MoMask: Generative Masked Modeling of 3D Human Motions",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Guo_MoMask_Generative_Masked_Modeling_of_3D_Human_Motions_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "CAMEL: CAusal Motion Enhancement Tailored for Lifting Text-driven Video Editing",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Zhang_CAMEL_CAusal_Motion_Enhancement_Tailored_for_Lifting_Text-driven_Video_Editing_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "LLMs are Good Sign Language Translators",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Gong_LLMs_are_Good_Sign_Language_Translators_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "Exploring Vision Transformers for 3D Human Motion-Language Models with Motion Patches",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Yu_Exploring_Vision_Transformers_for_3D_Human_Motion-Language_Models_with_Motion_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "Motion-adaptive Separable Collaborative Filters for Blind Motion Deblurring",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Liu_Motion-adaptive_Separable_Collaborative_Filters_for_Blind_Motion_Deblurring_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "HDRFlow: Real-Time HDR Video Reconstruction with Large Motions",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Xu_HDRFlow_Real-Time_HDR_Video_Reconstruction_with_Large_Motions_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "Implicit Motion Function",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Gao_Implicit_Motion_Function_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "Capturing Closely Interacted Two-Person Motions with Reaction Priors",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Fang_Capturing_Closely_Interacted_Two-Person_Motions_with_Reaction_Priors_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "DiffusionPoser: Real-time Human Motion Reconstruction From Arbitrary Sparse Sensors Using Autoregressive Diffusion",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Van_Wouwe_DiffusionPoser_Real-time_Human_Motion_Reconstruction_From_Arbitrary_Sparse_Sensors_Using_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "Text2HOI: Text-guided 3D Motion Generation for Hand-Object Interaction",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Cha_Text2HOI_Text-guided_3D_Motion_Generation_for_Hand-Object_Interaction_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "Mocap Everyone Everywhere: Lightweight Motion Capture With Smartwatches and a Head-Mounted Camera",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Lee_Mocap_Everyone_Everywhere_Lightweight_Motion_Capture_With_Smartwatches_and_a_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "MoML: Online Meta Adaptation for 3D Human Motion Prediction",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Sun_MoML_Online_Meta_Adaptation_for_3D_Human_Motion_Prediction_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "SmartRefine: A Scenario-Adaptive Refinement Framework for Efficient Motion Prediction",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Zhou_SmartRefine_A_Scenario-Adaptive_Refinement_Framework_for_Efficient_Motion_Prediction_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "Frequency Decoupling for Motion Magnification via Multi-Level Isomorphic Architecture",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Wang_Frequency_Decoupling_for_Motion_Magnification_via_Multi-Level_Isomorphic_Architecture_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "Emotional Speech-driven 3D Body Animation via Disentangled Latent Diffusion",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Chhatre_Emotional_Speech-driven_3D_Body_Animation_via_Disentangled_Latent_Diffusion_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "A Subspace-Constrained Tyler's Estimator and its Applications to Structure from Motion",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Yu_A_Subspace-Constrained_Tylers_Estimator_and_its_Applications_to_Structure_from_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "IQ-VFI: Implicit Quadratic Motion Estimation for Video Frame Interpolation",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Hu_IQ-VFI_Implicit_Quadratic_Motion_Estimation_for_Video_Frame_Interpolation_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "RoHM: Robust Human Motion Reconstruction via Diffusion",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Zhang_RoHM_Robust_Human_Motion_Reconstruction_via_Diffusion_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "SurMo: Surface-based 4D Motion Modeling for Dynamic Human Rendering",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Hu_SurMo_Surface-based_4D_Motion_Modeling_for_Dynamic_Human_Rendering_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "DeMatch: Deep Decomposition of Motion Field for Two-View Correspondence Learning",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Zhang_DeMatch_Deep_Decomposition_of_Motion_Field_for_Two-View_Correspondence_Learning_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "Efficient Multi-scale Network with Learnable Discrete Wavelet Transform for Blind Motion Deblurring",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Gao_Efficient_Multi-scale_Network_with_Learnable_Discrete_Wavelet_Transform_for_Blind_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "HMD-Poser: On-Device Real-time Human Motion Tracking from Scalable Sparse Observations",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Dai_HMD-Poser_On-Device_Real-time_Human_Motion_Tracking_from_Scalable_Sparse_Observations_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "Multi-agent Collaborative Perception via Motion-aware Robust Communication Network",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Hong_Multi-agent_Collaborative_Perception_via_Motion-aware_Robust_Communication_Network_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "A Unified Diffusion Framework for Scene-aware Human Motion Estimation from Sparse Signals",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Tang_A_Unified_Diffusion_Framework_for_Scene-aware_Human_Motion_Estimation_from_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "EventEgo3D: 3D Human Motion Capture from Egocentric Event Streams",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Millerdurai_EventEgo3D_3D_Human_Motion_Capture_from_Egocentric_Event_Streams_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "MotionEditor: Editing Video Motion via Content-Aware Diffusion",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Tu_MotionEditor_Editing_Video_Motion_via_Content-Aware_Diffusion_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "Enhanced Motion-Text Alignment for Image-to-Video Transfer Learning",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Zhang_Enhanced_Motion-Text_Alignment_for_Image-to-Video_Transfer_Learning_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "Effective Video Mirror Detection with Inconsistent Motion Cues",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Warren_Effective_Video_Mirror_Detection_with_Inconsistent_Motion_Cues_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "VMC: Video Motion Customization using Temporal Attention Adaption for Text-to-Video Diffusion Models",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Jeong_VMC_Video_Motion_Customization_using_Temporal_Attention_Adaption_for_Text-to-Video_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "Leveraging Camera Triplets for Efficient and Accurate Structure-from-Motion",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Manam_Leveraging_Camera_Triplets_for_Efficient_and_Accurate_Structure-from-Motion_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "RELI11D: A Comprehensive Multimodal Human Motion Dataset and Method",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Yan_RELI11D_A_Comprehensive_Multimodal_Human_Motion_Dataset_and_Method_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "Mitigating Motion Blur in Neural Radiance Fields with Events and Frames",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Cannici_Mitigating_Motion_Blur_in_Neural_Radiance_Fields_with_Events_and_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "MoST: Multi-Modality Scene Tokenization for Motion Prediction",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Mu_MoST_Multi-Modality_Scene_Tokenization_for_Motion_Prediction_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "Bring Event into RGB and LiDAR: Hierarchical Visual-Motion Fusion for Scene Flow",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Zhou_Bring_Event_into_RGB_and_LiDAR_Hierarchical_Visual-Motion_Fusion_for_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "Towards Variable and Coordinated Holistic Co-Speech Motion Generation",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Liu_Towards_Variable_and_Coordinated_Holistic_Co-Speech_Motion_Generation_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "Seamless Human Motion Composition with Blended Positional Encodings",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Barquero_Seamless_Human_Motion_Composition_with_Blended_Positional_Encodings_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "Seeing Motion at Nighttime with an Event Camera",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Liu_Seeing_Motion_at_Nighttime_with_an_Event_Camera_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "Arbitrary Motion Style Transfer with Multi-condition Motion Latent Diffusion Model",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Song_Arbitrary_Motion_Style_Transfer_with_Multi-condition_Motion_Latent_Diffusion_Model_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "Continual Learning for Motion Prediction Model via Meta-Representation Learning and Optimal Memory Buffer Retention Strategy",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Kang_Continual_Learning_for_Motion_Prediction_Model_via_Meta-Representation_Learning_and_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "FaceTalk: Audio-Driven Motion Diffusion for Neural Parametric Head Models",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Aneja_FaceTalk_Audio-Driven_Motion_Diffusion_for_Neural_Parametric_Head_Models_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "Motion2VecSets: 4D Latent Vector Set Diffusion for Non-rigid Shape Reconstruction and Tracking",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Cao_Motion2VecSets_4D_Latent_Vector_Set_Diffusion_for_Non-rigid_Shape_Reconstruction_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "DiffSHEG: A Diffusion-Based Approach for Real-Time Speech-driven Holistic 3D Expression and Gesture Generation",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Chen_DiffSHEG_A_Diffusion-Based_Approach_for_Real-Time_Speech-driven_Holistic_3D_Expression_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "Animating General Image with Large Visual Motion Model",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Chen_Animating_General_Image_with_Large_Visual_Motion_Model_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "Human Motion Prediction Under Unexpected Perturbation",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Yue_Human_Motion_Prediction_Under_Unexpected_Perturbation_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "Neural Sign Actors: A Diffusion Model for 3D Sign Language Production from Text",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Baltatzis_Neural_Sign_Actors_A_Diffusion_Model_for_3D_Sign_Language_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "Semantics-aware Motion Retargeting with Vision-Language Models",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Zhang_Semantics-aware_Motion_Retargeting_with_Vision-Language_Models_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "On the Road to Portability: Compressing End-to-End Motion Planner for Autonomous Driving",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Feng_On_the_Road_to_Portability_Compressing_End-to-End_Motion_Planner_for_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "Forecasting of 3D Whole-body Human Poses with Grasping Objects",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Yan_Forecasting_of_3D_Whole-body_Human_Poses_with_Grasping_Objects_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "OMG: Towards Open-vocabulary Motion Generation via Mixture of Controllers",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Liang_OMG_Towards_Open-vocabulary_Motion_Generation_via_Mixture_of_Controllers_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "Spike-guided Motion Deblurring with Unknown Modal Spatiotemporal Alignment",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Zhang_Spike-guided_Motion_Deblurring_with_Unknown_Modal_Spatiotemporal_Alignment_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "Motion Diversification Networks",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Kim_Motion_Diversification_Networks_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "ConvoFusion: Multi-Modal Conversational Diffusion for Co-Speech Gesture Synthesis",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Mughal_ConvoFusion_Multi-Modal_Conversational_Diffusion_for_Co-Speech_Gesture_Synthesis_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "Rethinking Human Motion Prediction with Symplectic Integral",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Chen_Rethinking_Human_Motion_Prediction_with_Symplectic_Integral_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "Optimizing Diffusion Noise Can Serve As Universal Motion Priors",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Karunratanakul_Optimizing_Diffusion_Noise_Can_Serve_As_Universal_Motion_Priors_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "Depth Information Assisted Collaborative Mutual Promotion Network for Single Image Dehazing",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Zhang_Depth_Information_Assisted_Collaborative_Mutual_Promotion_Network_for_Single_Image_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "Quantifying Uncertainty in Motion Prediction with Variational Bayesian Mixture",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Lu_Quantifying_Uncertainty_in_Motion_Prediction_with_Variational_Bayesian_Mixture_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "Generating Human Motion in 3D Scenes from Text Descriptions",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Cen_Generating_Human_Motion_in_3D_Scenes_from_Text_Descriptions_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "Learning Structure-from-Motion with Graph Attention Networks",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Brynte_Learning_Structure-from-Motion_with_Graph_Attention_Networks_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "MoST: Motion Style Transformer Between Diverse Action Contents",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Kim_MoST_Motion_Style_Transformer_Between_Diverse_Action_Contents_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "HumMUSS: Human Motion Understanding using State Space Models",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Mondal_HumMUSS_Human_Motion_Understanding_using_State_Space_Models_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "Robust Emotion Recognition in Context Debiasing",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Yang_Robust_Emotion_Recognition_in_Context_Debiasing_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "OmniMotionGPT: Animal Motion Generation with Limited Data",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Yang_OmniMotionGPT_Animal_Motion_Generation_with_Limited_Data_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "AvatarGPT: All-in-One Framework for Motion Understanding Planning Generation and Beyond",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Zhou_AvatarGPT_All-in-One_Framework_for_Motion_Understanding_Planning_Generation_and_Beyond_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "Co-Speech Gesture Video Generation via Motion-Decoupled Diffusion Model",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/He_Co-Speech_Gesture_Video_Generation_via_Motion-Decoupled_Diffusion_Model_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "WHAM: Reconstructing World-grounded Humans with Accurate 3D Motion",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Shin_WHAM_Reconstructing_World-grounded_Humans_with_Accurate_3D_Motion_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "AAMDM: Accelerated Auto-regressive Motion Diffusion Model",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Li_AAMDM_Accelerated_Auto-regressive_Motion_Diffusion_Model_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "EMOPortraits: Emotion-enhanced Multimodal One-shot Head Avatars",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Drobyshev_EMOPortraits_Emotion-enhanced_Multimodal_One-shot_Head_Avatars_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "PAPR in Motion: Seamless Point-level 3D Scene Interpolation",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Peng_PAPR_in_Motion_Seamless_Point-level_3D_Scene_Interpolation_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "Non-Rigid Structure-from-Motion: Temporally-Smooth Procrustean Alignment and Spatially-Variant Deformation Modeling",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Shi_Non-Rigid_Structure-from-Motion_Temporally-Smooth_Procrustean_Alignment_and_Spatially-Variant_Deformation_Modeling_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "WANDR: Intention-guided Human Motion Generation",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Diomataris_WANDR_Intention-guided_Human_Motion_Generation_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "Tri-Modal Motion Retrieval by Learning a Joint Embedding Space",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Yin_Tri-Modal_Motion_Retrieval_by_Learning_a_Joint_Embedding_Space_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "Selective Interpretable and Motion Consistent Privacy Attribute Obfuscation for Action Recognition",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Ilic_Selective_Interpretable_and_Motion_Consistent_Privacy_Attribute_Obfuscation_for_Action_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "Sparse Global Matching for Video Frame Interpolation with Large Motion",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Liu_Sparse_Global_Matching_for_Video_Frame_Interpolation_with_Large_Motion_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "NIFTY: Neural Object Interaction Fields for Guided Human Motion Synthesis",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Kulkarni_NIFTY_Neural_Object_Interaction_Fields_for_Guided_Human_Motion_Synthesis_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "EMAGE: Towards Unified Holistic Co-Speech Gesture Generation via Expressive Masked Audio Gesture Modeling",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Liu_EMAGE_Towards_Unified_Holistic_Co-Speech_Gesture_Generation_via_Expressive_Masked_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "Decoupling Static and Hierarchical Motion Perception for Referring Video Segmentation",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/He_Decoupling_Static_and_Hierarchical_Motion_Perception_for_Referring_Video_Segmentation_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "MagicAnimate: Temporally Consistent Human Image Animation using Diffusion Model",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Xu_MagicAnimate_Temporally_Consistent_Human_Image_Animation_using_Diffusion_Model_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "Loose Inertial Poser: Motion Capture with IMU-attached Loose-Wear Jacket",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Zuo_Loose_Inertial_Poser_Motion_Capture_with_IMU-attached_Loose-Wear_Jacket_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "DreamVideo: Composing Your Dream Videos with Customized Subject and Motion",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Wei_DreamVideo_Composing_Your_Dream_Videos_with_Customized_Subject_and_Motion_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "Dynamic Inertial Poser (DynaIP): Part-Based Motion Dynamics Learning for Enhanced Human Pose Estimation with Sparse Inertial Sensors",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Zhang_Dynamic_Inertial_Poser_DynaIP_Part-Based_Motion_Dynamics_Learning_for_Enhanced_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "ProMotion: Prototypes As Motion Learners",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Lu_ProMotion_Prototypes_As_Motion_Learners_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "Real-World Efficient Blind Motion Deblurring via Blur Pixel Discretization",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Kim_Real-World_Efficient_Blind_Motion_Deblurring_via_Blur_Pixel_Discretization_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "EmoVIT: Revolutionizing Emotion Insights with Visual Instruction Tuning",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Xie_EmoVIT_Revolutionizing_Emotion_Insights_with_Visual_Instruction_Tuning_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "Motion Blur Decomposition with Cross-shutter Guidance",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Ji_Motion_Blur_Decomposition_with_Cross-shutter_Guidance_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "Probabilistic Speech-Driven 3D Facial Motion Synthesis: New Benchmarks Methods and Applications",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Yang_Probabilistic_Speech-Driven_3D_Facial_Motion_Synthesis_New_Benchmarks_Methods_and_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "HOIAnimator: Generating Text-prompt Human-object Animations using Novel Perceptive Diffusion Models",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Song_HOIAnimator_Generating_Text-prompt_Human-object_Animations_using_Novel_Perceptive_Diffusion_Models_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "Detector-Free Structure from Motion",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/He_Detector-Free_Structure_from_Motion_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "MMM: Generative Masked Motion Model",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Pinyoanuntapong_MMM_Generative_Masked_Motion_Model_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "An N-Point Linear Solver for Line and Motion Estimation with Event Cameras",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Gao_An_N-Point_Linear_Solver_for_Line_and_Motion_Estimation_with_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "READ: Retrieval-Enhanced Asymmetric Diffusion for Motion Planning",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Oba_READ_Retrieval-Enhanced_Asymmetric_Diffusion_for_Motion_Planning_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "Space-Time Diffusion Features for Zero-Shot Text-Driven Motion Transfer",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Yatim_Space-Time_Diffusion_Features_for_Zero-Shot_Text-Driven_Motion_Transfer_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "VGGSfM: Visual Geometry Grounded Deep Structure From Motion",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Wang_VGGSfM_Visual_Geometry_Grounded_Deep_Structure_From_Motion_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "DynVideo-E: Harnessing Dynamic NeRF for Large-Scale Motion- and View-Change Human-Centric Video Editing",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Liu_DynVideo-E_Harnessing_Dynamic_NeRF_for_Large-Scale_Motion-_and_View-Change_Human-Centric_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "Egocentric Whole-Body Motion Capture with FisheyeViT and Diffusion-Based Motion Refinement",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Wang_Egocentric_Whole-Body_Motion_Capture_with_FisheyeViT_and_Diffusion-Based_Motion_Refinement_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "HardMo: A Large-Scale Hardcase Dataset for Motion Capture",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Liao_HardMo_A_Large-Scale_Hardcase_Dataset_for_Motion_Capture_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "Move as You Say Interact as You Can: Language-guided Human Motion Generation with Scene Affordance",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Wang_Move_as_You_Say_Interact_as_You_Can_Language-guided_Human_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "Frequency-aware Event-based Video Deblurring for Real-World Motion Blur",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Kim_Frequency-aware_Event-based_Video_Deblurring_for_Real-World_Motion_Blur_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "MultiPhys: Multi-Person Physics-aware 3D Motion Estimation",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Ugrinovic_MultiPhys_Multi-Person_Physics-aware_3D_Motion_Estimation_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "MAS: Multi-view Ancestral Sampling for 3D Motion Generation Using 2D Diffusion",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Kapon_MAS_Multi-view_Ancestral_Sampling_for_3D_Motion_Generation_Using_2D_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "FlowVQTalker: High-Quality Emotional Talking Face Generation through Normalizing Flow and Quantization",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Tan_FlowVQTalker_High-Quality_Emotional_Talking_Face_Generation_through_Normalizing_Flow_and_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "ProxyCap: Real-time Monocular Full-body Capture in World Space via Human-Centric Proxy-to-Motion Learning",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Zhang_ProxyCap_Real-time_Monocular_Full-body_Capture_in_World_Space_via_Human-Centric_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "Weakly-Supervised Emotion Transition Learning for Diverse 3D Co-speech Gesture Generation",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Qi_Weakly-Supervised_Emotion_Transition_Learning_for_Diverse_3D_Co-speech_Gesture_Generation_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "A Unified and Interpretable Emotion Representation and Expression Generation",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Paskaleva_A_Unified_and_Interpretable_Emotion_Representation_and_Expression_Generation_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "Gear-NeRF: Free-Viewpoint Rendering and Tracking with Motion-aware Spatio-Temporal Sampling",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Liu_Gear-NeRF_Free-Viewpoint_Rendering_and_Tracking_with_Motion-aware_Spatio-Temporal_Sampling_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "Multimodal Sense-Informed Forecasting of 3D Human Motions",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Lou_Multimodal_Sense-Informed_Forecasting_of_3D_Human_Motions_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "EmoGen: Emotional Image Content Generation with Text-to-Image Diffusion Models",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Yang_EmoGen_Emotional_Image_Content_Generation_with_Text-to-Image_Diffusion_Models_CVPR_2024_paper.html"
+      },
+      {
+        "venue": "CVPR2024",
+        "title": "LAMP: Learn A Motion Pattern for Few-Shot Video Generation",
+        "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Wu_LAMP_Learn_A_Motion_Pattern_for_Few-Shot_Video_Generation_CVPR_2024_paper.html"
+      }
+    ]
+  }
+]

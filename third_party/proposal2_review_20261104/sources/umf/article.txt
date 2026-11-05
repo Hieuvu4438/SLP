@@ -1,0 +1,2575 @@
+Unified Number-Free Text-to-Motion Generation Via Flow Matching
+Guanhe Huang
+Affiliation:
+King’s College London
+Email:
+guanhe.huang@kcl.ac.uk
+Oya Celiktutan
+Affiliation:
+King’s College London
+Email:
+oya.celiktutan@kcl.ac.uk
+Abstract
+Generative models excel at motion synthesis for a fixed number of agents but struggle to generalize with variable agents. Based on limited, domain-specific data, existing methods employ autoregressive models to generate motion recursively, which suffer from inefficiency and error accumulation. We propose
+Unified Motion Flow (UMF)
+, which consists of Pyramid Motion Flow (P-Flow) and Semi-Noise Motion Flow (S-Flow).
+UMF decomposes the number-free motion generation into a single-pass motion prior generation stage and multi-pass reaction generation stages. Specifically, UMF utilizes a unified latent space to bridge the distribution gap between heterogeneous motion datasets, enabling effective unified training.
+For motion prior generation, P-Flow operates on hierarchical resolutions conditioned on different noise levels, thereby mitigating computational overheads.
+For reaction generation, S-Flow learns a joint probabilistic path that adaptively performs reaction transformation and context reconstruction, alleviating error accumulation.
+Extensive results and user studies demonstrate UMF’s effectiveness as a generalist model for multi-person motion generation from text.
+Project page:
+https://githubhgh.github.io/umf/
+.
+1
+Introduction
+Text-to-motion generation, particularly via diffusion models, has advanced rapidly, progressing from single-agent
+[
+51
+,
+13
+,
+14
+,
+16
+,
+57
+]
+to multi-agent
+[
+32
+,
+61
+,
+11
+,
+45
+,
+58
+,
+47
+]
+synthesis.
+However, how to synthesize realistic number-free (
+i.e
+.
+, any arbitrary number) human motions with text prompts remains an open challenge.
+Existing methods struggle to generalize to unseen crowded scenes and are limited by motion data scarcity.
+These limitations hinder the applications in robotics
+[
+35
+,
+23
+]
+and virtual reality
+[
+62
+,
+19
+]
+, which often require seamless transitions between independent and collaborative tasks.
+This gap highlights the need for methods that can effectively utilize available heterogeneous data
+[
+12
+,
+46
+]
+.
+Figure 1
+:
+Core contribution of UMF.
+We show dual-agent cases here for simplicity.
+(a) Standard methods
+[
+51
+,
+55
+]
+are restricted to a fixed number of agents.
+(b) Autoregressive methods
+[
+12
+]
+decouple generation into a motion prior and subsequent reaction. The reaction is typically guided by the prior using a conditioning network.
+(c) Our UMF leverages a heterogeneous motion prior as the adaptive start point of the reaction flow path, mitigating error accumulation.
+To address the problem of text-to-motion generation with varying number of agents, previous methods typically rely on tailored architectures, more specifically, requiring expensive and time-consuming datasets
+[
+14
+,
+32
+]
+for specific motion generation tasks.
+Critically, existing multi-person interaction datasets
+[
+32
+,
+61
+]
+are smaller and less diverse compared to single-person datasets
+[
+14
+,
+39
+,
+21
+]
+, despite the interactive tasks being more complex.
+On the other hand, there is a significant overlap for basic movements (
+e.g
+.
+, walking) across these heterogeneous datasets, suggesting that
+single-person motion data can serve as heterogeneous prior for interaction synthesis
+.
+To leverage this overlap, in this paper, we introduce a single-person multi-token tokenizer that supports unified modeling and establishes the foundation for number-free, text-conditional generation.
+Compared to the noisy raw motion space, the regularized multi-token latent space stabilizes flow matching training on heterogeneous single-agent (
+i.e
+.
+, HumanML3D
+[
+14
+]
+) and multi-agent (
+i.e
+.
+, InterHuman
+[
+32
+]
+) datasets.
+Based on this latent space, we propose Unified Motion Flow (UMF), a framework for number-free human motion generation from text prompts. UMF features two modules, the Pyramid Motion Flow (P-Flow) and Semi-Noise Motion Flow (S-Flow), which utilize flow matching to learn the mapping between text, motion prior, and reaction.
+Specifically, it decouples number-free generation into a single-pass motion prior initialization (P-Flow) and a subsequent multi-pass reaction transformation (S-Flow).
+Compared to previous single-token methods
+[
+7
+,
+9
+]
+, our multi-token latent space shows superior reconstruction performance, mitigating heterogeneous domain gaps. However, it also imposes greater computational overhead.
+Inspired by the fact that samples in early timesteps are noisy and less informative
+[
+56
+,
+29
+]
+, we introduce the P-Flow, which decomposes the motion prior generation into continuous hierarchical stages based on the timestep (noise level).
+Specifically, P-Flow maintains the original resolution only at later timesteps and applies a lower resolution via downsampling for early stages.
+Previous works
+[
+50
+,
+60
+,
+28
+]
+that employ cascade models for these different resolutions are still accompanied by extra model complexity.
+In contrast, our P-Flow can handle different resolutions within a single transformer
+[
+52
+]
+, improving efficiency for multi-token motion prior generation.
+The motion prior generated by P-Flow serves as the input for the iterative synthesis of subsequent agent reactions. However, this autoregressive process often suffers from potential error accumulation
+[
+24
+,
+54
+]
+.
+Previous methods
+[
+12
+]
+rely on deterministic condition mechanisms (
+e.g
+.
+, ControlNet
+[
+66
+]
+) to guide the process, which struggle to capture the causal relationship between interactive agents.
+Consequently, we propose Semi-Noise Motion Flow (S-Flow) to learn the joint probabilistic path between previously generated motions (the context) and the subsequent agent’s motion (the reaction).
+As shown in Fig.
+1
+, rather than using the generated motions as a static condition, S-Flow integrates them to define the context distribution.
+This source distribution initializes the reaction generation path, which enables S-Flow to focus directly on learning the dynamic transformation between motion distributions.
+Concurrently, the S-Flow learns another auxiliary path to reconstruct the integrated context from noise distributions, as a strong regularizer for global interactive dependencies.
+This joint training of two distinct flow paths balances between the reaction prediction and context awareness, making it less prone to error accumulation.
+In summary, our contributions are as follows:
+•
+We propose Unified Motion Flow (UMF), a generalist framework for number-free text-to-motion generation. UMF’s core design unifies heterogeneous single-person (e.g., HumanML3D) and multi-person (e.g., InterHuman) datasets within a multi-token latent space.
+•
+For efficient individual motion synthesis, we introduce Pyramid Motion Flow (P-Flow). P-Flow operates on hierarchical resolutions conditioned on the noise level, which alleviates computational overheads of multi-token representations while maintaining high-fidelity generation.
+•
+For reaction and interaction synthesis, we develop Semi-Noise Motion Flow (S-Flow). S-Flow learns a joint probabilistic path by balancing reaction transformation and context reconstruction, thereby alleviating error accumulation.
+•
+Extensive experiments demonstrate UMF achieves state-of-the-art (SoTA) performance for multi-person generation (FID 4.772 on InterHuman) benchmarks. We also validate UMF’s zero-shot generalization to unseen group scenarios through a user study.
+2
+Related Work
+2.1
+Text-conditioned Human Motion Synthesis
+Generative models have shown promising results on human motion synthesis
+[
+51
+,
+7
+,
+13
+,
+9
+,
+67
+,
+68
+,
+53
+]
+, though most works focus on single-agent or dual-agent scenarios.
+Most recently, MaskControl
+[
+42
+]
+introduces accurate single-person controllability to the generative masked motion model
+[
+13
+]
+, while maintaining high-quality generation.
+Dual-agent motion synthesis has also seen rapid advancements
+[
+32
+,
+43
+,
+61
+]
+.
+Ma et al. [38]
+employs an interleaved learning strategy to capture the dynamic interactions and nuanced coordination, exhibiting higher text-to-motion alignment, and improved diversity.
+Wang et al. [55]
+subsequently introduces TIMotion, a parameter-efficient approach utilizing temporal modeling and interaction mixing.
+Synthesizing human-like reactions
+[
+48
+]
+is another active area of research.
+Xu et al. [63]
+establishes one of the earliest multi-setting benchmarks for this task, supported by three dedicated annotated datasets.
+Similar to us,
+Jiang et al. [27]
+propose direct noise-free action-to-reaction mappings through flow matching, while they ignore the error accumulation for autoregressive multi-person generation.
+2.2
+Unified Motion Synthesis
+The recent success of Large Language Models
+[
+1
+,
+15
+,
+2
+,
+6
+]
+, particularly their strong generative and zero-shot transfer capabilities, has inspired new generalist approaches in motion synthesis.
+Research in unified motion generation has focused on several aspects, including: 1) unifying generation with understanding
+[
+70
+,
+25
+]
+, 2) integrating diverse input modalities
+[
+31
+,
+40
+]
+, and 3) handling a variable number of actors
+[
+17
+,
+12
+,
+69
+]
+.
+An early work
+[
+25
+]
+proposed MotionGPT to address diverse motion-relevant tasks, which treats human motion as a foreign language to unify tasks like motion generation and understanding.
+Then,
+Petrov et al. [40]
+proposed TriDi for human-object interaction, a unified model capturing the joint 3D distribution of humans, objects, and their interactions.
+To unify motion generation across different conditioning modalities (
+e.g
+.
+, text, video),
+Li et al. [31]
+introduced GENMO, a generalist model conditioned on videos, music, text, 2D keypoints, and 3D keyframes.
+[
+17
+]
+introduced dualFlow, a flow-based model for interactive and reactive text-to-motion, though it is limited to dual-agent scenarios.
+Most related to our work, FreeMotion
+[
+12
+]
+proposes a decoupled generation and interaction module for number-free motion generation, while it suffers from inefficiency and error accumulation in multi-person scenarios.
+Recently,
+Zhao et al. [69]
+proposed FreeDance, a unified, number-free music-to-motion framework based on masked modeling of 2D discrete tokens, whereas our UMF focuses on the text-to-motion task.
+Figure 2
+:
+Overview of the Unified Motion Flow (UMF) architecture.
+The UMF framework consists of three stages.
+(A) Unified motion VAE:
+A motion VAE with latent adapters encodes raw motions from heterogeneous datasets (e.g., HumanML3D
+[
+14
+]
+, InterHuman
+[
+32
+]
+) into a regularized multi-token latent representation (
+[MATH: Z]
+).
+(B) P-Flow motion prior generation:
+The Pyramid Flow Transformer synthesizes the latent motion prior (
+[MATH: \check{Z}]
+) based on noisy latent motion and text conditions. The P-Flow operates hierarchically based on the timestep
+[MATH: t\sim(0,1)]
+: it processes downsampled, low-resolution latents for
+[MATH: t<p]
+and switches to original-resolution latents for
+[MATH: t>p]
+, mitigating multi-token computational overheads.
+(C) S-Flow reaction generation:
+Based on the previously generated latent {
+[MATH: \check{Z}_{i},\dots,\check{Z}_{1}]
+}, the context adapter generates the context motion
+[MATH: C]
+.
+Then the Semi-Noise Flow transformer predicts the reaction latent (
+[MATH: \check{W}]
+) by jointly modeling context reconstruction and reaction transformation, alleviating the error accumulation from previously generated motion.
+3
+Preliminaries
+Flow Matching.
+Flow generative models
+[
+33
+,
+34
+,
+3
+]
+aim to learn a velocity field
+[MATH: v_{t}]
+that maps source distribution
+[MATH: x_{0}\sim p]
+to target distribution
+[MATH: x_{1}\sim q]
+via an ordinary differential equation (ODE):
+[MATH: \frac{dx_{t}}{dt}=v_{t}(x_{t}).]
+(1)
+Recently,
+Lipman et al. [33]
+proposed the flow matching framework, which offers a simulation-free training objective by directly regressing the model’s velocity field
+[MATH: v_{t}]
+on a conditional vector field
+[MATH: u_{t}(\cdot|x_{1})]
+:
+[MATH: \mathbb{E}_{t,q(x_{1}),p_{t}(x_{t}|x_{1})}\left\|v_{t}(x_{t})-u_{t}(x_{t}|x_{1})\right\|^{2},]
+(2)
+where
+[MATH: u_{t}(\cdot|x_{1})]
+uniquely determines a conditional probability path
+[MATH: p_{t}(\cdot|x_{1})]
+toward data sample
+[MATH: x_{1}]
+. An effective choice of the conditional probability path is linear interpolation
+[
+37
+]
+of data and noise:
+[MATH: x_{t}=tx_{1}+(1-t)x_{0},]
+(3)
+[MATH: x_{t}\sim\mathcal{N}(tx_{1},(1-t)^{2}I),]
+(4)
+and
+[MATH: u(x_{t}|x_{1})=x_{1}-x_{0}]
+. Notably, flow matching can be flexibly extended to interpolate between distributions other than Gaussians. This enables us to employ the flow matching for both motion prior and reaction generation.
+4
+Proposed Method
+4.1
+Unified Latent Space
+A key challenge in building a generalist motion model is that generative frameworks like flow matching require a consistent data format, a condition not met by heterogeneous motion datasets. For instance, individual motion datasets
+[
+14
+]
+often use canonical representations, while interaction datasets
+[
+32
+]
+use non-canonical representations. To bridge this gap, we first convert individual motions to a unified non-canonical SMPL skeleton representation with 22 joints.
+Then we split the interaction sample into multiple individual motion sequences (see Appendix A for details).
+As shown in Fig.
+2
+(A), the single motion tokenizer learns a continuous latent space for individual motion sequences.
+Similar to TEMOS
+[
+41
+]
+, we utilize transformers
+[
+52
+]
+as the encoder and decoder, enhanced with skip connections and layer norms.
+The individual encoder takes an individual motion sequence
+[MATH: x^{1:N}_{I}\in\mathbb{R}^{N\times D}]
+as input and compresses it into a latent representation
+[MATH: z\in\mathbb{R}^{p\times r}]
+.
+Using the reparameterization trick
+[
+30
+]
+, we sample a latent vector
+[MATH: z\in\mathbb{R}^{p\times r}]
+from the learned Gaussian distribution. Then, the individual decoder reconstructs the latent vector
+[MATH: z]
+into motion sequences
+[MATH: \hat{x}^{1:N}_{I}]
+.
+Different from existing number-free methods
+[
+12
+]
+that are trained on raw motion space, which suffer from performance degradation on heterogeneous datasets, our multi-token latent space shows better stability.
+Multiple latent tokens.
+Previous latent motion diffusion works
+[
+7
+,
+70
+]
+employ
+single latent token
+learning (
+e.g
+.
+[MATH: 1\times 256]
+), imposing a bottleneck on the VAE’s reconstruction performance.
+While naively increasing the number of tokens can improve reconstruction, it often degrades the generative performance
+[
+65
+]
+.
+Inspired by
+Dai et al. [8]
+, we utilize a latent adapter
+to decouple the internal token representation from the final latent dimension.
+The VAE encoder first captures complex motion details using a larger token (e.g.,
+[MATH: 16\times 256]
+) and then projects them to a compact, semantically dense space (e.g.,
+[MATH: 16\times 32]
+) for the motion generation.
+This design achieves a better trade-off between reconstruction capacity and generative quality (See Sec.
+3
+).
+Regularized latent space.
+In a typical VAE training process, motion reconstruction
+[MATH: x^{1:N}]
+is constrained by the Mean Squared Error (MSE) and Kullback-Leibler (KL) losses.
+We further adapt the geometric loss
+[
+51
+]
+, which enhances the physical plausibility within involved individuals and preserves the original interaction relationships between individuals.
+The training loss of VAE is:
+[MATH: \mathcal{L}_{\text{VAE}}=\scalebox{1}{$\mathcal{L}_{\text{geometric}}+\mathcal{L}_{\text{reconstruction }}+\lambda_{\text{KL }}\mathcal{L}_{\text{KL }}.$}]
+(5)
+4.2
+Unified Motion Flow Matching
+As shown in Fig.
+2
+, based on the multi-token latent space, we decouple the number-free motion generation process into two stages:
+(1) Motion Prior Generation: An individual motion prior is generated via the
+Pyramid Motion Flow (P-Flow)
+, a hierarchical flow matching process conditioned on the timestep.
+Unlike Denoising Diffusion Probabilistic Models (DDPMs)
+[
+18
+]
+operating in the raw motion space, this design offers better scalability
+[
+10
+]
+and efficiency within multi-token latent spaces
+[
+29
+,
+44
+]
+.
+(2) Reaction Motion Generation: Given the motion prior (or preceding reaction),
+Semi-Noise Motion Flow (S-Flow)
+learns a joint path for context reconstruction and reaction transformation for the next person.
+Instead of fine-tuning complex ControlNet
+[
+66
+]
+, S-Flow learns an adaptive, context-aware motion transition, alleviating potential error accumulation.
+Scalability to Group Scenarios (
+[MATH: N>2]
+).
+Due to the scarcity of SMPL-based
+[
+36
+]
+datasets featuring
+[MATH: \geq]
+3 interacting agents, our framework is mainly trained and evaluated on dual-agent scenarios, while UMF is not limited to this setting.
+For
+[MATH: N>2]
+people, the S-Flow module is applied autoregressively, using the synthesized motions of preceding agents as input to generate the next agent’s motion.
+We demonstrate its zero-shot capability via a user study (Sec.
+5.3
+).
+4.2.1
+Motion Prior
+Compared to single-token approaches, the multi-token latent space unlocks better motion generation conditioned on text prompt
+[MATH: c]
+, but it also imposes more computational demands.
+A key observation is that initial generation steps
+[
+56
+]
+often operate on noisy and less informative variables, suggesting that the entire full resolution is not necessary.
+Previous works address this by training multiple models with different resolutions
+[
+60
+,
+26
+]
+based on the timestep, which still introduces extra model complexity.
+We introduce the Pyramid Motion Flow (P-Flow)
+[
+29
+]
+, which reinterprets the Gaussian flow matching trajectory as hierarchical stages within one transformer model.
+Each stage operates at a resolution corresponding to the timestep, where only the final stage uses the original resolution, enabling efficient flow matching inference.
+P-Flow forward process.
+Unlike standard Gaussian flow matching
+[
+33
+,
+20
+]
+that evolves between full-resolution noise and data, P-Flow starts with a coarser interpolation between downsampled latent motion, and progressively yields finer-grained, higher-resolution endpoints.
+To handle the varying dimensions of
+[MATH: z_{t}]
+, we decompose the trajectory into a piecewise flow
+[
+64
+]
+. It divides
+[MATH: [0,1]]
+into
+[MATH: K]
+time windows, each interpolating between successive resolutions with a unique start and end point.
+For the
+[MATH: k]
+-th time window
+[MATH: [s_{k},e_{k}]]
+, we jointly compute the endpoints
+[MATH: (\hat{z}_{s_{k}},\hat{z}_{e_{k}})]
+with noise
+[MATH: \epsilon\sim\mathcal{N}(\mathbf{0},I)]
+and data point
+[MATH: z_{1}]
+as:
+Start Point:
+[MATH: \displaystyle\hat{z}_{s_{k}}=s_{k}Up(Down(z_{1},2^{k}))+(1-s_{k})\epsilon,]
+(6)
+End Point:
+[MATH: \displaystyle\hat{z}_{e_{k}}=e_{k}Down(z_{1},2^{k-1})+(1-e_{k})\epsilon,]
+(7)
+where
+[MATH: k\in[K,1]]
+,
+[MATH: Up(\cdot)]
+and
+[MATH: Down(\cdot)]
+are standard resampling functions and irreversible between them.
+Notably,
+[MATH: Up(Down(z,2^{1}))]
+is a lossy approximation of
+[MATH: z]
+, which forces the flow model to learn the correlation between resolutions.
+The path spans from pure noise
+[MATH: \epsilon]
+(at
+[MATH: k=K,s_{k}=0,\hat{z}_{s_{k}}=\epsilon]
+) to the data point
+[MATH: z_{1}]
+(at
+[MATH: k=1,e_{k}=1,\hat{z}_{e_{k}}=Down(z_{1},2^{0})=z_{1}]
+).
+To enhance the straightness of the flow trajectory, we couple the sampling of its endpoints by enforcing the noise
+[MATH: \epsilon]
+to be in the same direction.
+Let
+[MATH: t^{\prime}=(t-s_{k})/(e_{k}-s_{k})]
+denote the rescaled timestep, then the flow within it follows:
+[MATH: \hat{z}_{t}=t^{\prime}\hat{z}_{e_{k}}+(1-t^{\prime})\hat{z}_{s_{k}},]
+(8)
+Here, the trajectory at
+[MATH: k]
+-th stage starts at
+[MATH: \hat{z}_{s_{k}}]
+and ends at
+[MATH: \hat{z}_{e_{k}}]
+.
+This pyramidal structure, applicable to spatial or temporal dimensions, concentrates computation at lower resolutions, reducing the cost by a factor of
+[MATH: \approx 1/K]
+in theory.
+Thereafter, we can regress the flow model
+[MATH: G^{P}_{\theta}]
+on the conditional vector field
+[MATH: u_{t}(\hat{z}_{t}|z_{1})=\hat{z}_{e_{k}}-\hat{z}_{s_{k}}]
+with the following objective to unify different stages:
+[MATH: \mathcal{L}_{\text{P-Flow}}=\mathbb{E}_{k,t,\hat{z}_{e_{k}},\hat{z}_{s_{k}}}\left\|G^{P}_{\theta}(\hat{z}_{t};t,c)-(\hat{z}_{e_{k}}-\hat{z}_{s_{k}})\right\|^{2}.]
+(9)
+P-Flow sampling process.
+Using Euler ODE solvers, each pyramid stage is discretized into
+[MATH: M=T_{P_{k}}]
+steps:
+[MATH: \vskip-2.84526pt\hat{z}_{t_{m+1}}\leftarrow\hat{z}_{t_{m}}+(t_{m+1}-t_{m})G^{P}_{\theta}(\hat{z}_{t_{m}},t_{m},c),\vskip-2.84526pt]
+(10)
+where
+[MATH: t_{1}=s_{k},\cdots,t_{M}=e_{k}]
+are the discrete timesteps.
+However, we must carefully handle the jump points
+[
+5
+]
+between successive pyramid stages of different resolutions to ensure continuity of the probability path.
+As shown in Algorithm 1, for the transition from stage
+[MATH: k]
+to
+[MATH: k-1]
+, we first upsample the previous endpoint
+[MATH: \hat{z}_{e_{k}}]
+via nearest-neighbor interpolation.
+The inference has to match the Gaussian distributions at each jump point by a linear transformation of the upsampled result.
+Specifically, the following rescaling and renoising scheme suffices:
+[MATH: \vskip-2.84526pt\hat{z}_{s_{k-1}}=\frac{s_{k-1}}{e_{k}}Up(\hat{z}_{e_{k}})+\alpha n^{\prime},\hskip 9.24994pt\text{s.t. }n^{\prime}\sim\mathcal{N}(0,\Sigma^{\prime}),\vskip-2.84526pt]
+(11)
+where
+[MATH: \Sigma^{\prime}]
+is a blockwise diagonal covariance matrix (e.g.,
+[MATH: 4\times 4]
+blocks).
+The coefficient
+[MATH: s_{k-1}/e_{k}]
+matches the means, and the corrective noise
+[MATH: \alpha n^{\prime}]
+matches the covariances.
+To ensure continuity after upsampling (see Appendix B for derivation), we set
+[MATH: e_{k}=2s_{k-1}/(1+s_{k-1})]
+and
+[MATH: \alpha=\frac{\sqrt{3}(1-s_{k-1})}{2}]
+for a consistent mean and covariance.
+4.2.2
+Reaction Motion Generation
+For number-free motion generation, we generate the reaction
+[MATH: W]
+conditioned on an arbitrary action (
+i.e
+.
+,
+[MATH: {\hat{Z}_{i}}]
+) and text prompt
+[MATH: c]
+.
+This process is applied iteratively to synthesize interactions involving more than two agents.
+Based on the set
+[MATH: \mathcal{Z}_{gen}]
+of previously generated motions,
+Semi-Noise Flow (S-Flow) learns a
+joint transformation
+to generate reaction motion
+[MATH: W]
+for subsequent characters, which is trained exclusively on the multi-person dataset.
+As shown in Fig.
+2
+(C), S-Flow reformulates reaction generation with context
+[MATH: C_{i}]
+by adaptively optimizing two probability paths simultaneously: (1)
+reaction transformation
+(the path from
+[MATH: C_{i}]
+to
+[MATH: W]
+) via context interpolation, and (2)
+context reconstruction
+(the path from
+[MATH: \epsilon]
+to
+[MATH: C_{i}]
+) via Gaussian noise interpolation.
+Instead of relying on complex conditional mechanisms like ControlNet
+[
+59
+,
+63
+,
+12
+]
+, we first employ a context adapter to generate context motion, which is used as
+the direct input into flow matching
+.
+This design provides a more flexible starting point for learning the reaction transformation paths, allowing the adaptive adjustment for possibly sub-optimal motion from other characters.
+The auxiliary context reconstruction path also helps S-Flow understand context at a global level, balancing its context-awareness and reaction forecasting, thereby alleviating overall error accumulation in autoregressive models.
+Algorithm 1
+UMF Inference Algorithm
+1:
+Input:
+[MATH: c]
+(text prompt);
+[MATH: N]
+(agent number);
+[MATH: K]
+(P-Flow stage count); Models (
+[MATH: G^{P}_{\theta}]
+,
+[MATH: G^{S}_{\theta}]
+,
+[MATH: Dec]
+,
+[MATH: TranEnc]
+)
+2:
+Parameters:
+[MATH: \{T_{P_{k}}\}]
+(P-Flow steps);
+[MATH: T_{S}]
+(S-Flow steps)
+3:
+# P-Flow Motion Prior Generation
+4:
+[MATH: \hat{z}_{s_{K}}\sim\mathcal{N}(0,I),0\leq s_{k}<e_{k}\leq 1,s_{K}=0,e_{1}=1]
+5:
+for
+[MATH: k=K]
+down to
+[MATH: 1]
+do
+6:
+[MATH: \hat{z}_{e_{k}}\leftarrow\text{SolveODE}(G^{P}_{\theta},\hat{z}_{s_{k}},c;T_{P_{k}})]
+[MATH: \triangleright]
+Eq.
+10
+7:
+if
+[MATH: k\geq 2]
+then
+8:
+[MATH: \hat{z}_{s_{k-1}}\leftarrow\text{JumpUpdate}(\hat{z}_{e_{k}},s_{k-1},e_{k})]
+[MATH: \triangleright]
+Eq.
+11
+9:
+end
+if
+10:
+end
+for
+11:
+[MATH: \hat{Z}_{1}\leftarrow\hat{z}_{e_{1}}]
+,
+[MATH: \mathcal{Z}_{gen}\leftarrow\{\hat{Z}_{1}\}]
+12:
+# S-Flow Reaction Generation
+13:
+for
+[MATH: i=2]
+to
+[MATH: N]
+do
+14:
+[MATH: C_{i}=TranEnc(\mathcal{Z}_{gen})]
+[MATH: \triangleright]
+Context Adapter
+15:
+[MATH: \hat{Z}_{i}\leftarrow\text{SolveODE}(G^{S}_{\theta},C_{i},c;T_{S})]
+[MATH: \triangleright]
+Eq.
+17
+16:
+[MATH: \mathcal{Z}_{gen}\leftarrow\mathcal{Z}_{gen}\cup\{\hat{Z}_{i}\}]
+17:
+end
+for
+18:
+# VAE Decoding
+19:
+[MATH: \{x_{1},\dots,x_{N}\}\leftarrow Dec(\mathcal{Z}_{gen})]
+20:
+Return
+[MATH: \{x_{1},\dots,x_{N}\}]
+Adaptive Context Formulation.
+The adapter first produces the context motion
+[MATH: C_{i}]
+by encoding the set of previously generated motions
+[MATH: \mathcal{Z}_{gen}]
+with a transformer encoder:
+[MATH: \displaystyle C_{i}=TranEnc(\mathcal{Z}_{gen}).]
+(12)
+Subsequently, if
+[MATH: i>2]
+, agent-wise average pooling is applied to match the latent dimension of
+[MATH: \hat{Z}_{i}]
+.
+This design adaptively refines
+[MATH: \mathcal{Z}_{gen}]
+into a concise global context, which alleviates error accumulation (See cases in Fig.
+3
+).
+S-Flow forward process.
+Similar to previous works
+[
+33
+,
+3
+]
+, we use the rectified flow as the backbone, which is parameterized by a neural network
+[MATH: G^{S}_{\theta}]
+to predict vector fields, i.e.,
+[MATH: v=w_{1}-w_{0}]
+.
+S-Flow is trained by jointly modeling two probabilistic paths for reaction transformation and context reconstruction as follows:
+(1) For the reaction path, we interpolate between the previously generated motion (context)
+[MATH: w_{0}=C]
+and the target reaction motion
+[MATH: w_{1}=W]
+,
+[MATH: w_{t}^{\text{react}}]
+at timestep
+[MATH: t]
+is:
+[MATH: w_{t}^{\text{react}}=tw_{1}+[1-t]w_{0}.]
+(13)
+The training objective of the reaction transformation is:
+[MATH: \mathcal{L}_{\text{trans}}=\mathbb{E}_{t,w_{1},w_{0}}\|G^{S}_{\theta}(w_{t}^{\text{react}},t,c)-(W-C)\|_{2}^{2},]
+(14)
+where
+[MATH: c]
+refers to the text prompt.
+(2) For the context path, we interpolate between Gaussian noise
+[MATH: w^{\prime}_{0}=\epsilon]
+and context motion
+[MATH: w^{\prime}_{1}=C]
+,
+[MATH: w_{t}^{\text{cont}}]
+at timestep
+[MATH: t]
+is:
+[MATH: w_{t}^{\text{cont}}=tw^{\prime}_{1}+[1-t]w^{\prime}_{0}.]
+(15)
+The training objective of the context reconstruction is:
+[MATH: \mathcal{L}_{\text{recon}}=\mathbb{E}_{t,w_{0},\epsilon}\|G^{S}_{\theta}(w_{t}^{\text{cont}},t,c)-(C-\epsilon)\|_{2}^{2},\vskip-5.69054pt]
+(16)
+where
+[MATH: c]
+refers to the text prompt.
+Finally, the S-Flow training objective is a weighted sum of these two losses
+[MATH: \mathcal{L}_{\text{S-Flow}}=\mathcal{L}_{\text{trans}}+\lambda_{\text{recon}}\mathcal{L}_{\text{recon}}.]
+Thus
+[MATH: G^{S}_{\theta}]
+learns to predict reaction for the next agent while being aware of the current context, balanced by
+[MATH: \lambda_{\text{recon}}]
+.
+S-Flow sampling process.
+As detailed in Algorithm 1, the sampling process mirrors P-Flow by using an Euler ODE solver. The discretization process involves dividing the procedure into
+[MATH: M=T_{S}]
+steps, as follows:
+[MATH: \hat{w}_{t_{m+1}}\leftarrow\hat{w}_{t_{m}}+(t_{m+1}-t_{m})G^{S}_{\theta}(\hat{w}_{t_{m}},t_{m},c),\vskip-5.69054pt]
+(17)
+where the integer time steps
+[MATH: t_{1}=0<t_{2}<\cdots<t_{M}=1]
+.
+The trajectory starts from the motion context
+[MATH: C]
+from the context adapter layer, and ends with the reaction motion
+[MATH: W]
+.
+4.3
+Justification of design choices
+Asymmetric Inference Budget for UMF Efficiency.
+Generating motion for
+[MATH: N]
+agents requires one P-Flow execution and
+[MATH: N-1]
+S-Flow executions.
+This structure motivates an asymmetric inference budget, as the quality of the motion prior determines the upper bound for all subsequent reactions.
+We therefore allocate a substantial budget to P-Flow (
+e.g
+.
+, 50 steps), which remains computationally feasible due to its pyramid structure.
+We find the performance of P-Flow is sensitive to the total number of steps, but far less sensitive to the ratio of low-to-high resolution steps.
+This allows us to assign more inference steps at low resolution (
+e.g
+.
+, 45 steps), minimizing the overhead from the multi-token representation.
+Furthermore, this dedicated motion prior enables the S-Flow to generate reactions with a minimal inference budget (
+e.g
+.
+, 10 steps), keeping UMF computationally tractable when
+[MATH: N]
+becomes large.
+Shared transformer between P-Flow and S-Flow.
+Sharing the transformer backbone between P-Flow and S-Flow would reduce the overall parameter count
+[
+12
+]
+. However, we found that a shared backbone struggles to converge and yields degraded performance (See Tab.
+5
+).
+We attribute this to two factors:
+1) P-Flow focuses on mapping noise to motion, while S-Flow learns both motion-to-motion and noise-to-motion paths. These tasks are incompatible and challenging to optimize.
+2) The continuity guarantees
+[
+29
+]
+at the pyramid jump points are difficult to maintain, which assume tractable distributions (e.g., Gaussian noise), while S-Flow operates on complex motion distributions with intractable means and variances.
+Therefore, UMF employs separate P-Flow and S-Flow modules.
+The S-Flow transformer is shared autoregressively to generate the reaction for the subsequent agent, using all previously generated motions as context.
+UMF
+FreeMotion
+Two performers use their
+right leg
+to confront each other, and then one lifts the
+left leg
+to attack.
+Two people stroll together and chatter with each other, the third person walks towards them with hand gestures, later they are
+walking together
+.
+Two people are sparring with each other. The third person extends arms to stop them. The fourth person
+engages in the fight
+.
+Five performers are
+training in taekwondo
+by exchanging attacks.
+Figure 3
+:
+Qualitative comparison (zoom into see it better) between FreeMotion
+[
+12
+]
+and UMF.
+Red circles
+demonstrate successful cases, while
+Blue circles
+show failure cases.
+Table 1
+:
+Quantitative evaluation on the InterHuman test sets.
+[MATH: \pm]
+indicates a 95% confidence interval and
+[MATH: \rightarrow]
+means the closer to ground truth the better.
+Boldface
+indicates the best result, while
+underline
+refers to the second best.
+Method
+R Top 1
+[MATH: \uparrow]
+R Top 2
+[MATH: \uparrow]
+R Top 3
+[MATH: \uparrow]
+FID
+[MATH: \downarrow]
+MM Dist
+[MATH: \downarrow]
+Diversity
+[MATH: \rightarrow]
+MModality
+[MATH: \uparrow]
+Ground Truth
+[MATH: 0.452^{\pm 0.008}]
+[MATH: 0.610^{\pm 0.009}]
+[MATH: 0.701^{\pm 0.008}]
+[MATH: 0.273^{\pm 0.007}]
+[MATH: 3.755^{\pm 0.008}]
+[MATH: 7.948^{\pm 0.064}]
+-
+TEMOS
+[
+41
+]
+[MATH: 0.224^{\pm 0.010}]
+[MATH: 0.316^{\pm 0.013}]
+[MATH: 0.450^{\pm 0.018}]
+[MATH: 17.375^{\pm 0.043}]
+[MATH: 6.342^{\pm 0.015}]
+[MATH: 6.939^{\pm 0.071}]
+[MATH: 0.535^{\pm 0.014}]
+T2M
+[
+14
+]
+[MATH: 0.238^{\pm 0.012}]
+[MATH: 0.325^{\pm 0.010}]
+[MATH: 0.464^{\pm 0.014}]
+[MATH: 13.769^{\pm 0.072}]
+[MATH: 5.731^{\pm 0.013}]
+[MATH: 7.046^{\pm 0.022}]
+[MATH: 1.387^{\pm 0.076}]
+MDM
+[
+51
+]
+[MATH: 0.153^{\pm 0.012}]
+[MATH: 0.260^{\pm 0.009}]
+[MATH: 0.339^{\pm 0.012}]
+[MATH: 9.167^{\pm 0.056}]
+[MATH: 7.125^{\pm 0.018}]
+[MATH: 7.602^{\pm 0.045}]
+[MATH: \mathbf{2.350^{\pm 0.080}}]
+ComMDM
+[
+46
+]
+[MATH: 0.223^{\pm 0.009}]
+[MATH: 0.334^{\pm 0.008}]
+[MATH: 0.466^{\pm 0.010}]
+[MATH: 7.069^{\pm 0.054}]
+[MATH: 6.212^{\pm 0.021}]
+[MATH: 7.244^{\pm 0.038}]
+[MATH: 1.822^{\pm 0.052}]
+InterGen
+[
+32
+]
+[MATH: 0.371^{\pm 0.010}]
+[MATH: 0.515^{\pm 0.012}]
+[MATH: 0.624^{\pm 0.010}]
+[MATH: 5.918^{\pm 0.079}]
+[MATH: 5.108^{\pm 0.014}]
+[MATH: 7.387^{\pm 0.029}]
+[MATH: 2.141^{\pm 0.063}]
+MoMat-MoGen
+[
+4
+]
+[MATH: 0.449^{\pm 0.004}]
+[MATH: 0.591^{\pm 0.003}]
+[MATH: 0.666^{\pm 0.004}]
+[MATH: 5.674^{\pm 0.085}]
+[MATH: 3.790^{\pm 0.001}]
+[MATH: 8.021^{\pm 0.035}]
+[MATH: 1.295^{\pm 0.023}]
+in2IN
+[
+43
+]
+[MATH: 0.425^{\pm 0.008}]
+[MATH: 0.576^{\pm 0.008}]
+[MATH: 0.662^{\pm 0.009}]
+[MATH: 5.535^{\pm 0.120}]
+[MATH: 3.803^{\pm 0.002}]
+[MATH: 7.953^{\pm 0.047}]
+[MATH: 1.215^{\pm 0.023}]
+TIMotion
+[
+55
+]
+[MATH: \mathbf{0.491^{\pm 0.005}}]
+[MATH: \mathbf{0.648^{\pm 0.004}}]
+[MATH: \mathbf{0.724^{\pm 0.004}}]
+[MATH: 5.433^{\pm 0.080}]
+[MATH: \mathbf{3.775^{\pm 0.001}}]
+[MATH: 8.032^{\pm 0.030}]
+[MATH: 0.952^{\pm 0.032}]
+InterMask
+[
+22
+]
+[MATH: 0.449^{\pm 0.004}]
+[MATH: 0.599^{\pm 0.005}]
+[MATH: 0.683^{\pm 0.004}]
+[MATH: \underline{5.154^{\pm 0.061}}]
+[MATH: 3.790^{\pm 0.002}]
+[MATH: \mathbf{7.944^{\pm 0.033}}]
+[MATH: 1.737^{\pm 0.020}]
+FreeMotion
+[MATH: 0.326^{\pm 0.003}]
+[MATH: 0.462^{\pm 0.006}]
+[MATH: 0.544^{\pm 0.006}]
+[MATH: 6.740^{\pm 0.130}]
+[MATH: 3.848^{\pm 0.002}]
+[MATH: 7.828^{\pm 0.130}]
+[MATH: 1.226^{\pm 0.046}]
+UMF
+[MATH: 0.467^{\pm 0.004}]
+[MATH: 0.620^{\pm 0.004}]
+[MATH: 0.694^{\pm 0.005}]
+[MATH: \mathbf{4.772^{\pm 0.079}}]
+[MATH: 3.784^{\pm 0.001}]
+[MATH: 8.039^{\pm 0.032}]
+[MATH: 1.398^{\pm 0.012}]
+Table 2
+:
+Comparison to state-of-the-art for human action-reaction synthesis on the InterHuman-AS dataset.
+[MATH: \pm]
+indicates 95% confidence interval,
+[MATH: \rightarrow]
+means that closer to Real is better.
+Bold
+indicates best result and
+underline
+indicates second best.
+Methods
+RTop3
+[MATH: \uparrow]
+FID
+[MATH: \downarrow]
+MM Dist
+[MATH: \downarrow]
+Diversity
+[MATH: \rightarrow]
+MModality
+[MATH: \uparrow]
+Real
+[MATH: 0.722^{\pm 0.004}]
+[MATH: 0.002^{\pm 0.0002}]
+[MATH: 3.503^{\pm 0.011}]
+[MATH: 5.390^{\pm 0.058}]
+-
+T2M
+[
+14
+]
+[MATH: 0.224^{\pm 0.003}]
+[MATH: 32.482^{\pm 0.098}]
+[MATH: 7.299^{\pm 0.016}]
+[MATH: 4.350^{\pm 0.073}]
+[MATH: 0.719^{\pm 0.041}]
+MDM
+[
+51
+]
+[MATH: 0.370^{\pm 0.006}]
+[MATH: 3.397^{\pm 0.052}]
+[MATH: 8.640^{\pm 0.045}]
+[MATH: 4.780^{\pm 0.015}]
+[MATH: 2.288^{\pm 0.039}]
+MDM-GRU
+[
+51
+]
+[MATH: 0.328^{\pm 0.012}]
+[MATH: 6.397^{\pm 0.214}]
+[MATH: 8.884^{\pm 0.040}]
+[MATH: 4.851^{\pm 0.081}]
+[MATH: 2.076^{\pm 0.040}]
+RAIG
+[
+49
+]
+[MATH: 0.363^{\pm 0.008}]
+[MATH: 2.915^{\pm 0.029}]
+[MATH: 7.294^{\pm 0.027}]
+[MATH: 4.736^{\pm 0.099}]
+[MATH: 2.203^{\pm 0.049}]
+InterGen
+[
+32
+]
+[MATH: 0.374^{\pm 0.005}]
+[MATH: 13.237^{\pm 0.035}]
+[MATH: 10.929^{\pm 0.026}]
+[MATH: 4.376^{\pm 0.042}]
+[MATH: \mathbf{2.793^{\pm 0.014}}]
+ReGenNet
+[
+63
+]
+[MATH: 0.407^{\pm 0.003}]
+[MATH: \mathbf{2.265^{\pm 0.097}}]
+[MATH: 6.860^{\pm 0.040}]
+[MATH: \mathbf{5.214^{\pm 0.139}}]
+[MATH: 2.391^{\pm 0.023}]
+FreeMotion
+[
+12
+]
+[MATH: 0.409^{\pm 0.006}]
+[MATH: 3.896^{\pm 0.029}]
+[MATH: 7.632^{\pm 0.036}]
+[MATH: 6.089^{\pm 0.027}]
+[MATH: 2.496^{\pm 0.036}]
+UMF
+[MATH: \mathbf{0.530^{\pm 0.006}}]
+[MATH: 2.577^{\pm 0.024}]
+[MATH: \mathbf{4.987^{\pm 0.011}}]
+[MATH: 7.764^{\pm 0.024}]
+[MATH: 2.116^{\pm 0.041}]
+Table 3
+:
+Ablation study of individual priors on the HumanML3D and InterHuman datasets.
+HP
+:
+H
+eterogeneous
+P
+riors;
+LA
+:
+L
+atent
+A
+dapter;
+MT
+:
+M
+ulti-token
+T
+okenizer.
+Components
+HumanML3D
+InterHuman
+Method
+HP
+LA
+MT
+RTop3
+[MATH: \uparrow]
+FID
+[MATH: \downarrow]
+RTop3
+[MATH: \uparrow]
+FID
+[MATH: \downarrow]
+Real Data
+-
+-
+-
+0.797
+0.002
+0.701
+0.273
+FreeMotion
+✓
+-
+-
+0.612
+3.539
+0.503
+7.984
+w/o HP
+✗
+-
+-
+0.128
+13.155
+0.544
+6.740
+UMF (Full)
+✓
+✓
+✓
+0.729
+0.486
+0.694
+4.772
+w/o HP
+✗
+✓
+✓
+0.134
+10.806
+0.651
+4.933
+w/o LA
+✓
+✗
+✓
+0.708
+0.646
+0.627
+5.473
+w/o MT
+✓
+✓
+✗
+0.713
+0.534
+0.655
+5.231
+w/o (HP + LA)
+✗
+✗
+✓
+0.131
+12.914
+0.579
+5.561
+w/o (HP + MT)
+✗
+✓
+✗
+0.139
+12.748
+0.616
+5.493
+w/o (LA + MT)
+✓
+✗
+✗
+0.682
+0.845
+0.605
+5.668
+w/o (HP + LA + MT)
+✗
+✗
+✗
+0.125
+13.844
+0.511
+6.036
+Table 4
+:
+Ablation study of Pyramid Flow on the InterHuman dataset. UMF has a 2-stage temporal pyramid structure. We report FLOPs(G) and AITS (Average Inference Time in Seconds).
+[MATH: T_{P2}]
+,
+[MATH: T_{P1}]
+, and
+[MATH: T_{S}]
+refer to the corresponding inference step for P-Flow low-res stage, P-Flow full-res stage, and S-Flow, respectively.
+UMF-PFK1 and UMF-PFS refer to P-Flow with the original resolution and with the spatial pyramid structure, respectively.
+Methods
+[MATH: T_{P_{2}}]
+[MATH: T_{P_{1}}]
+[MATH: T_{S}]
+FID
+[MATH: \downarrow]
+RTop3
+[MATH: \uparrow]
+FLOPs(G)
+[MATH: \downarrow]
+AITS
+[MATH: \downarrow]
+FreeMotion
+-
+-
+-
+6.740
+0.544
+217.8
+3.059
+UMF
+45
+5
+10
+4.772
+0.694
+140.3
+0.623
+UMF-PFK1
+-
+50
+10
+4.761
+0.674
+320.2
+1.119
+UMF-PFS
+45
+5
+10
+7.238
+0.527
+135.9
+0.581
+UMF-Fast
+5
+5
+10
+4.937
+0.687
+74.7
+0.439
+UMF-Symmetric
+25
+25
+10
+4.784
+0.697
+206.0
+0.874
+5
+Experiments
+5.1
+Datasets, Metrics & Implementation Details
+We utilize InterHuman
+[
+32
+]
+and HumanML3D
+[
+14
+]
+datasets for the evaluation of text-conditioned motion generation performance.
+The InterHuman and HumanML3D datasets contain 7,779 interaction sequences and 14,616 individual sequences, respectively, where each sequence is illustrated with 3 textual annotations.
+The InterHuman-AS dataset
+[
+63
+]
+is essentially the same as InterHuman, but includes additional actor–reactor order annotations.
+We employ the evaluation metrics following previous studies
+[
+32
+,
+14
+]
+. Fidelity is assessed using Frechet Inception Distance (FID), R-precision, and Multimodal Distance (MM Dist), and diversity is evaluated with Diversity and Multimodality scores.
+All our models are trained with the AdamW optimizer using an initial learning rate of
+[MATH: 10^{-4}]
+and a cosine decay schedule.
+Our mini-batch size is set to 128 during the VAE training stage and 64 during the flow matching training stage.
+Each model was trained for 6K epochs during the VAE stage, 2K epochs during the P-Flow and 2K epochs during S-Flow stage. See Appendix C for details.
+5.2
+Quantitative Results
+As shown in Table
+1
+, on the InterHuman benchmark, UMF substantially outperforms the generalist baseline, FreeMotion
+[
+12
+]
+, improving Top3 R-Precision by 28% and reducing FID by 29%. Furthermore, its Diversity score closely matches the ground truth, indicating a highly realistic output.
+Against specialist methods tailored for dual-agent scenarios, UMF demonstrates competitive performance, outperforming the strongest baseline, InterMask
+[
+22
+]
+, by 7% in FID.
+It also achieves the second-best results on R-Precision and MM-Distance, demonstrating competitive text-following ability.
+In Table
+2
+, we compare UMF with existing approaches on the InterHuman-AS dataset, where we observe a similar trend. Specifically, UMF improves Top3 R-Precision by over 30% and reduces MM-Distance by 27% compared to ReGenNet
+[
+63
+]
+, significantly improving the reactive motion quality.
+5.3
+Qualitative Results & User Study
+Fig.
+3
+demonstrates UMF’s ability to generate more realistic human interactions compared to FreeMotion
+[
+12
+]
+.
+In the “kick” (dual-agent) scenario, UMF generates a plausible kicking motion with correct leg assignment. In contrast, FreeMotion fails to produce a coherent generation, only attempting a poorly directed kick in the end.
+In the ”stroll” (three-agent) scenario, UMF correctly positions the third agent (green) between the other two (yellow, blue), maintaining plausible proximity, while FreeMotion’s output suffers from severe interpenetration.
+In the complex, multi-agent (
+[MATH: N>3]
+) “fight” scenario, FreeMotion fails to animate all participants, resulting in artifacts such as the static poses of agents.
+In contrast, UMF generalizes effectively to this zero-shot number-free task, producing dynamic and plausible interactions.
+Due to the scarcity of motion databases for group scenarios, we conducted a user study for assessing UMF’s zero-shot generalization capability (see Appendix D).
+The proposed UMF and FreeMotion
+[
+12
+]
+are compared according to the aspects of text alignment, physical realism, interaction quality, and overall quality.
+30 unique users participated in the user study, with 20 randomly sampled multi-person generations (
+[MATH: N>2]
+).
+The zero-shot results in Fig.
+4
+show that the number-free motions generated by UMF were clearly preferred over those generated by FreeMotion.
+5.4
+Ablation Studies
+Heterogeneous Priors and Latent Space.
+Table
+3
+investigates the impact of individual priors from HumanML3D
+[
+14
+]
+and our latent space design.
+The results demonstrate that models trained with the HumanML3D prior outperform those without, improving both text adherence and motion fidelity.
+This highlights the potential of leveraging single-agent datasets to enhance multi-agent interaction generation.
+We attribute the modest improvement to the complexity gap between the single-agent and multi-agent generation targets, which manifests as a challenging cross-dataset transfer effect.
+Furthermore, we compare UMF against variants without the Latent Adapter (w/o. LA) and with a single-token latent space (
+[MATH: 1\times 256]
+).
+The results indicate that the Latent Adapter is crucial for multi-token flow matching, whereas the single-token variant lacks sufficient capacity to model number-free generation effectively.
+Efficiency Analysis of Pyramid Flow.
+Table
+4
+ablates the Pyramid Flow (PF) structure and its inference step allocation.
+First, we compare UMF with FreeMotion under the same inference steps (
+i.e
+.
+, 60 steps), where UMF achieves lower FLOPs and is nearly 5
+[MATH: \times]
+faster, which demonstrates the efficiency of P-Flow for complex interaction generation.
+Next, we compare two variants, where UMF-PFK1 achieves a slightly better FID but with extra computational cost. Conversely, the UMF-PFS variant shows severe performance degradation.
+We also find that reducing the P-Flow budget from 50 to 10 steps can nearly halve the FLOPs but degrade performance.
+Notably, allocating asymmetric steps (
+[MATH: T_{P2}]
+= 45,
+[MATH: T_{P1}]
+= 5) achieves the best speed-quality trade-off, yielding competitive FID with fewer FLOPs compared to a symmetric allocation (
+[MATH: T_{P2}]
+=
+[MATH: T_{P1}]
+= 25).
+Semi-Noise Flow Component Analysis.
+Table
+5
+analyzes the key components of S-Flow.
+Sharing the transformer backbone between S-Flow and P-Flow, while parameter-efficient, results in significantly worse fidelity, likely due to their incompatible learning paths.
+We also compare the semi-noise flow with noise-free flow in
+[
+27
+]
+, which only learns the reaction transformation path. This variant shows degraded performance without considering the error accumulation.
+Removing the reconstruction loss also harms generation quality. Similarly, removing the Context Adapter entirely or replacing it with a ControlNet
+[
+66
+]
+both lead to a significant performance drop, underscoring the importance of context reconstruction.
+In contrast, the transformer-based adapter in UMF preserves a global view of the entire context.
+Table 5
+:
+Ablation study of Semi-Noise Flow on the InterHuman dataset.
+Methods
+FID
+[MATH: \downarrow]
+RTop3
+[MATH: \uparrow]
+Diversity
+[MATH: \rightarrow]
+UMF
+4.772
+0.694
+8.039
+UMF w. Shared Transformer
+6.206
+0.644
+8.088
+UMF w. Noise-Free path
+[
+27
+]
+5.617
+0.646
+8.112
+UMF w. ControlNet
+[
+66
+]
+6.868
+0.637
+8.061
+UMF w/o. Context Adapter
+7.038
+0.642
+8.087
+UMF w/o.
+[MATH: L_{recons}]
+5.765
+0.649
+8.124
+Figure 4
+:
+The UMF number-free zero-shot generation user study. We asked users to compare our UMF (
+Blue Bar
+) to the FreeMotion (
+Red Bar
+) in a side-by-side view. The dashed line marks 50%. UMF outperforms FreeMotion in all three aspects of generation.
+6
+Conclusion
+We introduce Unified Motion Flow (UMF), a generalist framework for number-free, text-conditioned motion generation, which consists of Pyramid Motion Flow (P-Flow) and Semi-Noise Motion Flow (S-Flow).
+Based on a unified heterogeneous latent space, UMF achieves number-free motion generation via P-Flow for mitigating computational overheads and S-Flow for alleviating error accumulation.
+Extensive results show UMF achieves state-of-the-art performance for multi-person generation, and exhibits robust zero-shot generalization to challenging group scenarios. While the
+[MATH: 1+N]
+paradigm enhances generalization, UMF remains constrained to medium sized group interactions (
+[MATH: \approx 10]
+agents) centered on a primary agent. Future will explore leveraging visual priors from large-scale video diffusion models to scale synthesis to dense crowd dynamics (
+[MATH: \approx 100]
+agents).
+Acknowledgments
+This work was supported by the K-CSC funding.
+The authors acknowledge the use of King’s CREATE HPC. Retrieved March 24, 2026, from
+https://doi.org/10.18742/rnvf-m076
+.
+References
+[1]
+J. Achiam, S. Adler, S. Agarwal, L. Ahmad, I. Akkaya, F. L. Aleman, D. Almeida, J. Altenschmidt, S. Altman, S. Anadkat,
+et al.
+(2023)
+Gpt-4 technical report
+.
+arXiv preprint arXiv:2303.08774
+.
+Cited by:
+§2.2
+.
+[2]
+N. Agarwal, A. Ali, M. Bala, Y. Balaji, E. Barker, T. Cai, P. Chattopadhyay, Y. Chen, Y. Cui, Y. Ding,
+et al.
+(2025)
+Cosmos world foundation model platform for physical ai
+.
+arXiv preprint arXiv:2501.03575
+.
+Cited by:
+§2.2
+.
+[3]
+M. S. Albergo and E. Vanden-Eijnden
+(2022)
+Building normalizing flows with stochastic interpolants
+.
+arXiv preprint arXiv:2209.15571
+.
+Cited by:
+§3
+,
+§4.2.2
+.
+[4]
+Z. Cai, J. Jiang, Z. Qing, X. Guo, M. Zhang, Z. Lin, H. Mei, C. Wei, R. Wang, W. Yin,
+et al.
+(2024)
+Digital life project: autonomous 3d characters with social intelligence
+.
+In
+Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition
+,
+pp. 582–592
+.
+Cited by:
+Table 1
+.
+[5]
+A. Campbell, W. Harvey, C. Weilbach, V. De Bortoli, T. Rainforth, and A. Doucet
+(2023)
+Trans-dimensional generative modeling via jump diffusion models
+.
+Advances in Neural Information Processing Systems
+36
+,
+pp. 42217–42257
+.
+Cited by:
+§4.2.1
+.
+[6]
+L. Chen, W. Dai, X. Ju, S. Lu, and L. Zhang
+(2024)
+Motionclr: motion generation and training-free editing via understanding attention mechanisms
+.
+arXiv e-prints
+,
+pp. arXiv–2410
+.
+Cited by:
+§2.2
+.
+[7]
+X. Chen, B. Jiang, W. Liu, Z. Huang, B. Fu, T. Chen, and G. Yu
+(2023)
+Executing your commands via motion diffusion in latent space
+.
+In
+Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition
+,
+pp. 18000–18010
+.
+Cited by:
+§1
+,
+§2.1
+,
+§4.1
+.
+[8]
+W. Dai, L. Chen, Y. Huo, J. Wang, J. Liu, B. Dai, and Y. Tang
+Real-time controllable motion generation via latent consistency model
+.
+Cited by:
+§4.1
+.
+[9]
+W. Dai, L. Chen, J. Wang, J. Liu, B. Dai, and Y. Tang
+(2024)
+Motionlcm: real-time controllable motion generation via latent consistency model
+.
+arXiv preprint arXiv:2404.19759
+.
+Cited by:
+§1
+,
+§2.1
+.
+[10]
+P. Esser, S. Kulal, A. Blattmann, R. Entezari, J. Müller, H. Saini, Y. Levi, D. Lorenz, A. Sauer, F. Boesel,
+et al.
+(2024)
+Scaling rectified flow transformers for high-resolution image synthesis
+.
+In
+Forty-first international conference on machine learning
+,
+Cited by:
+§4.2
+.
+[11]
+K. Fan, S. Lu, M. Dai, R. Yu, L. Xiao, Z. Dou, J. Dong, L. Ma, and J. Wang
+(2025)
+Go to zero: towards zero-shot motion generation with million-scale data
+.
+In
+Proceedings of the IEEE/CVF International Conference on Computer Vision
+,
+pp. 13336–13348
+.
+Cited by:
+§1
+.
+[12]
+K. Fan, J. Tang, W. Cao, R. Yi, M. Li, J. Gong, J. Zhang, Y. Wang, C. Wang, and L. Ma
+(2025)
+Freemotion: a unified framework for number-free text-to-motion synthesis
+.
+In
+European Conference on Computer Vision
+,
+pp. 93–109
+.
+Cited by:
+Figure 1
+,
+Figure 1
+,
+§1
+,
+§1
+,
+§2.2
+,
+Figure 3
+,
+Figure 3
+,
+§4.1
+,
+§4.2.2
+,
+§4.3
+,
+Table 2
+,
+§5.2
+,
+§5.3
+,
+§5.3
+.
+[13]
+C. Guo, Y. Mu, M. G. Javed, S. Wang, and L. Cheng
+(2024)
+Momask: generative masked modeling of 3d human motions
+.
+In
+Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition
+,
+pp. 1900–1910
+.
+Cited by:
+§1
+,
+§2.1
+.
+[14]
+C. Guo, S. Zou, X. Zuo, S. Wang, W. Ji, X. Li, and L. Cheng
+(2022)
+Generating diverse and natural 3d human motions from text
+.
+In
+Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition
+,
+pp. 5152–5161
+.
+Cited by:
+§1
+,
+§1
+,
+§1
+,
+Figure 2
+,
+Figure 2
+,
+§4.1
+,
+Table 1
+,
+Table 2
+,
+§5.1
+,
+§5.4
+.
+[15]
+D. Guo, D. Yang, H. Zhang, J. Song, R. Zhang, R. Xu, Q. Zhu, S. Ma, P. Wang, X. Bi,
+et al.
+(2025)
+Deepseek-r1: incentivizing reasoning capability in llms via reinforcement learning
+.
+arXiv preprint arXiv:2501.12948
+.
+Cited by:
+§2.2
+.
+[16]
+R. Guo, H. Pi, Z. Shen, Q. Shuai, Z. Hu, Z. Wang, Y. Dong, R. Hu, T. Komura, S. Peng,
+et al.
+(2025)
+Motion-2-to-3: leveraging 2d motion data for 3d motion generations
+.
+In
+Proceedings of the IEEE/CVF International Conference on Computer Vision
+,
+pp. 14305–14316
+.
+Cited by:
+§1
+.
+[17]
+P. Gupta, S. Verma, A. Grama, and A. Bera
+(2025)
+Unified multi-modal interactive & reactive 3d motion generation via rectified flow
+.
+arXiv preprint arXiv:2509.24099
+.
+Cited by:
+§2.2
+.
+[18]
+J. Ho, A. Jain, and P. Abbeel
+(2020)
+Denoising diffusion probabilistic models
+.
+Advances in neural information processing systems
+33
+,
+pp. 6840–6851
+.
+Cited by:
+§4.2
+.
+[19]
+F. Hong, V. Guzov, H. J. Kim, Y. Ye, R. Newcombe, Z. Liu, and L. Ma
+(2025)
+EgoLM: multi-modal language model of egocentric motions
+.
+In
+Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)
+,
+pp. 5344–5354
+.
+Cited by:
+§1
+.
+[20]
+V. T. Hu, W. Yin, P. Ma, Y. Chen, B. Fernando, Y. M. Asano, E. Gavves, P. Mettes, B. Ommer, and C. G. Snoek
+(2023)
+Motion flow matching for human motion synthesis and editing
+.
+arXiv preprint arXiv:2312.08895
+.
+Cited by:
+§4.2.1
+.
+[21]
+C. Ionescu, D. Papava, V. Olaru, and C. Sminchisescu
+(2013)
+Human3. 6m: large scale datasets and predictive methods for 3d human sensing in natural environments
+.
+IEEE transactions on pattern analysis and machine intelligence
+36
+(
+7
+),
+pp. 1325–1339
+.
+Cited by:
+§1
+.
+[22]
+M. G. Javed, C. Guo, L. Cheng, and X. Li
+(2024)
+InterMask: 3d human interaction generation via collaborative masked modelling
+.
+arXiv preprint arXiv:2410.10010
+.
+Cited by:
+Table 1
+,
+§5.2
+.
+[23]
+K. Ji, Y. Shi, Z. Jin, K. Chen, L. Xu, Y. Ma, J. Yu, and J. Wang
+(2025)
+Towards immersive human-x interaction: a real-time framework for physically plausible motion synthesis
+.
+In
+Proceedings of the IEEE/CVF International Conference on Computer Vision
+,
+pp. 10173–10183
+.
+Cited by:
+§1
+.
+[24]
+Y. Ji, T. Wang, Y. Ge, Z. Liu, S. Yang, Y. Shan, and P. Luo
+(2025)
+From denoising to refining: a corrective framework for vision-language diffusion model
+.
+arXiv preprint arXiv:2510.19871
+.
+Cited by:
+§1
+.
+[25]
+B. Jiang, X. Chen, W. Liu, J. Yu, G. Yu, and T. Chen
+(2023)
+Motiongpt: human motion as a foreign language
+.
+Advances in Neural Information Processing Systems
+36
+,
+pp. 20067–20079
+.
+Cited by:
+§2.2
+.
+[26]
+L. Jiang, Y. Wei, and H. Ni
+(2025)
+MotionPCM: real-time motion synthesis with phased consistency model
+.
+arXiv preprint arXiv:2501.19083
+.
+Cited by:
+§4.2.1
+.
+[27]
+W. Jiang, J. Wang, H. Lu, K. Ji, B. Jia, S. Huang, and Y. Shi
+(2025)
+ARFlow: human action-reaction flow matching with physical guidance
+.
+arXiv preprint arXiv:2503.16973
+.
+Cited by:
+§2.1
+,
+§5.4
+,
+Table 5
+.
+[28]
+P. Jin, Y. Wu, Y. Fan, Z. Sun, W. Yang, and L. Yuan
+(2023)
+Act as you wish: fine-grained control of motion diffusion model with hierarchical semantic graphs
+.
+Advances in Neural Information Processing Systems
+36
+,
+pp. 15497–15518
+.
+Cited by:
+§1
+.
+[29]
+Y. Jin, Z. Sun, N. Li, K. Xu, H. Jiang, N. Zhuang, Q. Huang, Y. Song, Y. Mu, and Z. Lin
+(2024)
+Pyramidal flow matching for efficient video generative modeling
+.
+arXiv preprint arXiv:2410.05954
+.
+Cited by:
+§1
+,
+§4.2.1
+,
+§4.2
+,
+§4.3
+.
+[30]
+D. P. Kingma
+(2013)
+Auto-encoding variational bayes
+.
+arXiv preprint arXiv:1312.6114
+.
+Cited by:
+§4.1
+.
+[31]
+J. Li, J. Cao, H. Zhang, D. Rempe, J. Kautz, U. Iqbal, and Y. Yuan
+(2025)
+Genmo: a generalist model for human motion
+.
+arXiv preprint arXiv:2505.01425
+.
+Cited by:
+§2.2
+.
+[32]
+H. Liang, W. Zhang, W. Li, J. Yu, and L. Xu
+(2024)
+Intergen: diffusion-based multi-human motion generation under complex interactions
+.
+International Journal of Computer Vision
+,
+pp. 1–21
+.
+Cited by:
+§1
+,
+§1
+,
+§1
+,
+Figure 2
+,
+Figure 2
+,
+§2.1
+,
+§4.1
+,
+Table 1
+,
+Table 2
+,
+§5.1
+.
+[33]
+Y. Lipman, R. T. Chen, H. Ben-Hamu, M. Nickel, and M. Le
+(2022)
+Flow matching for generative modeling
+.
+arXiv preprint arXiv:2210.02747
+.
+Cited by:
+§3
+,
+§3
+,
+§4.2.1
+,
+§4.2.2
+.
+[34]
+X. Liu, C. Gong, and Q. Liu
+(2022)
+Flow straight and fast: learning to generate and transfer data with rectified flow
+.
+arXiv preprint arXiv:2209.03003
+.
+Cited by:
+§3
+.
+[35]
+Z. Liu, J. Ge, M. Xiong, J. Gu, B. Tang, W. Jing, and S. Chen
+(2025)
+It takes two: learning interactive whole-body control between humanoid robots
+.
+arXiv preprint arXiv:2510.10206
+.
+Cited by:
+§1
+.
+[36]
+M. Loper, N. Mahmood, J. Romero, G. Pons-Moll, and M. J. Black
+(2015)
+SMPL: a skinned multi-person linear model
+.
+ACM Trans. Graphics (Proc. SIGGRAPH Asia)
+34
+(
+6
+),
+pp. 248:1–248:16
+.
+Cited by:
+§4.2
+.
+[37]
+N. Ma, M. Goldstein, M. S. Albergo, N. M. Boffi, E. Vanden-Eijnden, and S. Xie
+(2024)
+Sit: exploring flow and diffusion-based generative models with scalable interpolant transformers
+.
+In
+European Conference on Computer Vision
+,
+pp. 23–40
+.
+Cited by:
+§3
+.
+[38]
+Y. Ma, Y. Liang, X. Li, C. Zhang, and X. Li
+(2025)
+Intersyn: interleaved learning for dynamic motion synthesis in the wild
+.
+In
+Proceedings of the IEEE/CVF International Conference on Computer Vision
+,
+pp. 12832–12841
+.
+Cited by:
+§2.1
+.
+[39]
+N. Mahmood, N. Ghorbani, N. F. Troje, G. Pons-Moll, and M. J. Black
+(2019)
+AMASS: archive of motion capture as surface shapes
+.
+In
+Proceedings of the IEEE/CVF international conference on computer vision
+,
+pp. 5442–5451
+.
+Cited by:
+§1
+.
+[40]
+I. A. Petrov, R. Marin, J. Chibane, and G. Pons-Moll
+(2024)
+Tridi: trilateral diffusion of 3d humans, objects, and interactions
+.
+arXiv preprint arXiv:2412.06334
+.
+Cited by:
+§2.2
+.
+[41]
+M. Petrovich, M. J. Black, and G. Varol
+(2022)
+TEMOS: generating diverse human motions from textual descriptions
+.
+arXiv preprint arXiv:2204.14109
+.
+Cited by:
+§4.1
+,
+Table 1
+.
+[42]
+E. Pinyoanuntapong, M. Saleem, K. Karunratanakul, P. Wang, H. Xue, C. Chen, C. Guo, J. Cao, J. Ren, and S. Tulyakov
+(2025)
+MaskControl: spatio-temporal control for masked motion synthesis
+.
+In
+Proceedings of the IEEE/CVF International Conference on Computer Vision (ICCV)
+,
+pp. 9955–9965
+.
+Cited by:
+§2.1
+.
+[43]
+P. R. Ponce, G. Barquero, C. Palmero, S. Escalera, and J. Garcia-Rodriguez
+(2024)
+In2IN: leveraging individual information to generate human interactions
+.
+arXiv preprint arXiv:2404.09988
+.
+Cited by:
+§2.1
+,
+Table 1
+.
+[44]
+L. Ran and M. Z. Shou
+(2025)
+TPDiff: temporal pyramid video diffusion model
+.
+arXiv preprint arXiv:2503.09566
+.
+Cited by:
+§4.2
+.
+[45]
+P. Ruiz-Ponce, G. Barquero, C. Palmero, S. Escalera, and J. García-Rodríguez
+(2025)
+Mixermdm: learnable composition of human motion diffusion models
+.
+In
+Proceedings of the Computer Vision and Pattern Recognition Conference
+,
+pp. 12380–12390
+.
+Cited by:
+§1
+.
+[46]
+Y. Shafir, G. Tevet, R. Kapon, and A. H. Bermano
+(2023)
+Human motion diffusion as a generative prior
+.
+arXiv preprint arXiv:2303.01418
+.
+Cited by:
+§1
+,
+Table 1
+.
+[47]
+M. Shan, L. Dong, Y. Han, Y. Yao, T. Liu, I. Nwogu, G. Qi, and M. Hill
+(2024)
+Towards open domain text-driven synthesis of multi-person motions
+.
+In
+European Conference on Computer Vision
+,
+pp. 67–86
+.
+Cited by:
+§1
+.
+[48]
+W. Tan, B. Li, C. Jin, W. Huang, X. Wang, and R. Song
+(2025)
+Think-then-react: towards unconstrained human action-to-reaction generation
+.
+arXiv preprint arXiv:2503.16451
+.
+Cited by:
+§2.1
+.
+[49]
+M. Tanaka and K. Fujiwara
+(2023)
+Role-aware interaction generation from textual description
+.
+In
+Proceedings of the IEEE/CVF International Conference on Computer Vision
+,
+pp. 15999–16009
+.
+Cited by:
+Table 2
+.
+[50]
+J. Teng, W. Zheng, M. Ding, W. Hong, J. Wangni, Z. Yang, and J. Tang
+(2023)
+Relay diffusion: unifying diffusion process across resolutions for image synthesis
+.
+arXiv preprint arXiv:2309.03350
+.
+Cited by:
+§1
+.
+[51]
+G. Tevet, S. Raab, B. Gordon, Y. Shafir, D. Cohen-Or, and A. H. Bermano
+(2022)
+Human motion diffusion model
+.
+arXiv preprint arXiv:2209.14916
+.
+Cited by:
+Figure 1
+,
+Figure 1
+,
+§1
+,
+§2.1
+,
+§4.1
+,
+Table 1
+,
+Table 2
+,
+Table 2
+.
+[52]
+A. Vaswani, N. Shazeer, N. Parmar, J. Uszkoreit, L. Jones, A. N. Gomez, Ł. Kaiser, and I. Polosukhin
+(2017)
+Attention is all you need
+.
+Advances in neural information processing systems
+30
+.
+Cited by:
+§1
+,
+§4.1
+.
+[53]
+W. Wan, Z. Dou, T. Komura, W. Wang, D. Jayaraman, and L. Liu
+(2024)
+Tlcontrol: trajectory and language control for human motion synthesis
+.
+In
+European Conference on Computer Vision
+,
+pp. 37–54
+.
+Cited by:
+§2.1
+.
+[54]
+J. Wang, F. Zhang, X. Li, V. Y. F. Tan, T. Pang, C. Du, A. Sun, and Z. Yang
+(2025)
+Error analyses of auto-regressive video diffusion models: a unified framework
+.
+External Links:
+2503.10704
+,
+Link
+Cited by:
+§1
+.
+[55]
+Y. Wang, S. Wang, J. Zhang, K. Fan, J. Wu, Z. Xue, and Y. Liu
+(2025)
+TIMotion: temporal and interactive framework for efficient human-human motion generation
+.
+In
+Proceedings of the Computer Vision and Pattern Recognition Conference
+,
+pp. 7169–7178
+.
+Cited by:
+Figure 1
+,
+Figure 1
+,
+§2.1
+,
+Table 1
+.
+[56]
+Y. Wang, X. Chen, X. Ma, S. Zhou, Z. Huang, Y. Wang, C. Yang, Y. He, J. Yu, P. Yang,
+et al.
+(2025)
+Lavie: high-quality video generation with cascaded latent diffusion models
+.
+International Journal of Computer Vision
+133
+(
+5
+),
+pp. 3059–3078
+.
+Cited by:
+§1
+,
+§4.2.1
+.
+[57]
+Y. Wang, H. Mo, and C. Gao
+(2025)
+DiFusion: flexible stylized motion generation using digest-and-fusion scheme
+.
+IEEE Transactions on Visualization and Computer Graphics
+.
+Cited by:
+§1
+.
+[58]
+Q. Wu, Z. Dou, C. Guo, Y. Huang, Q. Feng, B. Zhou, J. Wang, and L. Liu
+(2025)
+Text2Interact: high-fidelity and diverse text-to-two-person interaction generation
+.
+arXiv preprint arXiv:2510.06504
+.
+Cited by:
+§1
+.
+[59]
+Y. Xie, V. Jampani, L. Zhong, D. Sun, and H. Jiang
+(2023)
+Omnicontrol: control any joint at any time for human motion generation
+.
+arXiv preprint arXiv:2310.08580
+.
+Cited by:
+§4.2.2
+.
+[60]
+Z. Xie, Y. Wu, X. Gao, Z. Sun, W. Yang, and X. Liang
+(2024)
+Towards detailed text-to-motion synthesis via basic-to-advanced hierarchical diffusion model
+.
+In
+Proceedings of the AAAI Conference on Artificial Intelligence
+,
+Vol.
+38
+,
+pp. 6252–6260
+.
+Cited by:
+§1
+,
+§4.2.1
+.
+[61]
+L. Xu, X. Lv, Y. Yan, X. Jin, S. Wu, C. Xu, Y. Liu, Y. Zhou, F. Rao, X. Sheng,
+et al.
+(2024)
+Inter-x: towards versatile human-human interaction analysis
+.
+In
+Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition
+,
+pp. 22260–22271
+.
+Cited by:
+§1
+,
+§1
+,
+§2.1
+.
+[62]
+L. Xu, C. Yang, Z. Lin, F. Xu, Y. Liu, C. Xu, Y. Zhang, J. Qin, X. Sheng, Y. Liu,
+et al.
+(2025)
+Perceiving and acting in first-person: a dataset and benchmark for egocentric human-object-human interactions
+.
+In
+Proceedings of the IEEE/CVF International Conference on Computer Vision
+,
+pp. 12535–12548
+.
+Cited by:
+§1
+.
+[63]
+L. Xu, Y. Zhou, Y. Yan, X. Jin, W. Zhu, F. Rao, X. Yang, and W. Zeng
+(2024)
+ReGenNet: towards human action-reaction synthesis
+.
+In
+Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition
+,
+pp. 1759–1769
+.
+Cited by:
+§2.1
+,
+§4.2.2
+,
+Table 2
+,
+§5.1
+,
+§5.2
+.
+[64]
+H. Yan, X. Liu, J. Pan, J. H. Liew, Q. Liu, and J. Feng
+(2024)
+Perflow: piecewise rectified flow as universal plug-and-play accelerator
+.
+arXiv preprint arXiv:2405.07510
+.
+Cited by:
+§4.2.1
+.
+[65]
+J. Yao, B. Yang, and X. Wang
+(2025)
+Reconstruction vs. generation: taming optimization dilemma in latent diffusion models
+.
+In
+Proceedings of the Computer Vision and Pattern Recognition Conference
+,
+pp. 15703–15712
+.
+Cited by:
+§4.1
+.
+[66]
+L. Zhang, A. Rao, and M. Agrawala
+(2023)
+Adding conditional control to text-to-image diffusion models
+.
+In
+Proceedings of the IEEE/CVF International Conference on Computer Vision
+,
+pp. 3836–3847
+.
+Cited by:
+§1
+,
+§4.2
+,
+§5.4
+,
+Table 5
+.
+[67]
+Z. Zhang, A. Liu, I. Reid, R. Hartley, B. Zhuang, and H. Tang
+(2025)
+Motion mamba: efficient and long sequence motion generation
+.
+In
+European Conference on Computer Vision
+,
+pp. 265–282
+.
+Cited by:
+§2.1
+.
+[68]
+K. Zhao, G. Li, and S. Tang
+(2024)
+DartControl: a diffusion-based autoregressive motion model for real-time text-driven motion control
+.
+arXiv preprint arXiv:2410.05260
+.
+Cited by:
+§2.1
+.
+[69]
+Y. Zhao, Y. Wang, L. Wen, H. Zhang, and X. Qi
+(2025)
+FreeDance: towards harmonic free-number group dance generation via a unified framework
+.
+In
+Proceedings of the IEEE/CVF International Conference on Computer Vision
+,
+pp. 10560–10569
+.
+Cited by:
+§2.2
+.
+[70]
+B. Zhu, B. Jiang, S. Wang, S. Tang, T. Chen, L. Luo, Y. Zheng, and X. Chen
+(2025)
+MotionGPT3: human motion as a second modality
+.
+arXiv preprint arXiv:2506.24086
+.
+Cited by:
+§2.2
+,
+§4.1
+.

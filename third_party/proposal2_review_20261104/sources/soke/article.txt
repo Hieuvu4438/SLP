@@ -1,0 +1,2196 @@
+Signs as Tokens: A Retrieval-Enhanced Multilingual Sign Language Generator
+Ronglai Zuo
+Rolandos Alexandros Potamias
+Evangelos Ververas
+Jiankang Deng
+Stefanos Zafeiriou
+Affiliation:
+Imperial College London
+Affiliation:
+https://2000zrl.github.io/soke/
+Abstract
+Sign language is a visual language that encompasses all linguistic features of natural languages and serves as the primary communication method for the deaf and hard-of-hearing communities. Although many studies have successfully adapted pretrained language models (LMs) for sign language translation (sign-to-text), the reverse task—sign language generation (text-to-sign)—remains largely unexplored. In this work, we introduce a multilingual sign language model, Signs as Tokens (SOKE), which can generate 3D sign avatars autoregressively from text inputs using a pretrained LM. To align sign language with the LM, we leverage a decoupled tokenizer that discretizes continuous signs into token sequences representing various body parts. During decoding, unlike existing approaches that flatten all part-wise tokens into a single sequence and predict one token at a time, we propose a multi-head decoding method capable of predicting multiple tokens simultaneously. This approach improves inference efficiency while maintaining effective information fusion across different body parts. To further ease the generation process, we propose a retrieval-enhanced SLG approach, which incorporates external sign dictionaries to provide accurate word-level signs as auxiliary conditions, significantly improving the precision of generated signs. Extensive qualitative and quantitative evaluations demonstrate the effectiveness of SOKE.
+Figure 1
+:
+We propose Signs as Tokens (SOKE), a unified sign language generator that can produce multilingual signs from text inputs. (Left: American sign language; Middle: Chinese sign language; Right: German sign language.)
+1
+Introduction
+Sign language is the primary communication method utilized by the deaf and hard-of-hearing communities, embodying all linguistic properties found in spoken languages, such as discrete semantic units and grammatical structure
+[
+77
+,
+19
+]
+.
+As an attempt to mitigate the barrier between sign and spoken languages, several methods have been developed to tackle sign language processing by unfolding the task into two research problems: sign language translation (SLT, sign-to-text)
+[
+23
+,
+75
+,
+87
+,
+70
+,
+90
+,
+73
+,
+38
+,
+62
+]
+and sign language generation (SLG, text-to-sign)
+[
+53
+,
+3
+,
+78
+,
+95
+,
+59
+]
+.
+In contrast with SLT, the usage of language models (LMs) in SLG remains relatively unexplored.
+Most existing methods approach SLG as a visual content generation task (
+e.g
+.
+, video, keypoint, or motion), using GANs
+[
+59
+,
+56
+]
+or diffusion models
+[
+3
+,
+49
+,
+13
+,
+64
+,
+65
+]
+. However, these works neglect the linguistic nature of sign languages, leading to suboptimal performance and missing benefits of pretrained LMs such as generalizability and scalability
+[
+66
+,
+33
+,
+21
+]
+.
+In particular, sign languages share the fundamental linguistic properties and the discrete structure of spoken languages
+[
+77
+,
+19
+]
+, which necessitates processing using autoregressive language modeling techniques
+[
+76
+]
+.
+To formulate SLG in the framework of language modeling, a crucial step is mapping signs into discrete tokens. A common approach to discretizing sign languages involves using glosses—the written form of signs—as an intermediate representation
+[
+95
+,
+56
+,
+25
+,
+14
+]
+. However, glosses require extensive annotation efforts and impose a predefined information bottleneck, which fail to fully capture the rich semantics of sign languages
+[
+44
+]
+.
+To address these limitations and better capture the multi-cue property of sign languages
+[
+92
+,
+29
+,
+88
+]
+, we leverage a vector quantized-variational auto-encoder (VQ-VAE)-based tokenizer
+[
+74
+,
+42
+,
+71
+]
+that learns mappings between continuous sign motions and discrete tokens for each body part (upper body, left hand, and right hand).
+During decoding, existing autoregressive motion generation methods
+[
+74
+,
+42
+]
+typically flatten tokens from different body parts into a single sequence, resulting in inefficient inference due to tripled decoding steps. To overcome this challenge, we propose a novel multi-head decoding method capable of predicting multiple tokens at a time while effectively fusing information from different body parts in real time.
+Furthermore, given the limited vocabulary size of continuous sign language datasets, we enhance the model’s generalization by instantiating the LM as a multilingual LM
+[
+40
+]
+, enabling it to handle a broader and more diverse domain of discourse. To support multilingual SLG in a unified framework, we train the proposed model on a curated multilingual sign language dataset encompassing American, Chinese, and German sign languages
+[
+11
+,
+89
+,
+4
+]
+.
+Recently, retrieval-augmented generation (RAG)
+[
+5
+,
+12
+,
+68
+]
+has proven effective in enhancing the interpretability and accuracy of content generated by large language models. Similarly, several SLG methods
+[
+95
+,
+56
+]
+leverage glosses to retrieve sign dictionaries and directly incorporate retrieved signs into the outputs, improving the interpretability of generated signs. However, beyond the inherent limitations of glosses, these methods often face challenges in handling co-articulations between adjacent signs. This is because dictionary signs are typically recorded at the word level, whereas SLG models operate at the sentence level, leading to potential unnaturalness in the generated sequences.
+To address these issues, we propose a retrieval-enhanced SLG approach that utilizes motion tokens from retrieved dictionary signs as additional conditions for language modeling. This approach avoids the unnaturalness of directly copying signs into model outputs while still benefiting from the precision of dictionary signs.
+To sum up, the contributions of this paper can be summarized as:
+•
+We propose a novel SLG approach, Signs as Tokens (SOKE). With the aid of a pretrained LM, SOKE can handle multiple sign languages in a unified model.
+•
+We propose a multi-head decoding method that reduces inference latency and efficiently fuses information from different body parts, enabling seamless integration of a decoupled tokenizer with the LM.
+•
+By leveraging external sign dictionaries, we introduce a retrieval-enhanced SLG approach to improve the precision of generated signs.
+•
+We curate two sign language datasets
+[
+89
+,
+4
+]
+with accurate SMPL-X
+[
+47
+]
+poses to facilitate multilingual SLG research. Experiments demonstrate that our SOKE achieves state-of-the-art performance on three challenging benchmarks, How2Sign
+[
+11
+]
+, CSL-Daily
+[
+89
+]
+, and Phoenix-2014T
+[
+4
+]
+, using a single unified model.
+Figure 2
+:
+An overview of our proposed method, Signs as Tokens (SOKE). We begin by training a VQ-VAE-based decoupled tokenizer to map continuous sign motions into discrete tokens for various body parts (upper body, left hand, and right hand). These sign motion tokens are then integrated into the text vocabulary of a pretrained language model, which serves as the backbone of our autoregressive multilingual generator (AMG). Given a text input, the AMG first retrieves word-level signs from external dictionaries, appends their motion tokens to the text tokens, and feeds them into the language model encoder. During decoding, our novel multi-head decoding strategy generates motion tokens for all body parts simultaneously at each time step. Finally, the derived motion tokens are used to reconstruct sign avatars.
+2
+Related Work
+Sign Language Generation.
+Early gloss-based methods
+[
+95
+,
+56
+,
+79
+,
+71
+,
+24
+,
+63
+,
+25
+]
+approach SLG under a text-to-gloss-to-sign framework.
+Several works
+[
+2
+,
+53
+,
+55
+]
+propose to directly regress 2D joints to represent sign poses, simplifying the modeling process, however, they suffer from mode collapse due to the limited scale of data.
+Recent state-of-the-art SLG works can be categorized into two classes: the first group of methods
+[
+3
+,
+13
+]
+employs diffusion models to generate sign motions conditioned on text inputs; the second group of methods
+[
+10
+,
+78
+,
+76
+]
+adopts a tokenizer-LM two-stage autoregressive generation approach.
+Among these,
+[
+78
+]
+incorporates costly gloss and HamNoSys notations
+[
+2
+]
+to train a semantic adapter, while
+[
+10
+]
+focuses on generating signs from a single word, limiting their applicability.
+Moreover, a notable gap exists in the literature regarding unified models for multilingual SLG. In this work, we address these gaps by utilizing a decoupled tokenizer and a pretrained multilingual LM, integrated with our customized multi-head decoding method and retrieval-enhanced approach, to enable text-driven multilingual SLG.
+Text-to-Motion Generation.
+Text-to-motion generation (T2MG) is an important research area with potential applications in human-computer interaction and robotics.
+Recent T2MG methods can be categorized into two main types: 1) Diffusion-based approaches
+[
+82
+,
+57
+,
+6
+]
+, which utilize latent diffusion
+[
+51
+]
+to generate motions conditioned on text inputs. 2) Autoregressive approaches
+[
+27
+,
+83
+,
+91
+,
+81
+,
+20
+,
+42
+]
+, which draw inspiration from text generation methods by first tokenizing motion sequences and then using LMs to perform autoregressive generation.
+When decoding with a decoupled tokenizer
+[
+42
+,
+74
+]
+, these autoregressive approaches simply flatten tokens from various body parts into one sequence, causing addtional decoding steps. In this work, we propose a novel multi-head decoding method that can efficiently predict motion tokens for all body parts at one single step, significantly reducing inference latency.
+Retrieval-Enhanced Generation.
+Using the concept of retrieval to enhance generation models has proven effective across various domains
+[
+5
+,
+12
+,
+68
+,
+18
+,
+72
+,
+9
+]
+. As a pioneering effort, Piktus
+et al
+.
+[
+36
+]
+propose to retrieve relevant documents before generating answers for knowledge-intensive NLP tasks. FLARE
+[
+28
+]
+introduces selective retrieval, activating it only when low-confidence tokens appear in the generation process. ToG
+[
+61
+]
+leverages retrieved knowledge to enhance the reasoning capabilities of large language models. In the field of image generation, retrieval has also been utilized to enable diffusion models to generate out-of-distribution images
+[
+58
+]
+.
+In the context of SLG, several methods
+[
+95
+,
+56
+]
+adopt gloss-based retrieval to obtain dictionary signs and approach SLG in a retrieve-and-concatenate manner. However, glosses have inherent limitations, and such methods often suffer from unrealistic transitions between signs. In this paper, we propose a simple yet effective retrieval-enhanced SLG approach that uses word-level signs as auxiliary conditions, addressing these limitations and improving the overall quality of generations.
+3
+Methodology
+Figure 3
+:
+Comparison of various decoding methods. (a) Sequential decoding flattens all motion tokens into a single sequence, requiring an inefficient
+[MATH: 3K]
+decoding steps, where
+[MATH: K]
+is the target motion sequence length. (b) Parallel decoding improves efficiency by decoding body parts in parallel but lacks information fusion, which may lead to suboptimal performance. (c) Our proposed multi-head decoding balances efficiency and fusion by predicting three tokens simultaneously via different heads, with input embeddings as a weighted average of part-wise token embeddings.
+An overview of our method is shown in Figure
+2
+. Our approach mainly consists of two parts: a decoupled tokenizer (DETO) and an autoregressive multilingual generator (AMG). In the first stage, DETO learns mappings between continuous sign motions and discrete tokens for each body part (Section
+3.2
+). In the second stage, AMG is trained to autoregressively generate motion tokens with the proposed multi-head decoding strategy (Section
+3.3
+) conditioned on text inputs and retrieved dictionary signs (Section
+3.4
+).
+3.1
+Data Preparation
+Although existing SLG works
+[
+3
+,
+78
+]
+have made efforts in curating high-quality SMPL-X poses for an American sign language (ASL) dataset, How2Sign
+[
+11
+]
+, there is a notable lack of 3D annotations for other continuous sign language datasets, impeding multilingual SLG research.
+In this work, we rely on a two-stage approach, leveraging state-of-the-art 3D pose estimation methods
+[
+39
+,
+48
+]
+, to extract high-fidelity SMPL-X poses for CSL-Daily
+[
+89
+]
+and Phoenix-2014T
+[
+4
+]
+, two widely-adopted datasets of Chinese and German sign languages (CSL and DGS), respectively.
+Specifically, we initially estimate a set of rough 3D body poses for each signer using OSX
+[
+39
+]
+along with accurate 3D hand poses from WiLoR
+[
+48
+]
+.
+Given that OSX often falls short in accurately capturing the arm poses, we follow
+[
+3
+]
+and refine the upper body joint rotations by minimizing a re-projection loss between the estimated joints and the detected 2D joint keypoints from Mediapipe
+[
+43
+]
+.
+Using this process we can ensure accurate whole-body annotations.
+We represent each sign motion sequence as
+[MATH: \mathbf{S}\in\mathbb{R}^{T\times d}]
+, where
+[MATH: T]
+is the sequence length and
+[MATH: d=133]
+denotes the number of SMPL-X parameters, including 11 upper body joints, 30 hand joints, and 10 expression parameters. Please check the supplementary materials for more details and quantitative evaluations of our pose fitting pipeline.
+3.2
+Decoupled Tokenizer
+Sign languages exhibit a multi-cue property
+[
+88
+,
+93
+,
+29
+,
+84
+,
+86
+,
+22
+]
+, where the semantics of a sign are conveyed simultaneously through body and hand movements. Inspired by this, we leverage a decoupled tokenizer
+[
+42
+,
+74
+,
+71
+]
+, comprising three VQ-VAEs
+[
+67
+]
+, to independently model key regions: the upper body and both hands. An illustration is available in the supplementary materials.
+Given a
+[MATH: T]
+-frame sign motion input
+[MATH: \mathbf{S}\in\mathbb{R}^{T\times d}]
+, we first decompose it into three part-wise motion sequences based on the kinematic tree of SMPL-X:
+[MATH: \mathbf{S}^{p}\in\mathbb{R}^{T\times d_{p}}]
+, where
+[MATH: p\in\{B,LH,RH\}]
+. Moreover, we build three distinct VQ-VAEs, where each of them consists of an encoder
+[MATH: \mathcal{E}_{p}(\cdot)]
+, a decoder
+[MATH: \mathcal{D}_{p}(\cdot)]
+, and a learnable codebook
+[MATH: \mathbf{Z}^{p}\in\mathbb{R}^{N_{Z}^{p}\times C}]
+, where
+[MATH: N_{Z}^{p}]
+represents the number of codes and
+[MATH: C]
+denotes the code dimension.
+For each motion sequence, the corresponding encoder first projects the sequence into a latent space:
+[MATH: \mathbf{S}_{f}^{p}=\mathcal{E}_{p}(\mathbf{S}^{p})=\{s_{f,i}^{p}\}_{i=1}^{T_{f}}\in\mathbb{R}^{T_{f}\times C}]
+, using a stack of 1D-CNN layers.
+Then, for each pose we can derive a set of discrete tokens
+[MATH: \mathbf{\hat{Z}}^{p}=\{\hat{z}_{i}^{p}\}_{i=1}^{T_{f}}]
+using a quantizer
+[MATH: Q(\cdot)]
+, which searches the nearest neighbor from the codebook
+[MATH: \mathbf{Z}^{p}]
+:
+[MATH: \hat{z}_{i}^{p}=Q(s_{f,i}^{p})=\arg\min_{z_{j}\in\mathbf{Z}^{p}}\|s_{f,i}^{p}-z_{j}\|_{2},\ j\in[1,N_{Z}^{p}].]
+(1)
+We then feed the obtained token sequence to the corresponding part-decoder
+[MATH: \mathcal{D}_{p}]
+to reconstruct the input motions:
+[MATH: \mathbf{\hat{S}}^{p}=\mathcal{D}_{p}(\mathbf{Z}^{p})]
+. Following
+[
+27
+]
+, the objective function of each VQ-VAE is defined as:
+[MATH: \mathcal{L}_{vq}^{p}=\mathcal{L}_{rec}^{p}+\mathcal{L}_{emb}^{p}+\mathcal{L}_{com}^{p}]
+, where
+[MATH: \mathcal{L}_{rec}^{p}=\|\mathbf{\hat{S}}^{p}-\mathbf{S}^{p}\|_{2}^{2}]
+denotes the reconstruction loss,
+[MATH: \mathcal{L}_{emb}^{p}]
+is the embedding loss, and
+[MATH: \mathcal{L}_{com}^{p}]
+is the commitment loss, respectively.
+3.3
+Autoregressive Multilingual Generator
+Using obtained discrete sign representations, we can respect the discrete properties of sign languages and approach SLG similarly to text generation with a pretrained LM
+[
+40
+]
+.
+Integrated Vocabulary.
+We first gather the discrete tokens for different body parts to construct a part-wise motion vocabulary:
+[MATH: \mathcal{V}_{m}^{p}=\{\textless\mathtt{p\_i}\textgreater\}_{i=1}^{N_{Z}^{p}}]
+,
+e.g
+.
+,
+[MATH: \textless\mathtt{B\_1}\textgreater]
+and
+[MATH: \textless\mathtt{RH\_2}\textgreater]
+. The overall motion vocabulary is a combination of three part-wise vocabularies:
+[MATH: \mathcal{V}_{m}=\{\mathcal{V}_{m}^{B},\mathcal{V}_{m}^{LH},\mathcal{V}_{m}^{RH}\}]
+.
+Following
+[
+40
+]
+, we further define a series of language identifier tokens:
+[MATH: \mathcal{V}_{l}=\{\textless\mathtt{ASL}\textgreater,\textless\mathtt{CSL}\textgreater,\textless\mathtt{DGS}\textgreater\}]
+, to prompt the LM with the information of target sign language. The integrated vocabulary for the generator is defined as:
+[MATH: \mathcal{V}=\{\mathcal{V}_{t},\mathcal{V}_{m},\mathcal{V}_{l}\}]
+, which lays a foundation for the subsequent LM fine-tuning.
+Sequential Decoding.
+Following previous motion generation works
+[
+42
+,
+74
+]
+, a naive decoding method is simply flattening tokens from each body part into a single sequence with tripled length:
+[MATH: \mathbf{Y}=\{y_{1}^{B},y_{1}^{LH},y_{1}^{RH},\dots,y_{K}^{B},y_{K}^{LH},y_{K}^{RH}\}]
+, where
+[MATH: y_{k}^{p}\in\mathcal{V}_{m}^{p}]
+denotes the part-wise motion token, and
+[MATH: K]
+denotes the length of the target sign motion sequence. The decoding process can then be formulated as:
+[MATH: \displaystyle P(\mathbf{Y}|\mathbf{h}_{en})=\prod_{k=1}^{K}P(y_{k}^{B,LH,RH}|y_{<k}^{B,LH,RH})]
+(2)
+[MATH: \displaystyle=\prod_{k=1}^{K}P(y_{k}^{B}|y_{<k}^{\{p\}})P(y_{k}^{LH}|y_{k}^{B},y_{<k}^{\{p\}})P(y_{k}^{RH}|y_{k}^{B,LH},y_{<k}^{\{p\}}),]
+where
+[MATH: \mathbf{h}_{en}]
+denotes the last encoder hidden states. For simplicity, we write
+[MATH: y_{<k}^{B,LH,RH}]
+as
+[MATH: y_{<k}^{\{p\}}]
+and omit
+[MATH: \mathbf{h}_{en}]
+.
+We term this decoding method as sequential decoding (Figure
+3
+(a)), which results in inefficient inference process requiring
+[MATH: 3K]
+decoding steps.
+Parallel Decoding.
+In real-world applications, the model’s real-time capability is important. To accelerate the decoding process, a straightforward way is to decompose the target sequence
+[MATH: \mathbf{Y}]
+into three part-wise sequences:
+[MATH: \mathbf{Y}^{p}=\{y_{1}^{p},\dots,y_{K}^{p}\}]
+.
+Moreover, three LM decoders are instantiated with shared weights, each one in charge of a single body part. To prompt the decoders with the information of body parts, we replace the language identifier tokens with a new set of special tokens:
+[MATH: \mathcal{V}_{l}=\{\textless\mathtt{Lang\_p}\textgreater\}]
+, where
+[MATH: \mathtt{Lang}]
+and
+[MATH: \mathtt{p}]
+denote the target language and body part, respectively.
+As shown in Figure
+3
+(b), three parallel decoding processes start from one of the above mentioned special tokens, based on the target language and body part. For example, the starting token would be set to <
+[MATH: \mathtt{ASL\_B}]
+>when the model is required to generate upper-body motions for ASL.
+The decoding process can then be formulated as:
+[MATH: \displaystyle P(\mathbf{Y}|\mathbf{h}_{en})=P(\mathbf{Y}^{B})P(\mathbf{Y}^{LH})P(\mathbf{Y}^{RH})]
+(3)
+[MATH: \displaystyle=\prod_{k=1}^{K}P(y_{k}^{B}|y_{<k}^{B})\prod_{k=1}^{K}P(y_{k}^{LH}|y_{<k}^{LH})\prod_{k=1}^{K}P(y_{k}^{RH}|y_{<k}^{RH}).]
+Comparing Eq.
+3
+with Eq.
+2
+, the parallel decoding strategy significantly reduces the dependence on previous tokens, as the decoding processes for each body part are completely separated. While this formulation enables efficient parallel execution, the overly independent assumption may result in suboptimal performance.
+Multi-Head Decoding.
+To balance efficiency and information fusion across body parts, we propose a multi-head decoding strategy. As shown in Figure
+3
+(c), we design three language modeling heads, implemented as fully connected layers, to predict motion tokens for each body part simultaneously at each step. Moreover, the decoder inputs at each step are modified to a weighted average of the token embeddings from different body parts. Specifically, denoting the token embeddings from upper body, left hand, and right hand as
+[MATH: \mathbf{E}^{B}]
+,
+[MATH: \mathbf{E}^{LH}]
+, and
+[MATH: \mathbf{E}^{RH}]
+, respectively, the input embeddings are defined as:
+[MATH: \mathbf{E}=(1-2\lambda)\mathbf{E}^{B}+\lambda\mathbf{E}^{LH}+\lambda\mathbf{E}^{RH}]
+, where
+[MATH: \lambda\in(0,0.5)]
+is a hyper-parameter to control the weight of hand embeddings.
+The decoding process can then be formulated as:
+[MATH: \displaystyle P(\mathbf{Y}|\mathbf{h}_{en})=\prod_{k=1}^{K}P(y_{k}^{B,LH,RH}|y_{<k}^{B,LH,RH})]
+(4)
+[MATH: \displaystyle=\prod_{k=1}^{K}P(y_{k}^{B}|y_{<k}^{\{p\}})P(y_{k}^{LH}|y_{<k}^{\{p\}})P(y_{k}^{RH}|y_{<k}^{\{p\}}),]
+which can be viewed as relaxing Eq.
+2
+under a conditional independence assumption.
+Training and Inference.
+The LM is trained with a standard cross-entropy loss:
+[MATH: \mathcal{L}_{LM}=-\log P(\mathbf{Y}|\mathbf{h_{en}})]
+.
+During inference, we adopt a simple greedy decoding algorithm that the LM always outputs the token with the highest probability at each step. For parallel and multi-head decoding, the inference process terminates as soon as any head or decoder predicts an end-of-sentence token. The obtained token sequences will be fed into the corresponding part-decoder,
+[MATH: \mathcal{D}_{p}(\cdot)]
+, to reconstruct sign motions.
+3.4
+Retrieval-Enhanced SLG
+Figure 4
+:
+Illustration of retrieval-enhanced SLG. We utilize external sign dictionaries to retrieve accurate word-level signs, which serve as additional conditions to enhance the generation quality.
+Inspired by the effectiveness of retrieval-augmented generation in NLP
+[
+5
+,
+12
+,
+68
+]
+, we propose to leverage external sign dictionaries to improve the fidelity of generated signs.
+As shown in Figure
+4
+, we first build a word-level sign dictionary for each target sign language by utilizing resources from isolated sign language recognition datasets
+[
+32
+,
+37
+,
+94
+,
+85
+,
+35
+]
+and online sources. Through our pose fitting pipeline, each RGB video in these dictionaries is converted into SMPL-X poses. Next, we employ a well-trained decoupled tokenizer to map the poses into discrete tokens. The resulting dictionary is represented as a set of quadruples
+[MATH: \{(w,m^{B},m^{LH},m^{RH})\}]
+, where
+[MATH: w]
+denotes lemmatized words in the written language, and
+[MATH: m^{p}]
+denotes motion tokens.
+If a word has multiple sign instances in the dictionary, we retain only the instance with the lowest reconstruction error after passing through the tokenizer.
+Given a text input
+[MATH: \mathbf{X}=\{x_{i}\}_{i=1}^{L}]
+, consisting of
+[MATH: L]
+words
+1
+1
+1
+Since Chinese sentences lack spaces between words, we use Jieba
+[
+17
+,
+45
+]
+for word segmentation.
+, we collect all words and corresponding tokens found in the dictionary. The final prompt is created by concatenating raw texts
+[MATH: \mathbf{X}]
+with the retrieved motion tokens
+[MATH: \{m_{j}^{p}\}]
+, which is then fed into the LM encoder to generate hidden states
+[MATH: \mathbf{h}_{en}]
+. Several examples are shown in Figure
+4
+.
+Figure 5
+:
+Qualitative comparisons of generated signs between our proposed method, SOKE, with the SOTA method, S-MotionGPT
+[
+27
+]
+, on the test sets of How2Sign (left), CSL-Daily (middle), and Phoenix-2014T (right).
+4
+Experiments
+Datasets.
+We construct a multilingual sign language dataset by merging three widely-adopted datasets: How2Sign
+[
+11
+]
+, CSL-Daily
+[
+89
+]
+, and Phoenix-2014T
+[
+4
+]
+. How2Sign is a large-scale ASL dataset, consisting of 35K video-text pairs. CSL-Daily is the largest existing continuous CSL dataset, containing 20K samples. Phoenix-2014T is a DGS dataset with 8K samples.
+To train SOKE, we use the SMPL-X poses of How2Sign dataset as provided in
+[
+3
+]
+along with the curated poses of CSL-Daily and Phoenix-2014T.
+Evaluation Metrics.
+Since the length of generated signs may differ from the ground truth, we employ the well-established dynamic time warping (DTW)
+[
+3
+,
+2
+]
+on both procrustes-aligned and original joint position errors (JPE) to measure sequence-level distances between the generated signs and ground truth. Following
+[
+3
+]
+, we also report back-translation (B-T) scores in BLEU-4
+[
+46
+]
+to assess the interpretability of the generated signs.
+Implementation Details.
+For DETO, we empirically set the code numbers to
+[MATH: N_{Z}^{B}=96]
+for the body and
+[MATH: N_{Z}^{LH}=N_{Z}^{RH}=192]
+for the left and right hands, respectively, with a code dimension of
+[MATH: C=512]
+.
+We train DETO on the combined multilingual sign language dataset and sign dictionaries with a batch size of 320 per GPU for 500 epochs, using the AdamW optimizer
+[
+41
+]
+and a cosine learning rate scheduler starting at 2e-4.
+For the LM, we use mBART-large-cc25
+[
+40
+]
+, which features 12 encoder-decoder layers with a model dimension of 1024 and is widely used in various sign language translation methods
+[
+8
+,
+69
+,
+7
+,
+96
+,
+30
+]
+. We empirically set
+[MATH: \lambda=1/3]
+to balance part-wise token embeddings. The LM is fine-tuned with a batch size of 32 per GPU on the multilingual sign language dataset for 150 epochs, employing the same optimizer settings as DETO. All models are trained using 6 RTX 3090 GPUs.
+Method
+Multi-
+lingual
+How2Sign
+CSL-Daily
+Phoenix-2014T
+DTW-PA-JPE
+[MATH: \downarrow]
+DTW-JPE
+[MATH: \downarrow]
+B-T
+[MATH: \uparrow]
+DTW-PA-JPE
+[MATH: \downarrow]
+DTW-JPE
+[MATH: \downarrow]
+B-T
+[MATH: \uparrow]
+DTW-PA-JPE
+[MATH: \downarrow]
+DTW-JPE
+[MATH: \downarrow]
+B-T
+[MATH: \uparrow]
+Body
+Hand
+Body
+Hand
+BLEU-4
+Body
+Hand
+Body
+Hand
+BLEU-4
+Body
+Hand
+Body
+Hand
+BLEU-4
+NAR
+[
+26
+]
+×
+13.94
+11.80
+–
+–
+5.75
+–
+–
+–
+–
+–
+–
+–
+–
+–
+–
+Prog. Trans.
+∗
+[
+53
+]
+×
+14.15
+11.57
+14.74
+30.17
+2.75
+15.98
+12.91
+16.30
+32.63
+3.07
+13.67
+11.95
+15.01
+31.77
+4.94
+Text2Mesh
+∗
+[
+60
+]
+×
+13.99
+13.47
+15.50
+32.97
+7.51
+13.47
+12.10
+13.76
+30.37
+5.11
+13.48
+12.06
+14.04
+31.64
+5.81
+Adv. Train.
+[
+54
+]
+×
+13.78
+11.17
+–
+–
+6.21
+–
+–
+–
+–
+–
+–
+–
+–
+–
+–
+T2S-GPT
+∗
+[
+76
+]
+×
+11.48
+6.39
+12.65
+18.44
+11.20
+11.94
+5.93
+12.32
+15.43
+8.94
+10.38
+6.47
+11.65
+19.09
+9.06
+NSA
+[
+3
+]
+×
+7.83
+7.33
+–
+–
+13.12
+–
+–
+–
+–
+–
+–
+–
+–
+–
+–
+S-MotionGPT
+∗
+[
+27
+]
+×
+11.23
+4.39
+12.41
+13.74
+11.45
+10.81
+3.78
+11.58
+11.31
+8.82
+9.45
+3.41
+10.42
+9.08
+9.68
+SOKE (ours)
+✓
+6.82
+2.35
+7.75
+10.08
+14.48
+6.24
+1.71
+7.38
+9.68
+11.30
+4.77
+1.38
+6.04
+7.72
+11.87
+Table 1:
+Comparison with state-of-the-art sign language generation (text-to-sign) methods.
+∗
+denotes reimplementation results.
+Decoding
+Method
+Sign
+Retrieval
+How2Sign
+CSL-Daily
+Phoenix-2014T
+DTW-PA-JPE
+[MATH: \downarrow]
+Latency
+[MATH: \downarrow]
+DTW-PA-JPE
+[MATH: \downarrow]
+Latency
+[MATH: \downarrow]
+DTW-PA-JPE
+[MATH: \downarrow]
+Latency
+[MATH: \downarrow]
+Avg
+Body
+Hand
+s/video
+Avg
+Body
+Hand
+s/video
+Avg
+Body
+Hand
+s/video
+Sequential
+×
+4.64
+8.55
+3.53
+3.26
+3.74
+8.14
+2.49
+3.15
+3.26
+6.97
+2.20
+3.23
+Parallel
+×
+5.06
+9.27
+3.86
+1.39
+4.19
+8.61
+2.93
+1.41
+3.54
+7.02
+2.55
+1.35
+Multi-head
+×
+4.17
+7.91
+3.10
+1.46
+3.37
+7.58
+2.17
+1.45
+2.80
+6.16
+1.85
+1.44
+Multi-head
+✓
+3.34
+6.82
+2.35
+1.55
+2.72
+6.24
+1.71
+1.52
+2.13
+4.77
+1.38
+1.51
+Table 2:
+Ablation study for the decoding method and sign retrieval. Latencies are measured using a single RTX 3090 GPU.
+4.1
+Comparison with State-of-the-Art Methods
+Qualitative Comparison.
+We first reimplement a state-of-the-art (SOTA) open-sourced motion generation approach, MotionGPT
+[
+27
+]
+, which utilizes a VQ-VAE to discretize whole-body motions and employs a monolingual language model
+[
+50
+]
+, on sign language datasets. The resulting model, S-MotionGPT, achieves competitive results on sign language benchmarks (Table
+1
+). In Figure
+5
+, we perform a qualitative comparison between our SOKE and S-MotionGPT. As can be easily seen, our proposed method produces significantly better results, with visual quality comparable to the ground truth sign videos across the ASL, CSL, and DGS datasets. Notably, our method can generate precise and informative hand movements, which play a key role in conveying semantics in sign languages. Additionally, the proposed method supports three sign languages simultaneously, whereas S-MotionGPT is monolingual and requires separate models for each sign language dataset.
+Quantitative Comparison.
+In addition to the above qualitative comparison, we also perform a quantitative evaluation against SOTA SLG methods, as detailed in Table
+1
+.
+Our reimplemented S-MotionGPT achieves competitive results, with low DTW errors of 4.39 and 3.78 on How2Sign and CSL-Daily, respectively, demonstrating the effectiveness of formulating SLG as a language modeling task.
+The previous best SLG approach, Neural Sign Actors (NSA)
+[
+3
+]
+, formulates SLG as a motion generation task and employs a diffusion model as its backbone. However, this approach overlooks the linguistic properties of sign languages, resulting in higher average DTW errors compared to S-MotionGPT.
+In contrast, our method sets a new state-of-the-art across all three benchmarks, achieving significantly lower DTW errors of 2.35, 1.71, and 1.38 on How2Sign, CSL-Daily, and Phoenix-2014T, respectively, using a single unified model.
+4.2
+Ablation Study
+Figure 6
+:
+Qualitative ablation study for retrieval-enhanced SLG. (Left: How2Sign; Middle: CSL-Daily; Right: Phoenix-2014T.)
+H2S
+CSL
+Ph-T
+Generation
+Reconstruction
+H2S (DTW
+[MATH: \downarrow]
+)
+CSL (DTW
+[MATH: \downarrow]
+)
+Ph-T (DTW
+[MATH: \downarrow]
+)
+H2S (JPE
+[MATH: \downarrow]
+)
+CSL (JPE
+[MATH: \downarrow]
+)
+Ph-T (JPE
+[MATH: \downarrow]
+)
+Body
+Hand
+Body
+Hand
+Body
+Hand
+Body
+Hand
+Body
+Hand
+Body
+Hand
+✓
+7.92
+3.07
+–
+–
+–
+–
+21.52
+7.74
+–
+–
+–
+–
+✓
+✓
+7.11
+2.63
+6.79
+2.14
+–
+–
+19.88
+6.97
+24.29
+5.83
+–
+–
+✓
+✓
+✓
+6.82
+2.35
+6.24
+1.71
+4.77
+1.38
+19.37
+6.65
+23.52
+5.13
+25.79
+6.78
+Table 3:
+Study on the scalability of our approach. We use procrustes-aligned mean per joint position error (PA-MPJPE)
+[
+39
+,
+78
+]
+to assess reconstruction performance of the decoupled tokenizer. (Ph-T: Phoenix-2014T.)
+VAE-1
+VAE-2
+VAE-3
+H2S (DTW
+[MATH: \downarrow]
+)
+CSL (DTW
+[MATH: \downarrow]
+)
+Ph-T (DTW
+[MATH: \downarrow]
+)
+Body
+Hand
+Body
+Hand
+Body
+Hand
+Whole-body
+×
+×
+9.49
+3.56
+9.22
+3.35
+8.03
+3.23
+Body
+Hands
+×
+7.99
+3.13
+6.93
+2.85
+6.24
+2.18
+Body
+L-hand
+R-hand
+6.82
+2.35
+6.24
+1.71
+4.77
+1.38
+Table 4:
+Ablation study on the decoupled tokenizer.
+Decoding Method.
+We compare the performance of different decoding methods in Table
+2
+. The traditional sequential decoding method is widely used in existing motion generation approaches
+[
+42
+,
+74
+]
+. However, since tokens from different body parts are flattened into a single sequence, the number of decoding steps is tripled, leading to high inference latency (3.26s per video on How2Sign).
+By using three separate LM decoders, parallel decoding predicts token sequences for each body part simultaneously. This formulation significantly reduces latency (1.39s per video on How2Sign) but results in higher DTW errors due to the lack of information fusion across part-wise motion tokens.
+Notably, our multi-head decoding method achieves a better trade-off between efficiency and information integration, maintaining comparable latency to parallel decoding while delivering even superior generation quality than sequential decoding.
+We attribute this to the weighting mechanism (soft gating): since the decoder inputs are a weighted average of all part-wise tokens, errors in a single token may have a reduced impact on the overall performance.
+Sign Retrieval.
+By leveraging external sign dictionaries, we develop a retrieval-enhanced SLG approach that incorporates retrieved word-level signs as additional generation conditions. As shown in Table
+2
+, this retrieval mechanism significantly enhances the precision of generated signs, reducing the average DTW errors by 19.9%/19.6%/23.9% on How2Sign, CSL-Daily, and Phoenix-2014T, respectively.
+Furthermore, we perform a qualitative comparison in Figure
+6
+. The figure demonstrates that the retrieved signs effectively guide the model’s generation: similar pose patterns from the retrieved signs, particularly in hand shapes, appear in the generated outputs. This guidance substantially improves the precision of the generated signs.
+Scalability with Multilingual Data.
+Results in Table
+3
+show that incorporating multilingual data significantly improves generation performance, demonstrating the scalability of our approach. This improvement stems from two key factors: 1) the tokenizer benefits from more pose training data (right half of Table
+3
+), which subsequently enhances the generator’s performance; 2) the presence of cross-lingual signs, as revealed in
+[
+69
+]
+. For example, the sign for “cold” in CSL and DGS shares similar body movements. Training on multilingual data helps the model better understand and generalize across these cross-lingual signs.
+Decoupled Tokenizer.
+Inspired by the multi-cue characteristics of sign languages, we introduce a decoupled tokenizer that discretizes sign motion sequences for different body parts. In Table
+4
+, we present an ablation study on various configurations: a single VQ-VAE for whole-body motions and one VAE for the body and another for both hands. The findings indicate that progressively separating the body and hands leads to consistently improved performance.
+4.3
+User Study
+In addition to the objective metrics presented in the previous tables, we conducted a user study involving 5 professional ASL signers and 4 professional CSL signers. These signers were asked to rate the alignment between generated signs and text annotations on a scale from 1 to 10, with higher scores indicating better semantic conveyance of the texts. Ground truth sign motions were also included in the study. Specifically, we provided 15 generated signs from both the baseline, S-MotionGPT, and our proposed method, SOKE. The order of the signs was randomly shuffled to prevent potential bias.
+As shown in Figure
+7
+, our method achieved an encouraging average rating of 5.32/6.45, significantly surpassing the baseline, which received a low score of 1.36/2.70 on How2Sign and CSL-Daily, respectively.
+These results align with the above qualitative and quantitative evaluations, indicating the potential of our method in constituting a two-way communication system between the deaf and hearing.
+Figure 7
+:
+User study with professional ASL and CSL signers. We report average ratings of S-MotionGPT, our proposed SOKE, and ground truth motions.
+5
+Conclusion
+In this paper, we propose SOKE, a retrieval-enhanced multilingual sign language generator. Unlike existing methods that view sign language generation as a visual content generation task, we emphasize its linguistic nature, characterized by discrete semantic units. To capture the multi-cue characteristics of sign languages, we employ a decoupled tokenizer to map continuous motions into discrete tokens for the upper body and both hands. To balance efficiency and generation quality, we propose a novel multi-head decoding method that reduces decoding steps by two-thirds while dynamically integrating information from different body parts. Additionally, we present a simple yet effective retrieval-enhanced approach by leveraging external sign dictionaries. Extensive evaluations on a combined ASL-CSL-DGS dataset validate the effectiveness of our method.
+Acknowledgements.
+S. Zafeiriou and part of the research was funded by the
+EPSRC Fellowship DEFORM (EP/S010203/1), EPSRC Project GNOMON
+(EP/X011364/1) and Turing AI Fellowship (EP/Z534699/1). R.A. Potamias and R. Zuo were supported by EPSRC Project GNOMON (EP/X011364/1). This research was also supported by the Sovereign AI AIRR programme. We would also like to thank anonymous signers who participated in the user study.
+References
+[1]
+Samuel Albanie, Gül Varol, Liliane Momeni, Triantafyllos Afouras, Joon Son Chung, Neil Fox, and Andrew Zisserman.
+BSL-1K: Scaling up co-articulated sign language recognition using mouthing cues.
+In
+ECCV
+, pages 35–53, 2020.
+[2]
+Rotem Shalev Arkushin, Amit Moryossef, and Ohad Fried.
+Ham2pose: Animating sign language notation into pose sequences.
+In
+CVPR
+, pages 21046–21056, 2023.
+[3]
+Vasileios Baltatzis, Rolandos Alexandros Potamias, Evangelos Ververas, Guanxiong Sun, Jiankang Deng, and Stefanos Zafeiriou.
+Neural sign actors: A diffusion model for 3d sign language production from text.
+In
+CVPR
+, pages 1985–1995, 2024.
+[4]
+Necati Cihan Camgoz, Simon Hadfield, Oscar Koller, Hermann Ney, and Richard Bowden.
+Neural sign language translation.
+In
+CVPR
+, 2018.
+[5]
+Jiawei Chen, Hongyu Lin, Xianpei Han, and Le Sun.
+Benchmarking large language models in retrieval-augmented generation.
+In
+AAAI
+, pages 17754–17762, 2024.
+[6]
+Xin Chen, Biao Jiang, Wen Liu, Zilong Huang, Bin Fu, Tao Chen, and Gang Yu.
+Executing your commands via motion diffusion in latent space.
+In
+CVPR
+, pages 18000–18010, 2023.
+[7]
+Yutong Chen, Fangyun Wei, Xiao Sun, Zhirong Wu, and Stephen Lin.
+A simple multi-modality transfer learning baseline for sign language translation.
+In
+CVPR
+, pages 5120–5130, 2022a.
+[8]
+Yutong Chen, Ronglai Zuo, Fangyun Wei, Yu Wu, Shujie Liu, and Brian Mak.
+Two-stream network for sign language recognition and translation.
+In
+NeurIPS
+, 2022b.
+[9]
+Wenhao Ding, Yulong Cao, Ding Zhao, Chaowei Xiao, and Marco Pavone.
+Realgen: Retrieval augmented generation for controllable traffic scenarios.
+In
+ECCV
+, pages 93–110, 2024.
+[10]
+Lu Dong, Lipisha Chaudhary, Fei Xu, Xiao Wang, Mason Lary, and Ifeoma Nwogu.
+Signavatar: Sign language 3d motion reconstruction and generation.
+In
+FG
+, 2024.
+[11]
+Amanda Duarte, Shruti Palaskar, Lucas Ventura, Deepti Ghadiyaram, Kenneth DeHaan, Florian Metze, Jordi Torres, and Xavier Giro-i Nieto.
+How2sign: a large-scale multimodal dataset for continuous american sign language.
+In
+CVPR
+, pages 2735–2744, 2021.
+[12]
+Wenqi Fan, Yujuan Ding, Liangbo Ning, Shijie Wang, Hengyun Li, Dawei Yin, Tat-Seng Chua, and Qing Li.
+A survey on rag meeting llms: Towards retrieval-augmented large language models.
+In
+SIGKDD
+, pages 6491–6501, 2024.
+[13]
+Sen Fang, Chunyu Sui, Xuedong Zhang, and Yapeng Tian.
+SignDiff: Learning diffusion models for American sign language production.
+arXiv preprint arXiv:2308.16082
+, 2023.
+[14]
+Sen Fang, Lei Wang, Ce Zheng, Yapeng Tian, and Chen Chen.
+Signllm: Sign languages production large language models.
+arXiv preprint arXiv:2405.10718
+, 2024.
+[15]
+Yao Feng, Vasileios Choutas, Timo Bolkart, Dimitrios Tzionas, and Michael J Black.
+Collaborative regression of expressive bodies using moderation.
+In
+3DV
+, pages 792–804, 2021.
+[16]
+Maria-Paola Forte, Peter Kulits, Chun-Hao P Huang, Vasileios Choutas, Dimitrios Tzionas, Katherine J Kuchenbecker, and Michael J Black.
+Reconstructing signing avatars from video using linguistic priors.
+In
+CVPR
+, pages 12791–12801, 2023.
+[17]
+fxsjy.
+https://github.com/fxsjy/jieba.
+In
+Github
+, 2012.
+[18]
+Aditya Golatkar, Alessandro Achille, Luca Zancato, Yu-Xiang Wang, Ashwin Swaminathan, and Stefano Soatto.
+Cpr: Retrieval augmented generation for copyright protection.
+In
+CVPR
+, pages 12374–12384, 2024.
+[19]
+Jia Gong, Lin Geng Foo, Yixuan He, Hossein Rahmani, and Jun Liu.
+Llms are good sign language translators.
+In
+CVPR
+, pages 18362–18372, 2024.
+[20]
+Chuan Guo, Xinxin Zuo, Sen Wang, and Li Cheng.
+Tm2t: Stochastic and tokenized modeling for the reciprocal generation of 3d human motions and texts.
+In
+ECCV
+, pages 580–597, 2022.
+[21]
+Tom Henighan, Jared Kaplan, Mor Katz, Mark Chen, Christopher Hesse, Jacob Jackson, Heewoo Jun, Tom B Brown, Prafulla Dhariwal, Scott Gray, et al.
+Scaling laws for autoregressive generative modeling.
+arXiv preprint arXiv:2010.14701
+, 2020.
+[22]
+Hezhen Hu, Wengang Zhou, and Houqiang Li.
+Hand-model-aware sign language recognition.
+In
+AAAI
+, pages 1558–1566, 2021.
+[23]
+Hezhen Hu, Weichao Zhao, Wengang Zhou, and Houqiang Li.
+SignBERT+: Hand-model-aware self-supervised pre-training for sign language understanding.
+TPAMI
+, 2023.
+[24]
+Wencan Huang, Wenwen Pan, Zhou Zhao, and Qi Tian.
+Towards fast and high-quality sign language production.
+In
+MM
+, pages 3172–3181, 2021.
+[25]
+Wencan Huang, Zhou Zhao, Jinzheng He, and Mingmin Zhang.
+Dualsign: Semi-supervised sign language production with balanced multi-modal multi-task dual transformation.
+In
+MM
+, pages 5486–5495, 2022.
+[26]
+Euijun Hwang, Jung-Ho Kim, and Jong C Park.
+Non-autoregressive sign language production with gaussian space.
+In
+BMVC
+, 2021.
+[27]
+Biao Jiang, Xin Chen, Wen Liu, Jingyi Yu, Gang Yu, and Tao Chen.
+Motiongpt: Human motion as a foreign language.
+NeurIPS
+, 36:20067–20079, 2023a.
+[28]
+Zhengbao Jiang, Frank F Xu, Luyu Gao, Zhiqing Sun, Qian Liu, Jane Dwivedi-Yu, Yiming Yang, Jamie Callan, and Graham Neubig.
+Active retrieval augmented generation.
+In
+EMNLP
+, pages 7969–7992, 2023b.
+[29]
+Peiqi Jiao, Yuecong Min, Yanan Li, Xiaotao Wang, Lei Lei, and Xilin Chen.
+Cosign: Exploring co-occurrence signals in skeleton-based continuous sign language recognition.
+In
+ICCV
+, pages 20676–20686, 2023.
+[30]
+Peiqi Jiao, Yuecong Min, and Xilin Chen.
+Visual alignment pre-training for sign language translation.
+In
+ECCV
+, pages 349–367, 2024.
+[31]
+Abhinav Joshi, Romit Mohanty, Mounika Kanakanti, Andesha Mangla, Sudeep Choudhary, Monali Barbate, and Ashutosh Modi.
+isign: A benchmark for indian sign language processing.
+In
+Findings of ACL
+, pages 10827–10844, 2024.
+[32]
+Hamid Reza Vaezi Joze and Oscar Koller.
+MS-ASL: A large-scale data set and benchmark for understanding American sign language.
+In
+BMVC
+, 2019.
+[33]
+Jared Kaplan, Sam McCandlish, Tom Henighan, Tom B Brown, Benjamin Chess, Rewon Child, Scott Gray, Alec Radford, Jeffrey Wu, and Dario Amodei.
+Scaling laws for neural language models.
+arXiv preprint arXiv:2001.08361
+, 2020.
+[34]
+Oscar Koller, Jens Forster, and Hermann Ney.
+Continuous sign language recognition: Towards large vocabulary statistical recognition systems handling multiple signers.
+CVIU
+, 141:108–125, 2015.
+[35]
+Gabriele Langer, Anke Müller, Sabrina Wähl, Felicitas Otte, Lea Sepke, and Thomas Hanke.
+Introducing the DW-DGS – the digital dictionary of DGS.
+In
+Proceedings of the LREC-COLING 2024 11th Workshop on the Representation and Processing of Sign Languages: Evaluation of Sign Language Resources
+, 2024.
+[36]
+Patrick Lewis, Ethan Perez, Aleksandra Piktus, Fabio Petroni, Vladimir Karpukhin, Naman Goyal, Heinrich Küttler, Mike Lewis, Wen-tau Yih, Tim Rocktäschel, et al.
+Retrieval-augmented generation for knowledge-intensive nlp tasks.
+NeurIPS
+, 33:9459–9474, 2020.
+[37]
+Dongxu Li, Cristian Rodriguez, Xin Yu, and Hongdong Li.
+Word-level deep sign language recognition from video: A new large-scale dataset and methods comparison.
+In
+WACV
+, pages 1459–1469, 2020.
+[38]
+Zecheng Li, Wengang Zhou, Weichao Zhao, Kepeng Wu, Hezhen Hu, and Houqiang Li.
+Uni-sign: Toward unified sign language understanding at scale.
+In
+ICLR
+, 2025.
+[39]
+Jing Lin, Ailing Zeng, Haoqian Wang, Lei Zhang, and Yu Li.
+One-stage 3d whole-body mesh recovery with component aware transformer.
+In
+CVPR
+, pages 21159–21168, 2023.
+[40]
+Yinhan Liu, Jiatao Gu, Naman Goyal, Xian Li, Sergey Edunov, Marjan Ghazvininejad, Mike Lewis, and Luke Zettlemoyer.
+Multilingual denoising pre-training for neural machine translation.
+TACL
+, 8:726–742, 2020.
+[41]
+Ilya Loshchilov and Frank Hutter.
+Decoupled weight decay regularization.
+In
+ICLR
+, 2019.
+[42]
+Shunlin Lu, Ling-Hao Chen, Ailing Zeng, Jing Lin, Ruimao Zhang, Lei Zhang, and Heung-Yeung Shum.
+Humantomato: Text-aligned whole-body motion generation.
+In
+ICML
+, pages 32939–32977, 2024.
+[43]
+Camillo Lugaresi, Jiuqiang Tang, Hadon Nash, Chris McClanahan, Esha Uboweja, Michael Hays, Fan Zhang, Chuo-Ling Chang, Ming Guang Yong, Juhyun Lee, et al.
+Mediapipe: A framework for building perception pipelines.
+arXiv preprint arXiv:1906.08172
+, 2019.
+[44]
+Mathias Müller, Zifan Jiang, Amit Moryossef, Annette Rios Gonzales, and Sarah Ebling.
+Considerations for meaningful sign language machine translation based on glosses.
+In
+ACL
+, pages 682–693, 2023.
+[45]
+Zhe Niu, Ronglai Zuo, Brian Mak, and Fangyun Wei.
+A Hong Kong sign language corpus collected from sign-interpreted tv news.
+In
+LREC-COLING
+, pages 636–646, 2024.
+[46]
+Kishore Papineni, Salim Roukos, Todd Ward, and Wei-Jing Zhu.
+BLEU: a method for automatic evaluation of machine translation.
+In
+ACL
+, pages 311–318, 2002.
+[47]
+Georgios Pavlakos, Vasileios Choutas, Nima Ghorbani, Timo Bolkart, Ahmed AA Osman, Dimitrios Tzionas, and Michael J Black.
+Expressive body capture: 3D hands, face, and body from a single image.
+In
+CVPR
+, pages 10975–10985, 2019.
+[48]
+Rolandos Alexandros Potamias, Jinglei Zhang, Jiankang Deng, and Stefanos Zafeiriou.
+Wilor: End-to-end 3d hand localization and reconstruction in-the-wild.
+In
+CVPR
+, 2025.
+[49]
+Fan Qi, Yu Duan, Changsheng Xu, and Huaiwen Zhang.
+Signgen: End-to-end sign language video generation with latent diffusion.
+In
+ECCV
+, 2024.
+[50]
+Colin Raffel, Noam Shazeer, Adam Roberts, Katherine Lee, Sharan Narang, Michael Matena, Yanqi Zhou, Wei Li, and Peter J Liu.
+Exploring the limits of transfer learning with a unified text-to-text transformer.
+JMLR
+, 21(140):1–67, 2020.
+[51]
+Robin Rombach, Andreas Blattmann, Dominik Lorenz, Patrick Esser, and Björn Ommer.
+High-resolution image synthesis with latent diffusion models.
+In
+CVPR
+, pages 10684–10695, 2022.
+[52]
+Yu Rong, Takaaki Shiratori, and Hanbyul Joo.
+Frankmocap: A monocular 3d whole-body pose estimation system via regression and integration.
+In
+ICCVW
+, pages 1749–1759, 2021.
+[53]
+Ben Saunders, Necati Cihan Camgoz, and Richard Bowden.
+Progressive transformers for end-to-end sign language production.
+In
+ECCV
+, pages 687–705, 2020a.
+[54]
+Ben Saunders, Necati Cihan Camgöz, and Richard Bowden.
+Adversarial training for multi-channel sign language production.
+In
+BMVC
+, 2020b.
+[55]
+Ben Saunders, Necati Cihan Camgoz, and Richard Bowden.
+Continuous 3D multi-channel sign language production via progressive transformers and mixture density networks.
+IJCV
+, 129(7):2113–2135, 2021.
+[56]
+Ben Saunders, Necati Cihan Camgoz, and Richard Bowden.
+Signing at scale: Learning to co-articulate signs for large-scale photo-realistic sign language production.
+In
+CVPR
+, pages 5141–5151, 2022.
+[57]
+Yoni Shafir, Guy Tevet, Roy Kapon, and Amit Haim Bermano.
+Human motion diffusion as a generative prior.
+In
+ICLR
+, 2024.
+[58]
+Shelly Sheynin, Oron Ashual, Adam Polyak, Uriel Singer, Oran Gafni, Eliya Nachmani, and Yaniv Taigman.
+knn-diffusion: Image generation via large-scale retrieval.
+In
+ICLR
+, 2023.
+[59]
+Tongkai Shi, Lianyu Hu, Fanhua Shang, Jichao Feng, Peidong Liu, and Wei Feng.
+Pose-guided fine-grained sign language video generation.
+In
+ECCV
+, pages 392–409, 2024.
+[60]
+Stephanie Stoll, Armin Mustafa, and Jean-Yves Guillemaut.
+There and back again: 3d sign language generation from text using back-translation.
+In
+3DV
+, pages 187–196, 2022.
+[61]
+Jiashuo Sun, Chengjin Xu, Lumingyuan Tang, Saizhuo Wang, Chen Lin, Yeyun Gong, Lionel Ni, Heung-Yeung Shum, and Jian Guo.
+Think-on-graph: Deep and responsible reasoning of large language model on knowledge graph.
+In
+ICLR
+, 2024.
+[62]
+Sihan Tan, Taro Miyazaki, and Kazuhiro Nakadai.
+Multilingual gloss-free sign language translation: Towards building a sign language foundation model.
+In
+ACL
+, 2025.
+[63]
+Shengeng Tang, Richang Hong, Dan Guo, and Meng Wang.
+Gloss semantic-enhanced network with online back-translation for sign language production.
+In
+MM
+, pages 5630–5638, 2022.
+[64]
+Shengeng Tang, Jiayi He, Lechao Cheng, Jingjing Wu, Dan Guo, and Richang Hong.
+Discrete to continuous: Generating smooth transition poses from sign language observations.
+In
+CVPR
+, 2025a.
+[65]
+Shengeng Tang, Jiayi He, Dan Guo, Yanyan Wei, Feng Li, and Richang Hong.
+Sign-idd: Iconicity disentangled diffusion for sign language production.
+In
+AAAI
+, 2025b.
+[66]
+Keyu Tian, Yi Jiang, Zehuan Yuan, Bingyue Peng, and Liwei Wang.
+Visual autoregressive modeling: Scalable image generation via next-scale prediction.
+NeurIPS
+, 2024.
+[67]
+Aaron Van Den Oord, Oriol Vinyals, et al.
+Neural discrete representation learning.
+NeurIPS
+, 30, 2017.
+[68]
+Xiaohua Wang, Zhenghua Wang, Xuan Gao, Feiran Zhang, Yixin Wu, Zhibo Xu, Tianyuan Shi, Zhengyuan Wang, Shizheng Li, Qi Qian, et al.
+Searching for best practices in retrieval-augmented generation.
+In
+EMNLP
+, pages 17716–17736, 2024.
+[69]
+Fangyun Wei and Yutong Chen.
+Improving continuous sign language recognition with cross-lingual signs.
+In
+ICCV
+, pages 23612–23621, 2023.
+[70]
+Ryan Wong, Necati Cihan Camgoz, and Richard Bowden.
+Sign2gpt: Leveraging large language models for gloss-free sign language translation.
+In
+ICLR
+, 2024.
+[71]
+Pan Xie, Qipeng Zhang, Peng Taiying, Hao Tang, Yao Du, and Zexian Li.
+G2p-ddm: Generating sign pose sequence from gloss sequence with discrete diffusion model.
+In
+AAAI
+, pages 6234–6242, 2024.
+[72]
+Jilan Xu, Yifei Huang, Junlin Hou, Guo Chen, Yuejie Zhang, Rui Feng, and Weidi Xie.
+Retrieval-augmented egocentric video captioning.
+In
+CVPR
+, pages 13525–13536, 2024.
+[73]
+Huijie Yao, Wengang Zhou, Hao Feng, Hezhen Hu, Hao Zhou, and Houqiang Li.
+Sign language translation with iterative prototype.
+In
+ICCV
+, pages 15592–15601, 2023.
+[74]
+Hongwei Yi, Hualin Liang, Yifei Liu, Qiong Cao, Yandong Wen, Timo Bolkart, Dacheng Tao, and Michael J Black.
+Generating holistic 3d human motion from speech.
+In
+CVPR
+, pages 469–480, 2023.
+[75]
+Aoxiong Yin, Zhou Zhao, Weike Jin, Meng Zhang, Xingshan Zeng, and Xiaofei He.
+MLSLT: Towards multilingual sign language translation.
+In
+CVPR
+, pages 5109–5119, 2022.
+[76]
+Aoxiong Yin, Haoyuan Li, Kai Shen, Siliang Tang, and Yueting Zhuang.
+T2S-GPT: Dynamic vector quantization for autoregressive sign language production from text.
+In
+ACL
+, 2024.
+[77]
+Kayo Yin, Amit Moryossef, Julie Hochgesang, Yoav Goldberg, and Malihe Alikhani.
+Including signed languages in natural language processing.
+In
+ACL
+, pages 7347–7360, 2021.
+[78]
+Zhengdi Yu, Shaoli Huang, Yongkang Cheng, and Tolga Birdal.
+Signavatars: A large-scale 3d sign language holistic motion dataset and benchmark.
+In
+ECCV
+, pages 1–19, 2024.
+[79]
+Jan Zelinka and Jakub Kanis.
+Neural sign language synthesis: Words are our glosses.
+In
+WACV
+, pages 3395–3403, 2020.
+[80]
+Hongwen Zhang, Yating Tian, Yuxiang Zhang, Mengcheng Li, Liang An, Zhenan Sun, and Yebin Liu.
+Pymaf-x: Towards well-aligned full-body model regression from monocular images.
+IEEE TPAMI
+, 45(10):12287–12303, 2023a.
+[81]
+Jianrong Zhang, Yangsong Zhang, Xiaodong Cun, Yong Zhang, Hongwei Zhao, Hongtao Lu, Xi Shen, and Ying Shan.
+Generating human motion from textual descriptions with discrete representations.
+In
+CVPR
+, pages 14730–14740, 2023b.
+[82]
+Mingyuan Zhang, Zhongang Cai, Liang Pan, Fangzhou Hong, Xinying Guo, Lei Yang, and Ziwei Liu.
+Motiondiffuse: Text-driven human motion generation with diffusion model.
+IEEE TPAMI
+, 2024a.
+[83]
+Yaqi Zhang, Di Huang, Bin Liu, Shixiang Tang, Yan Lu, Lu Chen, Lei Bai, Qi Chu, Nenghai Yu, and Wanli Ouyang.
+Motiongpt: Finetuned llms are general-purpose motion generators.
+In
+AAAI
+, pages 7368–7376, 2024b.
+[84]
+Weichao Zhao, Hezhen Hu, Wengang Zhou, Jiaxin Shi, and Houqiang Li.
+BEST: BERT pre-training for sign language recognition with coupling tokenization.
+In
+AAAI
+, 2023.
+[85]
+Weichao Zhao, Hezhen Hu, Wengang Zhou, Yunyao Mao, Min Wang, and Houqiang Li.
+Masa: Motion-aware masked autoencoder with semantic alignment for sign language recognition.
+IEEE TCSVT
+, 2024a.
+[86]
+Weichao Zhao, Wengang Zhou, Hezhen Hu, Min Wang, and Houqiang Li.
+Self-supervised representation learning with spatial-temporal consistency for sign language recognition.
+IEEE TIP
+, 2024b.
+[87]
+Benjia Zhou, Zhigang Chen, Albert Clapés, Jun Wan, Yanyan Liang, Sergio Escalera, Zhen Lei, and Du Zhang.
+Gloss-free sign language translation: Improving from visual-language pretraining.
+In
+ICCV
+, pages 20871–20881, 2023.
+[88]
+Hao Zhou, Wengang Zhou, Yun Zhou, and Houqiang Li.
+Spatial-temporal multi-cue network for continuous sign language recognition.
+In
+AAAI
+, pages 13009–13016, 2020.
+[89]
+Hao Zhou, Wengang Zhou, Weizhen Qi, Junfu Pu, and Houqiang Li.
+Improving sign language translation with monolingual data by sign back-translation.
+In
+CVPR
+, 2021a.
+[90]
+Hao Zhou, Wengang Zhou, Yun Zhou, and Houqiang Li.
+Spatial-temporal multi-cue network for sign language recognition and translation.
+TMM
+, pages 1–1, 2021b.
+[91]
+Zixiang Zhou, Yu Wan, and Baoyuan Wang.
+Avatargpt: All-in-one framework for motion understanding planning generation and beyond.
+In
+CVPR
+, pages 1357–1366, 2024.
+[92]
+Ronglai Zuo and Brian Mak.
+C2SLR: Consistency-enhanced continuous sign language recognition.
+In
+CVPR
+, pages 5131–5140, 2022.
+[93]
+Ronglai Zuo and Brian Mak.
+Improving continuous sign language recognition with consistency constraints and signer removal.
+ACM TOMM
+, 2024.
+[94]
+Ronglai Zuo, Fangyun Wei, and Brian Mak.
+Natural language-assisted sign language recognition.
+In
+CVPR
+, pages 14890–14900, 2023.
+[95]
+Ronglai Zuo, Fangyun Wei, Zenggui Chen, Brian Mak, Jiaolong Yang, and Xin Tong.
+A simple baseline for spoken language to sign language translation with 3d avatars.
+In
+ECCV
+, 2024a.
+[96]
+Ronglai Zuo, Fangyun Wei, and Brian Mak.
+Towards online continuous sign language recognition and translation.
+In
+EMNLP
+, 2024b.
+Figure S8:
+Qualitative comparisons between ground truth video
+frames and reconstructed meshes obtained from the proposed
+SMPL-X pose fitting pipeline on CSL-Daily (left) and Phoenix-2014T (right). Zoom-in for hand details.
+Appendix A
+Curating SMPL-X Poses
+To curate a high-fidelity dataset with accurate 3D annotations, we rely on state-of-the-art performing methods for 3D hand
+[
+48
+]
+and body reconstruction
+[
+39
+]
+.
+Specifically, given a 2D video of a signer, we first detect the number of identities in the video using an off-the-shelf detector
+[
+43
+]
+and retain the most confident detection box.
+Following that we feed the tight human crop to OSX
+[
+39
+]
+to extract a rough human body pose estimation.
+Given that OSX often fails to accurately capture the arm positions and the hand poses, we follow a two-step approach that accurately refines the human pose.
+To accurately reconstruct the fine details of the hand poses, we utilize WiLoR
+[
+48
+]
+, a state-of-the-art 3D reconstruction pipeline that can detect and reconstruct challenging hand poses with high fidelity.
+We acquire the hand poses of WiLoR along with the global orientation of the hand and directly substitute the hand parameters derived from OSX.
+In the second state, we employ Mediapipe body pose estimation
+[
+43
+]
+to extract 2D joint location
+[MATH: \mathbf{J}^{2D}]
+for the shoulders and the arms.
+Using the derived joint locations, we employ an optimization scheme that refines the OSX poses of the upper body, while keeping the hand poses and orientation fixed:
+[MATH: \mathcal{L}_{rec}=||\mathbf{J}^{2D}-\Pi_{K}(\mathbf{\hat{J}}^{3D})||_{1},]
+(S5)
+where
+[MATH: \mathbf{\hat{J}}^{3D}]
+are the predicted 3D joints and
+[MATH: \Pi_{K}]
+is the weak-perspective projection.
+To further constrain the temporal coherence of the reconstructions, we include an additional temporal loss
+[MATH: \mathcal{L}_{temp}]
+:
+[MATH: \mathcal{L}_{temp}=||\mathbf{X}_{f}-\mathbf{X}_{f-1}||_{2}+||\mathbf{J}_{f}-\mathbf{J}_{f-1}||_{2},]
+(S6)
+where
+[MATH: \mathbf{X}_{f}]
+denotes the 3D mesh in frame
+[MATH: f]
+.
+Finally, to penalize irregular poses, we include a pose regularization:
+[MATH: \mathcal{L}_{reg}=||\theta||_{2}]
+(S7)
+that constrains irregular upper body poses.
+Method
+Body
+[MATH: \downarrow]
+Left Hand
+[MATH: \downarrow]
+Right Hand
+[MATH: \downarrow]
+FrankMoCap
+[
+52
+]
+78.07
+20.47
+19.62
+PIXIE
+[
+15
+]
+60.11
+25.02
+22.42
+PyMAF-X
+[
+80
+]
+68.61
+21.46
+19.19
+SMPLify-X
+[
+47
+]
+56.07
+22.23
+18.83
+SGNify
+[
+16
+]
+55.63
+19.22
+17.50
+OSX
+[
+39
+]
+47.32
+18.34
+18.12
+NSA
+[
+3
+]
+46.42
+16.17
+15.23
+Ours
+46.73
+10.55
+8.94
+Table S5:
+Reconstruction errors on SGNify mocap dataset
+[
+16
+]
+. We report mean per vertex errors in mm.
+Figure S9:
+Qualitative comparisons of generated signs between our proposed method, SOKE, with the SOTA method, S-MotionGPT
+[
+27
+]
+, on the test sets of How2Sign (left), CSL-Daily (middle), and Phoenix-2014T (right).
+Since neither CSL-Daily
+[
+89
+]
+nor Phoenix-2014T
+[
+4
+]
+provides 3D annotations, we perform qualitative evaluations, as illustrated in Figure
+S8
+. The results clearly demonstrate that the proposed pose fitting pipeline can accurately reconstruct 3D hands and is robust across various handshapes. To quantitatively assess the pipeline, we further apply it to the SGNify mocap dataset
+[
+16
+]
+, which includes 57 signs with annotated meshes. The results presented in Table
+S5
+indicate that our method achieves the lowest hand reconstruction errors and comparable body errors to the previous best method
+[
+3
+]
+, establishing our approach as a powerful tool for curating more sign language datasets in the future.
+Appendix B
+Additional Qualitative Results
+Please refer to our project page for video demonstrations of generated signs. These demos include ground truth sign videos, as well as generations from the SOTA method, S-MotionGPT
+[
+27
+]
+, and our proposed SOKE.
+Additionally, we provide several qualitative results to showcase the generated signs (Figure
+S9
+) and highlight the effectiveness of our retrieval-enhanced SLG approach (Figure
+S10
+).
+Figure S10:
+Qualitative ablation study for retrieval-enhanced SLG. (Left: How2Sign; Middle: CSL-Daily; Right: Phoenix-2014T.)
+Appendix C
+Additional Quantitative Results
+[MATH: N_{Z}^{B}]
+[MATH: N_{Z}^{LH}=N_{Z}^{RH}]
+H2S (JPE
+[MATH: \downarrow]
+)
+CSL (JPE
+[MATH: \downarrow]
+)
+Ph-T (JPE
+[MATH: \downarrow]
+)
+Body
+Hand
+Body
+Hand
+Body
+Hand
+96
+128
+19.37
+7.07
+23.52
+5.80
+25.79
+7.35
+96
+256
+19.37
+6.86
+23.52
+5.52
+25.79
+7.11
+64
+192
+20.04
+6.65
+24.13
+5.13
+26.02
+6.78
+128
+192
+19.95
+6.65
+23.91
+5.13
+26.27
+6.78
+96
+192
+19.37
+6.65
+23.52
+5.13
+25.79
+6.78
+Table S6:
+Study on the codebook sizes for the body (
+[MATH: N_{Z}^{B}]
+) and hands (
+[MATH: N_{Z}^{LH},\ N_{Z}^{RH}]
+). We use procrustes-aligned mean per joint position error (PA-MPJPE) to assess the reconstruction performance of the decoupled tokenizer.
+[MATH: \lambda]
+H2S (DTW
+[MATH: \downarrow]
+)
+CSL (DTW
+[MATH: \downarrow]
+)
+Ph-T (DTW
+[MATH: \downarrow]
+)
+Body
+Hand
+Body
+Hand
+Body
+Hand
+0.1
+7.95
+2.82
+7.46
+2.13
+5.47
+2.04
+0.2
+7.28
+2.76
+6.91
+1.95
+5.08
+1.68
+1/3
+6.82
+2.35
+6.24
+1.71
+4.77
+1.38
+0.4
+7.34
+2.62
+7.11
+1.91
+6.39
+1.96
+Table S7:
+Study on the impact of
+[MATH: \lambda]
+, a hyper-parameter used for fusing part-wise token embeddings in our multi-head decoding method.
+Codebook Size.
+We perform a hyper-parameter analysis on the codebook sizes for the body (
+[MATH: N_{Z}^{B}]
+) and hands (
+[MATH: N_{Z}^{LH},\ N_{Z}^{RH}]
+) in our decoupled tokenizer. As shown in Table
+S6
+, we find that using either larger or smaller codebooks results in degraded reconstruction performance. Our default configuration (
+[MATH: N_{Z}^{B}=96]
+,
+[MATH: N_{Z}^{LH}=N_{Z}^{RH}=192]
+) delivers the best performance among all settings.
+Impact of
+[MATH: \lambda]
+on SLG.
+In our multi-head decoding method, we introduce a hyper-parameter,
+[MATH: \lambda]
+, to control the weight of hand tokens during embedding fusion. The results in Table
+S7
+demonstrate that
+[MATH: \lambda=1/3]
+,
+i.e
+.
+, assigning equal weights to the body and hands, yields the best performance. This further underscores the importance of each body part in conveying the semantics of sign languages.
+Method
+Multi
+ling.
+H2S (DTW
+[MATH: \downarrow]
+)
+CSL (DTW
+[MATH: \downarrow]
+)
+Phoenix (DTW
+[MATH: \downarrow]
+)
+Avg
+Body
+Hand
+Avg
+Body
+Hand
+Avg
+Body
+Hand
+S-MotionGPT
+×
+5.91
+11.23
+4.39
+5.34
+10.81
+3.78
+4.75
+9.45
+3.41
+Ours
+×
+4.14
+7.92
+3.07
+4.18
+8.18
+3.04
+3.83
+7.25
+2.85
+Ours
+✓
+3.34
+6.82
+2.35
+2.72
+6.24
+1.71
+2.13
+4.77
+1.38
+Table S8:
+Performance of our method on monolingual datasets.
+Monolingual Performance.
+As shown in Table
+S8
+, our method still outperforms the SOTA method, S-MotionGPT, when training on monolingual SL datasets, while the best results are achieved by the multilingual version of our method.
+Appendix D
+Illustration of Decoupled Tokenizer
+Figure S11:
+Workflow of our decoupled tokenizer. It is composed of three parallel VQ-VAEs, each dedicated to generating motion tokens for a different part of the signer’s body: the upper body, left hand, and right hand.
+As shown in Figure
+S11
+, we provide an illustration of our decoupled tokenizer for better understanding. It utilizes three VQ-VAEs to model the key regions of a signer: the upper body, left hand, and right hand.
+Appendix E
+Discussion
+Broader Impacts.
+Sign language is the primary mode of communication for the deaf communities. Due to significant grammatical differences from spoken languages, a notable communication gap exists between the deaf and hearing individuals. In this work, we propose an autoregressive sign language model, which is capable of generating multilingual sign language avatars from text inputs within a single unified framework. Extensive quantitative and qualitative results suggest the potential of our method to form a practical deaf-hearing communication system.
+Limitations.
+Our method employs 3D avatars to represent signers, enabling high-fidelity motion representations. However, there is a lack of 3D annotations in existing sign language datasets. While our proposed SMPL-X pose fitting pipeline can accurately reconstruct 3D meshes from 2D keypoints, some reconstruction errors are inevitable. In the future, the release of more sign language datasets with annotated meshes is anticipated, which could significantly enhance avatar-based sign language generation models.
+Future Works.
+We have validated the proposed multilingual sign language generator on three widely-adopted sign languages, Chinese, American, and German sign language
+[
+89
+,
+11
+,
+34
+]
+. As the scalability of our approach has been demonstrated in Table 3 of the main paper, in the future, we plan to extend our method to support more sign languages, such as British Sign Language
+[
+1
+]
+and Indian Sign Language
+[
+31
+]
+.

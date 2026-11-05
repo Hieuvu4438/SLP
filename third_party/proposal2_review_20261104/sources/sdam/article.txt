@@ -1,0 +1,1225 @@
+Spatiotemporally Decoupled Autoregressive Diffusion Model for Human Motion Generation
+Chengqun Yang
+Liang Xu
+Yanping Li
+Fulong Liu
+Jingnan Gao
+Weili Zeng
+Yichao YanMoE Key Lab of Artificial Intelligence, AI Institute, Shanghai Jiao Tong University
+{ycq0191, liangxu, ypli2024, lfl925884898, gjn0310, zwl666, yanyichao}@sjtu.edu.cn
+Abstract
+Text-driven human motion synthesis has made substantial development with two core modules of motion representation and generative architecture. For representation, Vector Quantization (VQ)-based methods compress motion data into discrete tokens while latent-based models operate directly in continuous space.
+However, both of these representations exhibit significant limitations. VQ-based methods suffer from inherent information loss, which compromises the quality, diversity, and generalization of generated motions, while continuous representation on holistic whole-body motion hinders part-level flexibility.
+For architecture, diffusion and autoregressive diffusion models have demonstrated their superiority, yet the fine-grained controllability over individual body parts is also limited.
+Thus, we propose a unified spatiotemporally decoupled framework named DeMoDiff, which jointly redesigns representation and architecture.
+To enhance representation extraction capabilities and offer greater part-level controllability, we present a spatial-temporal VAE that encodes each body joint rather than compressing the whole-body motion into a single latent space.
+Then, we incorporate spatial-temporal masking and attention mechanisms into an autoregressive diffusion generator, achieving both generative capability and controllable editability.
+Extensive experiments on the HumanML3D and KIT-ML datasets demonstrate that our model achieves state-of-the-art reconstruction performance and compelling motion generation results.
+Moreover, our framework demonstrates strong temporal and spatial editing capabilities, further validating its effectiveness.
+Our project page:
+https://rex0191.github.io/DeMoDiff/
+.
+Index Terms:
+Text-driven human motion generation, Autoregressive diffusion model, Spatial-temporal decoupling.
+†
+†
+footnotetext:
+* Corresponding author: Yichao Yan.
+This work was supported in part by NSFC (62571314).
+I
+Introduction
+Text-driven human motion generation
+[
+20
+,
+2
+,
+23
+,
+5
+,
+10
+]
+is a rapidly advancing frontier in computer vision, focusing on synthesizing realistic and controllable 3D human motion sequences that semantically align with the given language prompt.
+Existing approaches for human motion generation typically comprise two essential components: motion representation and generative architecture.
+Regarding motion representation, mainstream approaches primarily fall into two dominant paradigms of Vector Quantization (VQ)-based
+[
+7
+,
+24
+,
+27
+,
+5
+,
+23
+]
+and latent-based representations
+[
+12
+,
+2
+,
+21
+]
+.
+Generative architectures are inherently entangled with motion representations. For instance, VQ-based methods typically employ autoregressive models to predict discrete tokens
+[
+24
+,
+5
+,
+23
+]
+.
+Conversely, diffusion
+[
+2
+,
+20
+,
+25
+,
+26
+]
+and autoregressive diffusion models
+[
+21
+,
+12
+]
+have demonstrated their superiority, yet the fine-grained controllability over individual body parts is also limited.
+Although continuous regression avoids the quantization-induced precision loss of VQ-based methods, it introduces a more challenging problem of directly regressing articulated and high-dimensional human motions, making fine-grained manipulation infeasible.
+Fig. 1:
+Comparison of motion representation (A1-3) and generation model (B1-3).
+Our proposed DeMoDiff is composed of spatial-temporal VAE and spatial-temporal autoregressive diffusion model for enhanced motion representation, generation, and spatiotemporal editing capabilities.
+To overcome the limitations of existing methods, we introduce a unified spatiotemporally decoupled framework with two specific modules as illustrated in
+fig.
+1
+, ensuring
+high-fidelity generation
+and
+flexible controllability
+.
+For motion representation, we propose a lightweight spatial-temporal VAE that encodes each body joint rather than compressing the whole-body motion into a single latent space. The decoupled paradigm substantially enhances representation extraction performance and offers greater part-level controllability.
+For the generative architecture, we incorporate spatial-temporal masking and attention mechanisms into an autoregressive diffusion generator, achieving both generative capability and controllable editability.
+We conduct extensive experiments on HumanML3D
+[
+6
+]
+and KIT-ML
+[
+17
+]
+datasets to validate the superiority of our proposed spatiotemporally
+De
+coupled autoregressive
+Mo
+tion
+Diff
+usion model (DeMoDiff), for text-driven motion generation and motion editing. We also offer in-depth analysis and visualizations of our method, indicating that further advancements in autoregressive diffusion technology hold the potential to enhance its performance in the future.
+In summary, our main contributions are as follows:
+•
+We novelly compress human motion into a continuous 2D latent space based on a spatial-temporal VAE, with improved reconstruction and generation metrics.
+•
+A temporal-spatial masking strategy and diffusion mechanism adapted to continuous 2D latent of temporal-spatial representation, supporting fine-grained temporal-spatial control and motion generation.
+•
+Our method demonstrates superior performance in several motion-related tasks, especially in joint-level editing.
+II
+Related Work
+Text-driven Human Motion Generation.
+Text-driven human motion generation
+[
+6
+,
+14
+,
+15
+]
+aims to synthesize realistic 3D human motions from natural languages, which poses significant challenges in fine-grained semantic mapping between texts and body movements, intricate body part control, and elaborate textual descriptions.
+Vector Quantization (VQ)-based methods
+[
+7
+,
+24
+,
+27
+]
+encode motion data into discrete tokens for subsequent autoregressive motion synthesis. However, the sequential generation design inherently impedes the ability to model long-horizon temporal relationships.
+Most recent works
+[
+5
+,
+23
+]
+employ bidirectional masked generation models similar to BERT
+[
+3
+]
+, which allows the model to predict all masked tokens simultaneously and enhances the context modeling capability.
+Despite the impressive performance, VQ-based approaches suffer from inevitable information loss. In this paper, we introduce a lightweight spatial-temporal VAE to encode motion into latent vectors with better motion reconstruction performance.
+Denoising diffusion models, which have achieved significant success in image synthesis, have now become powerful tools for generating human motion. Some attempts
+[
+20
+,
+25
+,
+26
+]
+operate on raw motion representation, while MLD
+[
+2
+]
+uses a Transformer-based VAE to compress the entire motion sequence to latent vectors.
+Optimizing the denoising process in the latent space enhances training and sampling efficiency yet limits the model’s ability to capture temporal and spatial dynamics.
+Different from previous diffusion-based methods, we compress the raw motion into temporal and spatial latent space with a CNN-based encoder and decoder, and we autoregressively generate temporal and spatial motion latent during the inference stage with part-level control.
+Human Motion Representation.
+Human motion representation is critical for motion-related tasks.
+Previous works have extensively explored single human motion representations from the perspectives of both dimensional design and compact encoding.
+From a dimensional perspective, HumanML3D
+[
+6
+]
+presents a 263-d representation that includes root angular velocity, root linear velocities, root height, local joint positions, velocities, rotations, and foot-ground contact.
+MotionStreamer
+[
+21
+]
+further introduces a 272-d representation to avoid data duplication and intricate post-processing of converting to SMPL parameters.
+MARDM
+[
+12
+]
+excludes the redundant dimensions of the 263-d format, resulting in a more essential and compact representation.
+MotionPatches
+[
+22
+]
+divides and sorts skeleton joints based on body parts similar to image patches for ViT
+[
+4
+]
+pre-training.
+To achieve better joint encoding capability and joint-level spatial relationship, MoGenTS
+[
+23
+]
+splits the 263-d representation along the joint dimension.
+From a compression perspective, many works
+[
+7
+,
+24
+,
+27
+,
+5
+,
+23
+]
+represent motion as a discrete codebook.
+Some approaches
+[
+21
+,
+12
+]
+mapping the motion sequence into a temporal latent sequence, while MLD
+[
+2
+]
+compresses the entire motion sequence into a single latent vector.
+In this paper, we follow the dimensional setting of MoGenTS
+[
+23
+]
+for spatial-temporal decoupling and part-level editing, and subsequently encode motion into a 2D latent representation.
+III
+The DeMoDiff Model
+Fig. 2:
+Overview of DeMoDiff.
+(A) Spatial-Temporal VAE encodes motion into 2D latent and decodes it for reconstruction. (B) Spatial-Temporal Autoregressive Diffusion includes Spatial-Temporal Attention, Spatial Attention and Temporal Attention and is trained via mask modeling, using a diffusion head to predict motion latent. (C) During inference, Spatial-Temporal Autoregressive Diffusion iteratively predicts the latent representations, which are decoded into the motion sequence.
+The architecture overview of our proposed DeMoDiff model is demonstrated in
+fig.
+2
+.
+We provide a detailed explanation of spatial-temporal VAE for motion representation and spatial-temporal autoregressive diffusion architecture for continuous human motion generation.
+III-A
+Spatial-Temporal VAE.
+The architecture of our proposed spatial-temporal VAE is shown in
+fig.
+2
+(A).
+Following the previous method
+[
+23
+]
+, we organize the motion sequence into a 2D structure (in both temporal and joint dimensions) and process it as a 2D map, serving as the input to the VAE.
+For a motion sequence
+[MATH: \mathbf{X}_{2d}=\{x^{i,k}_{2d}\}_{i=1,k=1}^{T,J}]
+with length
+[MATH: T]
+and joint number
+[MATH: J]
+, we employ a 2D convolutional network to encode the 2D motion features
+[MATH: {x}_{2d}]
+into parameters of latent probability distributions, which are decoded to motion sequence.
+The network is optimized by a loss considering both reconstruction quality and latent space regularization, as:
+[MATH: \mathcal{L}_{2d}=\mathcal{L}^{{2d}}_{nll}+\lambda^{2d}_{k}\cdot\mathcal{L}^{2d}_{KL}+\lambda_{v}\cdot\mathcal{L}_{v},]
+(1)
+where
+[MATH: \mathcal{L}^{{2d}}_{nll}]
+is negative log-likelihood (NLL) loss,
+[MATH: \lambda^{2d}_{k}]
+and
+[MATH: \lambda_{v}]
+are the hyper-parameters for the Kullback Leibler (KL) loss
+[MATH: \mathcal{L}^{2d}_{KL}]
+and joint velocity loss
+[MATH: \mathcal{L}_{v}]
+. More details are shown in the supplementary material.
+III-B
+Spatial-Temporal Autoregressive Diffusion.
+In this section, we present Spatial-Temporal Autoregressive Diffusion, a diffusion-based framework for motion generation.
+Given a text input and a 2D latent vector, Spatial-Temporal Autoregressive Diffusion uses an AdaLN
+[
+8
+]
+transformer network to predict the condition at the masked locations. Then the condition is set to the diffusion head for generating the predicted latent. There are three attentions performed in this transformer: spatial-temporal attention, spatial attention, and temporal attention.
+Attention mechanism.
+For the spatial-temporal attention, CLIP
+[
+18
+]
+is employed to extract the text feature, resulting in a text latent
+[MATH: \mathbb{O}_{\text{text}}]
+.
+The text features are injected into the transformer via AdaLN
+[
+8
+]
+, while the 2D latent vectors are directly augmented with 2D positional encodings
+[
+23
+]
+.
+After the position encoding
+[MATH: \mathbf{P}]
+, we flatten the 2D latent vector to a 1D structure.
+We perform spatial-temporal attention on this sequence to preserve spatial-temporal relationships.
+Spatial attention focuses solely on spatial dimensions by treating time frames as separate batches, which computes relationships between joints within each time batch.
+Temporal attention is similar to spatial attention, focusing solely on temporal dimensions by treating joints as separate batches, which computes time-step relationships within each joint batch.
+Since we utilize the bidirectional model, the three attention modules can be applied respectively; however, we choose the integration version in which the three modules are applied sequentially for better performance.
+Masking and training strategy.
+Our masking strategy adopts the same mask ratio schedule following
+[
+1
+,
+23
+]
+.
+This ratio is computed as:
+[MATH: \gamma(\tau)=\cos(\frac{\pi\tau}{2}).]
+(2)
+During training,
+[MATH: \tau]
+is uniformly sampled from
+[MATH: (0,1)]
+(
+[MATH: \tau\sim\mathbf{U}(0,1)]
+) to generate a mask ratio
+[MATH: \gamma(\tau)]
+. Temporal masking then randomly masks
+[MATH: \gamma(\tau)\times t\times j]
+latent, and spatial masking randomly masks
+[MATH: \gamma(\tau)\times j]
+latent for each individual frame, both following this ratio.
+For enhanced disturbance in masked prediction, BERT’s remasking mechanism
+[
+3
+]
+is incorporated: A latent vector
+[MATH: {z}_{2d}]
+selected for masking is replaced by
+[MATH: \mathbb{O}_{\text{mask}}]
+(80% chance), a random noise
+[MATH: \mathcal{N}]
+(10% chance), or kept as is (10% chance).
+During training, a random mask is applied on the latent sequence
+[MATH: \mathbf{Z}_{2d}]
+which is then processed by the transformer.
+After the transformer processing, we obtain the intermediate latent
+[MATH: \mathbf{C}=\{c^{um}_{2d}\}]
+from unmasked latent vectors and the text latent
+[MATH: \mathbb{O}_{\text{text}}]
+, which serve as the condition for
+the diffusion head (a small MLP) to predict masked latent
+[MATH: \hat{\mathbf{Z}}_{2d}=\{z^{m}_{2d}\}]
+.
+Following
+[
+11
+,
+9
+]
+, the loss function is defined as:
+[MATH: \mathcal{L}=\mathbb{E}_{\epsilon,t}[||\epsilon-\epsilon_{\theta}(z^{m}_{2d}|t,c^{um}_{2d})||^{2}],]
+(3)
+where
+[MATH: t]
+denotes the timestep of the noise schedule.
+During inference, all latent vectors are initially set as mask latents. Text is first encoded via CLIP to obtain a semantic embedding, which is then fed into an AdaLN
+[
+8
+]
+modulation mechanism, which dynamically generates modulation parameters (scaling and shifting factors) for the AdaLN
+[
+8
+]
+transformer, thereby injecting text-conditioned signals into the transformer’s normalization layers to guide its processing. The transformer, under the guidance of these text-derived conditions, predicts a set of conditional latents. These latents are input to diffusion MLPs, which further predict the predicted latents. This newly generated latent set is then inserted back into the original sequence, and the aforementioned process is iteratively repeated until the complete latent sequence is predicted. Unlike previous works
+[
+12
+,
+21
+]
+, we utilize DDIM
+[
+19
+]
+to reduce the denoising step in our inference stage.
+TABLE I:
+Evaluation on the HumanML3D dataset (upper half) and KIT-ML dataset (lower half).
+We repeat the evaluation for 20 times and report the average with 95% confidence interval.
+[MATH: \downarrow]
+means the lower, the better, while
+[MATH: \uparrow]
+represents the opposite.
+[MATH: \rightarrow]
+indicates the closer to the real motion the better. We use
+bold
+to indicate the best result and
+underscore
+for the second best.
+Datasets
+Methods
+FID
+[MATH: \downarrow]
+Top1
+[MATH: \uparrow]
+Top2
+[MATH: \uparrow]
+Top3
+[MATH: \uparrow]
+MM-Dist
+[MATH: \downarrow]
+Diversity
+[MATH: \rightarrow]
+HumanML3D
+Ground Truth
+[MATH: 0.002^{\pm.000}]
+[MATH: 0.511^{\pm.003}]
+[MATH: 0.703^{\pm.003}]
+[MATH: 0.797^{\pm.002}]
+[MATH: 2.974^{\pm.008}]
+[MATH: 9.503^{\pm.065}]
+MDM
+[
+20
+]
+[MATH: 0.544^{\pm.044}]
+[MATH: 0.320^{\pm.005}]
+[MATH: 0.498^{\pm.004}]
+[MATH: 0.611^{\pm.007}]
+[MATH: 5.566^{\pm.027}]
+[MATH: \mathbf{9.559}^{\pm.086}]
+MLD
+[
+2
+]
+[MATH: 0.473^{\pm.013}]
+[MATH: 0.481^{\pm.003}]
+[MATH: 0.673^{\pm.003}]
+[MATH: 0.772^{\pm.002}]
+[MATH: 3.196^{\pm.010}]
+[MATH: 9.724^{\pm.082}]
+MotionDiffuse
+[
+25
+]
+[MATH: 0.630^{\pm.001}]
+[MATH: 0.491^{\pm.001}]
+[MATH: 0.681^{\pm.001}]
+[MATH: 0.782^{\pm.001}]
+[MATH: 3.113^{\pm.001}]
+[MATH: \underline{9.410}^{\pm.049}]
+ReMoDiffuse
+[
+26
+]
+[MATH: \mathbf{0.103}^{\pm.004}]
+[MATH: \underline{0.510}^{\pm.005}]
+[MATH: \underline{0.698}^{\pm.006}]
+[MATH: \underline{0.795}^{\pm.004}]
+[MATH: \underline{2.974}^{\pm.016}]
+[MATH: 9.018^{\pm.075}]
+DeMoDiff (Ours)
+[MATH: \underline{0.164}^{\pm.012}]
+[MATH: \mathbf{0.517}^{\pm.003}]
+[MATH: \mathbf{0.712}^{\pm.004}]
+[MATH: \textbf{0.808}^{\pm.002}]
+[MATH: \mathbf{2.907}^{\pm.013}]
+[MATH: 9.399^{\pm.096}]
+KIT-ML
+Ground Truth
+[MATH: 0.031^{\pm.004}]
+[MATH: 0.424^{\pm.005}]
+[MATH: 0.649^{\pm.006}]
+[MATH: 0.779^{\pm.006}]
+[MATH: 2.788^{\pm.012}]
+[MATH: 11.08^{\pm.097}]
+MDM
+[
+20
+]
+[MATH: 0.497^{\pm.021}]
+[MATH: 0.164^{\pm.004}]
+[MATH: 0.291^{\pm.004}]
+[MATH: 0.396^{\pm.004}]
+[MATH: 9.191^{\pm.022}]
+[MATH: 10.85^{\pm.109}]
+MLD
+[
+2
+]
+[MATH: 0.404^{\pm.027}]
+[MATH: 0.390^{\pm.008}]
+[MATH: 0.609^{\pm.008}]
+[MATH: 0.734^{\pm.007}]
+[MATH: 3.204^{\pm.027}]
+[MATH: 10.80^{\pm.117}]
+MotionDiffuse
+[
+25
+]
+[MATH: 1.954^{\pm.062}]
+[MATH: 0.417^{\pm.004}]
+[MATH: 0.621^{\pm.004}]
+[MATH: 0.739^{\pm.004}]
+[MATH: 2.958^{\pm.005}]
+[MATH: \mathbf{11.10}^{\pm.143}]
+ReMoDiffuse
+[
+26
+]
+[MATH: \mathbf{0.155}^{\pm.006}]
+[MATH: \underline{0.427}^{\pm.014}]
+[MATH: \underline{0.641}^{\pm.004}]
+[MATH: \underline{0.765}^{\pm.055}]
+[MATH: \mathbf{2.814}^{\pm.012}]
+[MATH: 10.80^{\pm.105}]
+DeMoDiff (Ours)
+[MATH: \underline{0.263}^{\pm.017}]
+[MATH: \mathbf{0.432}^{\pm.008}]
+[MATH: \mathbf{0.660}^{\pm.007}]
+[MATH: \mathbf{0.785}^{\pm.006}]
+[MATH: \underline{2.827}^{\pm.019}]
+[MATH: \underline{10.86}^{\pm.112}]
+Fig. 3:
+Visual comparison of generated results.
+The color from light blue to dark blue indicates the motion sequential order.
+IV
+Experiments
+IV-A
+Datasets.
+We adopt two widely used text-to-motion datasets,
+i.e.
+, HumanML3D
+[
+6
+]
+and KIT-ML
+[
+17
+]
+, to evaluate our proposed DeMoDiff model.
+HumanML3D includes 14,616 motion sequences and 44,970 corresponding text descriptions, while KIT-ML contains 3,911 motions and 6,278 texts. Following prior approaches, HumanML3D uses 23,384/1,460/4,383 samples for training, validation, and testing, respectively; KIT-ML employs 4,888/300/830 samples for the same splits.
+The human motions are extracted into features with 263 dimensions for HumanML3D and 251 dimensions for KIT-ML as in
+[
+6
+]
+, encompassing global elements like root velocity, root height, and foot contact, as well as local joint information (22 joints for HumanML3D and 21 joints for KIT-ML).
+IV-B
+Evaluation Metrics.
+TABLE II:
+Evaluation of motion compression methods on HumanML3D dataset.
+MPJPE and PAMPJPE are measured in millimeters. ACCL indicates acceleration error.
+Methods
+Generation
+Reconstruction
+FID
+[MATH: \downarrow]
+Diversity
+[MATH: \rightarrow]
+MPJPE
+[MATH: \downarrow]
+PA-MPJPE
+[MATH: \downarrow]
+ACCL
+[MATH: \downarrow]
+TM2T
+[
+7
+]
+0.320
+9.705
+57.5
+42.3
+7.8
+T2M-GPT
+[
+24
+]
+0.119
+9.705
+58.0
+41.1
+7.0
+MoMask
+[
+5
+]
+0.019
+9.662
+29.5
+20.3
+5.3
+MoGenTS
+[
+23
+]
+0.005
+9.547
+16.4
+8.0
+3.0
+VPoser-t
+[
+13
+]
+1.430
+8.336
+75.6
+48.6
+9.3
+ACTOR
+[
+16
+]
+0.341
+9.569
+65.3
+41.0
+7.0
+MLD
+[
+2
+]
+0.017
+9.554
+14.7
+8.9
+5.1
+DeMoDiff (Ours)
+0.005
+9.413
+9.4
+2.7
+2.4
+We evaluate both Spatial-Temporal VAE and motion generation within our framework. The evaluation process strictly follows the standard procedures established by previous research
+[
+6
+,
+24
+,
+5
+]
+.
+Detailed explanation of these metrics are provided in the supplementary material.
+We compare our model with previous diffusion-based text-to-motion works, including the continuous regression-based methods. From the results in
+table
+I
+, our method achieves performance that is highly competitive with previous state-of-the-art approaches on both the HumanML3D and KIT-ML datasets, reflecting the effectiveness of our design. The full comparison results and analysis are provided in supplementary material.
+DeMoDiff achieves better text-motion alignment, as evidenced by higher R-precision and lower MM-Dist.
+The relatively lower FID of ReMoDiffuse is mainly attributed to its retrieval module, whose retrieved motion segments may deviate from the distribution of dataset-native motions, increasing distributional mismatch despite improvements in semantic alignment.
+DeMoDiff consistently achieves comparable metrics, demonstrating its effectiveness in generating coherent and high-quality human motion.
+We also demonstrate visualization comparison results in
+fig.
+3
+. More visualization results of DeMoDiff are also provided in the supplementary material.
+The core idea of our motion representation model is Spatial-Temporal VAE, which differs from previous quantization-based methods. Therefore, we compare with both previous continuous methods and quantization-based methods for a fair comparison. As reported in
+table
+II
+, the reconstruction accuracy of our method surpasses that of previous methods by a significant margin for the HumanML3D datasets. We also present visualization results with the SMPL body model in
+fig.
+4
+. It can be observed that our method outperforms other approaches in both motion similarity and global positional alignment. This reveals that the effect of our Spatial-Temporal VAE is much better than that of previous approaches.
+TABLE III:
+Ablation study of Spatial-Temporal VAE on the HumanML3D dataset.
+Different VAE
+FID
+[MATH: \downarrow]
+Top1
+[MATH: \uparrow]
+Top2
+[MATH: \uparrow]
+Top3
+[MATH: \uparrow]
+MM-Dist
+[MATH: \downarrow]
+Diversity
+[MATH: \rightarrow]
+MPJPE
+[MATH: \downarrow]
+1D Temporal (16 latent dim)
+[MATH: 0.0144^{\pm.0002}]
+[MATH: 0.5071^{\pm.0024}]
+[MATH: 0.6984^{\pm.0025}]
+[MATH: 0.7936^{\pm.0020}]
+[MATH: 3.0092^{\pm.0096}]
+[MATH: 9.4839^{\pm.1060}]
+[MATH: 28.0^{\pm.1}]
+Ours (16 latent dim)
+[MATH: 0.0054^{\pm.0001}]
+[MATH: \mathbf{0.5142}^{\pm.0026}]
+[MATH: 0.7015^{\pm.00025}]
+[MATH: \underline{0.7983}^{\pm.0024}]
+[MATH: \mathbf{2.9740}^{\pm.0085}]
+[MATH: 9.5407^{\pm.0736}]
+[MATH: \underline{9.4}^{\pm.1}]
+Ours (32 latent dim)
+[MATH: \underline{0.0048}^{\pm.0000}]
+[MATH: \underline{0.5126}^{\pm.0023}]
+[MATH: \mathbf{0.7042}^{\pm.0018}]
+[MATH: \mathbf{0.7988}^{\pm.0019}]
+[MATH: \underline{2.9757}^{\pm.0073}]
+[MATH: \mathbf{9.5081}^{\pm.0710}]
+[MATH: 9.8^{\pm.1}]
+Ours (64 latent dim)
+[MATH: \mathbf{0.0041^{\pm.0001}}]
+[MATH: 0.5111^{\pm.0020}]
+[MATH: \underline{0.7019}^{\pm.0018}]
+[MATH: 0.7951^{\pm.0016}]
+[MATH: 2.9806^{\pm.0067}]
+[MATH: \underline{9.4896}^{\pm.0716}]
+[MATH: \mathbf{7.7^{\pm.1}}]
+TABLE IV:
+Ablation study of the attention mechanisms choices on the HumanML3D dataset.
+Methods
+FID
+[MATH: \downarrow]
+Top1
+[MATH: \uparrow]
+Top2
+[MATH: \uparrow]
+Top3
+[MATH: \uparrow]
+MM-Dist
+[MATH: \downarrow]
+Diversity
+[MATH: \rightarrow]
+1D Temporal VAE + temporal attention
+[MATH: 0.665^{\pm.017}]
+[MATH: 0.452^{\pm.003}]
+[MATH: 0.633^{\pm.004}]
+[MATH: 0.735^{\pm.003}]
+[MATH: 3.361^{\pm.011}]
+[MATH: 9.114^{\pm.070}]
+w/o all attention
+[MATH: 37.769^{\pm.122}]
+[MATH: 0.086^{\pm.003}]
+[MATH: 0.156^{\pm.004}]
+[MATH: 0.212^{\pm.003}]
+[MATH: 7.511^{\pm.011}]
+[MATH: 3.374^{\pm.083}]
+w/o temporal&spatial attention
+[MATH: 1.315^{\pm.034}]
+[MATH: 0.443^{\pm.007}]
+[MATH: 0.639^{\pm.007}]
+[MATH: 0.748^{\pm.006}]
+[MATH: 3.269^{\pm.013}]
+[MATH: 8.905^{\pm.147}]
+w/o spatial attention
+[MATH: 0.783^{\pm.015}]
+[MATH: 0.463^{\pm.003}]
+[MATH: \underline{0.661}^{\pm.004}]
+[MATH: \underline{0.765}^{\pm.007}]
+[MATH: 3.212^{\pm.022}]
+[MATH: \underline{9.232}^{\pm.127}]
+w/o temporal attention
+[MATH: \underline{0.752}^{\pm.026}]
+[MATH: \underline{0.466}^{\pm.005}]
+[MATH: 0.657^{\pm.004}]
+[MATH: 0.761^{\pm.004}]
+[MATH: \underline{3.168}^{\pm.018}]
+[MATH: 9.193^{\pm.095}]
+DeMoDiff (Full Model)
+[MATH: \mathbf{0.164}^{\pm.012}]
+[MATH: \mathbf{0.517}^{\pm.003}]
+[MATH: \mathbf{0.712}^{\pm.004}]
+[MATH: \mathbf{0.808}^{\pm.002}]
+[MATH: \mathbf{2.907}^{\pm.013}]
+[MATH: \mathbf{9.399}^{\pm.096}]
+Fig. 4:
+Comparison of different motion compression methods.
+The dark blue represents ground-truth, the light blue represents predicted results ( Note that the global position of SMPL is the global position of motion. We have not performed any additional alignment processing ).
+Fig. 5:
+Visualization of editing results.
+The color from light blue to dark blue indicates the motion sequence order. The green color indicates the edited regions.
+IV-C
+Ablation Study.
+To verify the efficacy of the proposed framework, we conducted ablation experiments on Spatial-Temporal VAE and Spatial-Temporal Autoregressive Diffusion.
+For the VAE, we first establish a baseline model incorporating a 1D Temporal motion VAE.
+Then, we change the VAE to our Spatial-Temporal VAE, examining its impact on both motion representation and motion generation capabilities. We also evaluate the influence of different VAE latent sizes. Regarding Spatial-Temporal Autoregressive Diffusion, we assessed the impact of various attention choices on human motion generation.
+Spatial-Temporal VAE.
+As shown in
+table
+III
+, we conducted a comparative analysis between our Spatial-Temporal VAE and the 1D Temporal VAE, alongside an investigation into the effects of varying VAE latent dimension sizes.
+Our experiments reveal that a larger latent dimension in the VAE leads to improvements in reconstruction metrics. This can be attributed to the fact that a higher-dimensional latent space provides a more abundant representational capacity for data distribution, enabling it to capture the detailed features of input data more precisely.
+Spatial-Temporal Autoregressive Diffusion.
+We analyze the impact of different design choices of the attention mechanisms, as shown in
+table
+IV
+. These attention mechanisms for Spatial-Temporal Autoregressive Diffusion were evaluated both in their individual applications and in sequential stacked configurations. We first removed all attention modules from the model, and then incrementally stacked the temporal-spatial attention, temporal attention, and spatial attention modules in a step-by-step manner until the complete model architecture was reconstructed. We also evaluate the metrics of 1D temporal VAE and temporal attention. Experimental results demonstrate that the model achieves a significant performance improvement when all three attention modules are integrated, which validates the effectiveness of the proposed model design.
+IV-D
+Temporal and Spatial Editing.
+Since we utilize bidirectional attention in our framework, our method supports both temporal editing and spatial editing without requiring any editing-specific fine-tuning, which differs from previous diffusion-based works
+[
+2
+,
+20
+,
+25
+,
+26
+,
+21
+,
+12
+]
+. For temporal motion editing, we treat all latents corresponding to the temporal dimensions that need to be edited as mask latents and then generate motions following our standard generation procedure, which conditions on the unmasked latents and the editing textual instructions. For spatial editing, similar to the temporal editing step, we only treat the latents of the spatial dimension to be edited as mask latents.
+We demonstrate the visualization results in
+fig.
+5
+V
+Conclusion
+We present DeMoDiff as a novel framework for text-to-motion generation that
+integrates a spatiotemporally decoupled autoregressive diffusion model to directly predict temporal and spatial motion latents. By introducing the spatial-temporal VAE and the spatial-temporal autoregressive diffusion model,
+DeMoDiff enables sampling in both temporal and spatial latent spaces, with the ability for temporal and spatial editing. Our method demonstrates its competitiveness in motion generation while providing greater flexibility.
+References
+[1]
+H. Chang, H. Zhang, L. Jiang, C. Liu, and W. T. Freeman
+(2022)
+MaskGIT: masked generative image transformer
+.
+In
+CVPR
+,
+Cited by:
+§III-B
+.
+[2]
+X. Chen, B. Jiang, W. Liu, Z. Huang, B. Fu, T. Chen, and G. Yu
+(2023)
+Executing your commands via motion diffusion in latent space
+.
+In
+CVPR
+,
+Cited by:
+§I
+,
+§I
+,
+§II
+,
+§II
+,
+TABLE I
+,
+TABLE I
+,
+§IV-D
+,
+TABLE II
+.
+[3]
+J. Devlin, M. Chang, K. Lee, and K. Toutanova
+(2019)
+Bert: pre-training of deep bidirectional transformers for language understanding
+.
+In
+NAACL
+,
+Cited by:
+§II
+,
+§III-B
+.
+[4]
+A. Dosovitskiy, L. Beyer, A. Kolesnikov, D. Weissenborn, X. Zhai, T. Unterthiner, M. Dehghani, M. Minderer, G. Heigold, S. Gelly,
+et al.
+(2021)
+An image is worth 16x16 words: transformers for image recognition at scale
+.
+In
+ICLR
+,
+Cited by:
+§II
+.
+[5]
+C. Guo, Y. Mu, M. G. Javed, S. Wang, and L. Cheng
+(2024)
+MoMask: generative masked modeling of 3d human motions
+.
+In
+CVPR
+,
+Cited by:
+§I
+,
+§I
+,
+§II
+,
+§II
+,
+§IV-B
+,
+TABLE II
+.
+[6]
+C. Guo, S. Zou, X. Zuo, S. Wang, W. Ji, X. Li, and L. Cheng
+(2022)
+Generating diverse and natural 3d human motions from text
+.
+In
+CVPR
+,
+Cited by:
+§I
+,
+§II
+,
+§II
+,
+§IV-A
+,
+§IV-B
+.
+[7]
+C. Guo, X. Zuo, S. Wang, and L. Cheng
+(2022)
+Tm2t: stochastic and tokenized modeling for the reciprocal generation of 3d human motions and texts
+.
+In
+ECCV
+,
+Cited by:
+§I
+,
+§II
+,
+§II
+,
+TABLE II
+.
+[8]
+Y. Guo, C. Wang, S. X. Yu, F. McKenna, and K. H. Law
+(2022)
+Adaln: a vision transformer for multidomain learning and predisaster building information extraction from images
+.
+Journal of Computing in Civil Engineering
+.
+Cited by:
+§III-B
+,
+§III-B
+,
+§III-B
+.
+[9]
+J. Ho, A. Jain, and P. Abbeel
+(2020)
+Denoising diffusion probabilistic models
+.
+In
+NeurIPS
+,
+Cited by:
+§III-B
+.
+[10]
+S. S. Kalakonda, S. Maheshwari, and R. K. Sarvadevabhatla
+(2023)
+Action-gpt: leveraging large-scale language models for improved and generalized action generation
+.
+In
+ICME
+,
+Cited by:
+§I
+.
+[11]
+T. Li, Y. Tian, H. Li, M. Deng, and K. He
+(2024)
+Autoregressive image generation without vector quantization
+.
+In
+NeurIPS
+,
+Cited by:
+§III-B
+.
+[12]
+Z. Meng, Y. Xie, X. Peng, Z. Han, and H. Jiang
+(2025)
+Rethinking diffusion for text-driven human motion generation: redundant representations, evaluation, and masked autoregression
+.
+In
+CVPR
+,
+Cited by:
+§I
+,
+§II
+,
+§III-B
+,
+§IV-D
+.
+[13]
+G. Pavlakos, V. Choutas, N. Ghorbani, T. Bolkart, A. A. Osman, D. Tzionas, and M. J. Black
+(2019)
+Expressive body capture: 3d hands, face, and body from a single image
+.
+In
+CVPR
+,
+Cited by:
+TABLE II
+.
+[14]
+M. Petrovich, M. J. Black, and G. Varol
+(2022)
+TEMOS: generating diverse human motions from textual descriptions
+.
+In
+ECCV
+,
+Cited by:
+§II
+.
+[15]
+M. Petrovich, M. J. Black, and G. Varol
+(2023)
+Tmr: text-to-motion retrieval using contrastive 3d human motion synthesis
+.
+In
+ICCV
+,
+Cited by:
+§II
+.
+[16]
+M. Petrovich, M. J. Black, and G. Varol
+(2021)
+Action-conditioned 3d human motion synthesis with transformer VAE
+.
+In
+ICCV
+,
+Cited by:
+TABLE II
+.
+[17]
+M. Plappert, C. Mandery, and T. Asfour
+(2016)
+The KIT motion-language dataset
+.
+Big Data
+.
+Cited by:
+§I
+,
+§IV-A
+.
+[18]
+A. Radford, J. W. Kim, C. Hallacy, A. Ramesh, G. Goh, S. Agarwal, G. Sastry, A. Askell, P. Mishkin, J. Clark,
+et al.
+(2021)
+Learning transferable visual models from natural language supervision
+.
+In
+ICML
+,
+Cited by:
+§III-B
+.
+[19]
+J. Song, C. Meng, and S. Ermon
+(2021)
+Denoising diffusion implicit models
+.
+In
+ICLR
+,
+Cited by:
+§III-B
+.
+[20]
+G. Tevet, S. Raab, B. Gordon, Y. Shafir, D. Cohen-Or, and A. H. Bermano
+(2023)
+Human motion diffusion model
+.
+In
+ICLR
+,
+Cited by:
+§I
+,
+§I
+,
+§II
+,
+TABLE I
+,
+TABLE I
+,
+§IV-D
+.
+[21]
+L. Xiao, S. Lu, H. Pi, K. Fan, L. Pan, Y. Zhou, Z. Feng, X. Zhou, S. Peng, and J. Wang
+(2025)
+MotionStreamer: streaming motion generation via diffusion-based autoregressive model in causal latent space
+.
+In
+ICCV
+,
+Cited by:
+§I
+,
+§II
+,
+§III-B
+,
+§IV-D
+.
+[22]
+Q. Yu, M. Tanaka, and K. Fujiwara
+(2024)
+Exploring vision transformers for 3d human motion-language models with motion patches
+.
+In
+CVPR
+,
+Cited by:
+§II
+.
+[23]
+W. Yuan, W. Shen, Y. HE, Y. Dong, X. Gu, Z. Dong, L. Bo, and Q. Huang
+(2024)
+MoGenTS: motion generation based on spatial-temporal joint modeling
+.
+In
+NeurIPS
+,
+Cited by:
+§I
+,
+§I
+,
+§II
+,
+§II
+,
+§III-A
+,
+§III-B
+,
+§III-B
+,
+TABLE II
+.
+[24]
+J. Zhang, Y. Zhang, X. Cun, Y. Zhang, H. Zhao, H. Lu, X. Shen, and S. Ying
+(2023)
+Generating human motion from textual descriptions with discrete representations
+.
+In
+CVPR
+,
+Cited by:
+§I
+,
+§II
+,
+§II
+,
+§IV-B
+,
+TABLE II
+.
+[25]
+M. Zhang, Z. Cai, L. Pan, F. Hong, X. Guo, L. Yang, and Z. Liu
+(2024)
+Motiondiffuse: text-driven human motion generation with diffusion model
+.
+TPAMI
+.
+Cited by:
+§I
+,
+§II
+,
+TABLE I
+,
+TABLE I
+,
+§IV-D
+.
+[26]
+M. Zhang, X. Guo, L. Pan, Z. Cai, F. Hong, H. Li, L. Yang, and Z. Liu
+(2023)
+ReMoDiffuse: retrieval-augmented motion diffusion model
+.
+In
+ICCV
+,
+Cited by:
+§I
+,
+§II
+,
+TABLE I
+,
+TABLE I
+,
+§IV-D
+.
+[27]
+Y. Zhang, D. Huang, B. Liu, S. Tang, Y. Lu, L. Chen, L. Bai, Q. Chu, N. Yu, and W. Ouyang
+(2024)
+Motiongpt: finetuned llms are general-purpose motion generators
+.
+In
+AAAI
+,
+Cited by:
+§I
+,
+§II
+,
+§II
+.

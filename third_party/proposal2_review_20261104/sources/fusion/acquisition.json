@@ -1,0 +1,59 @@
+{
+  "key": "fusion",
+  "requested_id": "2601.03959",
+  "retrieved_at": "2026-11-04T17:02:07.087491+00:00",
+  "reading_level": "unread",
+  "artifacts": [
+    {
+      "kind": "metadata",
+      "url": "https://arxiv.org/abs/2601.03959",
+      "path": "sources/fusion/metadata.html",
+      "sha256": "8a28504c2253501d67ca28c50c51b3328fd25f4cfec4c9bb131f8cb290b14218",
+      "bytes": 42777
+    },
+    {
+      "kind": "html",
+      "url": "https://arxiv.org/html/2601.03959",
+      "path": "sources/fusion/html.html",
+      "sha256": "195d9ed252a9560724c03e5af1d60df7be21017f10d12985e6f36da76b33129c",
+      "bytes": 515518
+    }
+  ],
+  "title": "FUSION: Full-Body Unified Motion Prior for Body and Hands via Diffusion",
+  "history": "Submission history From: Enes Duran [ view email ] [v1] Wed, 7 Jan 2026 14:18:59 UTC (2,307 KB)",
+  "canonical_ids": [
+    "2601.03959v1"
+  ],
+  "headings": [
+    "FUSION : Full-Body Unified Motion Prior for Body and Hands via Diffusion",
+    "1 Introduction",
+    "2 Related Work",
+    "2.1 Human Motion Synthesis",
+    "2.2 Spatial Control for Human Motion Synthesis",
+    "2.3 Controlling Diffusion Models",
+    "3 Method",
+    "3.1 Curating the Dataset",
+    "3.2 Motion Representation",
+    "3.3 FUSION Formulation",
+    "3.4 FUSION Implementation details",
+    "3.5 Diffusion Noise Optimization",
+    "4 Applications",
+    "4.1 Human–Object Interaction",
+    "4.2 Self-Interaction using LLMs",
+    "5 Experiments",
+    "5.1 Comparison with SOTA methods",
+    "5.2 Qualitative Comparison",
+    "5.3 Quantitative Analysis of LLM",
+    "5.4 Ablation Studies",
+    "6 Conclusion",
+    "References",
+    "7 Architecture",
+    "8 Optimization Hyperparameters",
+    "9 Evaluation Metrics",
+    "10 Dataset Curation",
+    "11 Qualitative Results",
+    "12 Self-Interaction",
+    "12.1 Sampling Body Vertices",
+    "12.2 Quantitative Evaluation"
+  ]
+}

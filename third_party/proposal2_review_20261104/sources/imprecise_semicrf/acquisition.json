@@ -1,0 +1,16 @@
+{
+  "key": "imprecise_semicrf",
+  "title": "Learning Time Series Segmentation Models from Temporally Imprecise Labels",
+  "requested_id": "UAI2018-Adams-Marlin",
+  "canonical_ids": [],
+  "reading_level": "unread",
+  "retrieved_at": "2026-11-05T01:56:00.315477+00:00",
+  "artifacts": [
+    {
+      "url": "https://raw.githubusercontent.com/mlresearch/r16/main/assets/adams18a/adams18a.pdf",
+      "kind": "official_pdf",
+      "sha256": "64fd1f711774f52b1d7c4460d0008f42a38cdf7c9c369d857e498c0e71a39725",
+      "path": "sources/imprecise_semicrf/paper.pdf"
+    }
+  ]
+}

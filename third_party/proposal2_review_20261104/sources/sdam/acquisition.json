@@ -1,0 +1,42 @@
+{
+  "key": "sdam",
+  "requested_id": "2608.23279",
+  "retrieved_at": "2026-11-04T16:53:20.160937+00:00",
+  "reading_level": "unread",
+  "artifacts": [
+    {
+      "kind": "metadata",
+      "url": "https://arxiv.org/abs/2608.23279",
+      "path": "sources/sdam/metadata.html",
+      "sha256": "ed27d1eb5d8f49098427b4354a5908d51caa4e4f42b81f0bd08b5bcf1e2f193b",
+      "bytes": 44043
+    },
+    {
+      "kind": "html",
+      "url": "https://arxiv.org/html/2608.23279",
+      "path": "sources/sdam/html.html",
+      "sha256": "5ac2c89cdbeec5d4895eceef2a5a2174e4af1b753ab7a4643ae1e94ec498f4ab",
+      "bytes": 194395
+    }
+  ],
+  "title": "Spatiotemporally Decoupled Autoregressive Diffusion Model for Human Motion Generation",
+  "history": "Submission history From: Chengqun Yang [ view email ] [v1] Mon, 24 Aug 2026 14:04:35 UTC (2,076 KB)",
+  "canonical_ids": [
+    "2608.23279v1"
+  ],
+  "headings": [
+    "Spatiotemporally Decoupled Autoregressive Diffusion Model for Human Motion Generation",
+    "I Introduction",
+    "II Related Work",
+    "III The DeMoDiff Model",
+    "III-A Spatial-Temporal VAE.",
+    "III-B Spatial-Temporal Autoregressive Diffusion.",
+    "IV Experiments",
+    "IV-A Datasets.",
+    "IV-B Evaluation Metrics.",
+    "IV-C Ablation Study.",
+    "IV-D Temporal and Spatial Editing.",
+    "V Conclusion",
+    "References"
+  ]
+}

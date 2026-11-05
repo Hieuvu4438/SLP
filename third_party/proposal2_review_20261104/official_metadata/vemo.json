@@ -1,0 +1,23 @@
+{
+  "key": "vemo",
+  "url": "https://proceedings.mlr.press/v306/ji26l.html",
+  "sha256": "c8d3c5426d13b0eed344d594903ebc3265de7882b52512c1580821d694a3df12",
+  "links": [
+    {
+      "label": "edit",
+      "url": "https://github.com/mlresearch/v306/edit/gh-pages/_posts/2026-09-29-ji26l.md"
+    },
+    {
+      "label": "Download PDF",
+      "url": "https://raw.githubusercontent.com/mlresearch/v306/main/assets/ji26l/ji26l.pdf"
+    },
+    {
+      "label": "Software",
+      "url": "https://github.com/spatial-westlakenlp/ActionReward/tree/main/VeMo"
+    },
+    {
+      "label": "Github Account",
+      "url": "https://github.com/mlresearch/v306"
+    }
+  ]
+}

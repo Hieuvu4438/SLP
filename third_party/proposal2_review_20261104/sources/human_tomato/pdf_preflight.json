@@ -1,0 +1,14 @@
+{
+  "schema": "pdf_read_preflight/1",
+  "verdict": "UNAVAILABLE",
+  "file": "third_party/proposal2_review_20261104/sources/human_tomato/published_icml2024.pdf",
+  "sha256": "1d006cfad2fdc4b7c44ad0a6cbf288d49f06cc662ade061ec910caa2b94c4399",
+  "declared_page_count": null,
+  "enumerated_page_count": null,
+  "reader_page_count": null,
+  "warnings": [
+    "pypdf-not-installed: preflight cannot parse the document"
+  ],
+  "generated_at": "2026-11-04T17:12:36.820277+00:00",
+  "tool": "pdf_read_preflight/1.0.0"
+}

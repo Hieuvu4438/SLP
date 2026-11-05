@@ -1,0 +1,70 @@
+[
+  {
+    "key": "blanc",
+    "requested_id": "2610.24109",
+    "retrieved_at": "2026-11-05T01:35:09.876104+00:00",
+    "reading_level": "unread",
+    "artifacts": [
+      {
+        "kind": "metadata",
+        "url": "https://arxiv.org/abs/2610.24109",
+        "path": "sources/blanc/metadata.html",
+        "sha256": "7523fdaa68a411b46c68639a2a0dad516518e154b17bb74b33b7f6d9720199d6",
+        "bytes": 41360
+      },
+      {
+        "kind": "html",
+        "url": "https://arxiv.org/html/2610.24109",
+        "path": "sources/blanc/html.html",
+        "sha256": "72bdbe176fdc998e3a58570256e8fd1c6d950cfe175232bd3f8efe9fad333e9b",
+        "bytes": 447135
+      }
+    ],
+    "title": "BLANC: Adaptive Temporal Scheduling for Sign Language Production",
+    "history": "Submission history From: Youngmin Kim [ view email ] [v1] Fri, 16 Oct 2026 18:36:26 UTC (2,437 KB)",
+    "canonical_ids": [
+      "2610.24109v1"
+    ],
+    "headings": [
+      "BLANC: Adaptive Temporal Scheduling for Sign Language Production",
+      "1 Introduction",
+      "2 Related Works",
+      "3 Method",
+      "3.1 Background: Block Diffusion Modeling",
+      "3.2 Motion Representation and Tokenization",
+      "3.3 BLANC",
+      "3.3.1 Learning the Latent Articulatory Clock",
+      "3.3.2 Block-wise Motion Generation",
+      "4 Experiments",
+      "4.1 Comparison with State-of-the-Art Methods",
+      "4.2 Ablation Studies",
+      "5 Conclusion",
+      "Limitations",
+      "References",
+      "Appendix A 3D Pose Fitting and Refinement",
+      "Appendix B Additional Details of the Multi-Rate Vector Quantizer",
+      "B.1 Quantization and Codebook Optimization",
+      "B.2 Motion Reconstruction",
+      "B.3 Training Objectives",
+      "Appendix C Additional Details of Blanc",
+      "C.1 Multi-Scale Motion Teacher",
+      "C.2 Latent Articulatory Clock",
+      "C.3 Training Objectives",
+      "C.4 Inference and Hand Refinement",
+      "Appendix D Experimental Details",
+      "D.1 Dataset Documentation and Statistics",
+      "D.2 Evaluation Metrics",
+      "D.3 Baseline Implementation Details",
+      "D.4 Hardware, Model Size, and Computational Budget",
+      "D.5 Hyperparameter Settings",
+      "Appendix E Additional Experiments",
+      "E.1 Qualitative Results of MRVQ",
+      "E.2 Semantic Preservation of Motion Tokenizers",
+      "E.3 Ablation of Refinement",
+      "Appendix F Discussion",
+      "F.1 Broader Impacts and Ethical Considerations",
+      "F.2 Data Privacy, Licenses, and Release",
+      "F.3 Use of AI Assistants"
+    ]
+  }
+]

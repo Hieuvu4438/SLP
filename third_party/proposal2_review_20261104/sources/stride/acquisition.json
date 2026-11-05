@@ -1,0 +1,64 @@
+{
+  "key": "stride",
+  "requested_id": "2609.32462",
+  "retrieved_at": "2026-11-04T16:53:19.895016+00:00",
+  "reading_level": "unread",
+  "artifacts": [
+    {
+      "kind": "metadata",
+      "url": "https://arxiv.org/abs/2609.32462",
+      "path": "sources/stride/metadata.html",
+      "sha256": "f79d2681f9a56386c1e3326ddf8ab39a823a84283c6c049a6904513748665ca8",
+      "bytes": 41786
+    },
+    {
+      "kind": "html",
+      "url": "https://arxiv.org/html/2609.32462",
+      "path": "sources/stride/html.html",
+      "sha256": "c1004b8227f43ffd072150bf725850582d6553933611752b781a376dccef39e1",
+      "bytes": 290550
+    }
+  ],
+  "title": "Can Motion-Language Models Ground Structure? STRIDE for Evaluating the Evaluators",
+  "history": "Submission history From: Lixing Tan [ view email ] [v1] Sat, 26 Sep 2026 10:52:20 UTC (8,408 KB)",
+  "canonical_ids": [
+    "2609.32462v1"
+  ],
+  "headings": [
+    "Can Motion-Language Models Ground Structure? STRIDE for Evaluating the Evaluators",
+    "1 Introduction",
+    "2 The STRIDE benchmark: When do evaluators miss structure?",
+    "2.1 Structural perturbations",
+    "2.2 Benchmark construction",
+    "2.3 Evaluation with unrelated-motion controls",
+    "2.4 Evaluation results",
+    "3 Why can structural errors be missed?",
+    "3.1 Limitations of retrieval-based evaluations",
+    "3.2 Limitations of contrastive learning-based training",
+    "4 A simple fix: structural hard negatives",
+    "5 Related work",
+    "6 Conclusion",
+    "AI usage statement",
+    "Ethics statement",
+    "Reproducibility statement",
+    "References",
+    "Appendix A Benchmark construction and coverage",
+    "A.1 Construction steps",
+    "Generate edits.",
+    "Check candidates.",
+    "Filter and balance.",
+    "A.2 Vocabulary and motion coverage",
+    "Appendix B Human audits",
+    "Appendix C Evaluation implementation",
+    "Appendix D Additional experiments",
+    "D.1 Released-evaluator grounding results",
+    "D.2 Adapted generative and vision-language models",
+    "Motion-to-text likelihood adapters.",
+    "Vision-language forced-choice interface.",
+    "Results and analysis.",
+    "Appendix E Structural hard-negative training and results",
+    "E.1 Losses and training settings",
+    "E.2 Detailed intervention results",
+    "Appendix F Qualitative failure cases"
+  ]
+}

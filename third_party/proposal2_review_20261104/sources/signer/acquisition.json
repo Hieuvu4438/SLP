@@ -1,0 +1,44 @@
+{
+  "key": "signer",
+  "requested_id": "2506.07460",
+  "retrieved_at": "2026-11-05T01:08:22.053230+00:00",
+  "reading_level": "unread",
+  "artifacts": [
+    {
+      "kind": "metadata",
+      "url": "https://arxiv.org/abs/2506.07460",
+      "path": "sources/signer/metadata.html",
+      "sha256": "c88ecb909ba7adc62886294b36f61085ac373492e21a74c3150e73ef38af9c16",
+      "bytes": 43327
+    },
+    {
+      "kind": "html",
+      "url": "https://arxiv.org/html/2506.07460",
+      "path": "sources/signer/html.html",
+      "sha256": "3f381a0cb83792fa73432da32b49a3c354af8c1d8ec913beec7b0d206921c625",
+      "bytes": 337561
+    }
+  ],
+  "title": "SIGNER: Temporally Grounded Sign Language Generation via Time-Resolved Conditioning",
+  "history": "Submission history From: Taeryung Lee [ view email ] [v1] Mon, 9 Jun 2025 06:09:03 UTC (3,784 KB) [v2] Fri, 26 Jun 2026 01:57:11 UTC (4,474 KB)",
+  "canonical_ids": [
+    "2506.07460v2"
+  ],
+  "headings": [
+    "SIGNER: Temporally Grounded Sign Language Generation via Time-Resolved Conditioning",
+    "1 Introduction",
+    "2 Related works",
+    "3 Preliminary",
+    "4 SIGNER",
+    "4.1 Motion latent space learning",
+    "4.2 Temporal-gloss condition",
+    "4.3 Time-resolved conditioning with LTF",
+    "5 Experiment",
+    "5.1 Protocols",
+    "5.2 Ablation Study",
+    "5.3 Comparison to state-of-the-art methods",
+    "6 Conclusion",
+    "Acknowledgements",
+    "References"
+  ]
+}

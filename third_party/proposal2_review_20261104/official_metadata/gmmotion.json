@@ -1,0 +1,11 @@
+{
+  "key": "gmmotion",
+  "url": "https://proceedings.neurips.cc/paper_files/paper/2025/hash/56dcc5a7b91a63f81bbcf91ba8699c74-Abstract-Conference.html",
+  "sha256": "38b9e0b68ed9357ffc48d06786429f7d0e59ebfb7fc79aa1ec13aa4b32aa38e8",
+  "links": [
+    {
+      "label": "Paper",
+      "url": "/paper_files/paper/2025/file/56dcc5a7b91a63f81bbcf91ba8699c74-Paper-Conference.pdf"
+    }
+  ]
+}

@@ -1,0 +1,2319 @@
+DisCoRD:
+Dis
+crete Tokens to
+Co
+ntinuous Motion via
+R
+ectified Flow
+D
+ecoding
+Jungbin Cho
+Junwan Kim
+1
+1
+footnotemark:
+1
+Jisoo Kim      Minseo Kim      Mingu Kang
+†
+†
+thanks:
+Equal contribution.
+Affiliation:
+Yonsei University
+Affiliation:
+Sungkyunkwan University
+Sungeun Hong      Tae-Hyun Oh      Youngjae Yu
+Affiliation:
+Yonsei University
+Affiliation:
+Sungkyunkwan University
+Affiliation:
+POSTECH
+Abstract
+Human motion is inherently continuous and dynamic, posing significant challenges for generative models. While discrete generation methods are widely used, they suffer from limited expressiveness and frame-wise noise artifacts. In contrast, continuous approaches produce smoother, more natural motion but often struggle to adhere to conditioning signals due to high-dimensional complexity and limited training data.
+To resolve this “discord” between discrete and continuous representations we introduce
+DisCoRD
+: Discrete Tokens to Continuous Motion via Rectified Flow Decoding, a novel method that leverages rectified flow to decode discrete motion tokens in the continuous, raw motion space. Our core idea is to frame token decoding as a conditional generation task, ensuring that DisCoRD captures fine-grained dynamics and achieves smoother, more natural motions. Compatible with any discrete-based framework, our method enhances naturalness without compromising faithfulness to the conditioning signals on diverse settings. Extensive evaluations demonstrate that DisCoRD achieves state-of-the-art performance, with FID of 0.032 on HumanML3D and 0.169 on KIT-ML. These results establish DisCoRD as a robust solution for bridging the divide between discrete efficiency and continuous realism. Project website:
+https://whwjdqls.github.io/discord-motion/
+1
+Introduction
+Human motion generation controlled by diverse signals has become an emerging area in computer vision, driven by its vast applications in virtual reality to animation, gaming, and human-computer interaction. The ability to generate realistic human motions that are precisely aligned with input conditions—such as textual descriptions
+[
+51
+,
+12
+,
+60
+,
+11
+]
+, human speech
+[
+62
+,
+28
+,
+30
+]
+, or even music
+[
+25
+,
+46
+,
+10
+]
+—is essential for creating immersive and interactive experiences. Two critical qualities define the success of such systems
+[
+56
+]
+:
+faithfulness
+, ensuring that the generated motion accurately reflects the conditioning signal, and
+naturalness
+, producing smooth and lifelike motions that are comfortable and convincing to human observers.
+Deficiencies in faithfulness cause misaligned motions, while slight unnaturalness disrupts immersion and triggers the uncanny valley
+[
+36
+]
+effect.
+Since human motion is inherently continuous, generation based on continuous representations is naturally well-suited for producing smooth and realistic motion
+[
+65
+,
+51
+,
+60
+,
+38
+]
+. However, due to the high dimensionality of continuous representation, they often encounter challenges with cross-modal mapping ambiguity
+[
+61
+,
+49
+]
+which can result in low faithfulness. This issue becomes especially pronounced in data-constrained settings, such as motion capture datasets
+[
+32
+]
+, where limited examples lead to difficulty of learning consistent mappings between signals and motions. On the other hand, discrete quantization methods
+[
+12
+,
+41
+,
+64
+]
+utilize motion VQ-VAEs
+[
+55
+]
+to discretize motion representation, simplifying the learning of high-dimensional data mappings by reformulating it as a classification task. This discretization enables more efficient learning and can be particularly beneficial when dealing with limited data, improving faithfulness
+[
+12
+,
+40
+,
+41
+]
+. However, motion VQ-VAEs face two main challenges.
+First, under-reconstruction occurs when fine-grained motion details, which are essential for generating dynamic movements, are lost during token discretization.
+Second, frame-wise noise arises from directly decoding discrete tokens, introducing unnatural artifacts that disrupt motion smoothness and diminish user immersion.
+These challenges make it difficult to generate motion that is both smooth and natural while maintaining high faithfulness.
+Figure 1
+:
+Concept of DisCoRD.
+Discrete quantization methods encode multiple motions into a single quantized representation. While existing methods directly decode from this quantized representation, DisCoRD iteratively decodes the discrete latent in a continuous space to recover the inherent continuity and dynamism of motion. To assess the gap between reconstructed and real motion, prior work primarily used FID as the metric. Here, we additionally propose symmetric Jerk Percentage Error (sJPE) to evaluate the differences in naturalness between reconstructed and real motion.
+In this paper, we propose
+DisCoRD
+, a novel approach that bridges discrete and continuous motion generation to achieve both faithfulness and naturalness.
+Our key insight is to leverage the strong faithfulness of discrete generation methods
+[
+64
+,
+12
+,
+40
+]
+by utilizing rectified flow models
+[
+29
+,
+26
+]
+to translate pretrained discrete tokens back into raw motion space. This enhances naturalness while preserving alignment with the conditioning signals.
+Our method offers two primary advantages over traditional discrete decoding methods, as shown in Figure
+1
+. First, instead of directly decoding discrete tokens into motion space, we use them as conditioning signals to guide motion generation within the continuous motion space. This reduces fine-grained noise and results in smoother, more natural motion. Second, rather than relying on a one-step decoding process, we employ an iterative refinement approach using a rectified flow model
+[
+5
+,
+67
+]
+, which progressively improves reconstruction quality. This enables the generation of dynamic and complex movements that conventional methods struggle to capture. Moreover,
+DisCoRD
+is framework-agnostic, making it adaptable to any discrete generation method (e.g., autoregressive
+[
+64
+]
+or bidirectional
+[
+12
+]
+), regardless of the conditioning signal type (e.g., text, music, or speech), thereby improving performance.
+Although our method improves motion naturalness, evaluating this quality remains challenging. Traditional metrics such as MPJPE do not correlate well with human perception
+[
+9
+,
+18
+]
+, and FID fails to capture subtle, frame-wise noise, as illustrated in Figure
+3
+. These limitations reduce the reliability of existing metrics in accurately assessing reconstructed motion naturalness.
+To address this, we introduce a novel sample-wise metric, the symmetric Jerk Percentage Error (
+sJPE
+), which evaluates reconstructed motion by simultaneously detecting under-reconstruction and fine-grained artifacts.
+Our experiments demonstrate the effectiveness of DisCoRD in enhancing sample-wise naturalness without suffering from under-reconstruction.
+Extensive evaluations across text-to-motion, co-speech gesture, and music-to-dance generation demonstrate that our method achieves state-of-the-art naturalness, consistently outperforming existing approaches. Our contributions are as follows:
+1.
+We introduce
+DisCoRD
+, a novel method for decoding discrete tokens in continuous motion space, improving the naturalness of generated motions while preserving faithfulness across various models and tasks.
+2.
+We propose a novel evaluation scheme, the symmetric Jerk Percentage Error (
+sJPE
+), designed to evaluate both under-reconstruction and frame-wise noise, which are often overlooked but critical for motion generation.
+3.
+Our extensive experiments demonstrate that our methods achieve state-of-the-art performance on existing human motion generation scenarios.
+2
+Related Work
+Human Motion Generation from Diverse Signals.
+Generating natural and controllable 3D human motion remains a long-standing task. Early approaches prioritized motion naturalness
+[
+22
+,
+2
+,
+13
+]
+, while recent advances in deep learning expand capabilities to generate motion conditioned on diverse signals. Recent advances of text-to-motion datasets
+[
+11
+,
+42
+]
+have driven progress in text-conditioned motion synthesis, while music-motion datasets
+[
+25
+,
+48
+]
+have enabled music-driven dance generation. Speech-motion datasets
+[
+62
+,
+27
+,
+28
+]
+extends motion control by synthesizing gestures from speech. As most recent methods rely on discrete representations
+[
+12
+,
+10
+,
+30
+]
+, our work enhances motion naturalness for all discrete methods, regardless of the task, by addressing the discrete token decoding problem.
+Continuous Human Motion Generation.
+Early approaches to signal-to-motion generation employ regression-based mapping of control signals to motion within a continuous representation space. These works leverage Variational Autoencoders (VAE)
+[
+21
+,
+11
+,
+39
+]
+, GANs
+[
+14
+]
+, or CLIP features
+[
+43
+,
+50
+]
+to generate natural motion. More recently, with the success of diffusion models
+[
+15
+,
+47
+]
+, motion generation models have achieved unprecedented generation quality
+[
+52
+,
+65
+,
+53
+]
+.
+Follow-up works explore continuous latent spaces for efficient motion generation
+[
+60
+,
+8
+]
+, incorporate physical constraints to improve realism
+[
+63
+]
+, and integrate retrieval mechanisms to enhance generalization
+[
+66
+]
+.
+Their ability to generate smooth, natural motion
+makes them well-suited for not only motion synthesis but also for a generative prior
+[
+45
+,
+37
+]
+. However, due to the lack of scalability in current motion datasets, the high complexity of continuous representations often makes it difficult to establish reliable cross-modal mappings between control signals and generated motions, leading to suboptimal performance.
+Discrete Human Motion Generation.
+Recently, to simplify the complex mapping between control signals and motions, some methods have reformulated the generation task as a discrete token classification problem, achieving notable performance in motion generation
+[
+64
+,
+62
+,
+46
+]
+.
+These approaches often employ VQ-VAEs
+[
+54
+]
+and its variants
+[
+24
+]
+to create motion tokens, which are then used to generate motion sequences via autoregressive
+[
+64
+,
+40
+,
+17
+,
+62
+,
+35
+,
+59
+]
+, or masked
+[
+12
+,
+19
+,
+28
+,
+30
+]
+token prediction.
+More recently, discrete diffusion models have been introduced to directly denoise these discrete tokens
+[
+7
+,
+31
+]
+. While these methods effectively bypass complex signal-to-motion mapping challenges, their inherent characteristics—such as quantization errors and discreteness result in unnatural artifacts, including under-reconstruction and frame-wise noise.
+Figure 2
+:
+An overview of DisCoRD.
+During the
+Training
+stage, we leverage a pretrained quantizer to first obtain discrete representations (tokens) of motion. These tokens are then projected into continuous features
+[MATH: \mathbf{C}]
+, which are concatenated with noisy motion
+[MATH: \mathbf{X}_{t}]
+. This concatenated feature is used to train a vector field
+[MATH: v]
+. During the
+Inference
+stage, we use a pretrained token prediction model based on the pretrained quantizer to first generate tokens from the given control signal. These generated tokens are then projected into continuous features
+[MATH: \mathbf{\hat{C}}]
+, concatenated with Gaussian noise
+[MATH: \mathbf{X}_{0}\sim\mathcal{N}(0,I)]
+, and iteratively decoded through the learned vector field
+[MATH: v_{\theta}]
+into motion
+[MATH: \mathbf{\hat{X}}_{1}]
+.
+3
+Method
+In this section, we introduce DisCoRD, a novel method for decoding pretrained discrete representations in the raw motion domain using rectified flow. This approach enables motion generation that is both smooth and dynamic: (1) decoding in the raw motion domain preserves natural motion smoothness, and (2) utilizing rectified flow enhances expressiveness, capturing fast-paced movements. We begin by introducing rectified flow models and motion tokenization, followed by an explanation of our condition projection, conditional rectified flow decoder, and training details.
+3.1
+Preliminaries
+Rectified Flow.
+Diffusion models
+[
+15
+,
+47
+]
+have demonstrated remarkable performance due to their iterative denoising formulation, which enhances their ability to capture complex data variations and generate high-dimensional samples. However, they typically require a large number of denoising steps to produce high-quality outputs. In contrast, rectified flow
+[
+29
+]
+provides a more direct approach by framing sample generation as a transport problem, addressed through a flow matching algorithm
+[
+29
+,
+1
+,
+26
+]
+. Flow matching algorithm aims to construct a transport map denoted as
+[MATH: T:\mathbb{R}^{d}\rightarrow\mathbb{R}^{d}]
+, that effectively transfers observations from the source distribution
+[MATH: x_{0}\sim\pi_{0}]
+on
+[MATH: \mathbb{R}^{d}]
+to the target distribution
+[MATH: x_{1}\sim\pi_{1}]
+on
+[MATH: \mathbb{R}^{d}]
+. This transport process is formalized as the following ordinary differential equation (ODE):
+[MATH: dx_{t}=v(x_{t},t)\,dt.]
+(1)
+Here,
+[MATH: v]
+represents the vector field, and
+[MATH: x_{t}]
+denotes the trajectory parameterized over
+[MATH: t\in[0,1]]
+. Rectified flow follows the formulation of the forward process in diffusion models
+[
+20
+]
+, but its specific parameterization enables a more direct mapping between distributions and improves efficiency. Specifically, its forward process can be expressed as:
+[MATH: x_{t}=tx_{1}+(1-t)x_{0},]
+(2)
+where
+[MATH: v]
+is defined as
+[MATH: x_{1}-x_{0}]
+. Then, the model is trained to learn a causal approximation of
+[MATH: v]
+, denoted as
+[MATH: v_{\theta}]
+, by solving the following least squares regression problem:
+[MATH: \begin{gathered}\min_{v}\int_{0}^{1}\mathbb{E}\left[\left\|(x_{1}-x_{0})-v(x_{t},t)\right\|^{2}\right]\,dt.\end{gathered}]
+(3)
+Once trained, samples from the target distribution
+[MATH: \pi_{1}]
+can be generated by solving Equation (
+1
+) using an ODE solver, where the initial conditions are drawn from the source distribution
+[MATH: \pi_{0}]
+. Unlike conventional diffusion models, which require many denoising steps, rectified flow follows a nearly straight trajectory, enabling more efficient transport with much fewer denoising steps.
+Motion Tokenization.
+The objective of generative models based on discrete quantization methods is to reformulate the regression problem into a classification problem. These models typically undergo a two-stage training process. In stage 1, a VQ-VAE is trained to encode a motion sequence
+[MATH: \mathbf{X}=[\mathbf{x}_{1},\mathbf{x}_{2},\dots,\mathbf{x}_{T}]]
+where
+[MATH: \mathbf{x}_{t}\in\mathbb{R}^{d_{motion}}]
+, using an encoder
+[MATH: \mathcal{E}]
+, into a sequence of discrete tokens
+[MATH: \mathbf{Z}=[\mathbf{z}_{1},\mathbf{z}_{2},\dots,\mathbf{z}_{T/q}]]
+. Each token
+[MATH: \mathbf{z}_{t}]
+is retrieved from the codebook
+[MATH: \mathcal{Z}=\left\{\mathbf{z}_{k}\in\mathbb{R}^{d_{code}}\right\}_{k=1}^{N}]
+, and
+[MATH: T]
+represents the length of the original motion sequence while
+[MATH: q]
+is the downsample factor. Then a decoder
+[MATH: \mathcal{D}]
+reconstructs the motions
+[MATH: \mathbf{X}_{recon}]
+from
+[MATH: \mathbf{Z}]
+, with the network trained using a reconstruction loss and a commitment loss. In stage 2, the index sequence
+[MATH: \mathbf{S}=[\mathbf{s}_{1},\mathbf{s}_{2},\dots,\mathbf{s}_{T/q}]]
+, representing the one-hot encoded codebook indices of the discrete token sequence
+[MATH: \mathbf{Z}]
+, is used to train a next-index prediction model conditioned on various signals.
+After training both stages, generating a new motion sequence
+[MATH: \hat{\mathbf{X}}]
+from a given condition
+[MATH: \mathbf{C}]
+involves two steps: first, the stage 2 model produces a sequence of predicted indices
+[MATH: \hat{\mathbf{S}}]
+, which is then converted into discrete tokens
+[MATH: \hat{\mathbf{Z}}]
+using the learned codebook. Finally,
+[MATH: \mathcal{D}]
+reconstructs the motion sequence
+[MATH: \hat{\mathbf{X}}]
+from
+[MATH: \hat{\mathbf{Z}}]
+, yielding the desired motion output.
+3.2
+DisCoRD
+Directly decoding discrete tokens using traditional feed-forward decoders
+[MATH: \mathcal{D}]
+suffer from limited expressiveness and propagate token discreteness into decoded motions, resulting in under-reconstructed and noisy outputs (Figure
+4
+). To address these issues, we propose decoding pretrained tokens in continuous space by replacing
+[MATH: \mathcal{D}]
+with an expressive rectified flow model. Specifically, we first extract frame-wise conditioning features from discrete tokens through a Condition Projection module, and then use these features as frame-wise conditions for a Rectified Flow Decoder that synthesizes human motion from Gaussian noise. The overall pipeline of DisCoRD is depicted in Figure
+2
+.
+Condition Projection.
+To enable our decoder to generate expressive motion, we first extract frame-wise conditioning features from discrete tokens
+[MATH: \mathbf{Z}=[\mathbf{z}_{1},\dots,\mathbf{z}_{T/q}]]
+.
+Since each token
+[MATH: \mathbf{z}_{t}]
+encodes information spanning
+[MATH: q]
+consecutive motion frames, we must extract
+[MATH: q]
+distinct, frame-specific features from each token.
+A naïve upsampling and linear projection would result in same
+[MATH: q]
+features from each token, and upconvolution layers would disregard the temporal correspondence between each tokens and frames.
+To mitigate these issues, we first repeat each token
+[MATH: \mathbb{z}_{t}\in\mathbb{R}^{1\times d_{code}}]
+[MATH: q]
+times to restore the original temporal resolution, resulting in
+[MATH: \mathbb{z}^{repeat}_{t}\in\mathbb{R}^{q\times d_{code}}]
+. Then we stack into a tensor
+[MATH: \mathbf{z}_{t}^{stacked}\in\mathbb{R}^{1\times(q\times d_{code})}]
+and project to
+[MATH: \mathbb{z}^{project}_{t}\in\mathbb{R}^{1\times(q\times d_{feat})}]
+. Finally, we unstack the projected tensor to
+[MATH: \mathbb{z}^{final}_{t}\in\mathbb{R}^{q\times d_{feat}}]
+where each vector
+[MATH: \mathbf{c}_{i}\in\mathbb{R}^{d_{feat}}(\text{for}\ i\in[1,...,q])]
+are frame-wise conditioning features. This process is applied to every token in
+[MATH: \mathbf{Z}]
+, resulting in
+[MATH: \mathbf{C}=[\mathbf{c}_{1},\dots,\mathbf{c}_{T}]]
+. This approach maintains the correspondence between tokens and motion frames by explicitly extracting
+[MATH: q]
+features from each token, ensuring that the resulting frame-wise conditioning features are well-suited for the motion decoding. Moreover, we found that our projection method enhances motion generation on unseen token sequences on stage 2.
+Rectified Flow Decoder.
+Our goal is to decode discrete tokens into natural motion while operating within a continuous space. Therefore, we do not directly map discrete tokens back into motion, but treat discrete tokens as a signal to guide motion decoding in the raw motion space.
+Given the frame-wise conditioning features
+[MATH: \mathbf{C}]
+extracted from discrete tokens by the condition projection module, we train a conditional rectified flow model to reconstruct the original motion.
+Specifically, given a motion data distribution
+[MATH: P_{\mathbf{X}}]
+, we define the transport process from Gaussian noise
+[MATH: \mathbf{X_{0}}\sim\mathcal{N}(0,I)]
+to motion
+[MATH: \mathbf{X_{1}}\sim P_{\mathbf{X}}]
+, guided by frame-wise conditioning features
+[MATH: \mathbf{C}]
+, formulated as:
+[MATH: \begin{gathered}\min_{v}\int_{0}^{1}\mathbb{E}\left[\left\|(\mathbf{X}_{1}-\mathbf{X}_{0})-v(\mathbf{X}_{t},t,\mathbf{C})\right\|^{2}\right]\,dt,\\
+\text{with}\quad\mathbf{X}_{t}=t\mathbf{X}_{1}+(1-t)\mathbf{X}_{0}.\end{gathered}]
+(4)
+We concatenate frame-wise features
+[MATH: \mathbf{C}]
+along the channel dimension, similar to image generation methods
+[
+67
+,
+16
+]
+, allowing each motion frame to be conditioned independently.
+This formulation ensures that decoding remains in the continuous space, enabling more expressive decoding.
+During inference, features
+[MATH: \mathbf{\hat{C}}]
+are first extracted from tokens generated by a pretrained token generation model. This extracted features are then iteratively decoded into
+[MATH: \mathbf{\hat{X}_{1}}]
+by solving a conditional ODE using the Euler method, progressively improving generation quality.
+Training.
+In variants of diffusion models, training is performed over the entire data instance with fixed sequence lengths, such as 196 frames in HumanML3D
+[
+11
+]
+, a standard in motion generation
+[
+51
+,
+60
+]
+. While this approach improves reconstruction quality in stage 1, our results indicate that these improvements do not translate effectively to generation quality in stage 2. To address this limitation and improve generalization to unseen motion sequences during inference, we train our rectified flow model on sliding windows of motion frames rather than max length spans. Additionally, although conventional U-Net diffusion models often incorporate attention mechanisms to enhance performance
+[
+44
+]
+, we found this strategy to be suboptimal in our context, resulting in a performance degradation.
+4
+Experiments
+In this section, we evaluate the effectiveness of
+DisCoRD
+in achieving motion naturalness compared to other discrete methods. We begin by assessing the naturalness of reconstructed motions to highlight the expressive capabilities of our rectified flow decoder. Then, we examine how this naturalness carries over to stage 2, generating natural motions while preserving faithfulness. We focus on text-to-motion generation due to its complex motions and diversity, but also evaluate our approach on other motion generation tasks, including co-speech gesture generation and music-to-dance generation, demonstrating the flexibility of our method.
+4.1
+Dataset and Evaluation
+Datasets.
+For text-to-motion, we use HumanML3D
+[
+11
+]
+and KIT-ML
+[
+42
+]
+.
+HumanML3D
+is a 3D motion dataset with language annotations, including 14,616 motion sequences paired with 44,970 text descriptions. Sourced from motion capture data, motions are standardized to a template, scaled to 20 FPS, and cropped to 10 seconds if longer.
+KIT-ML
+is a smaller dataset with 3,911 motion sequences paired with 6,278 text descriptions. Motion capture data are downsampled to 12.5 FPS, with 1–4 descriptions per sequence. For co-speech gesture generation, we utilize the
+SHOW
+[
+62
+]
+dataset, while a mixed version of
+AIST++
+[
+25
+]
+and HumanML3D is used for music-to-dance generation. Further dataset details are provided in the Supplementary Section B.
+Figure 3
+:
+sJPE and FID response to frame-wise gaussian noise.
+We introduce Gaussian noise with varying standard deviations (x-axis) to ground-truth motion data and evaluate its effect on sJPE and FID.
+Noise sJPE
+is highly sensitive to subtle frame-wise perturbations, whereas
+Static sJPE
+remains low. FID is highly insensitive to frame-wise noise. Note that FID scale (y-axis, right) is very small compared to sJPE scale (y-axis, left).
+Figure 4
+:
+Under-reconstruction and frame-wise noise.
+We visualize fine-grained motion trajectories (top), and corresponding jerk graphs (bottom), where blue and red regions indicate noise and static sJPE, respectively. Compared to other methods, DisCoRD significantly reduces sJPE, resulting in smoother motion (fewer blue regions) and greater dynamism (fewer red regions), as highlighted in green boxes.
+Evaluation.
+We evaluate DisCoRD on both motion reconstruction and motion generation separately. For motion reconstruction, the primary objective is to assess how effectively the decoder reconstructs motion from tokens. This is measured by Fréchet Inception Distance (FID), which assesses motion realism by comparing the feature distributions of generated and ground truth motions, and Mean Per Joint Position Error (MPJPE), which quantifies positional accuracy.
+For text-to-motion generation, we follow
+[
+51
+]
+and employ several established metrics: FID, R-Precision, Multimodal Distance (MM-Dist), and Multimodality (MModality).
+For co-speech gesture generation, we employ Fréchet Gesture Distance (FGD)
+[
+33
+]
+, and for music-to-dance generation, following
+[
+53
+]
+, we utilize Dist
+k
+and Dist
+g
+to assess the quality of generated motions by comparing the distributional spread of generated and real motions. Additional specifics on these metrics are provided in the Supplementary Section B.
+Symmetric Jerk Percentage Error.
+Prior works
+[
+60
+,
+12
+]
+rely on MPJPE and FID at stage 1. However, MPJPE has limited correlation with human perceptual preferences
+[
+9
+]
+, while FID, being a model-level metric extracted from pretrained network features, fails to capture per-sample naturalness
+[
+57
+]
+. Our experiments further indicate that FID is particularly insensitive to subtle, fine-grained noise (see Figure
+3
+), which critically affects immersive motion quality
+[
+58
+]
+. To overcome these limitations, we introduce the Symmetric Jerk Percentage Error (SJPE), a metric explicitly designed to assess both under-reconstructed motions and frame-level noise through jerk. Jerk, defined as the third derivative of position with respect to time, has proven to effectively quantify subtle deviations
+[
+4
+,
+7
+]
+and kinetic inconsistencies in motion
+[
+3
+,
+23
+]
+, being a critical measure for detecting unnatural artifacts in generated motion.
+Let
+[MATH: J_{\text{pred},t}]
+and
+[MATH: J_{\text{true},t}]
+denote the predicted and ground truth jerk, respectively, at time
+[MATH: t]
+over
+[MATH: n]
+time points. Then sJPE, capturing the symmetric mean absolute percentage error
+[
+34
+]
+between predicted and ground truth jerk values, is defined as
+[MATH: \text{sJPE}=\tfrac{1}{n}\sum\nolimits_{t=1}^{n}\tfrac{|J_{\text{pred},t}-J_{\text{true},t}|}{|J_{\text{true},t}|+|J_{\text{pred},t}|}.]
+(5)
+Within sJPE, we identify two components:
+Noise sJPE
+and
+Static sJPE
+. Noise sJPE corresponds to instances where
+[MATH: J_{\text{pred},t}>J_{\text{true},t}]
+, indicating an overestimation of jerk in the predicted motion, which reflects the presence of fine-grained noise. This effect is evident in discrete-based methods, where discrete tokens introduce frame-wise noise, as shown in Figure
+4
+. Static sJPE captures instances where
+[MATH: J_{\text{pred},t}\leq J_{\text{true},t}]
+, indicating underestimation of jerk, or insufficiently dynamic predicted motion, highlighted by green boxes in Figure
+4
+. Together, these components provide a comprehensive measure of prediction accuracy, capturing both over- and underestimations of jerk within a unified score. Additional details and results are in Supplementary Section C.
+Dataset
+Methods
+000
+FID
+[MATH: \downarrow]
+MPJPE
+[MATH: \downarrow]
+000
+sJPE
+[MATH: \downarrow]
+H-ML3D
+MLD
+[
+60
+]
+(cont.)
+0.017
+14.7
+0.404
+T2M-GPT
+[
+64
+]
+0.089
+60.0
+0.564
++DisCoRD(Ours)
+0.031
+(+65%)
+71.5
+0.488
+(+13%)
+MMM
+[
+41
+]
+0.097
+46.9
+0.517
++DisCoRD(Ours)
+0.020
+(+79%)
+56.8
+0.429
+(+17%)
+MoMask
+[
+12
+]
+0.019
+29.5
+0.512
++DisCoRD(Ours)
+0.011
+(+42%)
+33.3
+0.385
+(+25%)
+KIT-ML
+T2M-GPT
+[
+64
+]
+0.470
+46.4
+0.526
++DisCoRD(Ours)
+0.284
+(+40%)
+58.7
+0.395
+(+25%)
+MoMask
+[
+12
+]
+0.113
+37.5
+0.384
++DisCoRD(Ours)
+0.103
+(+9%)
+33.0
+0.359
+(+7%)
+Table 1
+:
+Quantitative results on motion reconstruction.
+DisCoRD enhances naturalness as a decoder for discrete models, shown by improvements over base models on FID and sJPE (blue). H-ML3D stands for HumanML3D and cont. for continuous.
+4.2
+Quantitative results
+Datasets
+Methods
+R Precision
+[MATH: \uparrow]
+0000
+FID
+[MATH: \downarrow]
+MM-Dist
+[MATH: \downarrow]
+MultiModality
+[MATH: \uparrow]
+Top 1
+Top 2
+Top 3
+Human
+ML3D
+MDM
+[
+52
+]
+-
+-
+[MATH: {0.611}^{\pm{.007}}]
+[MATH: {0.544}^{\pm{.044}}]
+[MATH: {5.566}^{\pm{.027}}]
+[MATH: \mathbf{{2.799}}^{\pm{.072}}]
+MLD
+[
+6
+]
+[MATH: {0.481}^{\pm{.003}}]
+[MATH: {0.673}^{\pm{.003}}]
+[MATH: {0.772}^{\pm{.002}}]
+[MATH: {0.473}^{\pm{.013}}]
+[MATH: {3.196}^{\pm{.010}}]
+[MATH: \underline{{2.413}}^{\pm{.079}}]
+MotionDiffuse
+[
+65
+]
+[MATH: {0.491}^{\pm{.001}}]
+[MATH: {0.681}^{\pm{.001}}]
+[MATH: {0.782}^{\pm{.001}}]
+[MATH: {0.630}^{\pm{.001}}]
+[MATH: {3.113}^{\pm{.001}}]
+[MATH: {1.553}^{\pm{.042}}]
+ReMoDiffuse
+[
+66
+]
+[MATH: {0.510}^{\pm{.005}}]
+[MATH: {0.698}^{\pm{.006}}]
+[MATH: {0.795}^{\pm{.004}}]
+[MATH: {0.103}^{\pm{.004}}]
+[MATH: {2.974}^{\pm{.016}}]
+[MATH: {1.795}^{\pm{.043}}]
+MMM
+[
+41
+]
+[MATH: {0.504}^{\pm{.003}}]
+[MATH: {0.696}^{\pm{.003}}]
+[MATH: {0.794}^{\pm{.002}}]
+[MATH: {0.080}^{\pm{.003}}]
+[MATH: {2.998}^{\pm{.007}}]
+[MATH: {1.164}^{\pm{.041}}]
+T2M-GPT
+[
+64
+]
+[MATH: {0.491}^{\pm{.003}}]
+[MATH: {0.680}^{\pm{.003}}]
+[MATH: {0.775}^{\pm{.002}}]
+[MATH: {0.116}^{\pm{.004}}]
+[MATH: {3.118}^{\pm{.011}}]
+[MATH: {1.856}^{\pm{.011}}]
++ DisCoRD (Ours)
+[MATH: {0.476}^{\pm{.008}}]
+[MATH: {0.663}^{\pm{.006}}]
+[MATH: {0.760}^{\pm{.007}}]
+[MATH: {0.095}^{\pm{.011}}]
+(+18%)
+[MATH: {3.121}^{\pm{.009}}]
+[MATH: {1.831}^{\pm{.048}}]
+BAMM
+[
+40
+]
+[MATH: \mathbf{{0.525}}^{\pm{.002}}]
+[MATH: \mathbf{{0.720}}^{\pm{.003}}]
+[MATH: \mathbf{{0.814}}^{\pm{.003}}]
+[MATH: {0.055}^{\pm{.002}}]
+[MATH: \mathbf{{2.919}}^{\pm{.008}}]
+[MATH: {1.687}^{\pm{.051}}]
++ DisCoRD (Ours)
+[MATH: {0.522}^{\pm{.003}}]
+[MATH: \underline{{0.715}}^{\pm{.005}}]
+[MATH: \underline{{0.811}}^{\pm{.004}}]
+[MATH: \underline{{0.041}}^{\pm{.002}}]
+(+25%)
+[MATH: \underline{{2.921}}^{\pm{.015}}]
+[MATH: {1.772}^{\pm{.067}}]
+MoMask
+[
+12
+]
+[MATH: {0.521}^{\pm{.002}}]
+[MATH: {0.713}^{\pm{.002}}]
+[MATH: {0.807}^{\pm{.002}}]
+[MATH: {0.045}^{\pm{.002}}]
+[MATH: {2.958}^{\pm{.008}}]
+[MATH: {1.241}^{\pm{.040}}]
++ DisCoRD (Ours)
+[MATH: \underline{{0.524}}^{\pm{.003}}]
+[MATH: \underline{{0.715}}^{\pm{.003}}]
+[MATH: {0.809}^{\pm{.002}}]
+[MATH: \mathbf{{0.032}}^{\pm{.002}}]
+(+29%)
+[MATH: {2.938}^{\pm{.010}}]
+[MATH: {1.288}^{\pm{.043}}]
+KIT-
+ML
+MDM
+[
+52
+]
+-
+-
+[MATH: {0.396}^{\pm{.004}}]
+[MATH: {0.497}^{\pm{.021}}]
+[MATH: {9.191}^{\pm{.022}}]
+[MATH: {1.907}^{\pm{.214}}]
+MLD
+[
+6
+]
+[MATH: {0.390}^{\pm{.008}}]
+[MATH: {0.609}^{\pm{.008}}]
+[MATH: {0.734}^{\pm{.007}}]
+[MATH: {0.404}^{\pm{.027}}]
+[MATH: {3.204}^{\pm{.027}}]
+[MATH: \mathbf{{2.192}}^{\pm{.071}}]
+MotionDiffuse
+[
+65
+]
+[MATH: {0.417}^{\pm{.004}}]
+[MATH: {0.621}^{\pm{.004}}]
+[MATH: {0.739}^{\pm{.004}}]
+[MATH: {1.954}^{\pm{.062}}]
+[MATH: {2.958}^{\pm{.005}}]
+[MATH: {0.730}^{\pm{.013}}]
+ReMoDiffuse
+[
+66
+]
+[MATH: {0.427}^{\pm{.014}}]
+[MATH: {0.641}^{\pm{.004}}]
+[MATH: {0.765}^{\pm{.055}}]
+[MATH: \mathbf{{0.155}}^{\pm{.006}}]
+[MATH: {2.814}^{\pm{.012}}]
+[MATH: {1.239}^{\pm{.028}}]
+MMM
+[
+41
+]
+[MATH: {0.404}^{\pm{.005}}]
+[MATH: {0.621}^{\pm{.006}}]
+[MATH: {0.744}^{\pm{.005}}]
+[MATH: {0.316}^{\pm{.019}}]
+[MATH: {2.977}^{\pm{.019}}]
+[MATH: {1.232}^{\pm{.026}}]
+T2M-GPT
+[
+64
+]
+[MATH: {0.398}^{\pm{.007}}]
+[MATH: {0.606}^{\pm{.006}}]
+[MATH: {0.729}^{\pm{.005}}]
+[MATH: {0.718}^{\pm{.038}}]
+[MATH: {3.076}^{\pm{.028}}]
+[MATH: {1.887}^{\pm{.050}}]
++ DisCoRD (Ours)
+[MATH: {0.382}^{\pm{.007}}]
+[MATH: {0.590}^{\pm{.007}}]
+[MATH: {0.715}^{\pm{.004}}]
+[MATH: {0.541}^{\pm{.038}}]
+(+25%)
+[MATH: {3.260}^{\pm{.028}}]
+[MATH: \underline{{1.928}}^{\pm{.059}}]
+MoMask
+[
+12
+]
+[MATH: \underline{{0.433}}^{\pm{.007}}]
+[MATH: \underline{{0.656}}^{\pm{.005}}]
+[MATH: \mathbf{{0.781}}^{\pm{.005}}]
+[MATH: {0.204}^{\pm{.011}}]
+[MATH: \mathbf{{2.779}}^{\pm{.022}}]
+[MATH: {1.131}^{\pm{.043}}]
++ DisCoRD (Ours)
+[MATH: \mathbf{{0.434}}^{\pm{.007}}]
+[MATH: \mathbf{{0.657}}^{\pm{.005}}]
+[MATH: \underline{{0.775}}^{\pm{.004}}]
+[MATH: \underline{{0.169}}^{\pm{.010}}]
+(+17%)
+[MATH: \underline{{2.792}}^{\pm{.015}}]
+[MATH: {1.266}^{\pm{.046}}]
+Table 2
+:
+Quantitative results on motion generation.
+[MATH: \pm]
+indicates a 95% confidence interval. +DisCoRD indicates that the baseline model’s decoder is replaced with DisCoRD.
+Bold
+indicates the best result, while
+underscore
+refers the second best. DisCoRD improves naturalness, as evidenced by FID improvements shown in blue, while preserving faithfulness, demonstrated by R-Precision.
+Natural Motion Reconstruction.
+We evaluate DisCoRD’s effectiveness in reconstructing natural motions from discrete models. Existing discrete methods often struggle to generate natural motions, as indicated by higher sJPE and FID values. While MoMask achieves competitive FID, its high sJPE suggests significant frame-wise noise and poor reconstruction quality compared to continuous models like MLD. Our proposed DisCoRD decoder substantially improves motion quality, as shown by reduced FID and sJPE metrics, overcoming the typical limitations of discrete models and producing smoother, more natural motions.
+Note that MPJPE measures only positional accuracy, and does not reflect motion naturalness or align with human perception
+[
+18
+]
+.
+Methods
+sJPE
+[MATH: \downarrow]
+FGD
+[MATH: \downarrow]
+TalkSHOW
+[
+62
+]
+0.284
+74.88
++ DisCoRD(Ours)
+0.077
+43.58
+ProbTalk
+[
+30
+]
+0.406
+5.21
++ DisCoRD(Ours)
+0.349
+4.83
+Table 3
+:
+Quantitative results on each method’s SHOW test set.
+DisCoRD outperforms baseline models on sJPE and FGD.
+Methods
+sJPE
+[MATH: \downarrow]
+[MATH: \mathrm{Dist_{k}}\rightarrow]
+(9.780)
+[MATH: \mathrm{Dist_{g}}\rightarrow]
+(7.662)
+TM2D
+[
+10
+]
+0.275
+8.851
+4.225
++DisCoRD(Ours)
+0.261
+9.830
+8.519
+Table 4
+:
+Quantitative results on the AIST++ test set.
+DisCoRD outperforms baseline model on sJPE,
+[MATH: \mathrm{Dist_{k}}]
+and
+[MATH: \mathrm{Dist_{g}}]
+.
+Natural Motion Generation.
+To evaluate DisCoRD’s effectiveness in decoding predicted tokens, we use models trained in stage 1 to assess their performance in decoding tokens generated by pretrained token predictors. As shown in Table
+2
+, our method consistently outperforms baseline models, particularly in terms of FID, achieving state-of-the-art performance in naturalness. We observe that for T2M-GPT, which employs a vanilla VQ-VAE with limited representational capacity, there is a slight decline in faithfulness, as a single token can map to multiple motions in DisCoRD. However, with RQVAEs
+[
+24
+]
+, a popular quantization method on recent works
+[
+40
+,
+12
+]
+, DisCoRD performs on par and even increase faithfullness, shown by R-Precision and MM-Dist. These results indicate that when paired with a decent tokenizer, DisCoRD can significantly boost naturalness without sacrificing faithfulness, highlighting its potential as a default decoder replacement for discrete motion generation models.
+Performance on Various Tasks.
+To validate our approach as a general method for enhancing naturalness in discrete-based human motion generation, we train DisCoRD on co-speech gesture and music-driven dance generation, conducting a comparative analysis against baseline models. As shown in Table
+3
+and Table
+4
+, our method consistently outperforms baseline models across both tasks, achieving superior performance on sJPE and standard evaluation metrics. We present additional evaluation results in Supplementary Section D.
+Figure 5
+:
+Decoding efficiency comparison.
+We report the average decoding time for a batch of 32 token sequences on an NVIDIA RTX 4090 Ti, averaged over 20 trials on the HumanML3D test set. DisCoRD achieves more better performance on motion naturalness at a comparable decoding speed to MoMask and can even decode significantly faster while maintaining superior performance.
+Effect of Sample Steps.
+By selecting the rectified flow algorithm from among the various diffusion model variants, we exploit its efficient transport mechanism to achieve inference speeds comparable to baseline models. As shown in Figure
+5
+, we evaluated the decoding times for both Momask and our model on tokens generated by a pretrained token generator. At the default setting of 16 sampling steps, our model achieves decoding speeds on par with MoMask while delivering superior sJPE, stage 1 FID, and stage 2 FID. Furthermore, by reducing the sampling steps, our method can decode tokens significantly fasterer than MoMask, maintaining comparable or enhanced FID and sJPE performance. Additionally, although it was not the primary focus of this experiment, we observed that sJPE responds more sensitively to changes in sampling steps compared to FID, further confirming that our sJPE metric effectively captures subtle variations in motion quality. Detailed decoding times are reported in the Supplementary Table E.
+Effect of Residual Quantization.
+We evaluate the impact of the representational capacity of motion tokens on DisCoRD by varying the residual quantization (RQ) levels in MoMask. As shown in Tab.
+5
+, while DisCoRD consistently improves FID across all RQ levels, its R-Precision gains over each MoMask baseline increase with higher RQ levels, suggesting that DisCoRD better leverages richer token representations. This result is consistent with Table
+2
+where R-Precision drops for T2M-GPT (based on standard VQ-VAE) but maintains performance for MoMask and BAMM.
+Methods
+Recon
+Generation
+FID
+[MATH: \downarrow]
+FID
+[MATH: \downarrow]
+RP@1
+[MATH: \uparrow]
+RP@2
+[MATH: \uparrow]
+RP@3
+[MATH: \uparrow]
+MoMask‑R0
+0.125
+0.082
+0.505
+0.696
+0.793
++Ours
+0.061
+(+51%)
+0.068
+(+17%)
+0.491
+(-2.8%)
+0.682
+(-2.0%)
+0.782
+(-1.4%)
+MoMask‑R1
+0.066
+0.058
+0.517
+0.710
+0.805
++Ours
+0.024
+(+64%)
+0.037
+(+36%)
+0.510
+(-1.4%)
+0.703
+(-1.0%)
+0.800
+(-0.6%)
+MoMask‑R2
+0.046
+0.053
+0.520
+0.712
+0.806
++Ours
+0.018
+(+61%)
+0.031
+(+42%)
+0.517
+(-0.6%)
+0.709
+(-0.4%)
+0.806
+(0.0%)
+MoMask‑R4
+0.024
+0.047
+0.519
+0.711
+0.807
++Ours
+0.011
+(+54%)
+0.032
+(+32%)
+0.520
+(+0.2%)
+0.711
+(0.0%)
+0.806
+(-0.1%)
+MoMask‑R5
+0.019
+0.045
+0.521
+0.713
+0.807
++Ours
+0.011
+(+42%)
+0.032
+(+29%)
+0.524
+(+0.6%)
+0.715
+(+0.3%)
+0.809
+(+0.2%)
+Table 5
+:
+Effect of residual quantization levels (R)
+. in MoMask on DisCoRD performance. Higher R yields greater R-Precision (RP) gains, indicating better use of richer representations.
+Ablation Studies.
+We conduct ablation studies on DisCoRD’s each component shown in
+Table
+6
+.
+First, we compare our decoding strategy with post refinement methods which refine output motions from MoMask’s decoder. Feedforward convolution layers show little improvement and rectified flow post refinement falls short in all metrics compared to ours.
+Second, we examine alternative projection mechanisms. While up-convolution or repeat followed by a linear layer show strong reconstruction performance, they fail to decode natural motion from generated token sequences (unseen at training) shown by low FID.
+Additionally, incorporating attention into the U-Net backbone and using full motion sequences instead of windowed motion segments result in performace degradation. This indicates that focusing on localized motion segments enhances the model’s generalization capability, particularly in stage 2.
+Methods
+Reconstruction
+Generation
+FID
+[MATH: \downarrow]
+sJPE
+[MATH: \downarrow]
+FID
+[MATH: \downarrow]
+MM-Dist
+[MATH: \downarrow]
+MoMask
+[MATH: {0.019}^{\pm{.001}}]
+0.512
+[MATH: {0.051}^{\pm{.002}}]
+[MATH: {2.957}^{\pm{.008}}]
++ Post Refinement (FF model)
+[MATH: {0.028}^{\pm{.000}}]
+0.481
+[MATH: {0.044}^{\pm{.002}}]
+[MATH: {2.962}^{\pm{.006}}]
++ Post Refinement (RF model)
+[MATH: {0.013}^{\pm{.000}}]
+0.489
+[MATH: {0.035}^{\pm{.002}}]
+[MATH: {2.955}^{\pm{.008}}]
++ DisCoRD (Ours)
+[MATH: {0.011}^{\pm{.000}}]
+0.385
+[MATH: \mathbf{{0.032}}^{\pm{.002}}]
+[MATH: \mathbf{{2.938}}^{\pm{.010}}]
+Ours (Upconv)
+[MATH: {0.010}^{\pm{.000}}]
+0.375
+[MATH: {0.039}^{\pm{.003}}]
+[MATH: {2.943}^{\pm{.006}}]
+Ours (Repeat & Linear)
+[MATH: {0.011}^{\pm{.001}}]
+0.342
+[MATH: {0.038}^{\pm{.001}}]
+[MATH: {2.947}^{\pm{.008}}]
+Ours (w/ Attention)
+[MATH: {0.020}^{\pm{.000}}]
+0.384
+[MATH: {0.043}^{\pm{.002}}]
+[MATH: {2.983}^{\pm{.009}}]
+Ours (w/ Full Motion Sequence)
+[MATH: \mathbf{{0.008}}^{\pm{.000}}]
+0.385
+[MATH: {0.038}^{\pm{.002}}]
+[MATH: {2.952}^{\pm{.009}}]
+Table 6
+:
+Ablation studies.
+Evaluation on the HumanML3D test set assessing the impact of decoding strategies, projection methods, and training strategies. FF and RF denote feedforward and rectified flow model, respectively.
+4.3
+Qualitative Results
+We visualize motion trajectories in Figure
+4
+, where DisCoRD, unlike discrete methods, produces smooth and expressive motion with low sJPE.
+Extensive visualizations are provided in Supplementary Sections C.3 and E.1 with supporting user studies in Sections C.4 and E.2.
+5
+Conclusion and Discussion
+In this paper, we present DisCoRD, a novel approach that decodes discrete motion tokens to natural, dynamic human motion using rectified flow.
+To demonstrate gains in naturalness, we also introduce symmetric Jerk Percentage Error (sJPE), specifically designed to capture subtle artifacts that were overlooked by traditional metrics. Extensive experiments across text-to-motion, co-speech gesture, and music-to-dance tasks demonstrate that DisCoRD consistently achieves state-of-the-art performance, providing a versatile solution adaptable to various discrete-based motion generation frameworks. While we experimented only on human motion generation, a promising direction would be to expand our framework to discrete talking face, hand motion, or even whole body motion generation.
+Acknowledgments.
+This study was supported by the Institute of Information & Communications Technology Planning & Evaluation (IITP) grant funded by the Korea government (MSIT) (No. RS-2024-00457882, Artificial Intelligence Research Hub Project). This work was also supported by the Culture, Sports and Tourism R&D Program through the Korea Creative Content Agency, funded by the Ministry of Culture, Sports and Tourism in 2024 (Project Name: Development of multimodal UX evaluation platform technology for XR spatial responsive content optimization, Project Number: RS-2024-00361757). T.-H. Oh was partially supported by the IITP grant funded by the Korea government (MSIT) (No. RS-2023-00225630, Development of Artificial Intelligence for Text-based 3D Movie Generation).
+References
+[1]
+Michael S Albergo and Eric Vanden-Eijnden.
+Building normalizing flows with stochastic interpolants.
+arXiv preprint arXiv:2209.15571
+, 2022.
+[2]
+Okan Arikan and D. A. Forsyth.
+Interactive motion generation from examples.
+ACM Trans. Graph.
+, 21(3):483–490, 2002.
+[3]
+Sivakumar Balasubramanian, Alejandro Melendez-Calderon, and Etienne Burdet.
+A robust and sensitive metric for quantifying movement smoothness.
+IEEE transactions on biomedical engineering
+, 59(8):2126–2136, 2011.
+[4]
+German Barquero, Sergio Escalera, and Cristina Palmero.
+Seamless human motion composition with blended positional encodings.
+In
+Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition
+, 2024.
+[5]
+Vighnesh Birodkar, Gabriel Barcik, James Lyon, Sergey Ioffe, David Minnen, and Joshua V Dillon.
+Sample what you cant compress.
+arXiv preprint arXiv:2409.02529
+, 2024.
+[6]
+Xin Chen, Biao Jiang, Wen Liu, Zilong Huang, Bin Fu, Tao Chen, and Gang Yu.
+Executing your commands via motion diffusion in latent space.
+In
+Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition
+, pages 18000–18010, 2023.
+[7]
+Seunggeun Chi, Hyung gun Chi, Hengbo Ma, Nakul Agarwal, Faizan Siddiqui, Karthik Ramani, and Kwonjoon Lee.
+M2d2m: Multi-motion generation from text with discrete diffusion models, 2024.
+[8]
+Wenxun Dai, Ling-Hao Chen, Jingbo Wang, Jinpeng Liu, Bo Dai, and Yansong Tang.
+Motionlcm: Real-time controllable motion generation via latent consistency model, 2024.
+[9]
+Yann Desmarais, Denis Mottet, Pierre Slangen, and Philippe Montesinos.
+A review of 3d human pose estimation algorithms for markerless motion capture, 2021.
+[10]
+Kehong Gong, Dongze Lian, Heng Chang, Chuan Guo, Zihang Jiang, Xinxin Zuo, Michael Bi Mi, and Xinchao Wang.
+Tm2d: Bimodality driven 3d dance generation via music-text integration.
+In
+Proceedings of the IEEE/CVF International Conference on Computer Vision
+, pages 9942–9952, 2023.
+[11]
+Chuan Guo, Shihao Zou, Xinxin Zuo, Sen Wang, Wei Ji, Xingyu Li, and Li Cheng.
+Generating diverse and natural 3d human motions from text.
+In
+Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition
+, pages 5152–5161, 2022.
+[12]
+Chuan Guo, Yuxuan Mu, Muhammad Gohar Javed, Sen Wang, and Li Cheng.
+Momask: Generative masked modeling of 3d human motions.
+In
+Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition
+, pages 1900–1910, 2024.
+[13]
+Rachel Heck and Michael Gleicher.
+Parametric motion graphs.
+In
+Proceedings of the 2007 symposium on Interactive 3D graphics and games
+, pages 129–136, 2007.
+[14]
+Alejandro Hernandez, Jurgen Gall, and Francesc Moreno-Noguer.
+Human motion prediction via spatio-temporal inpainting.
+In
+Proceedings of the IEEE/CVF International Conference on Computer Vision
+, pages 7134–7143, 2019.
+[15]
+Jonathan Ho, Ajay Jain, and Pieter Abbeel.
+Denoising diffusion probabilistic models.
+Advances in neural information processing systems
+, 33:6840–6851, 2020.
+[16]
+Jonathan Ho, Chitwan Saharia, William Chan, David J. Fleet, Mohammad Norouzi, and Tim Salimans.
+Cascaded diffusion models for high fidelity image generation, 2021.
+[17]
+S Rohollah Hosseyni, Ali Ahmad Rahmani, S Jamal Seyedmohammadi, Sanaz Seyedin, and Arash Mohammadi.
+Bad: Bidirectional auto-regressive diffusion for text-to-motion generation.
+arXiv preprint arXiv:2409.10847
+, 2024.
+[18]
+Catalin Ionescu, Dragos Papava, Vlad Olaru, and Cristian Sminchisescu.
+Human3. 6m: Large scale datasets and predictive methods for 3d human sensing in natural environments.
+IEEE transactions on pattern analysis and machine intelligence
+, 36(7):1325–1339, 2013.
+[19]
+Muhammad Gohar Javed, Chuan Guo, Li Cheng, and Xingyu Li.
+Intermask: 3d human interaction generation via collaborative masked modeling, 2025.
+[20]
+Diederik Kingma and Ruiqi Gao.
+Understanding diffusion objectives as the elbo with simple data augmentation.
+Advances in Neural Information Processing Systems
+, 36, 2024.
+[21]
+Diederik P Kingma.
+Auto-encoding variational bayes.
+arXiv preprint arXiv:1312.6114
+, 2013.
+[22]
+Lucas Kovar, Michael Gleicher, and Frédéric Pighin.
+Motion graphs.
+In
+ACM SIGGRAPH 2008 Classes
+, New York, NY, USA, 2008. Association for Computing Machinery.
+[23]
+Caroline Larboulette and Sylvie Gibet.
+A review of computable expressive descriptors of human motion.
+In
+Proceedings of the 2nd International Workshop on Movement and Computing
+, pages 21–28, 2015.
+[24]
+Doyup Lee, Chiheon Kim, Saehoon Kim, Minsu Cho, and Wook-Shin Han.
+Autoregressive image generation using residual quantization, 2022.
+[25]
+Ruilong Li, Shan Yang, David A. Ross, and Angjoo Kanazawa.
+Ai choreographer: Music conditioned 3d dance generation with aist++, 2021.
+[26]
+Yaron Lipman, Ricky TQ Chen, Heli Ben-Hamu, Maximilian Nickel, and Matt Le.
+Flow matching for generative modeling.
+arXiv preprint arXiv:2210.02747
+, 2022.
+[27]
+Haiyang Liu, Zihao Zhu, Naoya Iwamoto, Yichen Peng, Zhengqing Li, You Zhou, Elif Bozkurt, and Bo Zheng.
+Beat: A large-scale semantic and emotional multi-modal dataset for conversational gestures synthesis, 2022a.
+[28]
+Haiyang Liu, Zihao Zhu, Giorgio Becherini, Yichen Peng, Mingyang Su, You Zhou, Xuefei Zhe, Naoya Iwamoto, Bo Zheng, and Michael J. Black.
+Emage: Towards unified holistic co-speech gesture generation via expressive masked audio gesture modeling, 2024a.
+[29]
+Xingchao Liu, Chengyue Gong, and Qiang Liu.
+Flow straight and fast: Learning to generate and transfer data with rectified flow.
+arXiv preprint arXiv:2209.03003
+, 2022b.
+[30]
+Yifei Liu, Qiong Cao, Yandong Wen, Huaiguang Jiang, and Changxing Ding.
+Towards variable and coordinated holistic co-speech motion generation.
+In
+Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition
+, pages 1566–1576, 2024b.
+[31]
+Yunhong Lou, Linchao Zhu, Yaxiong Wang, Xiaohan Wang, and Yi Yang.
+Diversemotion: Towards diverse human motion generation via discrete diffusion.
+arXiv preprint arXiv:2309.01372
+, 2023.
+[32]
+Naureen Mahmood, Nima Ghorbani, Nikolaus F. Troje, Gerard Pons-Moll, and Michael J. Black.
+Amass: Archive of motion capture as surface shapes, 2019.
+[33]
+Antoine Maiorca, Youngwoo Yoon, and Thierry Dutoit.
+Evaluating the quality of a synthesized motion with the fréchet motion distance, 2022.
+[34]
+Spyros Makridakis.
+Accuracy measures: theoretical and practical concerns.
+International Journal of Forecasting
+, 9(4):527–529, 1993.
+[35]
+Vongani Maluleke, Lea Müller, Jathushan Rajasegaran, Georgios Pavlakos, Shiry Ginosar, Angjoo Kanazawa, and Jitendra Malik.
+Synergy and synchrony in couple dances, 2024.
+[36]
+Masahiro Mori, Karl F. MacDorman, and Norri Kageki.
+The uncanny valley [from the field].
+IEEE Robotics & Automation Magazine
+, 19(2):98–100, 2012.
+[37]
+Lea Müller, Vickie Ye, Georgios Pavlakos, Michael Black, and Angjoo Kanazawa.
+Generative proxemics: A prior for 3d social interaction from images, 2023.
+[38]
+Mathis Petrovich, Michael J. Black, and Gül Varol.
+Action-conditioned 3D human motion synthesis with transformer VAE.
+In
+International Conference on Computer Vision (ICCV)
+, 2021.
+[39]
+Mathis Petrovich, Michael J Black, and Gül Varol.
+Temos: Generating diverse human motions from textual descriptions.
+In
+European Conference on Computer Vision
+, pages 480–497. Springer, 2022.
+[40]
+Ekkasit Pinyoanuntapong, Muhammad Usama Saleem, Pu Wang, Minwoo Lee, Srijan Das, and Chen Chen.
+Bamm: Bidirectional autoregressive motion model.
+arXiv preprint arXiv:2403.19435
+, 2024a.
+[41]
+Ekkasit Pinyoanuntapong, Pu Wang, Minwoo Lee, and Chen Chen.
+Mmm: Generative masked motion model.
+In
+Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition
+, pages 1546–1555, 2024b.
+[42]
+Matthias Plappert, Christian Mandery, and Tamim Asfour.
+The kit motion-language dataset.
+Big data
+, 4(4):236–252, 2016.
+[43]
+Alec Radford, Jong Wook Kim, Chris Hallacy, Aditya Ramesh, Gabriel Goh, Sandhini Agarwal, Girish Sastry, Amanda Askell, Pamela Mishkin, Jack Clark, et al.
+Learning transferable visual models from natural language supervision.
+In
+International conference on machine learning
+, pages 8748–8763. PMLR, 2021.
+[44]
+Robin Rombach, Andreas Blattmann, Dominik Lorenz, Patrick Esser, and Björn Ommer.
+High-resolution image synthesis with latent diffusion models, 2022.
+[45]
+Yonatan Shafir, Guy Tevet, Roy Kapon, and Amit H. Bermano.
+Human motion diffusion as a generative prior, 2023.
+[46]
+Li Siyao, Weijiang Yu, Tianpei Gu, Chunze Lin, Quan Wang, Chen Qian, Chen Change Loy, and Ziwei Liu.
+Bailando: 3d dance generation by actor-critic gpt with choreographic memory.
+In
+Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition
+, pages 11050–11059, 2022.
+[47]
+Yang Song, Jascha Sohl-Dickstein, Diederik P Kingma, Abhishek Kumar, Stefano Ermon, and Ben Poole.
+Score-based generative modeling through stochastic differential equations.
+arXiv preprint arXiv:2011.13456
+, 2020.
+[48]
+Guofei Sun, Yongkang Wong, Zhiyong Cheng, Mohan S. Kankanhalli, Weidong Geng, and Xiangdong Li.
+Deepdance: Music-to-dance motion choreography with adversarial learning.
+IEEE Transactions on Multimedia
+, 23:497–509, 2021.
+[49]
+Andrew Szot, Bogdan Mazoure, Harsh Agrawal, Devon Hjelm, Zsolt Kira, and Alexander Toshev.
+Grounding multimodal large language models in actions, 2024.
+[50]
+Guy Tevet, Brian Gordon, Amir Hertz, Amit H Bermano, and Daniel Cohen-Or.
+Motionclip: Exposing human motion generation to clip space.
+In
+European Conference on Computer Vision
+, pages 358–374. Springer, 2022.
+[51]
+Guy Tevet, Sigal Raab, Brian Gordon, Yoni Shafir, Daniel Cohen-or, and Amit Haim Bermano.
+Human motion diffusion model.
+In
+The Eleventh International Conference on Learning Representations
+, 2023a.
+[52]
+Guy Tevet, Sigal Raab, Brian Gordon, Yoni Shafir, Daniel Cohen-or, and Amit Haim Bermano.
+Human motion diffusion model.
+In
+The Eleventh International Conference on Learning Representations
+, 2023b.
+[53]
+Jonathan Tseng, Rodrigo Castellon, and Karen Liu.
+Edge: Editable dance generation from music.
+In
+Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition
+, pages 448–458, 2023.
+[54]
+Aaron Van Den Oord, Oriol Vinyals, et al.
+Neural discrete representation learning.
+Advances in neural information processing systems
+, 30, 2017.
+[55]
+Aaron van den Oord, Oriol Vinyals, and Koray Kavukcuoglu.
+Neural discrete representation learning, 2018.
+[56]
+Jordan Voas, Yili Wang, Qixing Huang, and Raymond Mooney.
+What is the best automated metric for text to motion generation?
+In
+SIGGRAPH Asia 2023 Conference Papers
+, pages 1–11, 2023.
+[57]
+Haoru Wang, Wentao Zhu, Luyi Miao, Yishu Xu, Feng Gao, Qi Tian, and Yizhou Wang.
+Aligning motion generation with human perceptions.
+2024.
+[58]
+Marta Wilczkowiak, Ken Jakubzak, James Clemoes, Cornelia Treptow, Michaela Porubanova, Kerry Read, Daniel McDuff, Marina Kuznetsova, Sean Rintel, and Mar Gonzalez-Franco.
+Ecological validity and the evaluation of avatar facial animation noise.
+In
+2024 IEEE Conference on Virtual Reality and 3D User Interfaces Abstracts and Workshops (VRW)
+, pages 72–79, 2024.
+[59]
+Qi Wu, Yubo Zhao, Yifan Wang, Yu-Wing Tai, and Chi-Keung Tang.
+Motionllm: Multimodal motion-language learning with large language models.
+arXiv preprint arXiv:2405.17013
+, 2024.
+[60]
+Chen Xin, Biao Jiang, Wen Liu, Zilong Huang, Bin Fu, Tao Chen, Jingyi Yu, and Gang Yu.
+Executing your commands via motion diffusion in latent space.
+In
+Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)
+, 2023.
+[61]
+Jinbo Xing, Menghan Xia, Yuechen Zhang, Xiaodong Cun, Jue Wang, and Tien-Tsin Wong.
+Codetalker: Speech-driven 3d facial animation with discrete motion prior.
+In
+Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition
+, pages 12780–12790, 2023.
+[62]
+Hongwei Yi, Hualin Liang, Yifei Liu, Qiong Cao, Yandong Wen, Timo Bolkart, Dacheng Tao, and Michael J Black.
+Generating holistic 3d human motion from speech.
+In
+CVPR
+, 2023.
+[63]
+Ye Yuan, Jiaming Song, Umar Iqbal, Arash Vahdat, and Jan Kautz.
+Physdiff: Physics-guided human motion diffusion model.
+In
+Proceedings of the IEEE/CVF international conference on computer vision
+, pages 16010–16021, 2023.
+[64]
+Jianrong Zhang, Yangsong Zhang, Xiaodong Cun, Shaoli Huang, Yong Zhang, Hongwei Zhao, Hongtao Lu, and Xi Shen.
+T2m-gpt: Generating human motion from textual descriptions with discrete representations, 2023a.
+[65]
+Mingyuan Zhang, Zhongang Cai, Liang Pan, Fangzhou Hong, Xinying Guo, Lei Yang, and Ziwei Liu.
+Motiondiffuse: Text-driven human motion generation with diffusion model.
+arXiv preprint arXiv:2208.15001
+, 2022.
+[66]
+Mingyuan Zhang, Xinying Guo, Liang Pan, Zhongang Cai, Fangzhou Hong, Huirong Li, Lei Yang, and Ziwei Liu.
+Remodiffuse: Retrieval-augmented motion diffusion model.
+In
+Proceedings of the IEEE/CVF International Conference on Computer Vision
+, pages 364–373, 2023b.
+[67]
+Long Zhao, Sanghyun Woo, Ziyu Wan, Yandong Li, Han Zhang, Boqing Gong, Hartwig Adam, Xuhui Jia, and Ting Liu.
+[MATH: \epsilon]
+-VAE: Denoising as Visual Decoding.
+arXiv preprint arXiv:2410.04081
+, 2024.
+Supplementary Material
+This supplementary material is organized as follows: Section
+A
+details the implementation of DisCoRD. Section
+B
+provides additional information on the datasets and evaluation metrics. Section
+C
+offers a comprehensive analysis of sJPE. Section
+D
+presents quantitative results excluded from the main paper. Section
+E
+includes additional qualitative results.
+We highly recommend viewing the accompanying video
+, as static images are insufficient to fully convey the intricacies of motion.
+Appendix A
+Implementation Details
+Table
+A
+provides an overview of the implementation details for our method. These configurations were employed to train the DisCoRD decoder using the pretrained Momask
+[
+12
+]
+quantizer. Specifically, the 512-dimensional codebook embeddings from MoMask are projected into the conditional channel dimension. This projection is concatenated with Gaussian noise of the same dimensionality as the output channel. The concatenated representation is subsequently projected into the input channel dimension of the U-Net architecture. The U-Net processes this input and transforms it back into the output channel dimension, generating the final output shape. For training, we used an input window size of 64 and trained the model for 35 hours on a single NVIDIA RTX 4090 Ti GPU.
+Training Details
+Optimizer
+AdamW
+[MATH: (0.9,0.999)]
+LR
+0.0005
+LR Decay Ratio
+0
+LR Scheduler
+Cosine
+Warmup Epochs
+20
+Gradient Clipping
+1.0
+Weight EMA
+0.999
+Flow Loss
+MSE Loss
+Batch Size
+768
+Window Size
+64
+Steps
+481896
+Epochs
+200
+Model Details
+Input Channels
+512
+Output Channels
+263
+Condition Channels
+256
+Activation
+SiLU
+Dropout
+0
+Width
+(512, 1024)
+# Resnet / Block
+2
+# Params
+66.9M
+Table A
+:
+Implementation details
+for training the DisCoRD decoder on the HumanML3D dataset using the pretrained Momask quantizer.
+Appendix B
+Datasets and Evaluations
+In this section, we provide additional explanations regarding the co-speech gesture generation and music-to-dance generation tasks that we were unable to describe in detail in the main paper.
+B.1
+Datasets.
+For the co-speech gesture generation task, we utilized the SHOW dataset
+[
+62
+]
+, a 3D holistic body dataset comprising 26.9 hours of in-the-wild talking videos. For the music-driven dance generation task, we used a mixed dataset combining AIST++
+[
+25
+]
+and HumanML3D
+[
+11
+]
+where AIST++ is a large-scale 3D dance dataset created from multi-camera videos accompanied by music of varying styles and tempos, containing 992 high-quality pose sequences in the SMPL format.
+B.2
+Evaluations.
+To evaluate the co-speech gesture generation task, we used Frechet Gesture Distance (FGD)
+[
+33
+]
+, which measures the difference between the latent distributions of generated and real motions. Since our focus is on body movements, we reported body FGD, which quantifies differences specifically for the body part, for ProbTalk
+[
+30
+]
+. For TalkSHOW
+[
+62
+]
+, which only utilizes holistic FGD—a metric that measures differences across the entire motion, including the face and hands—we reported the holistic FGD. To evaluate the music-to-dance generation task, we utilized
+[MATH: \mathrm{Dist_{k}}]
+, which quantifies the distributional spread of generated dances based on kinetic features, and
+[MATH: \mathrm{Dist_{g}}]
+, which does the same for geometric features, as proposed in
+[
+53
+]
+. A smaller difference between the distributions of the generated motion and the ground truth motion indicates that the
+[MATH: \mathrm{Dist_{k}}]
+and
+[MATH: \mathrm{Dist_{g}}]
+values of the generated motion align closely with those of the ground truth, reflecting a similar level of distributional spread.
+Appendix C
+Additional Analysis on sJPE
+To evaluate the sample-wise naturalness of reconstructed motions, we introduce the symmetric Jerk Percentage Error (sJPE), as defined in Equation
+5
+of the main paper. We present detailed formulations of
+Noise sJPE
+and
+Static sJPE
+, supported by analysis using generated motion samples. Furthermore, qualitative comparisons highlight the effectiveness of DisCoRD against state-of-the-art discrete methods. Finally, we investigate the alignment of sJPE with human preference to validate its perceptual relevance.
+C.1
+Visualization of Fine-Grained Motion
+To analyze fine-grained motion trajectories, we follow a three-step procedure. First, we select a joint for visualization, typically hand joints due to their high dynamism, and track their positional changes over time. Second, we apply a Gaussian filter to smooth the trajectory, reducing noise. Finally, we compute the difference between the smoothed and original trajectories to isolate fine-grained motion components. This method allows for detailed evaluation of frame-wise noise and under-reconstructed regions in motion trajectories. The visualizations in Figure 5 of the main paper and the qualitative samples in the supplementary material are generated using this process.
+C.2
+Details on sJPE.
+Within the symmetric Jerk Percentage Error (sJPE), we define two components: Noise sJPE and Static sJPE. These isolate the instances where the predicted jerk overestimates or underestimates the ground truth jerk, respectively.
+Noise sJPE and Static sJPE.
+Noise sJPE
+captures the average overestimation of jerk in the predicted motion signal, meaning frame-wise noise, corresponding to cases where
+[MATH: J_{\text{pred},t}>J_{\text{true},t}]
+. It is defined as:
+[MATH: \text{Noise sJPE}=\frac{1}{n}\sum_{t=1}^{n}\frac{\max\left(0,J_{\text{pred},t}-J_{\text{true},t}\right)}{|J_{\text{true},t}|+|J_{\text{pred},t}|}.]
+(6)
+The operator
+[MATH: \max(0,x)]
+ensures that only positive differences contribute to Noise sJPE, separating overestimations from underestimations.
+Noise sJPE can be seen on the red box of Figure
+A
+. Time steps where motion trajectory is noisy compared to ground truth motion show bigger jerk. The area under the predicted jerk and above the ground truth jerk, shown in blue area, is proportional to the Noise sJPE, meaning frame-wise noise.
+Static sJPE
+measures the average underestimation of jerk, meaning lack of dynamism in the predicted motion, corresponding to cases where
+[MATH: J_{\text{pred},t}\leq J_{\text{true},t}]
+. It is defined as:
+[MATH: \text{Static sJPE}=\frac{1}{n}\sum_{t=1}^{n}\frac{\max\left(0,J_{\text{true},t}-J_{\text{pred},t}\right)}{|J_{\text{true},t}|+|J_{\text{pred},t}|}.]
+(7)
+Static sJPE can be seen on the green box of Figure
+A
+. Time steps where motion trajectory is under-reconstructed compared to ground truth motion show smaller jerk. The area above the predicted jerk and under the ground truth jerk, shown in red area, is proportional to the Static sJPE, meaning under reconstructed motions.
+The overall sJPE can be expressed as the sum of
+Noise sJPE
+and
+Static sJPE
+:
+[MATH: \text{sJPE}=\text{Noise sJPE}+\text{Static sJPE}.]
+(8)
+These formulations provide a measure of prediction accuracy by separately accounting for the tendencies of the predictive model to overestimate or underestimate the true motion jerks.
+Figure A
+:
+Relationship between fine-grained trajectory and jerk:
+Frame-wise noise in predicted motions, highlighted in the red box, results in higher jerk values compared to the ground truth, represented by the blue areas. The sum of the blue areas corresponds to Noise sJPE. Conversely, under-reconstruction in predicted motions, highlighted in the green box, leads to lower jerk values compared to the ground truth, represented by the red areas. The sum of the red areas corresponds to Static sJPE.
+Figure B
+:
+Joint Trajectory and Jerk: Under-Reconstruction in Discrete Methods
+DisCoRD effectively reduces the red area, demonstrating its capability to reconstruct dynamic motion accurately. This improvement is also reflected in the lower sJPE value.
+Figure C
+:
+Joint Trajectory and Jerk: Frame-Wise Noise in Discrete Methods
+DisCoRD significantly reduces the blue area, indicating its ability to generate smooth motions that closely resemble the ground truth. This improvement is further reflected in the lower sJPE value.
+C.3
+Qualitative Results on Joint Trajectory and Jerk
+We present a series of figures demonstrating the effectiveness of DisCoRD in reconstructing smooth and dynamic motion. For each sample, the first row visualizes the motion trajectory, while the second row plots the corresponding jerk at each time step, with the calculated sJPE displayed at the top. This visualization enables detailed analysis of fine-grained trajectories in predicted motions and highlights the contributions of Noise sJPE and Static sJPE to the overall sJPE.
+We compare DisCoRD with recent discrete methods, including T2M-GPT
+[
+64
+]
+, MMM
+[
+41
+]
+, and Momask
+[
+12
+]
+. Motion samples that illustrate under-reconstruction in discrete methods are presented in Figure
+B
+, while those that exhibit frame-wise noise are shown in Figure
+C
+. Samples showing both issues in discrete models are displayed in Figure
+D
+. DisCoRD effectively reduces frame-wise noise while accurately reconstructing dynamic, fast-paced motions. This is shown in both the visualizations and the sJPE results.
+Figure D
+:
+Joint Trajectory and Jerk: Both Frame-Wise Noise and Under-Reconstruction in Discrete Methods
+DisCoRD addresses both frame-wise noise and under-reconstruction by simultaneously reducing the blue and red areas. This demonstrates its ability to generate smooth and dynamic motions, closely aligning with the ground truth. This further supported by the lower sJPE values.
+C.4
+Correlation between sJPE and human perception.
+To further verify that sJPE aligns with human judgment of naturalness, we conducted an additional user study. We asked participants to rank three models—MLD, MoMask, and ours—in order of naturalness, guided as Figure
+J
+. The user interface for this user study is shown in Figure
+L
+. The rankings were scored such that the first place received 1 point, the second place 2 points, and the third place 3 points. Using these human scores, we calculated Pearson’s correlation between the human scores and two metrics—MPJPE and sJPE— for each sample. During this process, we excluded the lowest 10% of samples in terms of human score standard deviation among models, as these were considered indistinguishable by human evaluators. Our analysis revealed that the average Pearson’s correlation between MPJPE and human scores was 0.181, whereas the correlation between sJPE and human scores was significantly higher at 0.483. This result demonstrates the effectiveness of sJPE in evaluating sample-wise naturalness.
+Appendix D
+Additional Quantitative Results
+D.1
+Performance on Text-to-Motion Generation.
+In Table
+B
+, we present a comparison of our method against additional results from various text-to-motion models. Our method consistently achieves strong performance on the HumanML3D and KIT-ML
+[
+42
+]
+test sets, even when evaluated alongside these additional models. While ReMoDiffuse achieves particularly strong performance on KIT-ML, it is worth noting that its performance benefits from the use of a specialized database for high-quality motion generation, which makes direct comparisons less appropriate.
+Datasets
+Methods
+R Precision
+[MATH: \uparrow]
+FID
+[MATH: \downarrow]
+MultiModal Dist
+[MATH: \downarrow]
+MultiModality
+[MATH: \uparrow]
+Top 1
+Top 2
+Top 3
+Human
+ML3D
+MDM
+[
+52
+]
+-
+-
+[MATH: {0.611}^{\pm{.007}}]
+[MATH: {0.544}^{\pm{.044}}]
+[MATH: {5.566}^{\pm{.027}}]
+[MATH: \underline{{2.799}}^{\pm{.072}}]
+MLD
+[
+6
+]
+[MATH: {0.481}^{\pm{.003}}]
+[MATH: {0.673}^{\pm{.003}}]
+[MATH: {0.772}^{\pm{.002}}]
+[MATH: {0.473}^{\pm{.013}}]
+[MATH: {3.196}^{\pm{.010}}]
+[MATH: {2.413}^{\pm{.079}}]
+MotionDiffuse
+[
+65
+]
+[MATH: {0.491}^{\pm{.001}}]
+[MATH: {0.681}^{\pm{.001}}]
+[MATH: {0.782}^{\pm{.001}}]
+[MATH: {0.630}^{\pm{.001}}]
+[MATH: {3.113}^{\pm{.001}}]
+[MATH: {1.553}^{\pm{.042}}]
+ReMoDiffuse
+[
+66
+]
+[MATH: {0.510}^{\pm{.005}}]
+[MATH: {0.698}^{\pm{.006}}]
+[MATH: {0.795}^{\pm{.004}}]
+[MATH: {0.103}^{\pm{.004}}]
+[MATH: {2.974}^{\pm{.016}}]
+[MATH: {1.795}^{\pm{.043}}]
+Fg-T2M
+[
+wang2023fg
+]
+[MATH: {0.492}^{\pm{.002}}]
+[MATH: {0.683}^{\pm{.003}}]
+[MATH: {0.783}^{\pm{.024}}]
+[MATH: {0.243}^{\pm{.019}}]
+[MATH: {3.109}^{\pm{.007}}]
+[MATH: {1.614}^{\pm{.049}}]
+M2DM
+[
+m2dm
+]
+[MATH: {0.497}^{\pm{.003}}]
+[MATH: {0.682}^{\pm{.002}}]
+[MATH: {0.763}^{\pm{.003}}]
+[MATH: {0.352}^{\pm{.005}}]
+[MATH: {3.134}^{\pm{.010}}]
+[MATH: \mathbf{{3.587}}^{\pm{.072}}]
+M2D2M
+[
+7
+]
+-
+-
+[MATH: {0.799}^{\pm{.002}}]
+[MATH: {0.087}^{\pm{.004}}]
+[MATH: {3.018}^{\pm{.010}}]
+[MATH: {2.115}^{\pm{.079}}]
+MotionGPT
+[
+zhang2024motiongpt
+]
+[MATH: {0.364}^{\pm{.005}}]
+[MATH: {0.533}^{\pm{.003}}]
+[MATH: {0.629}^{\pm{.004}}]
+[MATH: {0.805}^{\pm{.002}}]
+[MATH: {3.914}^{\pm{.013}}]
+[MATH: {2.473}^{\pm{.041}}]
+MotionLLM
+[
+59
+]
+[MATH: {0.482}^{\pm{.004}}]
+[MATH: {0.672}^{\pm{.003}}]
+[MATH: {0.770}^{\pm{.002}}]
+[MATH: {0.491}^{\pm{.019}}]
+[MATH: {3.138}^{\pm{.010}}]
+-
+MotionGPT-2
+[
+motiongpt2
+]
+[MATH: {0.496}^{\pm{.002}}]
+[MATH: {0.691}^{\pm{.003}}]
+[MATH: {0.782}^{\pm{.004}}]
+[MATH: {0.191}^{\pm{.004}}]
+[MATH: {3.080}^{\pm{.013}}]
+[MATH: {2.137}^{\pm{.022}}]
+AttT2M
+[
+zhong2023attt2m
+]
+[MATH: {0.499}^{\pm{.003}}]
+[MATH: {0.690}^{\pm{.002}}]
+[MATH: {0.786}^{\pm{.002}}]
+[MATH: {0.112}^{\pm{.006}}]
+[MATH: {3.038}^{\pm{.007}}]
+[MATH: {2.452}^{\pm{.051}}]
+MMM
+[
+41
+]
+[MATH: {0.504}^{\pm{.003}}]
+[MATH: {0.696}^{\pm{.003}}]
+[MATH: {0.794}^{\pm{.002}}]
+[MATH: {0.080}^{\pm{.003}}]
+[MATH: {2.998}^{\pm{.007}}]
+[MATH: {1.164}^{\pm{.041}}]
+T2M-GPT
+[
+64
+]
+[MATH: {0.491}^{\pm{.003}}]
+[MATH: {0.680}^{\pm{.003}}]
+[MATH: {0.775}^{\pm{.002}}]
+[MATH: {0.116}^{\pm{.004}}]
+[MATH: {3.118}^{\pm{.011}}]
+[MATH: {1.856}^{\pm{.011}}]
++ DisCoRD (Ours)
+[MATH: {0.476}^{\pm{.008}}]
+[MATH: {0.663}^{\pm{.006}}]
+[MATH: {0.760}^{\pm{.007}}]
+[MATH: {0.095}^{\pm{.011}}]
+[MATH: {3.121}^{\pm{.009}}]
+[MATH: {1.831}^{\pm{.048}}]
+BAMM
+[
+40
+]
+[MATH: \mathbf{{0.525}}^{\pm{.002}}]
+[MATH: \mathbf{{0.720}}^{\pm{.003}}]
+[MATH: \mathbf{{0.814}}^{\pm{.003}}]
+[MATH: {0.055}^{\pm{.002}}]
+[MATH: \mathbf{{2.919}}^{\pm{.008}}]
+[MATH: {1.687}^{\pm{.051}}]
++ DisCoRD (Ours)
+[MATH: {0.522}^{\pm{.003}}]
+[MATH: \underline{{0.715}}^{\pm{.005}}]
+[MATH: \underline{{0.811}}^{\pm{.004}}]
+[MATH: \underline{{0.041}}^{\pm{.002}}]
+[MATH: \underline{{2.921}}^{\pm{.015}}]
+[MATH: {1.772}^{\pm{.067}}]
+MoMask
+[
+12
+]
+[MATH: {0.521}^{\pm{.002}}]
+[MATH: {0.713}^{\pm{.002}}]
+[MATH: {0.807}^{\pm{.002}}]
+[MATH: {0.045}^{\pm{.002}}]
+[MATH: {2.958}^{\pm{.008}}]
+[MATH: {1.241}^{\pm{.040}}]
++ DisCoRD (Ours)
+[MATH: \underline{{0.524}}^{\pm{.003}}]
+[MATH: \underline{{0.715}}^{\pm{.003}}]
+[MATH: {0.809}^{\pm{.002}}]
+[MATH: \mathbf{{0.032}}^{\pm{.002}}]
+[MATH: {2.938}^{\pm{.010}}]
+[MATH: {1.288}^{\pm{.043}}]
+KIT-
+ML
+MDM
+[
+52
+]
+-
+-
+[MATH: {0.396}^{\pm{.004}}]
+[MATH: {0.497}^{\pm{.021}}]
+[MATH: {9.191}^{\pm{.022}}]
+[MATH: {1.907}^{\pm{.214}}]
+MLD
+[
+6
+]
+[MATH: {0.390}^{\pm{.008}}]
+[MATH: {0.609}^{\pm{.008}}]
+[MATH: {0.734}^{\pm{.007}}]
+[MATH: {0.404}^{\pm{.027}}]
+[MATH: {3.204}^{\pm{.027}}]
+[MATH: {2.192}^{\pm{.071}}]
+MotionDiffuse
+[
+65
+]
+[MATH: {0.417}^{\pm{.004}}]
+[MATH: {0.621}^{\pm{.004}}]
+[MATH: {0.739}^{\pm{.004}}]
+[MATH: {1.954}^{\pm{.062}}]
+[MATH: {2.958}^{\pm{.005}}]
+[MATH: {0.730}^{\pm{.013}}]
+ReMoDiffuse
+[
+66
+]
+[MATH: {0.427}^{\pm{.014}}]
+[MATH: {0.641}^{\pm{.004}}]
+[MATH: {0.765}^{\pm{.055}}]
+[MATH: \mathbf{{0.155}}^{\pm{.006}}]
+[MATH: {2.814}^{\pm{.012}}]
+[MATH: {1.239}^{\pm{.028}}]
+Fg-T2M
+[
+wang2023fg
+]
+[MATH: {0.418}^{\pm{.005}}]
+[MATH: {0.626}^{\pm{.004}}]
+[MATH: {0.745}^{\pm{.004}}]
+[MATH: {0.571}^{\pm{.047}}]
+[MATH: {3.114}^{\pm{.015}}]
+[MATH: {1.019}^{\pm{.029}}]
+M2DM
+[
+m2dm
+]
+[MATH: {0.416}^{\pm{.004}}]
+[MATH: {0.628}^{\pm{.004}}]
+[MATH: {0.743}^{\pm{.004}}]
+[MATH: {0.515}^{\pm{.029}}]
+[MATH: {3.015}^{\pm{.017}}]
+[MATH: \mathbf{{3.325}}^{\pm{.037}}]
+M2D2M
+[
+7
+]
+-
+-
+[MATH: {0.753}^{\pm{.006}}]
+[MATH: {0.378}^{\pm{.023}}]
+[MATH: {3.012}^{\pm{.021}}]
+[MATH: {2.061}^{\pm{.067}}]
+MotionGPT
+[
+zhang2024motiongpt
+]
+[MATH: {0.340}^{\pm{.002}}]
+[MATH: {0.570}^{\pm{.003}}]
+[MATH: {0.660}^{\pm{.004}}]
+[MATH: {0.868}^{\pm{.032}}]
+[MATH: {3.721}^{\pm{.018}}]
+[MATH: {2.296}^{\pm{.022}}]
+MotionLLM
+[
+59
+]
+[MATH: {0.409}^{\pm{.006}}]
+[MATH: {0.624}^{\pm{.007}}]
+[MATH: {0.750}^{\pm{.005}}]
+[MATH: {0.781}^{\pm{.026}}]
+[MATH: {2.982}^{\pm{.022}}]
+-
+MotionGPT-2
+[
+motiongpt2
+]
+[MATH: {0.427}^{\pm{.003}}]
+[MATH: {0.627}^{\pm{.002}}]
+[MATH: {0.764}^{\pm{.003}}]
+[MATH: {0.614}^{\pm{.005}}]
+[MATH: {3.164}^{\pm{.013}}]
+[MATH: \underline{{2.357}}^{\pm{.022}}]
+AttT2M
+[
+zhong2023attt2m
+]
+[MATH: {0.413}^{\pm{.006}}]
+[MATH: {0.632}^{\pm{.006}}]
+[MATH: {0.751}^{\pm{.006}}]
+[MATH: {0.870}^{\pm{.039}}]
+[MATH: {3.039}^{\pm{.021}}]
+[MATH: {2.281}^{\pm{.047}}]
+MMM
+[
+41
+]
+[MATH: {0.404}^{\pm{.005}}]
+[MATH: {0.621}^{\pm{.006}}]
+[MATH: {0.744}^{\pm{.005}}]
+[MATH: {0.316}^{\pm{.019}}]
+[MATH: {2.977}^{\pm{.019}}]
+[MATH: {1.232}^{\pm{.026}}]
+T2M-GPT
+[
+64
+]
+[MATH: {0.398}^{\pm{.007}}]
+[MATH: {0.606}^{\pm{.006}}]
+[MATH: {0.729}^{\pm{.005}}]
+[MATH: {0.718}^{\pm{.038}}]
+[MATH: {3.076}^{\pm{.028}}]
+[MATH: {1.887}^{\pm{.050}}]
++ DisCoRD (Ours)
+[MATH: {0.382}^{\pm{.007}}]
+[MATH: {0.590}^{\pm{.007}}]
+[MATH: {0.715}^{\pm{.004}}]
+[MATH: {0.541}^{\pm{.038}}]
+[MATH: {3.260}^{\pm{.028}}]
+[MATH: {1.928}^{\pm{.059}}]
+MoMask
+[
+12
+]
+[MATH: \underline{{0.433}}^{\pm{.007}}]
+[MATH: \underline{{0.656}}^{\pm{.005}}]
+[MATH: \mathbf{{0.781}}^{\pm{.005}}]
+[MATH: {0.204}^{\pm{.011}}]
+[MATH: \mathbf{{2.779}}^{\pm{.022}}]
+[MATH: {1.131}^{\pm{.043}}]
++ DisCoRD (Ours)
+[MATH: \mathbf{{0.434}}^{\pm{.007}}]
+[MATH: \mathbf{{0.657}}^{\pm{.005}}]
+[MATH: \underline{{0.775}}^{\pm{.004}}]
+[MATH: \underline{{0.169}}^{\pm{.010}}]
+[MATH: \underline{{2.792}}^{\pm{.015}}]
+[MATH: {1.266}^{\pm{.046}}]
+Table B
+:
+Additional quantitative evaluation
+on the HumanML3D and KIT-ML test sets.
+[MATH: \pm]
+indicates a 95% confidence interval. +DisCoRD indicates that the baseline model’s decoder is replaced with our DisCoRD decoder.
+Bold
+indicates the best result, while
+underscore
+refers the second best.
+D.2
+Performance on Various Tasks.
+In
+Table
+C
+, we present additional evaluation results for co-speech gesture generation. Following
+[
+62
+]
+, we additionally report Diversity, which measures the variance among multiple samples generated from the same condition, and Beat Consistency (BC), which evaluates the synchronization between the generated motion and the corresponding audio. In Table
+D
+, we provide additional evaluation results for music-to-dance generation. Following
+[
+46
+]
+, we report
+[MATH: \mathrm{FID_{k}}]
+to measure differences in kinetic motion features and
+[MATH: \mathrm{FID_{g}}]
+for geometric motion features. Additionally, we include the Beat Align Score (BAS) to assess the synchronization between motion and music. While
+[
+53
+]
+has shown that these metrics are not fully reliable and often fail to align with actual output quality, we include them to follow established conventions.
+Methods
+Diversity
+[MATH: \uparrow]
+BC
+[MATH: \rightarrow]
+(0.868)
+TalkSHOW
+[
+62
+]
+0.821
+0.872
++DisCoRD(Ours)
+0.919
+0.876
+ProbTalk
+[
+30
+]
+0.259
+0.795
++DisCoRD(Ours)
+0.331
+0.866
+Table C
+:
+Additional quantitative results
+on each method’s SHOW test set. The results demonstrate that our method performs on par with, or surpasses, the baseline models.
+Methods
+[MATH: \mathrm{FID_{k}}\downarrow]
+[MATH: \mathrm{FID_{g}}\downarrow]
+BAS
+[MATH: \uparrow]
+Ground Truth
+17.10
+10.60
+0.2374
+TM2D
+[
+10
+]
+19.01
+20.09
+0.2049
++DisCoRD(Ours)
+23.98
+88.74
+0.2190
+Table D
+:
+Additional quantitative results
+on the AIST++ test set. The results demonstrate that, although our method shows performance degradation on
+[MATH: \mathrm{FID_{k}}]
+and
+[MATH: \mathrm{FID_{g}}]
+, which are known to be unreliable, it achieves improvement in the Beat Align Score.
+Appendix E
+Additional Qualitative Results
+E.1
+Motion visualization.
+In Figure
+F
+and Figure
+G
+, we present qualitative comparisons between our model and other leading approaches.
+In Figure
+H
+, we additionally display more qualitative results of our method. We observed that our method effectively follows the text prompts while maintaining naturalness in the generated outputs. Again, we highly recommend viewing the accompanying video, as static images are insufficient to fully convey the intricacies of motion.
+Figure E
+:
+User study results on the HumanML3D dataset.
+Each bar represents a comparison between two models, with win rates depicted in blue and loss rates in red, evaluated based on naturalness and faithfulness.
+E.2
+User preference study details.
+We conduct two user studies to (1) validate our motivation and method effectiveness and (2) evaluate how well sJPE aligns with human perception. The first study, shown in Figure
+E
+, indicates that the discrete model Momask outperforms the continuous model MDM in faithfulness but lags in naturalness. In contrast, DisCoRD surpasses both, demonstrating its ability to generate motion that is both natural and faithful. In the second study, we find that sJPE exhibits 2.7 times higher correlation with human preference for naturalness compared to MPJPE, highlighting its effectiveness in evaluating sample-wise motion naturalness. Participants were guided to evaluate both faithfulness and naturalness, as shown in Figure
+I
+. Given two motion videos generated by two different models on the same prompt, participants were asked to choose a better one in terms of faithfulness and naturalness, as shown in Figure
+K
+. Total 41 participants participated in this user study.
+Figure F
+:
+Qualitative comparisons
+on the test set of HumanML3D.
+Figure G
+:
+Additional qualitative comparisons
+on the HumanML3D test set. The continuous method, MLD, often fails to perfectly align with the text consistently, while the discrete method, MoMask, exhibits issues such as under-reconstruction, resulting in minimal hand movement, or unnatural leg jitter caused by frame-wise noise.
+Figure H
+:
+Additional qualitative results
+of our method on the HumanML3D test set.
+Method
+Sampling Steps
+2
+16
+50
+100
+DDPM (DDIM sample)
+0.055 / 0.007s
+0.044 / 0.087s
+0.038 / 0.331s
+0.035 / 0.689s
+Linear SDE
+8.998 / 0.024s
+0.047 / 0.157s
+0.033 / 0.472s
+0.032 / 0.955s
+Ours
+0.034 / 0.016s
+0.032 / 0.221s
+0.032 / 0.703s
+0.032 / 1.426s
+Table E:
+FID and decoding time (s) for different sampling steps
+[MATH: (\downarrow)]
+. The original
+MoMask has a decoding time of 0.244 seconds
+. We trained a diffusion decoder (DDPM) using the same architecture as our rectified flow decoder for a fair comparison. For the Linear SDE variant, we replaced only the sampler in our model with the Euler-Maruyama sampler, keeping all other components identical.
+Figure I
+:
+Guidelines for user study in the Main paper:
+participants were asked to evaluate Faithfulness and Naturalness, excluding hand and facial movements that are not included in HumanML3D.
+Figure J
+:
+Guidelines for User Study in the Supplementary:
+Participants were asked to evaluate Naturalness, excluding hand and facial movements that are not included in HumanML3D.
+Figure K
+:
+User evaluation interface
+for the user study in the Main paper: participants were presented with two randomly selected videos and asked to choose the better sample in terms of faithfulness and naturalness.
+Figure L
+:
+User evaluation interface
+for the user study in the supplementary: participants were presented with a grid layout containing the GT video and three generated videos. Using the GT video as the upper bound, they were asked to rank the three generated videos in terms of naturalness.

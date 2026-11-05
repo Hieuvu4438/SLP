@@ -1,0 +1,1962 @@
+\ConferenceSubmission
+Perceptually Grounded and Semantics-Aware Evaluation for Holistic Co-Speech Gesture Generation
+Nick Milkin
+1,2
+†
+†
+thanks:
+Equal Contribution
+Lanmiao Liu
+1,2,3
+1
+1
+footnotemark:
+1
+Esam Ghaleb
+1,3
+Asli Ozyurek
+1,3
+Zerrin Yumak
+2
+1
+Max Planck Institute for Psycholinguistics
+Nijmegen
+The Netherlands
+2
+Utrecht University
+Utrecht
+The Netherlands
+3
+Donders Institute for Brain
+Cognition and Behaviour
+Nijmegen
+The Netherlands
+nick.milkin, lanmiao.liu, esam.ghaleb, asli.ozyurek@mpi.nl,
+z.yumak@uu.nl
+Abstract
+Holistic and semantics-aware co-speech gesture generation has advanced rapidly, yet evaluation remains behind: objective metrics do not consistently reflect human perception, and semantic appropriateness remains difficult to quantify. We present a perceptually grounded and semantics-aware benchmark that combines standardized model comparison, human-centered metric validation, and fine-grained semantic evaluation. We first curate a list of 13 objective metrics covering different aspects, including distributional similarity, geometric fidelity, kinematic quality, cross-modal synchrony, and semantic appropriateness. For the semantic-appropriateness category, we propose a new metric, Semantic Gesture Preservation (SGP), which measures how far semantic gestures in the ground truth are preserved in the generated gestures. For this, we augment the BEAT2 dataset’s annotations using a multi-modal LLM. We then conduct a perceptual study where 101 participants score generated gestures among five dimensions, including human-likeness, motion diversity, absence of animation errors, speech timing and content match. We systematically analyze objective metric–subjective score correlations. Unlike Semantic Score (SC), which shows no significant association with the evaluated perceptual dimensions, SGP is selectively aligned with speech-aware human judgments. We construct five target-specific composite metrics aligned with the subjective dimensions. These composites improve perceptual alignment across all five dimensions, with the largest gains for absence of animation errors and content match, indicating that complementary objective signals can better approximate human judgments than individual metrics alone. Overall, our results show that objective metrics require validation against subjective evaluations. Gesture quality assessment is complex and can benefit from semantics-aware and composite objective metrics. We hope that these findings shed light to and form the basis for further fine-grained semantics-aware and composite metric assessments across a larger number of methods. Demos and qualitative illustrations are available on the anonymized project page: https://holisticgesturebenchmark.github.io/HolisticGestureBenchmark/. Code for individual and composite metrics and annotations for the dataset will be provided upon acceptance with a Github page.
+ccs
+Computing methodologies Computer vision
+ccs
+Computing methodologies Animation
+ccs
+Computing methodologies Machine learning
+1
+Introduction
+Human communication is fundamentally multimodal
+[
+11
+]
+, where speech is linked to non-verbal behaviors that encode intent, emphasis, and discourse structure. As a cornerstone for developing virtual humans, co-speech gestures must exhibit deep behavioral coherence and social appropriateness rather than just visual fidelity
+[
+3
+,
+13
+,
+8
+,
+7
+]
+. While early learning-based approaches targeted rhythmic, acoustics-driven upper-body motion
+[
+9
+]
+, the field has recently undergone a paradigm shift toward a holistic synthesis that integrates the body, hands, and face while leveraging richer linguistic and semantic conditioning
+[
+17
+]
+. However, as these generative architectures grow in complexity, the methodology for their evaluation has lagged. Co-speech gesture quality is inherently multifaceted, demanding a synergy of naturalness, diversity, temporal synchrony, and semantic relevance. Capturing these attributes remains an open challenge, leaving current practices reliant on fragmented and narrow evaluation protocols.
+A fundamental question therefore persists regarding whether prevalent objective metrics designed to quantify motion fidelity, diversity, or temporal alignment
+[
+18
+,
+1
+]
+truly align with human perception. Recent evidence suggests a significant divergence between numerical gains and subjective preferences
+[
+27
+]
+, indicating that current metrics often fail to capture the nuanced perceptual dimensions of high-quality gestures. This disconnect is most pronounced in semantic gesture evaluation: a gesture may be kinematically natural and temporally synchronized yet remain semantically vacuous or mismatched. Unlike rhythmic motion, semantic gestures are sparse, context-dependent, and exhibit a complex many-to-many mapping between meaning and form, rendering conventional statistical measures ill-equipped to capture these high-level relationships.
+Reliable perceptual validation is further complicated by a systemic lack of standardization across the literature, where disparate datasets, preprocessing pipelines, rendering conditions, and subjective study designs have fostered a “Wild West” of evaluation in non-verbal behavior generation
+[
+26
+,
+10
+]
+. In this environment, performance gains reported in individual studies are often not directly comparable, as apparent improvements may stem from idiosyncratic experimental settings rather than fundamental algorithmic advances, necessitating a transition toward evaluating representative models under a common protocol. Establishing such a standardized setting is therefore essential for determining whether objective metrics genuinely reflect human perception and for enabling controlled analysis of semantic gesture quality.
+In this work, we propose a unified evaluation framework for semantics-aware holistic co-speech gesture generation bridging the gap between perceptual validation and objective metrics. We first conduct a systematic study of objective-subjective correlations drawing inspiration from multi-dimensional evaluation in other domains (i.e facial animation
+[
+6
+]
+and general body motion
+[
+34
+]
+). Rather than treating objective metrics as isolated scores, we analyze their perceptual relevance across five distinct dimensions and construct five target-specific composite metrics that combine complementary objective signals to predict human judgments of human-likeness, motion diversity, absence of animation errors, speech timing, and content match. To address the semantic gesture evaluation gap, we further introduce an LLM-assisted framework for fine-grained semantic annotation and derive a new semantics-aware metric. We empirically validate this metric against human judgments of content appropriateness, assessing its efficacy as an automated proxy for semantic performance. To support these analyses under controlled and directly comparable conditions, we establish a benchmark involving four state-of-the-art holistic gesture generation models: EMAGE
+[
+17
+]
+, SemTalk
+[
+43
+]
+, GestureLSM
+[
+22
+]
+, and SemConFlow
+[
+20
+]
+, all evaluated under a shared data and rendering pipeline. By integrating these components, we provide a rigorous foundation for measuring progress in semantics-aware holistic co-speech gesture generation, offering insights into the strengths and limitations of the current evaluative toolkit. Our primary contributions are:
+•
+Perceptual Validation and Target-Specific Composite Metrics:
+We systematically evaluate objective metrics against human judgments across five perceptual dimensions and construct five target-specific composite predictors that combine complementary objective signals to better approximate dimension-specific human ratings.
+•
+Semantics-Aware Gesture Evaluation Framework:
+We establish a scalable paradigm for fine-grained semantic gesture annotation leveraging the cross-modal reasoning of LLMs, contributing an annotated corpus of semantic gesture descriptions to the community. Building upon this, we introduce the Semantic Gesture Preservation (SGP) metric, a new objective measure for semantic evaluation that is assessed against human perception.
+•
+A Semantics-aware Holistic Co-Speech Gesture Generation Benchmark:
+We provide standardized objective metrics and subjective scores comparison of four representative generative models under a unified dataset, rendering pipeline, and evaluation protocol, enabling direct and fair performance analysis.
+2
+Related Work
+2.1
+Co-speech gesture generation
+Co-speech gesture generation aims to synthesize human motion conditioned on multimodal signals such as speech and text, with the goal of producing behavior that is both perceptually plausible and communicatively appropriate
+[
+29
+]
+. Early data-driven approaches mainly focused on generating rhythmic motion that followed the prosodic structure of speech
+[
+9
+]
+, whereas later methods increasingly incorporated linguistic and semantic information to improve the correspondence between speech content and generated gestures. Representative directions include combining low-level acoustic features with higher-level speech representations
+[
+4
+]
+, explicitly modeling semantically rich gestures separately from rhythmic motion
+[
+44
+]
+, retrieving semantically relevant motion from external databases
+[
+42
+,
+24
+]
+, and optimizing semantic consistency between speech and motion during training
+[
+19
+]
+using contrastive learning
+[
+20
+]
+. These developments reflect a broader shift from generating motion that is primarily synchronized with speech toward gestures that also capture communicative meaning.
+In parallel, advances in motion representation have enabled increasingly expressive and holistic generation. Discrete latent representations based on VQ-VAEs
+[
+32
+]
+and RQ-VAEs
+[
+15
+]
+have been widely adopted to model complex motion distributions and provide stronger priors for full-body synthesis. EMAGE
+[
+17
+]
+models different body components through compositional VQ-VAEs, while SemTalk
+[
+43
+]
+employs separate residual-quantized representations for different body regions. Together with other recent systems such as GestureLSM
+[
+22
+]
+and TalkSHOW
+[
+40
+]
+, these methods extend co-speech gesture generation toward coordinated face, hand, and body motion under richer multi-modal conditioning
+[
+20
+]
+. Despite rapid progress, evaluation of co-speech gesture synthesis methods remains an open topic as these methods are aspiring to be more semantically-aware and holistic. Current methods do not specifically evaluate the semantic aspect in depth and rely on a set of common objective metrics and limited subjective evaluations.
+2.2
+Human-Centered Validation of Objective Metrics
+Human evaluation remains the most direct way to assess the perceptual quality of generated gestures and is widely regarded as the gold standard in co-speech gesture generation
+[
+27
+]
+. However, subjective results are sensitive to study design, including question formulation, presented modalities, and the perceptual dimensions participants are asked to judge
+[
+26
+,
+39
+]
+. The GENEA evaluations sought to reduce such confounds by separating motion-quality judgments from speech-dependent appropriateness, for example through muted motion evaluation and mismatched speech–motion pairs
+[
+27
+,
+14
+]
+. Nevertheless, subjective protocols remain heterogeneous across studies and are costly to reproduce at scale, motivating the widespread use of automatic objective metrics.
+Objective metrics provide efficient and reproducible estimates of properties such as motion fidelity, diversity, and speech–motion alignment, yet their correspondence with human perception remains uncertain. Large-scale evaluations have shown that correlations between commonly used objective metrics and subjective judgments are not always strong
+[
+14
+,
+27
+,
+28
+]
+. In other fields such as general body motion Rekik et al.
+[
+34
+]
+and facial animation Delbosc et al.
+[
+6
+]
+researchers suggested to use combined metrics as an alternative. These studies suggest that complementary metrics can provide more informative perceptual signals than individual scores alone. However, for the field of co-speech gesture generation the idea of combined metrics particularly for holistic and semantics-aware methods have not been explored. In this work, we first systematically analyze correlations between automatic metrics and human judgments for recent semantics-aware and holistic methods. We explicitly extend the current repertoire of objective metrics to better capture these aspects and correlate them with a carefully selected list of subjective scores. Based on these findings, we propose combined objective metrics that better correlates with subjective evaluations.
+2.3
+Assessing Semantic Grounding in Co-Speech Gestures
+Multi-modal large language models (MLLMs) have recently emerged as scalable tools for semantic annotation and automatic evaluation. Their ability to jointly reason over visual and linguistic information has enabled applications beyond conventional recognition, including fine-grained multi-modal assessment and data annotation. Gemini -2.5
+[
+5
+]
+has been investigated as a general-purpose evaluator for vision-language tasks, showing promising agreement with human judgments across several evaluation settings
+[
+35
+]
+. Hu et al.
+[
+12
+]
+studies the use of MLLMs for scoring, pairwise comparison, and ranking across multiple tasks. Recent dataset construction pipelines have also exploited multi-modal models for scalable annotation;
+[
+45
+]
+uses Gemini-2.5 to generate fine-grained video reasonin MLLMs can provide rich semantic supervision without requiring every annotation to be manually specified. However, their potential for systematically annotating and evaluating the semantic content of co-speech gestures remains largely unexplored.
+Existing semantics-aware evaluation approaches instead rely on predefined semantic annotations
+[
+18
+]
+and learned cross-modal representations
+[
+1
+,
+19
+,
+30
+,
+21
+]
+. Semantic Relevant Gesture Recall (SRGR)
+[
+18
+]
+weights pose accuracy according to semantic relevance annotations, emphasizing motion correctness at semantically important moments. Semantic Score (SC)
+[
+1
+]
+measures similarity between speech and generated motion in a learned gesture-text embedding space, while Emotional Accuracy (EA)
+[
+33
+]
+evaluates whether generated motion conveys a target affective category. Canonical Correlation Analysis (CCA)
+[
+14
+,
+36
+]
+provides a more indirect measure by quantifying shared structure between generated and reference motion. Although these metrics extend evaluation beyond low-level motion statistics, they provide only partial access to whether a generated gesture is semantically present, what meaning it conveys, and whether that meaning is consistent with the accompanying speech. Overall, fine-grained semantic gesture evaluation remains constrained by limited scalable annotation and by metrics that only indirectly capture gesture meaning. We address this gap by leveraging large multimodal models for detailed semantic gesture annotation and, building on these annotations, introduce a semantics-aware metric that takes into account micro-level annotations.
+3
+Methodology
+We curate a diverse set of objective metrics covering multiple aspects of motion and introduce a new semantics metric based on MLLM-derived fine-grained motion annotations. We evaluate recent holistic and semantics-aware gesture models, conduct a perceptual study extending existing subjective criteria with motion diversity, absence of animation errors, and content match, and analyze objective–subjective correlations to derive potential composite metrics.
+3.1
+Benchmark Objective Metrics
+To quantify model performance, we organize objective metrics into a multidimensional taxonomy spanning distributional similarity, geometric fidelity, kinematic quality, cross-modal synchrony, and semantic appropriateness. The selected metrics operate across latent, distributional, and raw-signal levels, providing complementary measures of physical plausibility and communicative quality in co-speech gesture generation.
+3.1.1
+Latent-space Distribution-Based Metrics
+Fréchet Gesture Distance (FGD)
+Fréchet Gesture Distance (FGD)
+[
+41
+]
+measures the discrepancy between real and generated motion distributions in a learned latent feature space. Let
+[MATH: \boldsymbol{\mu}^{A},\boldsymbol{\Sigma}^{A}]
+and
+[MATH: \boldsymbol{\mu}^{G},\boldsymbol{\Sigma}^{G}]
+denote the corresponding means and covariances. FGD is defined as
+[MATH: \mathrm{FGD}=\left\|\boldsymbol{\mu}^{A}-\boldsymbol{\mu}^{G}\right\|_{2}^{2}+\operatorname{Tr}\left(\boldsymbol{\Sigma}^{A}+\boldsymbol{\Sigma}^{G}-2\left(\boldsymbol{\Sigma}^{A}\boldsymbol{\Sigma}^{G}\right)^{1/2}\right).]
+(1)
+Lower values indicate closer agreement between the two motion distributions, while the metric depends on the learned feature encoder and does not directly capture speech–gesture semantics.
+Density
+Density
+[
+25
+]
+measures how well generated samples align with local regions of the real-data manifold. Unlike binary precision, it counts the number of reference neighborhoods containing each generated feature. Let
+[MATH: \{X_{i}\}_{i=1}^{N}]
+and
+[MATH: \{Y_{j}\}_{j=1}^{M}]
+denote reference and generated features, respectively, and let
+[MATH: \mathrm{NND}_{k}(X_{i})]
+be the distance from
+[MATH: X_{i}]
+to its
+[MATH: k]
+-th nearest reference neighbor. Density is defined as
+[MATH: \mathrm{Density}=\frac{1}{kM}\sum_{j=1}^{M}\sum_{i=1}^{N}\mathbf{1}\left[Y_{j}\in B\left(X_{i},\mathrm{NND}_{k}(X_{i})\right)\right],]
+(2)
+where
+[MATH: B(\cdot)]
+denotes the local reference neighborhood. Higher values indicate that generated motions more frequently fall within well-supported regions of the reference distribution.
+Coverage
+Coverage
+[
+25
+]
+complements Density by measuring how extensively the generated samples cover the support of the reference motion distribution. Using the same
+[MATH: k]
+-nearest-neighbor neighborhoods defined for Density, Coverage computes the proportion of reference samples whose local neighborhood contains at least one generated sample:
+[MATH: \mathrm{Coverage}=\frac{1}{N}\sum_{i=1}^{N}\mathbf{1}\left[\exists j\text{ such that }Y_{j}\in B\left(X_{i},\mathrm{NND}_{k}(X_{i})\right)\right].]
+(3)
+Higher Coverage indicates that the generated samples represent a larger fraction of the real-motion manifold. Density and Coverage therefore provide complementary estimates of generation fidelity and support coverage in latent feature space.
+3.1.2
+Geometric Fidelity Metrics
+Chamfer Distance
+Chamfer Distance
+[
+34
+]
+measures geometric similarity between generated and reference motions using their root-aligned vertex point clouds. Let
+[MATH: S_{i}^{A}]
+and
+[MATH: S_{i}^{G}]
+denote the reference and generated vertex sets at frame
+[MATH: i]
+. The symmetric distance over
+[MATH: n]
+frames is
+[MATH: C(\{S_{i}^{A}\}_{i=1}^{n},\{S_{i}^{G}\}_{i=1}^{n})=\frac{1}{n}\sum_{i=1}^{n}\bigg(\frac{1}{|S_{i}^{A}|}\sum_{x\in S_{i}^{A}}\min_{y\in S_{i}^{G}}\|x-y\|_{2}^{2}\\
++\frac{1}{|S_{i}^{G}|}\sum_{y\in S_{i}^{G}}\min_{x\in S_{i}^{A}}\|x-y\|_{2}^{2}\bigg).]
+(4)
+Lower values indicate closer average surface geometry, while primarily reflecting geometric fidelity rather than perceptual or semantic appropriateness.
+Hausdorff Distance
+Hausdorff Distance
+[
+38
+]
+measures the largest geometric discrepancy between generated and reference motion surfaces, making it more sensitive to local deviations than average-based distances. For reference and generated point sets
+[MATH: S_{i}^{A}]
+and
+[MATH: S_{i}^{G}]
+at frame
+[MATH: i]
+, it is defined as
+[MATH: H(\{S_{i}^{A}\}_{i=1}^{n},\{S_{i}^{G}\}_{i=1}^{n})=\frac{1}{n}\sum_{i=1}^{n}\max\bigg\{\max_{x\in S_{i}^{A}}\min_{y\in S_{i}^{G}}\|x-y\|_{2},\\
+\max_{y\in S_{i}^{G}}\min_{x\in S_{i}^{A}}\|x-y\|_{2}\bigg\}.]
+(5)
+Lower values indicate smaller worst-case geometric deviations from the reference motion.
+Mean Joint Distance
+Mean Joint Distance (MJD)
+[
+34
+]
+measures pose-space error between generated and reference motion using corresponding root-aligned body and hand joints. Let
+[MATH: p_{ct}^{j}]
+and
+[MATH: \hat{p}_{cmt}^{j}]
+denote the reference and generated positions of joint
+[MATH: j]
+at frame
+[MATH: t]
+. MJD is defined as
+[MATH: \mathrm{MJD}_{cm}=\frac{1}{TJ}\sum_{t=1}^{T}\sum_{j=1}^{J}\left\|p_{ct}^{j}-\hat{p}_{cmt}^{j}\right\|_{2},]
+(6)
+where
+[MATH: T]
+and
+[MATH: J]
+denote the numbers of aligned frames and evaluated joints, respectively. Lower values indicate closer agreement with the reference pose sequence.
+Dice Coefficient
+The Dice Coefficient
+[
+37
+]
+measures spatial overlap between generated and reference gesture trajectories after projection onto a binary occupancy map in the frontal
+[MATH: xy]
+plane. Let
+[MATH: A]
+and
+[MATH: B]
+denote the occupied regions of the reference and generated motions, respectively. It is defined as
+[MATH: \mathrm{Dice}(A,B)=\frac{2|A\cap B|}{|A|+|B|}.]
+(7)
+The score lies in
+[MATH: [0,1]]
+, with higher values indicating greater spatial overlap. Dice captures the overall motion footprint but discards depth information and temporal ordering.
+3.1.3
+Motion Quality and Physical Plausibility Metrics
+Foot Contact
+Foot Contact measures lower-body plausibility by comparing stable ground-contact rates between generated and reference motion. A foot is considered in contact when at least two of the heel, big-toe, and small-toe vertices are within
+[MATH: 3]
+cm of the estimated floor and have horizontal velocity below
+[MATH: 0.10]
+m/s. Let
+[MATH: r_{\mathrm{GT}}]
+and
+[MATH: r_{\mathrm{GEN}}]
+denote the proportions of frames with at least one foot in contact. The Foot Contact error is
+[MATH: \mathrm{FC}=\left|r_{\mathrm{GT}}-r_{\mathrm{GEN}}\right|.]
+(8)
+Lower values indicate closer agreement with reference contact behavior. The metric primarily reflects lower-body stability and artifacts such as implausible contact or foot sliding, rather than speech-related gesture quality.
+Log Dimensionless Jerk (LDLJ)
+Log Dimensionless Jerk (LDLJ)
+[
+2
+]
+measures motion smoothness from the third derivative of position while normalizing for movement duration and amplitude. For a trajectory
+[MATH: p(t)]
+with duration
+[MATH: T]
+and path length
+[MATH: L]
+, it is defined as
+[MATH: \mathrm{LDLJ}(p)=-\ln\left(\frac{T^{5}}{L^{2}}\int_{0}^{T}\left(\frac{d^{3}p(t)}{dt^{3}}\right)^{2}dt\right).]
+(9)
+Higher LDLJ indicates smoother motion. To compare generated and reference sequences, we use the relative score
+[MATH: \mathrm{LDLJ}_{\mathrm{REL}}=\mathrm{LDLJ}_{\mathrm{GT}}-\mathrm{LDLJ}_{\mathrm{GEN}}]
+, where values closer to zero indicate more similar smoothness and positive values indicate smoother reference motion.
+3.1.4
+Speech-Motion Alignment Metrics
+Beat Consistency
+Beat Consistency (BC)
+[
+16
+]
+measures temporal synchronization between kinematic motion beats and acoustic beats in the accompanying speech. Let
+[MATH: B^{x}=\{t_{i}^{x}\}]
+denote detected gesture-beat timestamps and
+[MATH: B^{y}=\{t_{j}^{y}\}]
+detected audio-beat timestamps. BC is computed as
+[MATH: \mathrm{BC}=\frac{1}{m}\sum_{i=1}^{m}\exp\left(-\frac{\min_{t_{j}^{y}\in B^{y}}\|t_{i}^{x}-t_{j}^{y}\|^{2}}{2\sigma^{2}}\right),]
+(10)
+where
+[MATH: \sigma]
+controls the temporal tolerance around each acoustic beat. Higher values indicate stronger temporal correspondence between gesture and speech beats. BC is therefore prosody-aware but semantics-agnostic: it evaluates
+when
+a gesture occurs, but not whether the gesture expresses information consistent with the spoken content.
+3.1.5
+Semantics-Aware Metrics
+SRGR
+Semantic Relevant Gesture Recall (SRGR)
+[
+18
+]
+extends PCK by weighting pose correctness according to semantic relevance. Let
+[MATH: p_{t}^{j}]
+and
+[MATH: \hat{p}_{t}^{j}]
+denote the reference and generated positions of joint
+[MATH: j]
+at frame
+[MATH: t]
+, respectively. SRGR is defined as
+[MATH: D_{\mathrm{SRGR}}=\lambda\frac{1}{TJ}\sum_{t=1}^{T}\sum_{j=1}^{J}\mathbf{1}\left[\|p_{t}^{j}-\hat{p}_{t}^{j}\|_{2}<\delta\right],]
+(11)
+where
+[MATH: \lambda]
+is the semantic relevance weight and
+[MATH: \delta]
+the distance threshold. Higher values indicate greater pose agreement at semantically important intervals. As a reference-pose-based metric, SRGR may penalize alternative but semantically valid gesture realizations.
+Semantic Score
+Semantic Score (SC)
+[
+1
+]
+measures speech–gesture semantic alignment in a learned cross-modal embedding space by comparing transcript and generated-motion embeddings with cosine similarity. Let
+[MATH: \mathbf{e}_{\mathrm{text}}]
+and
+[MATH: \mathbf{e}_{\mathrm{motion}}]
+denote the corresponding embeddings. SC is defined as
+[MATH: \mathrm{SC}=\frac{\mathbf{e}_{\mathrm{text}}^{\top}\mathbf{e}_{\mathrm{motion}}}{\|\mathbf{e}_{\mathrm{text}}\|_{2}\|\mathbf{e}_{\mathrm{motion}}\|_{2}}.]
+(12)
+Higher values indicate stronger semantic alignment. Unlike SRGR, SC does not require frame-level semantic annotations, but depends on the quality of the learned gesture–text embedding space.
+Semantic Gesture Preservation (SGP)
+We introduce
+Semantic Gesture Preservation (SGP)
+, a new semantics-aware metric designed to evaluate whether generated motion preserves semantic gesturing during speech intervals annotated as semantically meaningful; see details in
+3.2
+. In contrast to reference-pose metrics such as SRGR, SGP does not require the generated gesture to reproduce the exact physical realization observed in the ground truth. This is important for co-speech gestures, where the same communicative meaning can be expressed through multiple valid motion forms.
+SGP operates on semantic gesture events annotated in BEAT2 and uses Gemini 2.5 Pro
+[
+5
+]
+as a multimodal gesture classifier. For each annotated semantic event, the corresponding generated video is extracted with temporal context and presented to Gemini together with the speech and annotation metadata. The model is instructed to determine the visibly observed gesture rather than assume that a semantic gesture is present, and classifies its type as
+iconic
+,
+metaphoric
+,
+deictic
+,
+beat
+,
+none
+, or
+uncertain
+. This yields a scalable event-level assessment of whether intervals expected to contain semantic gestures instead collapse into generic beat-like motion.
+Let
+[MATH: E_{c}]
+denote the set of annotated semantic gesture events in clip
+[MATH: c]
+, and let
+[MATH: \hat{\tau}_{cme}]
+denote the gesture type identified by Gemini for event
+[MATH: e]
+from model
+[MATH: m]
+. An event is considered semantically degraded when
+[MATH: \hat{\tau}_{cme}=\mathrm{beat}]
+. The clip-level Semantic Gesture Preservation score is then defined as
+[MATH: \mathrm{SGP}_{cm}=1-\frac{n\left(\hat{\tau}_{cme}=\mathrm{beat}\right)}{n(E_{c})},]
+(13)
+where
+[MATH: n(E_{c})]
+is the number of valid semantic events in the reference clip and
+[MATH: n(\hat{\tau}_{cme}=\mathrm{beat})]
+counts how many of these intervals are classified as beat gestures in the generated motion. Higher values indicate that semantic-gesture intervals are less frequently replaced by generic beat gestures, with
+[MATH: \mathrm{SGP}=1]
+indicating that none of the evaluated semantic events are classified as beats.
+The model-level SGP is obtained by averaging the clip-level scores:
+[MATH: \mathrm{SGP}_{m}=\frac{1}{C_{m}}\sum_{c=1}^{C_{m}}\mathrm{SGP}_{cm},]
+(14)
+where
+[MATH: C_{m}]
+denotes the number of evaluated clips for model
+[MATH: m]
+. Each clip therefore contributes equally regardless of its number of annotated semantic events.
+SGP should be interpreted specifically as a measure of
+semantic gesture preservation against beat-gesture collapse
+. It does not aim to verify that the generated gesture reproduces the exact annotated meaning or specific semantic gesture type. Instead, it provides a complementary semantic metric that shows how far semantic gestures in the reference motion are preserved in the generated motion.
+3.2
+LLM-Based Semantic Gesture Annotation
+The existing BEAT2 annotations identify semantically relevant gesture intervals and provide coarse gesture categories, but they contain limited information about how a gesture is physically realized or what communicative meaning it expresses in context. Such information is important for semantic evaluation because semantically equivalent gestures may differ substantially in their exact pose trajectories. We therefore enrich the existing intervals with structured multimodal annotations using Gemini 2.5 Pro
+[
+5
+]
+. For each predefined semantic interval
+[MATH: e]
+, we extract the corresponding rendered motion segment and pair it with the annotated target word or expression. Gemini is instructed to analyze only the target interval and to ground its output in the visible motion. The annotation decomposes semantic gesture information into three complementary components: (i)
+gesture form
+, describing handedness, hand shape, orientation, spatial location, and movement trajectory; (ii)
+contextual meaning
+, describing the communicative interpretation of the observed gesture in relation to the accompanying expression; and (iii)
+gesture type
+, selected from {
+iconic
+,
+metaphoric
+,
+deictic
+,
+beat
+}. The model additionally reports a confidence value. We represent the resulting annotation as
+[MATH: \mathcal{A}_{e}=\left(w_{e},d_{e},m_{e},\tau_{e},c_{e}\right),]
+(15)
+where
+[MATH: w_{e}]
+denotes the target word or expression,
+[MATH: d_{e}]
+the fine-grained description of observable gesture form,
+[MATH: m_{e}]
+the inferred contextual meaning,
+[MATH: \tau_{e}]
+the gesture type, and
+[MATH: c_{e}]
+the annotation confidence. For example, for an interval associated with the word
+had
+, the annotator describes a small downward right-hand motion in front of the torso, interprets the motion as conveying possession, and assigns the gesture to the
+iconic
+category. This structured representation separates what is visibly performed from how that motion is interpreted, which is useful when multiple physical realizations can convey similar communicative content. The complete annotation prompt and additional examples are provided in Appendix
+8.1
+. To assess annotation reliability, a subset of the generated annotations is manually evaluated along the same information dimensions used downstream: gesture-type agreement, contextual-meaning correctness, and the quality of the gesture-form description (Appendix
+8.3
+). This validation does not treat Gemini outputs as semantic ground truth; rather, it assesses whether the generated annotations are sufficiently consistent and interpretable to support subsequent semantics-aware analysis. The enriched annotations are subsequently used in the Semantic Gesture Preservation metric described in Section
+3.1.5
+.
+3.3
+Benchmark Models
+This subsection summarizes the representative holistic co-speech gesture generation models selected for our benchmark, covering diverse methodological paradigms within a unified full-body motion space. Architectural details are provided in the respective original papers.
+3.3.1
+EMAGE
+EMAGE
+[
+17
+]
+proposes a unified framework for holistic co-speech gesture generation, jointly synthesizing facial expressions, upper- and lower-body motion, hand gestures, and global translation. The model uses a Masked Audio Gesture Transformer to jointly optimize masked gesture reconstruction and audio-conditioned generation, allowing partially observed motion to provide structured body hints during synthesis. To capture the heterogeneous dynamics of different body regions, EMAGE employs four compositional VQ-VAEs that separately model the face, upper body, hands, and lower body in discrete latent spaces. It further introduces Content Rhythm Attention (CRA), which adaptively combines rhythmic speech cues with transcript semantics to balance beat-aligned and content-related gesture generation. The reconstructed latent features are decoded into local facial and body motion, while a separate global motion predictor estimates body translation. This design enables coherent, audio-synchronized holistic gesture generation while supporting partially predefined spatial-temporal gesture constraints.
+3.3.2
+GestureLSM
+GestureLSM
+[
+22
+]
+introduces a flow-matching-based framework for real-time holistic co-speech gesture generation, with emphasis on modeling interactions across body regions. Rather than treating the face, hands, upper body, and lower body as independent streams, it represents them with separate residual vector-quantized latent tokens and captures their dependencies through sequential spatial and temporal attention. Spatial attention models inter-region coordination within each frame, while temporal attention captures motion evolution over time. Speech conditioning combines low-level acoustic cues with high-level semantic transcript features and is fused with gesture representations through cross-attention. To improve sampling efficiency, GestureLSM further introduces a latent shortcut model for learning direct transitions along the flow trajectory, together with beta-distributed timestep sampling. This design substantially reduces inference steps while maintaining high-quality, speech-coordinated holistic motion generation.
+3.3.3
+SemTalk
+SemTalk
+[
+43
+]
+generates holistic co-speech motion by separating rhythm-related base motion from sparse semantic motion and adaptively integrating them at the frame level. A hierarchical coarse-to-fine cross-attention module propagates speech-driven motion cues from the face to the hands, upper body, and lower body, while local and global rhythm objectives encourage temporal synchronization and coherence. To model infrequent but semantically salient gestures, SemTalk introduces semantic emphasis learning that combines local text features, sentence-level CLIP representations, emotional cues, and high-level speech features to estimate frame-level semantic scores. These scores selectively activate semantic motion and control its fusion with the rhythm-aligned base motion. Separate RVQ-VAE representations are used for different body regions to preserve region-specific dynamics and support expressive holistic synthesis.
+3.3.4
+SemConFlow
+SemConFlow
+[
+20
+]
+introduces a semantically grounded framework for holistic co-speech gesture generation by combining multimodal semantic alignment with contrastive flow matching. It first learns region-specific motion priors for the face, hands, upper body, and lower body using hierarchical RVQ-VAEs and aggregates them into a composite full-body latent space. A Semantics-Aware Composite Module aligns this representation with textual and acoustic features through cosine and contrastive objectives, encouraging consistent semantics across body regions. SemConFlow then applies contrastive flow matching, using mismatched audio–text conditions as negative contexts so that the learned velocity field favors semantically congruent speech–motion trajectories while diverging from incongruent alternatives. Temporal cross-attention and self-attention further integrate multimodal conditioning and maintain motion coherence. Experiments on BEAT2 and SHOW demonstrate strong performance in motion realism, diversity, synchronization, and semantic consistency.
+3.4
+Perception Study Design
+We conduct a perceptual study to obtain human judgments of holistic co-speech gesture quality and use these ratings as targets for validating the objective metrics. Following the general separation adopted in GENEA-style evaluation
+[
+26
+]
+, we distinguish visual motion quality from speech-dependent appropriateness through two independent conditions. Unlike GENEA, however, our perceptual criteria are selected to align with the multidimensional evaluation objectives of this benchmark. The muted condition assesses human-likeness, motion diversity, and absence of animation errors, capturing complementary aspects of visual motion quality. The audio condition evaluates speech timing and content match, explicitly separating temporal coordination from semantic correspondence. This distinction enables a more fine-grained analysis of how different objective metrics relate to specific perceptual properties of generated gestures. All criteria are rated on a seven-point Likert scale, with higher scores indicating better perceived quality. The two evaluation interfaces are shown in Figure
+1
+.
+Figure 1
+:
+Perceptual study interfaces for the audio (left) and muted (right) conditions, evaluating speech-aware and visual-quality dimensions, respectively. Participants complete one condition using the same seven-point Likert scale and video interface.
+The study compares EMAGE, SemConFlow, SemTalk, and GestureLSM together with BEAT2 motion-capture ground truth. All conditions use the same avatar, camera, crop, and rendering pipeline. Each stimulus is a 10-second clip. As we are specifically interested in evaluating semantically rich gesture clips, BEAT2 annotations are used to select windows with the highest occurrence of iconic, metaphoric, and deictic gestures. The same temporal interval is used for all models and the corresponding ground-truth motion. The selected stimuli contain 80 annotated semantic events: 44 iconic, 18 metaphoric, and 18 deictic gestures. A total of 103 participants were recruited online with compensation: 51 for the muted condition and 52 for the audio condition. After quality control, two participants were excluded from the muted study, resulting in 101 valid participants in total (49 muted and 52 audio).
+Each study evaluates 15 unique sequences from five motion sources (four models and ground truth), yielding 75 unique source sequence pairs for analysis.Videos must be watched in full before ratings can be submitted, and participants failing two or more attention checks are excluded. For each model sequence pair, ratings are summarized by their mean and standard deviation, with the mean used as the subjective target in the objective–subjective correlation analysis. This yields 75 observations across all five motion sources and 60 generated-motion observations after excluding BEAT2 ground truth. We further compute pairwise Spearman correlations among the five subjective dimensions to assess the extent to which the selected perceptual criteria provide complementary judgments (Section
+4.4.2
+). Further details of the user-study procedure and interface are provided in Appendix
+7.1
+.
+4
+Experiments
+4.1
+Datasets
+BEAT2
+[
+17
+]
+contains approximately 60 hours of synchronized speech and holistic motion from 25 speakers (12 female and 13 male). The dataset is divided into BEAT2-Standard (27 hours) and BEAT2-Additional (33 hours), with the latter capturing more spontaneous and natural gestural behavior. Full-body motion is represented using SMPL-X
+[
+31
+]
+and further refined with MoSh++
+[
+23
+]
+, providing detailed body, hand, facial, and global motion aligned with speech. Compared with the original BEAT dataset, BEAT2 provides a more accurate mesh-based representation with improved body proportions, hand articulation, and facial motion, making it well suited for holistic co-speech gesture generation and evaluation. In our experiments, we use the BEAT2-Standard subset and adopt the official 85%/7.5%/7.5% train/validation/test split over all 25 speakers.
+4.2
+Implementation Detail
+All benchmark experiments are conducted on a single NVIDIA A100 GPU under a unified evaluation setup. To ensure a consistent comparison, all evaluated methods are retrained using their official implementations and original optimization settings, while sharing the full BEAT2 training set as the common training-data regime. This extends the original single-speaker training setup used by EMAGE
+[
+17
+]
+, SemTalk
+[
+43
+]
+, and GestureLSM
+[
+22
+]
+to 60 hours of multi-speaker training data. During inference, all models are evaluated on the same BEAT2 test sequences with identical speech inputs and sequence boundaries. Their outputs are converted to a common SMPL-X representation and processed through the same post-processing, rendering, and metric-computation pipeline, reducing variation introduced by differences in implementation or evaluation protocol.
+4.3
+Objective Evaluation
+Table
+1
+reveals pronounced differences across evaluation dimensions. SemConFlow achieves the strongest performance on most distributional, geometric, and speech-alignment metrics, including FGD, BC, Diversity, Dice, SRGR, PCK, MJD, Chamfer, Hausdorff, and SC. Its substantially lower FGD together with higher Diversity suggests a closer match to the reference motion distribution without sacrificing motion variability, while the improvements in MJD, Chamfer, and Hausdorff indicate stronger geometric agreement with the reference motion. SemConFlow also obtains the highest BC and SC, suggesting stronger temporal coordination with speech and higher cross-modal semantic similarity in the learned gesture–text embedding space.
+No single method, however, dominates across all metric families. EMAGE achieves the best Density and Coverage and the relative LDLJ value closest to zero, indicating stronger support within the reference feature distribution and smoothness closer to the captured motion. Notably, EMAGE also obtains the highest SGP despite not achieving the highest SC. This discrepancy highlights an important distinction between the two semantics-aware measures: SC evaluates global speech–motion similarity in a learned embedding space, whereas SGP targets whether annotated semantic-gesture intervals are preserved rather than collapsing into generic beat-like motion. SemTalk performs best on Foot Contact, indicating more consistent lower-body contact behavior, while GestureLSM does not lead on an individual metric.
+Overall, the varying model rankings across distributional, geometric, kinematic, temporal, and semantic metrics show that these measures capture complementary aspects of gesture quality. While SC and SGP scores overall indicates EMAGE and SemConFlow as best, overall rankings are different suggesting more analysis in the semantics-aware metrics direction. These results therefore motivate a multidimensional evaluation protocol and, more importantly, the subsequent analysis of which objective signals are actually aligned with human perception.
+Method
+FGD
+[MATH: \downarrow]
+BC
+[MATH: \uparrow]
+Div.
+[MATH: \uparrow]
+Dens.
+[MATH: \uparrow]
+Cov.
+[MATH: \uparrow]
+Dice
+[MATH: \uparrow]
+LDLJ
+[MATH: {}_{\mathrm{REL}}\!\rightarrow\!0]
+SRGR
+[MATH: \uparrow]
+PCK
+[MATH: \uparrow]
+MJD
+[MATH: \downarrow]
+Chamfer
+[MATH: \downarrow]
+Hausdorff
+[MATH: \downarrow]
+Foot Contact
+[MATH: \downarrow]
+SC
+[MATH: \uparrow]
+SGP
+[MATH: \uparrow]
+EMAGE
+5.523
+0.692
+88
+0.8972
+0.07275
+0.6407
+0.0530
+0.05494
+0.3309
+0.2410
+0.01375
+0.2908
+0.5048
+0.248
+0.4372
+SemConFlow
+2.245
+0.780
+120
+0.01559
+0.06647
+0.6793
+-0.4294
+0.05868
+0.3552
+0.2007
+0.01112
+0.2530
+0.5932
+0.314
+0.4205
+SemTalk
+4.266
+0.727
+116
+0.1123
+0.06673
+0.6241
+-0.6020
+0.05059
+0.3037
+0.2303
+0.13976
+0.4663
+0.4040
+0.268
+0.4014
+GestureLSM
+4.268
+0.525
+112
+0.009239
+0.009817
+0.6573
+1.5386
+0.04536
+0.2715
+0.2391
+0.01797
+0.2909
+0.8883
+0.248
+0.2622
+Table 1:
+Objective comparison of the benchmarked holistic co-speech gesture generation methods on BEAT2. All metrics are computed over the 265 shared test sequences, except SGP, which is evaluated on the 15 sequences used in the perceptual study with Gemini-based semantic annotations. Arrows indicate the preferred direction, and bold denotes the best result for each metric.
+4.4
+Subjective Evaluation
+4.4.1
+Main Analysis.
+The final subjective dataset contains ratings from 49 participants in the muted condition and 52 participants in the audio condition. Participants reported English fluency in both studies. The muted group had a mean age of 37.5 years (
+[MATH: \mathrm{SD}=10.9]
+; 24 male, 25 female), while the audio group had a mean age of 38.9 years (
+[MATH: \mathrm{SD}=11.9]
+; 29 male, 23 female). For each motion source, we first average ratings at the sequence level and then aggregate over the 15 unique sequences. Figure
+2
+summarizes the resulting model means together with between-sequence variation on the common seven-point scale.
+BEAT2 reference motion receives the highest mean rating across all five perceptual dimensions, with particularly large margins for human-likeness, absence of animation errors, speech timing, and content match. The gap is notably smaller for motion diversity, where the reference score is closer to the strongest generated result. This suggests that, under the predefined perceptual criterion of motion diversity used in our study, current systems can approach the reference more closely in perceived variation of motion, while a larger gap remains in overall human-likeness, animation quality, and speech-dependent appropriateness.
+Among the generated systems, SemConFlow achieves the highest mean score on all five dimensions. In the muted condition, SemTalk generally ranks second, followed by EMAGE and GestureLSM, with SemTalk and EMAGE remaining relatively close on motion diversity. In the audio condition, EMAGE ranks second for both speech timing and content match, followed by SemTalk, while GestureLSM consistently receives the lowest mean ratings. The change in ordering between muted and audio evaluations indicates that visual motion quality and speech-conditioned appropriateness are not interchangeable perceptual properties.
+Overall, the subjective results indicate that motion-centric and speech-aware criteria capture related but non-identical aspects of perceived gesture quality. Models do not preserve the same relative behavior across visual and speech-conditioned judgments, motivating an explicit analysis of how strongly the five perceptual dimensions covary before using them as separate targets for objective-metric validation.
+Figure 2
+:
+Subjective ratings across five perceptual dimensions. Points show mean ratings with standard-deviation error bars; BEAT2 serves as the reference, and the remaining methods are generated results.
+4.4.2
+Relationship among perceptual dimensions.
+To examine whether the five perceptual criteria capture distinct or shared aspects of gesture quality, we compute pairwise Spearman correlations between sequence-level subjective ratings. Table
+2
+reports the associations for the 60 generated model–sequence observations, with the 15 BEAT2 reference sequences included as a complementary comparison. Among generated motions, all dimensions are positively correlated (
+[MATH: \rho=0.595]
+–
+[MATH: 0.974]
+). Human-likeness is strongly associated with absence of animation errors (
+[MATH: \rho=0.928]
+), while motion diversity shows moderate-to-strong correlations with the other dimensions (
+[MATH: \rho=0.629]
+–
+[MATH: 0.770]
+). Cross-condition correlations are also substantial, including human-likeness with speech timing (
+[MATH: \rho=0.650]
+) and content match (
+[MATH: \rho=0.624]
+). The strongest association is between speech timing and content match (
+[MATH: \rho=0.974]
+), indicating that temporal and semantic appropriateness are closely coupled in the evaluated stimuli. Overall, the results reveal shared perceptual aspects without making the five criteria interchangeable, supporting a multidimensional evaluation while highlighting the particularly close relationship between speech timing and content match.
+Table 2
+:
+Pairwise Spearman correlations among subjective perceptual dimensions.
+Perceptual dimension pair
+Generated
+(
+[MATH: n=60]
+)
+Including GT
+(
+[MATH: n=75]
+)
+Human-likeness – Motion diversity
+0.728
+0.626
+Human-likeness – Absence of animation errors
+0.928
+0.960
+Human-likeness – Speech timing
+0.650
+0.813
+Human-likeness – Content match
+0.624
+0.801
+Motion diversity – Absence of animation errors
+0.770
+0.647
+Motion diversity – Speech timing
+0.665
+0.564
+Motion diversity – Content match
+0.629
+0.538
+Absence of animation errors – Speech timing
+0.620
+0.795
+Absence of animation errors – Content match
+0.595
+0.783
+Speech timing – Content match
+0.974
+0.985
+4.5
+Objective–Subjective Correlation Analysis
+Figure
+3
+shows a strongly dimension-dependent relationship between objective metrics and human judgments. No single metric consistently explains all five perceptual targets, indicating that objective measures capture distinct aspects of holistic gesture quality. SC is included in the analysis but does not exhibit a statistically meaningful correlation with any of the five subjective dimensions. For the muted dimensions,
+[MATH: \mathrm{LDLJ}_{REL}]
+correlates most strongly with human-likeness (
+[MATH: \rho=-0.61]
+) and absence of animation errors (
+[MATH: \rho=-0.62]
+), while Coverage and Density are most informative for motion diversity. MJD and Hausdorff show little correspondence with subjective ratings, suggesting limited value of direct geometric distances for perceptual assessment.
+For the speech-dependent dimensions, Coverage reaches
+[MATH: \rho=0.73]
+for speech timing and
+[MATH: \rho=0.70]
+for content match, with Density and FGD showing similarly strong associations. Although these metrics do not explicitly model semantics, their correlations indicate that motion-distribution quality can co-vary with speech appropriateness. BC, by contrast, is negatively correlated with all five perceptual dimensions, showing that stronger beat alignment alone does not imply better perceived quality.
+The semantics-aware metrics provide an especially informative comparison. SC explicitly measures speech–motion similarity in a learned semantic embedding space, yet shows no statistically meaningful correlation with any of the five subjective dimensions, including speech timing and content match. In contrast, SGP exhibits the intended selectivity toward speech-aware judgments, correlating with both speech timing and content match at
+[MATH: \rho=0.39]
+, while remaining weak or non-significant for the muted dimensions. SGP also shows stronger alignment with human judgments on speech-aware dimensions than SRGR, while remaining comparable to SRGR on the other perceptual dimensions. Although its absolute correlations are lower than those of Coverage, Density, and FGD, SGP provides a more targeted and interpretable semantic signal by explicitly measuring whether semantic gesture intervals are preserved rather than reduced to generic beat-like motion. Together, the results for SC, SRGR, and SGP demonstrate that semantics-aware metrics differ substantially in their perceptual alignment and should therefore be validated directly against human judgments of communicative content. Overall, these findings motivate the subsequent composite analysis, where complementary objective signals are combined to better approximate human perception.
+Figure 3
+:
+Spearman correlations between thirteen objective metrics and five subjective evaluation dimensions (
+[MATH: n=60]
+), with significance indicated by
+[MATH: {}^{*}p<0.05]
+,
+[MATH: {}^{**}p<0.01]
+, and
+[MATH: {}^{***}p<0.001]
+.
+4.6
+Target-Specific Composite Metrics and Analysis
+4.6.1
+Learning Target-Specific Perceptual Composites
+Despite the positive associations among the subjective dimensions, the preceding analyses show that they are not interchangeable: their pairwise correlations vary substantially, model behavior differs across perceptual targets, and individual objective metrics exhibit strongly dimension-dependent correspondence with human judgments. We therefore construct a separate composite predictor for each perceptual dimension rather than collapsing gesture quality into a single global score.
+Let
+[MATH: \mathbf{x}_{i}=[x_{i1},\ldots,x_{iK}]^{\top}]
+, with
+[MATH: K=13]
+, denote the objective-metric vector for model–sequence observation
+[MATH: i]
+, comprising FGD, BC, Density, Coverage, Dice,
+[MATH: \mathrm{LDLJ}_{\mathrm{REL}}]
+, SRGR, PCK, MJD, Hausdorff, Foot Contact, SC, and SGP. Chamfer Distance is excluded from the joint composite model because of its strong redundancy with Hausdorff Distance, while SC is retained as an independent semantics-aware predictor. Because these metrics operate on different numerical scales, each predictor is standardized using statistics estimated exclusively from the training observations,
+[MATH: z_{ik}=\frac{x_{ik}-\mu_{k}}{\sigma_{k}},]
+(16)
+where
+[MATH: \mu_{k}]
+and
+[MATH: \sigma_{k}]
+denote the training-set mean and standard deviation of metric
+[MATH: k]
+.
+For each perceptual target
+[MATH: q\in\{\mathrm{HL},\mathrm{MD},\mathrm{AE},\mathrm{ST},\mathrm{CM}\}]
+,
+corresponding to human-likeness, motion diversity, absence of animation errors, speech timing, and content match, we fit an independent ordinary least-squares predictor with an intercept,
+[MATH: C_{q}(\mathbf{x}_{i})=\beta_{0q}+\boldsymbol{\beta}_{q}^{\top}\mathbf{z}_{i}=\beta_{0q}+\sum_{k=1}^{K}\beta_{kq}z_{ik},]
+(17)
+where
+[MATH: \beta_{0q}]
+is the intercept and
+[MATH: \boldsymbol{\beta}_{q}]
+contains the target-specific coefficients. The regression target is the mean subjective rating for dimension
+[MATH: q]
+. Standardization is applied only to the predictors and does not normalize the subjective targets, so
+[MATH: C_{q}(\mathbf{x}_{i})]
+remains on the original seven-point rating scale. For ordinary least squares with an intercept, fitting standardized predictors is algebraically equivalent to fitting the same predictors in their original units after reparameterizing the coefficients. Standardization therefore changes coefficient scaling but does not dampen or otherwise alter the fitted predictions.
+To avoid information leakage, all standardization statistics and regression coefficients are estimated independently within each training fold. We evaluate the composite predictors using leave-one-out cross-validation (LOOCV) over the 60 generated model–sequence observations. In each fold, the held-out observation is standardized using statistics from the remaining 59 observations and predicted by the corresponding regression model, yielding one out-of-fold prediction per observation and perceptual target.
+4.6.2
+Cross-Validated Perceptual Alignment
+Table
+3
+evaluates how well each target-specific composite approximates its corresponding subjective dimension. Mean Squared Error (MSE) and Mean Absolute Error (MAE) quantify out-of-fold prediction error on the original seven-point scale, while Composite
+[MATH: \rho]
+denotes the Spearman correlation between the 60 out-of-fold predictions and subjective ratings. “Best individual” identifies the single objective metric with the strongest absolute Spearman correlation for that target, and
+[MATH: \Delta|\rho|=|\rho_{\mathrm{composite}}|-|\rho_{\mathrm{best\ individual}}|]
+(18)
+measures the gain over that metric.
+Composite correlations range from
+[MATH: 0.5375]
+for motion diversity to
+[MATH: 0.7824]
+for content match. All five composites improve over their strongest individual metric, although the gains vary substantially across perceptual targets. The largest improvements are observed for absence of animation errors (
+[MATH: +0.0819]
+) and content match (
+[MATH: +0.0805]
+), followed by human-likeness (
+[MATH: +0.0468]
+). Motion diversity and speech timing show smaller gains of
+[MATH: +0.0117]
+and
+[MATH: +0.0246]
+, respectively. These results indicate that the benefit of combining objective signals is target-dependent, with some perceptual dimensions drawing more strongly on complementary information distributed across multiple metrics.
+Table 3
+:
+LOOCV performance of target-specific composite predictors over 60 generated model–sequence observations using 13 predictors. MSE and MAE report out-of-fold error on the seven-point subjective scale, while composite
+[MATH: \rho]
+measures Spearman correlation with subjective ratings. Best individual is the strongest single objective metric by absolute Spearman correlation, and
+[MATH: \Delta|\rho|]
+denotes the composite gain.
+Target Composite Metric
+MSE
+[MATH: \downarrow]
+MAE
+[MATH: \downarrow]
+Composite
+[MATH: \rho\uparrow]
+Best individual
+[MATH: \Delta|\rho|\uparrow]
+Human-likeness
+0.2846
+0.4140
+0.6568
+[MATH: \mathrm{LDLJ}_{\mathrm{REL}}]
+[MATH: +0.0468]
+Motion diversity
+0.2035
+0.3610
+0.5375
+Coverage
+[MATH: +0.0117]
+Absence of animation errors
+0.1560
+0.2984
+0.7065
+[MATH: \mathrm{LDLJ}_{\mathrm{REL}}]
+[MATH: +0.0819]
+Speech timing
+0.2671
+0.4349
+0.7439
+Coverage
+[MATH: +0.0246]
+Content match
+0.3665
+0.4844
+0.7824
+Coverage
+[MATH: +0.0805]
+The composite predictors should be interpreted as dimension-specific automated proxies for human judgments rather than substitutes for direct perceptual evaluation. We therefore assess them at the sequence level through out-of-fold correlation and prediction error rather than deriving an additional model-level ranking from averaged predictions. The results show that the usefulness of metric combination is strongly target-dependent. The largest improvements occur for absence of animation errors and content match, suggesting that these perceptual judgments benefit from complementary signals across multiple objective measures. Human-likeness also shows a moderate improvement, whereas the gains for motion diversity and speech timing are comparatively small. Thus, no single pattern of metric combination applies uniformly across perceptual dimensions.
+5
+Conclusions
+We present a perceptually grounded and semantics-aware benchmark for holistic co-speech gesture generation, combining standardized model comparison, human-centered metric validation, and fine-grained semantic evaluation. By retraining recent methods under a shared BEAT2 protocol and using a unified rendering and evaluation pipeline, we enable more controlled and directly comparable assessment across systems.
+Our results show that gesture quality is strongly multidimensional. Model rankings vary across distributional, geometric, kinematic, temporal, and semantic measures, while no single objective metric consistently reflects all perceptual dimensions. Target-specific composite metrics improve alignment with human judgments across all five dimensions, with the largest gains observed for absence of animation errors and content match. These findings show that complementary objective signals can provide additional perceptual information beyond the strongest individual metric, although the benefit of combination remains target-dependent.
+For semantic evaluation, we enrich BEAT2 annotations with fine-grained gesture descriptions using Gemini 2.5 Pro and derive Semantic Gesture Preservation (SGP). Unlike SC, which shows no significant association with the evaluated perceptual dimensions, SGP is selectively aligned with speech-aware judgments and captures whether semantic gesture intervals are preserved rather than reduced to generic beat-like motion. Together, these findings provide a more systematic basis for evaluating progress in holistic co-speech gesture generation.
+6
+Limitations and Discussion
+Although our benchmark reduces several sources of experimental variation, the evaluation remains constrained by the structure of the available data. The perceptual analysis is based on 15 unique speech sequences evaluated across four generation systems, yielding 60 generated model sequence observations rather than 60 fully independent samples. In addition, the selected study windows were deliberately enriched for semantic gestures, which improves the sensitivity of semantic evaluation but may overrepresent semantically dense speech relative to the broader BEAT2 distribution.
+The semantic analysis introduces a further limitation. Gemini 2.5 Pro provides a scalable way to enrich coarse BEAT annotations with gesture descriptions, contextual meaning, and gesture type, but its outputs should not be treated as semantic ground truth. Likewise, SGP specifically measures whether annotated semantic intervals avoid collapsing into generic beat gestures; it does not directly verify that the generated motion preserves the exact intended meaning or gesture category. More broadly, the observed objective–subjective relationships are specific to the evaluated models, sequences, and metric implementations. Future work should therefore extend the benchmark to larger and more diverse datasets, models, and perceptual studies, and develop semantic metrics that can more directly assess meaning preservation while retaining the scalability of multimodal-model-based evaluation.
+References
+[1]
+T. Ao, Z. Zhang, and L. Liu
+(2023)
+Gesturediffuclip: gesture diffusion model with clip latents
+.
+ACM Transactions on Graphics (TOG)
+42
+(
+4
+),
+pp. 1–18
+.
+Cited by:
+§1
+,
+§2.3
+,
+§3.1.5
+.
+[2]
+S. Balasubramanian, A. Melendez-Calderon, A. Roby-Brami, and E. Burdet
+(2015)
+On the analysis of movement smoothness
+.
+Journal of NeuroEngineering and Rehabilitation
+12
+,
+pp.
+.
+External Links:
+Document
+Cited by:
+§3.1.3
+.
+[3]
+M. Carrozzino, R. Galdieri, O. Machidon, M. Bergamasco, and M. Potel
+(2020)
+Do virtual humans dream of digital sheep?
+.
+IEEE computer graphics and applications
+40
+,
+pp. 71–83
+.
+External Links:
+Document
+Cited by:
+§1
+.
+[4]
+J. Chen, Y. Liu, J. Wang, A. Zeng, Y. Li, and Q. Chen
+(2024)
+Diffsheg: a diffusion-based approach for real-time speech-driven holistic 3d expression and gesture generation
+.
+In
+2024 IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)
+,
+pp. 7352–7361
+.
+Cited by:
+§2.1
+.
+[5]
+G. Comanici, E. Bieber, M. Schaekermann, I. Pasupat, N. Sachdeva, I. Dhillon, M. Blistein, O. Ram, D. Zhang, E. Rosen,
+et al.
+(2025)
+Gemini 2.5: pushing the frontier with advanced reasoning, multimodality, long context, and next generation agentic capabilities
+.
+arXiv preprint arXiv:2507.06261
+.
+Cited by:
+§2.3
+,
+§3.1.5
+,
+§3.2
+.
+[6]
+A. Delbosc, N. Sabouret, B. Ravenet, S. Ayache, and M. Ochs
+(2025)
+Automatic objective metric for the optimization of nonverbal behavior generative models
+.
+In
+Proceedings of the 25th ACM International Conference on Intelligent Virtual Agents
+,
+IVA ’25
+,
+New York, NY, USA
+.
+External Links:
+ISBN 9798400715082
+,
+Link
+,
+Document
+Cited by:
+§1
+,
+§2.2
+.
+[7]
+E. Ghaleb, B. Khaertdinov, A. Ozyurek, and R. Fernández
+(2025)
+I see what you mean: co-speech gestures for reference resolution in multimodal dialogue
+.
+In
+Findings of the Association for Computational Linguistics: ACL 2025
+,
+pp. 13191–13206
+.
+Cited by:
+§1
+.
+[8]
+E. Ghaleb, H. M. Wong, and K. Kobrock
+(2026)
+Investigating multimodal informativity under different partner visibility conditions in video-mediated dialogue
+.
+arXiv preprint arXiv:2608.08915
+.
+Cited by:
+§1
+.
+[9]
+I. Habibie, W. Xu, D. Mehta, L. Liu, H. Seidel, G. Pons-Moll, M. Elgharib, and C. Theobalt
+(2021)
+Learning speech-driven 3d conversational gestures from video
+.
+In
+Proceedings of the 21st ACM international conference on intelligent virtual agents
+,
+pp. 101–108
+.
+Cited by:
+§1
+,
+§2.1
+.
+[10]
+K. I. Haque, A. Pavlou, and Z. Yumak
+(2025)
+“Wild west” of evaluating speech-driven 3d facial animation synthesis: a benchmark study
+.
+Computer Graphics Forum
+44
+(
+2
+),
+pp. e70073
+.
+External Links:
+Document
+,
+Link
+,
+https://onlinelibrary.wiley.com/doi/pdf/10.1111/cgf.70073
+Cited by:
+§1
+.
+[11]
+J. Holler and S. C. Levinson
+(2019)
+Multimodal language processing in human communication
+.
+Trends in Cognitive Sciences
+23
+(
+8
+),
+pp. 639–652
+.
+External Links:
+ISSN 1364-6613
+,
+Document
+,
+Link
+Cited by:
+§1
+.
+[12]
+Y. Hu, R. Askari-Hemmat, M. Hall, E. Dinan, L. Zettlemoyer, and M. Ghazvininejad
+(2026)
+Multimodal rewardbench 2: evaluating omni reward models for interleaved text and image
+.
+In
+Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition
+,
+pp. 36904–36915
+.
+Cited by:
+§2.3
+.
+[13]
+C. Huang and B. Mutlu
+(2012)
+Robot behavior toolkit: generating effective social behaviors for robots
+.
+In
+2012 7th ACM/IEEE International Conference on Human-Robot Interaction (HRI)
+,
+Vol.
+,
+pp. 25–32
+.
+External Links:
+Document
+Cited by:
+§1
+.
+[14]
+T. Kucherenko, P. Wolfert, Y. Yoon, C. Viegas, T. Nikolov, M. Tsakov, and G. E. Henter
+(2024)
+Evaluating gesture generation in a large-scale open challenge: the genea challenge 2022
+.
+ACM Transactions on Graphics
+43
+(
+3
+).
+External Links:
+ISSN 1557-7368
+,
+Link
+,
+Document
+Cited by:
+§2.2
+,
+§2.2
+,
+§2.3
+.
+[15]
+D. Lee, C. Kim, S. Kim, M. Cho, and W. Han
+(2022)
+Autoregressive image generation using residual quantization
+.
+In
+2022 IEEE/CVF conference on computer vision and pattern recognition (CVPR)
+,
+pp. 11513–11522
+.
+Cited by:
+§2.1
+.
+[16]
+R. Li, S. Yang, D. A. Ross, and A. Kanazawa
+(2021)
+Ai choreographer: music conditioned 3d dance generation with aist++
+.
+In
+2021 IEEE/CVF International Conference on Computer Vision (ICCV)
+,
+pp. 13381–13392
+.
+Cited by:
+§3.1.4
+.
+[17]
+H. Liu, Z. Zhu, G. Becherini, Y. Peng, M. Su, Y. Zhou, X. Zhe, N. Iwamoto, B. Zheng, and M. J. Black
+(2024)
+Emage: towards unified holistic co-speech gesture generation via expressive masked audio gesture modeling
+.
+In
+2024 IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)
+,
+pp. 1144–1154
+.
+Cited by:
+§1
+,
+§1
+,
+§2.1
+,
+§3.3.1
+,
+§4.1
+,
+§4.2
+.
+[18]
+H. Liu, Z. Zhu, N. Iwamoto, Y. Peng, Z. Li, Y. Zhou, E. Bozkurt, and B. Zheng
+(2022)
+Beat: a large-scale semantic and emotional multi-modal dataset for conversational gestures synthesis
+.
+In
+European conference on computer vision
+,
+pp. 612–630
+.
+Cited by:
+§1
+,
+§2.3
+,
+§3.1.5
+.
+[19]
+L. Liu, E. Ghaleb, A. Ozyurek, and Z. Yumak
+(2025)
+Semges: semantics-aware co-speech gesture generation using semantic coherence and relevance learning
+.
+In
+Proceedings of the IEEE/CVF International Conference on Computer Vision
+,
+pp. 13963–13973
+.
+Cited by:
+§2.1
+,
+§2.3
+.
+[20]
+L. Liu, E. Ghaleb, A. Özyürek, and Z. Yumak
+(2026)
+Semconflow: semantic grounding of holistic co-speech gesture generation with contrastive flow-matching
+.
+In
+European Conference on Computer Vision
+,
+pp. 528–545
+.
+Cited by:
+§1
+,
+§2.1
+,
+§2.1
+,
+§3.3.4
+.
+[21]
+L. Liu, C. Yu, S. Song, Z. Su, and A. Tapus
+(2023)
+Human gesture recognition with a flow-based model for human robot interaction
+.
+In
+Companion of the 2023 ACM/IEEE International Conference on Human-Robot Interaction
+,
+pp. 548–551
+.
+Cited by:
+§2.3
+.
+[22]
+P. Liu, L. Song, J. Huang, H. Liu, and C. Xu
+(2025)
+Gesturelsm: latent shortcut based co-speech gesture generation with spatial-temporal modeling
+.
+In
+2025 IEEE/CVF International Conference on Computer Vision (ICCV)
+,
+pp. 10929–10939
+.
+Cited by:
+§1
+,
+§2.1
+,
+§3.3.2
+,
+§4.2
+.
+[23]
+N. Mahmood, N. Ghorbani, N. F. Troje, G. Pons-Moll, and M. J. Black
+(2019)
+AMASS: archive of motion capture as surface shapes
+.
+In
+Proceedings of the IEEE/CVF international conference on computer vision
+,
+pp. 5442–5451
+.
+Cited by:
+§4.1
+.
+[24]
+M. H. Mughal, R. Dabral, M. C. Scholman, V. Demberg, and C. Theobalt
+(2025)
+Retrieving semantics from the deep: an rag solution for gesture synthesis
+.
+In
+2025 IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)
+,
+pp. 16578–16588
+.
+Cited by:
+§2.1
+.
+[25]
+M. F. Naeem, S. J. Oh, Y. Uh, Y. Choi, and J. Yoo
+(2020)
+Reliable fidelity and diversity metrics for generative models
+.
+In
+International conference on machine learning
+,
+pp. 7176–7185
+.
+Cited by:
+§3.1.1
+,
+§3.1.1
+.
+[26]
+R. Nagy, H. Voss, T. Hoang-Minh, M. Tsakov, T. Nikolov, Z. Zhang, T. Ao, S. Yang, S. Huang, Y. Cheng,
+et al.
+(2026)
+Towards reliable human evaluations in gesture generation: insights from a community-driven state-of-the-art benchmark
+.
+In
+Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition
+,
+pp. 2152–2164
+.
+Cited by:
+§1
+,
+§2.2
+,
+§3.4
+.
+[27]
+R. Nagy, H. Voss, Y. Yoon, T. Kucherenko, T. Nikolov, T. Hoang-Minh, R. McDonnell, S. Kopp, M. Neff, and G. E. Henter
+(2024)
+Towards a genea leaderboard – an extended, living benchmark for evaluating and advancing conversational motion synthesis
+.
+External Links:
+2410.06327
+,
+Link
+Cited by:
+§1
+,
+§2.2
+,
+§2.2
+.
+[28]
+S. Nyatsanga, T. Kucherenko, C. Ahuja, G. E. Henter, and M. Neff
+(2023)
+A comprehensive review of data-driven co-speech gesture generation
+.
+Computer Graphics Forum
+42
+(
+2
+),
+pp. 569–596
+.
+External Links:
+Document
+,
+Link
+,
+https://onlinelibrary.wiley.com/doi/pdf/10.1111/cgf.14776
+Cited by:
+§2.2
+.
+[29]
+S. Nyatsanga, T. Kucherenko, C. Ahuja, G. E. Henter, and M. Neff
+(2023)
+A comprehensive review of data-driven co-speech gesture generation
+.
+In
+Computer Graphics Forum
+,
+Vol.
+42
+,
+pp. 569–596
+.
+Cited by:
+§2.1
+.
+[30]
+F. Paar, L. Liu, A. Özyürek, S. Thill, and E. Ghaleb
+(2026)
+DuoGesture: neuro-inspired and biomechanically informed dual-stream co-speech gesture generation
+.
+arXiv preprint arXiv:2605.26236
+.
+Cited by:
+§2.3
+.
+[31]
+G. Pavlakos, V. Choutas, N. Ghorbani, T. Bolkart, A. A. Osman, D. Tzionas, and M. J. Black
+(2019)
+Expressive body capture: 3d hands, face, and body from a single image
+.
+In
+Proceedings of the IEEE/CVF conference on computer vision and pattern recognition
+,
+pp. 10975–10985
+.
+Cited by:
+§4.1
+.
+[32]
+J. Peng, D. Liu, S. Xu, and H. Li
+(2021)
+Generating diverse structure for image inpainting with hierarchical vq-vae
+.
+In
+2021 IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)
+,
+pp. 10770–10779
+.
+Cited by:
+§2.1
+.
+[33]
+X. Qi, C. Liu, L. Li, J. Hou, H. Xin, and X. Yu
+(2024)
+EmotionGesture: audio-driven diverse emotional co-speech 3d gesture generation
+.
+IEEE Transactions on Multimedia
+26
+,
+pp. 10420–10430
+.
+External Links:
+Document
+Cited by:
+§2.3
+.
+[34]
+R. Rekik, S. Wuhrer, L. Hoyet, K. Zibrek, and A. Olivier
+(2026)
+Quality assessment of 3d human animation: subjective and objective evaluation
+.
+IEEE Transactions on Visualization and Computer Graphics
+32
+(
+2
+),
+pp. 1780–1792
+.
+External Links:
+ISSN 2160-9306
+,
+Link
+,
+Document
+Cited by:
+§1
+,
+§2.2
+,
+§3.1.2
+,
+§3.1.2
+.
+[35]
+L. Tang, G. Kim, X. Zhao, T. Lake, W. Ding, F. Yin, P. Singhal, M. Wadhwa, Z. Liu, Z. Sprague,
+et al.
+(2026)
+Chartmuseum: testing visual reasoning capabilities of large vision-language models
+.
+Advances in Neural Information Processing Systems
+38
+.
+Cited by:
+§2.3
+.
+[36]
+B. Thompson
+(1984)
+Canonical correlation analysis
+.
+Sage
+47
+.
+External Links:
+Document
+,
+Link
+Cited by:
+§2.3
+.
+[37]
+R. L. Tonoli, P. D. P. Costa, L. B. d. M. M. Marques, and L. H. Ueda
+(2024)
+Gesture area coverage to assess gesture expressiveness and human-likeness
+.
+In
+Companion Proceedings of the 26th International Conference on Multimodal Interaction
+,
+ICMI ’24 Companion
+,
+New York, NY, USA
+,
+pp. 165–169
+.
+External Links:
+ISBN 9798400704635
+,
+Link
+,
+Document
+Cited by:
+§3.1.2
+.
+[38]
+M. van Kreveld, T. Miltzow, T. Ophelders, W. Sonke, and J. L. Vermeulen
+(2022)
+Between shapes, using the hausdorff distance
+.
+Computational Geometry
+100
+,
+pp. 101817
+.
+External Links:
+ISSN 0925-7721
+,
+Document
+,
+Link
+Cited by:
+§3.1.2
+.
+[39]
+P. Wolfert, N. Robinson, and T. Belpaeme
+(2022)
+A review of evaluation practices of gesture generation in embodied conversational agents
+.
+IEEE Transactions on Human-Machine Systems
+52
+(
+3
+),
+pp. 379–389
+.
+External Links:
+ISSN 2168-2305
+,
+Link
+,
+Document
+Cited by:
+§2.2
+.
+[40]
+H. Yi, H. Liang, Y. Liu, Q. Cao, Y. Wen, T. Bolkart, D. Tao, and M. J. Black
+(2023)
+Generating holistic 3d human motion from speech
+.
+In
+2023 IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)
+,
+pp. 469–480
+.
+Cited by:
+§2.1
+.
+[41]
+Y. Yoon, B. Cha, J. Lee, M. Jang, J. Lee, J. Kim, and G. Lee
+(2020)
+Speech gesture generation from the trimodal context of text, audio, and speaker identity
+.
+ACM Transactions on Graphics
+39
+(
+6
+).
+External Links:
+ISSN 1557-7368
+,
+Link
+,
+Document
+Cited by:
+§3.1.1
+.
+[42]
+M. Zhang, X. Guo, L. Pan, Z. Cai, F. Hong, H. Li, L. Yang, and Z. Liu
+(2023)
+Remodiffuse: retrieval-augmented motion diffusion model
+.
+In
+2023 IEEE/CVF International Conference on Computer Vision (ICCV)
+,
+pp. 364–373
+.
+Cited by:
+§2.1
+.
+[43]
+X. Zhang, J. Li, J. Zhang, Z. Dang, J. Ren, L. Bo, and Z. Tu
+(2025)
+Semtalk: holistic co-speech motion generation with frame-level semantic emphasis
+.
+In
+2025 IEEE/CVF International Conference on Computer Vision (ICCV)
+,
+pp. 13761–13771
+.
+Cited by:
+§1
+,
+§2.1
+,
+§3.3.3
+,
+§4.2
+.
+[44]
+Y. Zhi, X. Cun, X. Chen, X. Shen, W. Guo, S. Huang, and S. Gao
+(2023)
+Livelyspeaker: towards semantic-aware co-speech gesture generation
+.
+In
+2023 IEEE/CVF International Conference on Computer Vision (ICCV)
+,
+pp. 20750–20760
+.
+Cited by:
+§2.1
+.
+[45]
+K. Zhu, Z. Jin, H. Yuan, J. Li, S. Tu, P. Cao, Y. Chen, K. Liu, and J. Zhao
+(2026)
+MMR-v: what’s left unsaid? a benchmark for multimodal deep reasoning in videos
+.
+In
+International Conference on Learning Representations
+,
+Vol.
+2026
+,
+pp. 67949–67991
+.
+Cited by:
+§2.3
+.
+7
+Appendix
+7.1
+User Study Interface and Instructions
+This section summarizes the participant-facing interfaces and instructions used in the two perceptual studies. The muted and audio conditions follow the same interaction flow but differ in the perceptual dimensions being assessed. In both studies, participants were required to watch each clip in full before submitting their ratings.
+The muted condition focuses exclusively on visual motion quality. Participants first viewed the animation without audio and, once playback was completed, rated human-likeness, motion diversity, and absence of animation errors. Figure
+4
+illustrates the interface before and after video playback.
+(a)
+Before video playback.
+(b)
+After video playback.
+Figure 4
+:
+Participant interface for the muted condition. Ratings become available only after the complete stimulus has been viewed.
+Before beginning the muted study, participants were given explicit definitions of the three evaluation criteria and instructed to base their judgments solely on the observed motion. The exact participant-facing instructions were as follows:
+Participant Instructions: Muted Condition
+In the following pages, you will watch animations without audio and evaluate the body motion according to three criteria:
+Human-likeness: Does the movement look like something a real person could perform?
+Motion diversity: Does the animation contain a variety of different movements, rather than repeating the same motions throughout?
+Absence of animation errors: Is the movement free from noticeable issues such as body parts suddenly jumping, getting stuck, moving through each other, or behaving strangely?
+For each criterion, provide a rating on a 7-star scale, where 1 = Very poor and 7 = Excellent.
+Please base your ratings only on the visual motion.
+You will begin with 2 practice questions and 1 practice attention question.
+The audio condition follows the same presentation structure but evaluates speech-dependent properties. Participants viewed the animation together with the accompanying speech and subsequently rated speech timing and content match. The corresponding interface is shown in Figure
+5
+.
+(a)
+Before video playback.
+(b)
+After video playback.
+Figure 5
+:
+Participant interface for the audio condition. After viewing the audiovisual stimulus, participants rate speech timing and content match.
+The instructions explicitly distinguish temporal coordination from semantic correspondence, allowing the two speech-dependent dimensions to be judged independently:
+Participant Instructions: Audio Condition
+In the following pages, you will watch animations with audio and evaluate the gestures according to two criteria:
+Speech timing: Do the gestures occur at appropriate moments relative to the rhythm, pauses, and emphasis of the speech?
+Content match: Do the gestures meaningfully correspond to the spoken content?
+For each criterion, provide a rating on a 7-star scale, where 1 = Very poor and 7 = Excellent.
+Some attention-check questions regarding the spoken content will appear throughout the study. Please listen carefully before responding.
+You will begin with 2 practice questions and 1 practice attention question.
+To monitor response quality, attention checks were distributed throughout both studies. The muted condition used instructed-response checks, whereas the audio condition used questions about the content of the preceding clip. Representative examples are shown in Figure
+6
+.
+(a)
+Muted condition.
+(b)
+Audio condition.
+Figure 6
+:
+Attention-check interfaces used in the two perceptual studies. The muted condition uses an instructed-response check, while the audio condition uses a content-based question about the preceding stimulus.
+8
+LLM-Based Semantic Gesture Annotation
+This section provides additional details of the LLM-based semantic gesture
+annotation procedure introduced in Sec. 3.5. We describe the annotation
+pipeline, the prompt used for multimodal annotation, an example output, and
+human validation of the resulting annotations.
+8.1
+Annotation Procedure
+Our annotation pipeline converts predefined semantic gesture intervals into
+fine-grained natural-language descriptions of gesture form and communicative
+meaning. The procedure consists of four steps.
+First, each source sequence is manually segmented into short video clips
+according to the existing semantic-word intervals. Each clip therefore
+corresponds to a predefined semantic expression and contains the motion
+associated with that expression. Second, the semantic word associated with
+each interval is retrieved from the existing annotation. Third, the segmented
+video and its target semantic word are provided to Gemini using the prompt
+shown in Fig.
+7
+. The model is instructed to describe
+only the gesture occurring within the specified interval and to characterize
+its visible form in terms of handedness, hand shape, orientation, spatial
+location, and movement trajectory. It additionally infers the communicative
+meaning of the gesture and assigns one primary gesture class from
+{
+iconic
+,
+metaphoric
+,
+deictic
+,
+beat
+}.
+Finally, the generated annotations are checked and inserted into the
+corresponding annotation files.
+The resulting annotation for each semantic interval is represented as
+[MATH: a_{i}=(w_{i},d_{i},m_{i},c_{i}),]
+where
+[MATH: w_{i}]
+denotes the target semantic word or expression,
+[MATH: d_{i}]
+the
+fine-grained gesture description,
+[MATH: m_{i}]
+the inferred contextual meaning, and
+[MATH: c_{i}]
+the gesture class. This representation explicitly separates observable
+motion form from its inferred semantic function, enabling subsequent
+semantics-aware evaluation.
+LLM Prompt: Semantic Gesture Annotation
+You are an expert in multimodal gesture understanding.
+TASK:
+Given a short video clip of a person speaking and the semantic-word interval
+below, annotate only the gesture corresponding to the specified semantic word.
+1. Gesture description.
+Describe the visible gesture involving the hands, arms, head, or upper body.
+Specify:
+(i) which hand(s) move;
+(ii) hand shape;
+(iii) palm or hand orientation;
+(iv) spatial location relative to the body; and
+(v) movement trajectory, direction, amplitude, and speed.
+If multiple micro-gestures occur within the interval, describe them in
+temporal order.
+2. Contextual meaning.
+Infer the communicative function of the gesture in context.
+Assign one primary class:
+iconic
+,
+metaphoric
+,
+deictic
+, or
+beat
+,
+and briefly describe the conveyed meaning.
+ANNOTATION SCOPE:
+Annotate only the specified semantic-word interval and ignore all other
+time spans.
+RULES:
+Be objective and concise.
+Base the description strictly on what is visible within the target interval.
+If the gesture is not visible or is ambiguous, use
+unknown
+.
+If the hands are occluded, explicitly state this.
+Do not borrow cues from outside the specified interval.
+Prefer precise descriptions over speculative interpretations.
+OUTPUT FORMAT:
+{
+"word": "...",
+"gesture_description": "...",
+"contextual_meaning": "...",
+"class": "...",
+"confidence": ...
+}
+Figure 7
+:
+Prompt used for LLM-based semantic gesture annotation.
+The model receives a short video segment together with its predefined semantic
+word and returns a structured description of gesture form and contextual
+meaning.
+8.2
+Annotation Example
+In addition to the annotated intervals used throughout the dataset, we provide a representative event-level example in Figure
+8
+. For this event, Gemini 2.5 Pro observes a rendered motion clip of approximately 2-3 seconds centered on the target semantic interval, together with the corresponding target word and the structured annotation prompt shown in
+7
+. The model is instructed to ground its response in the visible motion and to identify the observed gesture form, infer its contextual meaning, and assign a gesture type. Figure
+9
+shows the resulting annotation output for the target word
+had
+, illustrating how the proposed pipeline converts a short motion event into a structured semantic description.
+Figure 8
+:
+Representative event-level motion example used for semantic gesture annotation. The figure visualizes a short rendered motion clip of approximately 2–3 s centered on the annotated semantic interval. This event clip, together with the corresponding target word and structured annotation prompt, is provided to Gemini 2.5 Pro as input for fine-grained semantic annotation.
+Example annotation output for an additional semantic-gesture event
+Target semantic word:
+had
+LLM annotation:
+{
+"word": "had",
+"gesture_description":
+"Right hand moves at shoulder level in front
+of the torso. Motion is a small, straight
+downward flick with very small amplitude
+and speed.",
+"contextual_meaning":
+"Holding or bringing an implied object into
+possession.",
+"class": "iconic",
+"confidence": 0.58
+}
+Figure 9
+:
+Example of an LLM-generated semantic gesture annotation.
+The target semantic expression is paired with a fine-grained description of
+the visible motion and an interpretation of its communicative meaning.
+8.3
+Human Validation
+To assess the reliability of the automatically generated annotations, we
+conducted a manual validation study on a randomly sampled subset of the
+annotated semantic gestures. Human validation considered both the visual
+description of the gesture and its inferred semantic interpretation.
+For each sampled interval, the annotator viewed the corresponding video and
+compared it with the LLM-generated annotation. Gesture descriptions were
+checked with respect to five observable components:
+handedness
+,
+hand shape
+,
+orientation
+,
+location
+, and
+movement
+. The semantic interpretation was
+additionally checked for whether the predicted gesture class and contextual
+meaning were consistent with the observed gesture and associated semantic
+expression.
+An annotation was considered correct when its gesture description captured
+the principal visible motion and its semantic interpretation was compatible
+with the manually assessed communicative function. Under this criterion,
+75%
+of the evaluated LLM-generated annotations were judged correct.
+This validation indicates that the LLM annotations provide a useful scalable
+source of semantic supervision, while also motivating the use of human
+verification for ambiguous gesture instances.

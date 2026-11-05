@@ -1,0 +1,61 @@
+{
+  "key": "mardm",
+  "requested_id": "2411.16575",
+  "retrieved_at": "2026-11-04T17:02:04.406539+00:00",
+  "reading_level": "unread",
+  "artifacts": [
+    {
+      "kind": "metadata",
+      "url": "https://arxiv.org/abs/2411.16575",
+      "path": "sources/mardm/metadata.html",
+      "sha256": "b1d57db10a305140f0e3e5c62fba6a79e9b5dd6f2bea4cac072cc4e95a7751b9",
+      "bytes": 42413
+    },
+    {
+      "kind": "html",
+      "url": "https://arxiv.org/html/2411.16575",
+      "path": "sources/mardm/html.html",
+      "sha256": "c1d1adee9319be675ce42bf7b6c540cd27146672f0d524b1262ec5211ed0477a",
+      "bytes": 503050
+    }
+  ],
+  "title": "Rethinking Diffusion for Text-Driven Human Motion Generation: Redundant Representations, Evaluation, and Masked Autoregression",
+  "history": "Submission history From: Zichong Meng [ view email ] [v1] Mon, 25 Nov 2024 16:59:42 UTC (2,437 KB) [v2] Tue, 8 Jul 2025 20:15:01 UTC (2,442 KB)",
+  "canonical_ids": [
+    "2411.16575v2"
+  ],
+  "headings": [
+    "Rethinking Diffusion for Text-Driven Human Motion Generation: Redundant Representations, Evaluation, and Masked Autoregression",
+    "1 Introduction",
+    "2 Diagnosis: Motion Data Representation and Distribution",
+    "2.1 Prelimenary",
+    "2.2 Impacts on Training and Sampling",
+    "2.3 Impact on Method Evaluation Robustness",
+    "3 Revisiting Motion Diffusion",
+    "3.1 Reforming Motion Representations",
+    "3.2 Diffusion: An Autoregressive Approach",
+    "3.2.1 Masked Autoregressive Motion Generation",
+    "3.2.2 Autoregressive Generation Branch",
+    "3.3 Evaluation: More Robust Evaluators.",
+    "4 Experiment",
+    "4.1 Datasets and Evaluation Protocols.",
+    "4.2 Results and Analysis",
+    "4.3 Ablation Study",
+    "5 Related Work",
+    "6 Conclusion",
+    "References",
+    "Appendix A Detailed Deduction",
+    "A.1 Detailed Deduction for Eq. 4",
+    "Appendix B Detailed Related Works",
+    "Appendix C Implementation Details",
+    "Appendix D Additional Quantitative Results",
+    "D.1 AutoEncoder Reconstruction Results",
+    "D.2 Baseline Methods Training With Reformed Data Representation and Distribution",
+    "D.3 Original Evaluation Results",
+    "D.4 Further Ablation Study and Optimize Routine",
+    "D.5 Model Scalability",
+    "Appendix E Temporal Editing",
+    "Appendix F Additional Qualitative Results",
+    "Appendix G Limitations"
+  ]
+}

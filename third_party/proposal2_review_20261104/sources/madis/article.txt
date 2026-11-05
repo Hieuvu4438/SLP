@@ -1,0 +1,2962 @@
+MaDiS: Taming Masked Diffusion Language Models for Sign Language Generation
+Ronglai Zuo  Rolandos Alexandros Potamias  Qi Sun  Evangelos Ververas
+Jiankang Deng  Stefanos Zafeiriou
+Affiliation:
+Imperial College London
+Abstract
+Sign language generation (SLG) aims to translate written texts into expressive sign motions, bridging communication barriers for the Deaf and Hard-of-Hearing communities. Recent studies formulate SLG within the language modeling framework using autoregressive language models, which suffer from unidirectional context modeling and slow token-by-token inference. To address these limitations, we present MaDiS, a masked-diffusion-based language model for SLG that captures bidirectional dependencies and supports efficient parallel multi-token generation. We further introduce a tri-level cross-modal pretraining scheme that jointly learns from token-, latent-, and 3D physical-space objectives to leverage complementary, multi-level sign representations. To accelerate model convergence in the fine-tuning stage, we design a novel unmasking strategy with temporal checkpoints, which restructures generation in a coarse-to-fine manner and reduces the combinatorial complexity of unmasking orders by over
+[MATH: 10^{41}]
+times. In addition, a mixture-of-parts embedding layer is developed to effectively fuse information stored in different part-wise sign tokens through a learnable gate and well-optimized codebooks. Extensive experiments on CSL-Daily, Phoenix-2014T, and How2Sign demonstrate that MaDiS achieves superior performance across multiple metrics, including DTW error and two newly introduced metrics, SiBLEU and SiCLIP, while delivering a 40% higher throughput. Code and models will be publicly released.
+Keywords:
+Sign Language Generation Diffusion Language Model Sign Language Pretraining
+Figure 1
+:
+We propose MaDiS, a novel sign language generation approach built upon masked diffusion language models (MDLMs)
+[
+49
+]
+. (a) A sign tokenizer discretizes continuous sign motions into part-wise tokens
+[
+104
+]
+. (b) Conventional autoregressive language models generate tokens in a left-to-right manner, limiting utilization of contexts and inference efficiency. (c) The emerging MDLMs model token distributions with bidirectional contexts and enable parallel multi-token sampling during inference. (d) MaDiS achieves SOTA performance across multiple benchmarks
+[
+20
+,
+102
+,
+12
+]
+while delivering a 40% higher throughput.
+1
+Introduction
+Sign language is the primary communication mode for Deaf and Hard-of-Hearing (DHH) individuals, yet in predominantly oral societies they are often encouraged to rely on text instead of their preferred sign language
+[
+93
+]
+. Research in sign language translation (SLT, sign-to-text) and generation (SLG, text-to-sign) aims to improve the accessibility of sign language, thereby mitigating the communication gap between the hearing and DHH communities. While SLT has seen significant progress
+[
+41
+,
+27
+,
+15
+,
+35
+,
+82
+,
+32
+,
+24
+,
+26
+,
+90
+]
+, SLG remains relatively under-explored.
+Early SLG approaches typically rely on glosses, the written form of signs, as an intermediate representation and formulate SLG as a text-to-gloss-to-sign pipeline
+[
+105
+,
+63
+,
+61
+,
+69
+]
+. While glosses encode rich linguistic information, the performance of gloss-based methods is constrained by the quality of the text-to-gloss module: due to the high cost of gloss annotations, gloss-based datasets are often limited in scale, leading to degraded text-to-gloss performance. For example, Gemini-generated glosses exhibit an error rate of over 60%
+[
+32
+]
+. In addition, such cascaded pipelines incur higher inference latency.
+Given these limitations, recent efforts have increasingly adopted gloss-free SLG, directly generating signs from text. Typical works
+[
+66
+,
+5
+,
+22
+,
+78
+]
+formulate the task as a visual content generation problem, using either GANs
+[
+63
+]
+or diffusion models
+[
+58
+]
+.
+Recently, motivated by the linguistic character of sign language and the generalizability of large language models (LLMs), a new research direction has emerged that models SLG through tokenization (
+Fig.
+1
+a) and autoregressive language models (ARLMs)
+[
+104
+,
+92
+,
+95
+,
+23
+,
+19
+]
+(
+Fig.
+1
+b). However, ARLMs have two main limitations: their left-to-right generation order restricts the use of bidirectional contexts and their one-token-at-a-time decoding introduces an inference bottleneck.
+To address such problems, we propose MaDiS (
+Fig.
+1
+c), a novel SLG approach built upon an emerging and promising language modeling paradigm, the masked diffusion language model (MDLM)
+[
+49
+,
+89
+,
+94
+,
+48
+]
+. Unlike conventional ARLMs, MDLMs are based on masked diffusion models
+[
+64
+,
+60
+,
+50
+]
+, which introduce a forward data masking process and train a mask predictor to approximate the reverse denoising process. This mechanism enables MDLMs to construct model distributions with bidirectional dependencies, allowing them to capture richer contextual information. During the reverse process, multiple tokens can be sampled simultaneously, thereby improving inference efficiency.
+Pretraining plays a crucial role in sign language understanding models
+[
+41
+,
+33
+,
+103
+,
+83
+,
+100
+,
+38
+]
+, yet pretraining for SLG models remains largely unexplored. MDLMs are typically pretrained in the token space using a mask-then-predict framework
+[
+49
+]
+, where a subset of tokens is randomly masked and subsequently predicted by the model.
+Although such token-space objective is well-established in natural language processing, recent advances in self-supervised learning
+[
+40
+,
+6
+,
+4
+]
+have demonstrated that latent-space pretraining is often more effective in a wide range of vision tasks, including image and video understanding
+[
+47
+,
+6
+]
+and world modeling
+[
+101
+,
+3
+]
+.
+Moreover, sign language, as a visual language, conveys most of its semantics through body and hand motions in the 3D physical space. Motivated by the advantages of different representation spaces, we propose a tri-level cross-modal pretraining method in which the model learns to predict masked text and sign tokens, latent features, and 3D sign motions simultaneously. This challenging and comprehensive pretraining objective encourages the model to fully exploit complementary sign representations and yields significant performance improvements in the downstream SLG task.
+After pretraining, we perform supervised fine-tuning conditioned on unmasked text tokens. The original MDLM can be viewed as an any-order ARLM
+[
+67
+]
+. Due to its unconstrained confidence-based unmasking strategy, the number of possible unmasking orders is enormous. For example, generating 100 tokens in 25 steps results in approximately
+[MATH: 10^{123}]
+possible orders. Although this property enables MDLMs to perform well in data-constrained scenarios, it also leads to significantly slower convergence, often requiring more training epochs
+[
+55
+]
+.
+To address this issue, we propose a novel unmasking strategy with temporal checkpoints. Inspired by the effectiveness of VAR
+[
+75
+]
+, which generates images progressively from low to high resolution, we insert checkpoints composed of uniformly distributed tokens at noise levels 0.75 and 0.5, corresponding to temporal resolutions of
+[MATH: T/4]
+and
+[MATH: T/2]
+. This design decomposes generation in a coarse-to-fine manner and dramatically prunes unmasking orders by over
+[MATH: 10^{41}]
+times, thereby accelerating convergence during training.
+Furthermore, to better integrate part-wise sign tokens
+[
+104
+]
+, we propose a plug-and-play mixture-of-parts (MoP) embedding layer. Unlike the previous SOTA method
+[
+104
+]
+that simply averages token embeddings from different body parts, our MoP embedding layer is built upon well-optimized VQ-VAE codebooks, and part-wise embeddings are dynamically fused through a learnable gate.
+In summary, our contributions are as follows:
+•
+We propose MaDiS, a novel gloss-free SLG approach built upon MDLMs that enable bidirectional context modeling and parallel multi-token generation.
+•
+A tri-level cross-modal pretraining framework is developed that jointly learns from token, latent, and 3D physical spaces, enabling the model to exploit the benefits from complementary, multi-level sign representations.
+•
+To accelerate training convergence, we design a novel token unmasking strategy with temporal checkpoints, which significantly reduces unmasking order complexity through a coarse-to-fine decomposition. To enhance the integration of part-wise sign tokens, we introduce an MoP embedding layer that is conditioned on VQ-VAE codebooks and controlled by a learnable gate.
+•
+Extensive experiments on widely adopted benchmarks
+[
+20
+,
+102
+,
+12
+]
+demonstrate that MaDiS achieves SOTA performance across multiple metrics, including DTW error and two newly introduced metrics, SiBLEU and SiCLIP, while enhancing inference throughput by 40% (
+Fig.
+1
+d).
+2
+Related Work
+Sign Language Generation (SLG).
+SLG aims to translate texts into sign language outputs represented in various forms, such as skeletons
+[
+62
+,
+71
+,
+1
+,
+86
+,
+72
+]
+, RGB videos
+[
+78
+,
+63
+,
+56
+,
+21
+,
+22
+]
+, and 3D motions
+[
+104
+,
+105
+,
+92
+,
+95
+,
+5
+,
+8
+]
+.
+Although real-person videos are more realistic, developing end-to-end sign video generation models is challenging due to the high dimensionality of RGB video data. Therefore, we focus on generating sign motions, which can serve as an intermediate representation for subsequent sign video synthesis
+[
+66
+,
+65
+,
+80
+]
+.
+Motivated by the linguistic nature of sign language, recent studies
+[
+95
+,
+19
+,
+104
+,
+92
+]
+formulate SLG within a language modeling framework. However, these approaches rely on ARLMs, which are inherently limited by their left-to-right generation process.
+In this work, we explore emerging MDLMs for SLG, which model token distributions bidirectionally and enable efficient parallel generation.
+Masked Diffusion Language Model (MDLM).
+Current LLMs are mostly built upon ARLMs. Although they demonstrate strong capability, their left-to-right generation order limits both efficiency and context modeling. Recently, MDLMs
+[
+49
+,
+9
+,
+48
+,
+28
+]
+have emerged as a new language modeling paradigm, showing promising capability, scalability, and efficiency. MDLMs have also been successfully applied to diverse domains, including multimodal understanding
+[
+89
+]
+, protein design
+[
+79
+]
+, and robotics
+[
+81
+]
+.
+A related line of work in human motion generation
+[
+31
+,
+30
+,
+54
+,
+85
+]
+adopts a similar masked generation approach
+[
+14
+]
+, but their training objectives are determined heuristically and lack the rigorous theoretical foundation of MDLMs.
+In this work, we present the first effort to introduce MDLMs into SLG and propose a temporal-checkpoint unmasking strategy to improve training efficiency.
+Figure 2
+:
+MaDiS is built upon the emerging masked diffusion language model (MDLM), implemented by modifying a standard decoder-only LLM with bidirectional attention. The MDLM is first pretrained with three objectives (
+[MATH: \mathcal{L}_{tok}^{text}+\mathcal{L}_{tok}^{sign}]
+,
+[MATH: \mathcal{L}_{lat}]
+,
+[MATH: \mathcal{L}_{phy}]
+) from the token, latent, and 3D physical spaces, respectively. We then fine-tune the model conditioned on text inputs using the proposed temporal-checkpoint unmasking strategy and a dedicated mixture-of-parts sign embedding layer.
+Pretraining for Sign Language Models.
+Pretraining plays a crucial role in sign language understanding tasks. Existing works can be categorized into alignment-based methods
+[
+38
+,
+100
+,
+39
+,
+91
+,
+16
+]
+, which pretrain by aligning signs and texts; reconstruction-based methods
+[
+33
+,
+83
+,
+29
+,
+59
+,
+99
+,
+98
+]
+, which pretrain by reconstructing sign inputs; hybrid methods
+[
+103
+]
+; and next-token prediction methods
+[
+41
+,
+96
+]
+.
+However, an important oversight is that all these works focus solely on understanding tasks. Our work represents the first attempt to pretrain sign language generation models through a cross-modal and multi-level strategy that jointly predicts sign and text tokens, latent features, and 3D sign motions, thereby effectively injecting sign-aware knowledge into MDLMs.
+3
+Methodology
+An overview of MaDiS is illustrated in
+Fig.
+2
+. In the first stage, both text and sign tokens are randomly masked according to a masking ratio
+[MATH: t]
+, and the MDLM is pretrained with objectives defined across multiple representation spaces (token, latent, and physical) to exploit the benefits from multi-level sign representations. In the subsequent fine-tuning stage, the MDLM keeps text tokens unmasked and learns to generate sign tokens using the proposed unmasking with temporal checkpoints (UTC) strategy and the mixture-of-parts (MoP) embedding layer.
+3.1
+Preliminaries
+Sign Tokenizer.
+We adopt the open-sourced SOTA decoupled tokenizer
+[
+104
+]
+to discretize sign motions, which can be reconstructed with high accuracy. It consists of three parallel VQ-VAEs
+[
+77
+]
+responsible for different body parts. Each VQ-VAE includes an encoder
+[MATH: \mathcal{E}_{p}]
+, a decoder
+[MATH: \mathcal{D}_{p}]
+, and a codebook
+[MATH: \mathcal{C}_{p}=\{{\mathbf{c}_{p}^{i}}\}_{i=1}^{N_{c}}]
+, where
+[MATH: p\in\{b,l,r\}]
+represents the upper body, left hand, and right hand, respectively, and
+[MATH: N_{c}]
+is the codebook size. Using this tokenizer, a
+[MATH: T]
+-frame sign motion sequence
+[MATH: \mathbf{S}\in\mathbb{R}^{T\times d_{s}}]
+, where
+[MATH: d_{s}=133]
+denotes the number of SMPL-X parameters
+[
+52
+]
+, is decomposed as three part-wise token sequences
+[MATH: x_{p}=\{x_{p}^{i}\}_{i=1}^{L_{s}}]
+, where
+[MATH: x_{p}^{i}\in\{1,\dots,N_{c}\}]
+and
+[MATH: L_{s}]
+denotes the token sequence length.
+Masked Diffusion Language Model.
+MDLMs
+[
+49
+,
+48
+]
+introduce a new language modeling paradigm based on forward-reverse discrete diffusion. In the forward process, the original token sequence
+[MATH: x_{0}]
+is corrupted with mask tokens
+[MATH: |\mathrm{M}|]
+according to the time (noise level)
+[MATH: t\in[0,1]]
+. The conditional distribution of the masked sequence
+[MATH: x_{t}]
+is defined as
+[MATH: q_{t|0}(x_{t}|x_{0})=\prod_{i=1}^{L}q_{t|0}(x_{t}^{i}|x_{0}^{i})]
+, where
+[MATH: q_{t|0}\!\left(x_{t}^{i}\mid x_{0}^{i}\right)=\begin{cases}1-t,&x_{t}^{i}=x_{0}^{i},\\[4.0pt]
+t,&x_{t}^{i}=|\mathrm{M}|.\end{cases}]
+(1)
+The reverse process aims to generate meaningful tokens from the all-masked sequence
+[MATH: x_{1}]
+. The conditional distribution is defined as
+[MATH: q_{s|t}(x_{s}|x_{t})=\prod_{i=1}^{L}q_{s|t}(x_{s}^{i}|x_{t})]
+, where
+[MATH: 0\leq s<t\leq 1]
+, and
+[MATH: q_{s|t}(x_{s}^{i}|x_{t})=\begin{cases}1,&\!\!\!\!x_{s}^{i}\!=\!x_{t}^{i}\!\neq\!|\mathrm{M}|,\\
+\frac{s}{t},&\!\!\!\!x_{s}^{i}\!=\!x_{t}^{i}\!=\!|\mathrm{M}|,\\
+\frac{t-s}{t}q_{0|t}(x_{s}^{i}|x_{t}),&\!\!\!\!x_{s}^{i}\!\neq\!|\mathrm{M}|,x_{t}^{i}\!=\!|\mathrm{M}|,\\
+0,&\!\!\!\!\text{otherwise.}\end{cases}]
+(2)
+A rigorous proof in
+[
+50
+]
+shows that
+[MATH: q_{0|t}(x_{s}^{i}|x_{t})=p_{\text{data}}(x_{0}^{i}|x_{t}^{\mathrm{UM}})]
+, where
+[MATH: x_{t}^{\mathrm{UM}}]
+denotes the unmasked tokens in
+[MATH: x_{t}]
+that are identical to those in
+[MATH: x_{0}]
+. This implies that the time condition
+[MATH: t]
+can be omitted from the model inputs, leading to a simplified implementation of MDLM in which the model only needs to predict masked tokens conditioned on the unmasked ones.
+3.2
+Tri-Level Cross-Modal Pretraining
+Existing works
+[
+13
+,
+76
+]
+reveal that the knowledge of LMs mainly comes from pretraining. As shown in
+Fig.
+2
+, we pretrain the MDLM at three spaces, enabling it to absorb knowledge from sign representations of different levels.
+Token Space.
+At the first level, we pretrain the MDLM by predicting masked tokens. Following
+[
+49
+]
+, at each training iteration, we uniformly sample a noise level (mask ratio)
+[MATH: t\sim U(0,1)]
+. Denoting text tokens as
+[MATH: x_{e}=\{x_{e}^{i}\}_{i=1}^{L_{e}}]
+and an end-of-sentence token as
+[MATH: |\mathrm{eos}|]
+, the input sequence is formed by concatenating text tokens,
+[MATH: |\mathrm{eos}|]
+, and sign tokens:
+[MATH: x_{0}=\mathrm{cat}(x_{e},|\mathrm{eos}|,x_{\{p\}},|\mathrm{eos}|)=\{x_{0}^{i}\}_{i=1}^{L_{e}+L_{s}+2}]
+. For simplicity, we use
+[MATH: \{p\}]
+to denote all part-wise sign tokens, since they are masked and unmasked simultaneously once their index is selected.
+Each index
+[MATH: i]
+is selected with a probability of
+[MATH: t]
+, and its corresponding token is masked to obtain
+[MATH: x_{t}]
+.
+The token-space loss is defined as a cross-entropy loss
+[
+49
+]
+:
+[MATH: \mathcal{L}_{tok}=-\mathbb{E}_{t,x_{0},x_{t}}\left[\frac{1}{t}\sum_{i\in I_{m}}\log p_{\theta}(x_{0}^{i}\mid x_{t})\right],\vskip-8.53581pt]
+(3)
+where
+[MATH: I_{m}]
+denote the set of masked indices, and
+[MATH: p_{\theta}(\cdot)]
+denotes the token probabilities predicted by the model.
+Latent Space.
+Inspired by the effectiveness of joint-embedding predictive architectures (JEPAs)
+[
+40
+,
+2
+]
+in numerous vision tasks
+[
+6
+,
+3
+,
+101
+]
+, we extend this idea to MDLM pretraining. Unlike the original JEPAs that train an additional target encoder to extract embeddings, we directly leverage the well-trained codebooks
+[MATH: \mathcal{C}_{p}]
+, whose embeddings can accurately reconstruct sign motions via the decoders, as the prediction targets to simplify model design.
+More specifically, let the last hidden states of the MDLM corresponding to masked sign tokens be
+[MATH: \mathbf{H}\in\mathbb{R}^{|I_{s}|\times d}]
+, where
+[MATH: I_{s}]
+denotes the index set of masked sign tokens. We use three MLPs to map
+[MATH: \mathbf{H}]
+into the spaces of the codebooks:
+[MATH: \mathbf{H}_{p}=\mathrm{MLP}_{p}(\mathbf{H})\in\mathbb{R}^{|I_{s}|\times d_{c}}]
+, where
+[MATH: d_{c}]
+denotes the dimension of each code embedding. The target embeddings are then collected from the corresponding code embeddings:
+[MATH: \mathbf{\hat{H}}_{p}=\mathrm{cat}(\{\mathbf{c}^{n_{i}}_{p}\mid i\in I_{s},1\leq n_{i}\leq N_{c}\})]
+, where
+[MATH: n_{i}]
+denotes the code index of the
+[MATH: i]
+-th token. Finally, the MDLM learns to predict the code embeddings with a smoothed L1 loss (
+[MATH: \|\cdot\|_{1}]
+):
+[MATH: \mathcal{L}_{lat}=\sum_{p}\|\mathbf{H}_{p}-\mathbf{\hat{H}}_{p}\|_{1}]
+.
+Physical Space.
+Inspired by the visual-language nature of sign languages, we incorporate 3D sign motion reconstruction as an additional pretraining objective in the physical space. More specifically, we reuse the well-trained VAE decoder
+[MATH: \mathcal{D}_{p}]
+, which is frozen and used to reconstruct sign motions from the mapped hidden states
+[MATH: \mathbf{H}_{p}]
+. Denoting the ground-truth part-wise sign motions at the masked indices as
+[MATH: \mathbf{\hat{S}}_{p}]
+, the objective function in the physical space is defined as:
+[MATH: \mathcal{L}_{phy}=\sum_{p}\|\mathcal{D}_{p}(\mathbf{H}_{p})-\mathbf{\hat{S}}_{p}\|_{1}]
+.
+Unlike existing works
+[
+33
+,
+103
+,
+59
+]
+that mask and reconstruct sign poses, we mask tokens but reconstruct poses (motions), which is more challenging and encourages the model to learn more grounded sign representations. The overall pretraining loss is defined as
+[MATH: \mathcal{L}_{pre}=\mathcal{L}_{tok}+\mathcal{L}_{lat}+\mathcal{L}_{phy}]
+.
+3.3
+Supervised Fine-Tuning
+Figure 3
+:
+(a) Vanilla MDLMs adopt an unconstrained confidence-based unmasking strategy
+[
+49
+]
+. (b) We insert temporal checkpoints at noise levels
+[MATH: 0.75]
+and
+[MATH: 0.5]
+to reduce the complexity of unmasking orders. (c) The original unmasking strategy allows arbitrary unmasking orders (about
+[MATH: 10^{123}]
+for generating 100 tokens), while our method reduces this complexity by over
+[MATH: 10^{41}]
+times.
+After the pretraining stage, the MDLM is expected to acquire basic sign language knowledge and adapt to the diffusion process with bidirectional contexts. We then fine-tune the entire model while keeping the text tokens unmasked.
+Unmasking with Temporal Checkpoints (UTC).
+During the reverse process, the original MDLM
+[
+49
+]
+adopts a simple confidence-based unmasking strategy (
+Fig.
+3
+a). Specifically, at each step, the model unmasks
+[MATH: k]
+tokens with the highest confidence, defined as the maximum of their categorical probabilities. However, this unconstrained strategy leads to highly diverse unmasking orders. Denoting the number of generated tokens as
+[MATH: M]
+, the total number of possible unmasking orders is:
+[MATH: N_{u}=\binom{M}{k}\binom{M-k}{k}\cdots\binom{k}{k}=\frac{M!}{(k!)^{M/k}}.\vskip-5.69054pt]
+(4)
+When
+[MATH: M=100]
+and
+[MATH: k=4]
+, this number can achieve
+[MATH: 2.9\times 10^{123}]
+. Although such diversity can enhance model performance, it also results in slow convergence
+[
+55
+]
+.
+Inspired by VAR
+[
+75
+]
+, which adopts a coarse-to-fine generation scheme with progressively enhanced resolution, we propose a novel unmasking strategy with temporal checkpoints (UTC), as shown in
+Fig.
+3
+b. Specifically, we divide the reverse process into three stages at
+[MATH: t=0.75]
+and
+[MATH: t=0.5]
+, where
+[MATH: 1/4]
+and
+[MATH: 1/2]
+of the tokens have been unmasked, respectively. Both pivot states are enforced to contain uniformly distributed tokens, while a standard confidence-based unmasking strategy is applied within each stage. Consequently, the number of possible orders under our UTC is substantially reduced to:
+[MATH: N_{u}^{\mathrm{UTC}}=\frac{(M/4)!}{(k!)^{M/4k}}\cdot\frac{(M/4)!}{(k!)^{M/4k}}\cdot\frac{(M/2)!}{(k!)^{M/2k}}.\vskip-2.84526pt]
+(5)
+When
+[MATH: M=100]
+and
+[MATH: k=4]
+, UTC reduces the number of orders by
+[MATH: 10^{41}\times]
+compared to vanilla unmasking strategy (
+Fig.
+3
+c). Moreover, the resulting generation process follows a coarse-to-fine structure, with both factors jointly easing model learning and accelerating convergence.
+To ensure training-inference consistency, we employ predefined index masks to filter out infeasible states during training. More implementation details are provided in the supplement.
+Figure 4
+:
+(a) A typical sign embedding layer averages part-wise token embeddings
+[
+104
+]
+. (b) The proposed mixture-of-parts embedding layer leverages optimized VAE codebooks and uses a learnable gate to control contributions from different body parts.
+Mixture-of-Parts (MoP) Embedding Layer.
+In contrast to the pretraining stage, where different part-wise tokens are treated equally, we aim to more discriminatively capture the relations among body parts during fine-tuning with text conditions. To this end, our MoP embedding layer is built upon the well-trained VAE codebooks and employs a learnable gate to control the contributions from different parts. For instance, since numerous signs are produced with a single hand
+[
+7
+,
+25
+]
+, it would be beneficial to assign distinct weights to each hand.
+As shown in
+Fig.
+4
+b, given the part IDs (
+[MATH: i_{p}]
+), the part-wise code embeddings are passed through fully-connected (FC) layers to match the model dimension of MDLM:
+[MATH: \mathbf{E}_{p}=\mathrm{FC}_{p}(\mathbf{c}_{p}^{i_{p}})]
+. Furthermore, we use an MLP with a softmax layer to learn gating weights:
+[MATH: \mathbf{G}=\{g_{p}\}=\mathrm{softmax}(\mathrm{MLP}(\mathrm{cat}(\{\mathbf{c}_{p}^{i_{p}}\})))]
+. The final sign embedding is obtained as
+[MATH: \mathbf{E}=\sum_{p}g_{p}\cdot\mathbf{E}_{p}]
+.
+Similar to
+[
+38
+]
+, we also observe that continuing to use pretraining objectives during fine-tuning is beneficial. Therefore, the fine-tuning loss is defined as
+[MATH: \mathcal{L}_{sft}=\mathcal{L}_{tok}+\alpha(\mathcal{L}_{lat}+\mathcal{L}_{phy})]
+, where
+[MATH: \alpha=0.5]
+is determined empirically through a sensitivity analysis in the supplement.
+3.4
+SiBLEU and SiCLIP
+Existing SLG models
+[
+104
+,
+5
+,
+105
+,
+1
+]
+are typically evaluated using dynamic time warping (DTW) error
+[
+1
+]
+and back-translation (BT)
+[
+61
+]
+. However, DTW error may over-optimistically reflect model performance since it measures the minimum distance between generated and ground-truth sequences. Moreover, its computation is inefficient due to the reliance on dynamic programming.
+On the other hand, BT evaluates performance in the text space, which overlooks the visual and multi-cue nature of sign language, and the translation process itself introduces unavoidable errors
+[
+34
+]
+.
+To address these issues, we propose two new metrics that serve as effective alternatives.
+SiBLEU – Straightforward and Efficient Evaluation in the Token Space.
+For LM-based SLG approaches, signs are tokenized, which enables a straightforward evaluation by computing BLEU scores
+[
+51
+]
+over generated tokens against ground-truth tokens. We term this the SiBLEU score. A higher SiBLEU indicates greater overlap with the ground-truth tokens.
+SiCLIP – Evaluation in a Joint Embedding Space.
+In related domains such as human motion generation
+[
+74
+,
+46
+]
+and text-to-video generation
+[
+97
+,
+84
+,
+87
+]
+, CLIP
+[
+57
+]
+is widely used to evaluate the alignment between prompts (texts) and generations in a joint-embedding space. Motivated by this, we train a CLIP model over ground-truth sign-text pairs in the training sets, and adopt retrieval-based metrics
+[
+8
+,
+53
+,
+37
+]
+for evaluating the semantic alignment between texts and generated signs. More details are provided in the supplement.
+Figure 5
+:
+Qualitative comparisons of generated signs between our proposed method, MaDiS, with the SOTA method, SOKE
+[
+104
+]
+, on the test sets of CSL-Daily (left), Phoenix-2014T (middle), and How2Sign (right).
+4
+Experiments
+Datasets.
+We evaluate MaDiS on three widely-adopted datasets: CSL-Daily
+[
+102
+]
+, Phoenix-2014T
+[
+12
+]
+, and How2Sign
+[
+20
+]
+, which contain 20K/8K/35K video-text pairs for Chinese, American, and German sign languages, respectively. We use the curated SMPL-X poses provided in
+[
+104
+]
+as sign motion representations.
+Evaluation Metrics.
+Due to the length difference between generated signs and ground truth, we follow the previous work
+[
+104
+]
+to use dynamic time warping over joint position errors (DTW-JPE) as the major metric to measure sequence-level distances. Note that we do not compute procrustes alignment (PA) since it will align rotation before computing joint errors, leading to overoptimistic performance
+[
+10
+]
+. As a complement, we use SiBLEU-4 as an indicator for token-level precision and report the sentence-level sign-to-text retrieval performance (R@1)
+[
+8
+,
+17
+]
+using SiCLIP as a joint feature extractor for signs and texts.
+Implementation Details.
+We instantiate the MDLM with Qwen3-0.6B-Base
+[
+88
+]
+, a leading open-source LLM supporting 119 languages. To enable bidirectional modeling, we replace the causal attention mask in each transformer layer with a non-causal one
+[
+49
+]
+. During pretraining, the model is trained on the combined training sets of all three datasets to maximize data utilization
+[
+33
+,
+96
+]
+. In the fine-tuning stage, it is trained on each dataset independently. We empirically set
+[MATH: k=4]
+and
+[MATH: M=100]
+, which corresponds to 400 frames after decoding due to the 4x up-sampling layer in the VAE decoder. This length is sufficient to cover about 98% of training videos, and over-length videos are uniformly sampled to fit within 400 frames. When generating sign tokens, we adopt multi-head decoding
+[
+104
+]
+to predict all three part-wise tokens simultaneously, and tokens appearing after the end-of-sentence token are discarded
+[
+49
+]
+. The initial learning rate is set to
+[MATH: 2e-4]
+, and we adopt the AdamW optimizer
+[
+43
+]
+with a cosine learning rate scheduler and a batch size of 64 per GPU for both stages. The models are trained for 200 and 150 epochs in the pretraining and fine-tuning stages, respectively, using 4x Nvidia GH200 GPUs.
+Method
+CSL-Daily
+Phoenix-2014T
+How2Sign
+DTW-JPE
+[MATH: \downarrow]
+SiBLEU
+[MATH: \uparrow]
+SiCLIP
+[MATH: \uparrow]
+DTW-JPE
+[MATH: \downarrow]
+SiBLEU
+[MATH: \uparrow]
+SiCLIP
+[MATH: \uparrow]
+DTW-JPE
+[MATH: \downarrow]
+SiBLEU
+[MATH: \uparrow]
+SiCLIP
+[MATH: \uparrow]
+Body
+Hands
+Body
+Hands
+R@1
+Body
+Hands
+Body
+Hands
+R@1
+Body
+Hands
+Body
+Hands
+R@1
+Prog. Trans.
+∗
+[
+61
+]
+16.30
+32.63
+N/A
+13.65
+15.01
+31.77
+N/A
+14.03
+14.74
+30.17
+N/A
+9.88
+Text2Mesh
+∗
+[
+70
+]
+13.76
+30.37
+N/A
+15.84
+14.04
+31.64
+N/A
+12.08
+15.50
+32.97
+N/A
+9.30
+T2S-GPT
+∗
+[
+92
+]
+12.32
+15.43
+2.11
+N/A
+20.03
+11.65
+19.09
+1.93
+N/A
+22.10
+12.65
+18.44
+2.13
+N/A
+12.58
+NSA
+[
+5
+]
+–
+–
+N/A
+–
+–
+–
+N/A
+–
+9.16
+18.51
+N/A
+15.04
+S-MotionGPT
+∗
+[
+36
+]
+11.58
+11.31
+2.26
+N/A
+20.37
+10.42
+9.08
+1.97
+N/A
+32.42
+12.41
+13.74
+2.32
+N/A
+12.77
+MoMask++
+[
+30
+]
+8.93
+10.57
+1.53
+N/A
+22.62
+8.16
+9.96
+1.49
+N/A
+37.88
+9.06
+11.34
+1.58
+N/A
+20.39
+SOKE (mBART)
+†
+[
+104
+]
+7.38
+9.68
+2.59
+2.14
+23.64
+6.04
+7.72
+2.71
+1.85
+34.30
+7.75
+10.08
+2.52
+1.74
+16.12
+SOKE (Qwen3)
+†
+[
+104
+]
+7.29
+9.59
+2.71
+2.27
+25.05
+6.09
+7.65
+2.38
+1.98
+38.53
+7.18
+10.09
+2.57
+1.97
+18.48
+MDLM baseline
+7.12
+9.57
+3.17
+2.55
+29.17
+5.98
+7.58
+2.36
+2.14
+44.25
+7.02
+10.16
+2.73
+1.79
+25.78
+MaDiS (ours)
+5.99
+7.96
+4.87
+4.08
+38.61
+4.97
+6.59
+4.54
+3.33
+57.94
+6.59
+9.45
+4.41
+3.46
+34.27
+Table 1:
+Comparison with SOTA sign language generation methods. Note that since SiBLEU scores are computed over sign tokens, we report “N/A” for tokenizer-free methods
+[
+61
+,
+70
+,
+5
+]
+. Similarly, for methods
+[
+92
+,
+36
+,
+30
+]
+that employ a single tokenizer for whole-body motions, the SiBLEU-Hands results are also marked as “N/A”.
+∗
+DTW errors are reported by
+[
+104
+]
+.
+†
+Methods using external sign dictionaries.
+4.1
+Comparison with State-of-the-Art Methods
+Qualitative Comparison.
+We first conduct qualitative comparisons with the previous SOTA method, SOKE
+[
+104
+]
+, which proposes a simple autoregressive SLG model without dedicated pretraining and can only capture unidirectional contexts due to the nature of ARLMs. In contrast, our MaDiS is pretrained across multiple sign representation spaces and benefits from an MDLM backbone that enables bidirectional contextual modeling. As shown in
+Fig.
+5
+, our model produces more precise and natural sign motions, demonstrating better generalization across diverse hand shapes, palm orientations, single- and double-handed signs, and finger details. Video demos are provided in the supplement.
+Quantitative Comparison.
+As detailed in
+Tab.
+1
+, we conduct a quantitative comparison with SOTA SLG methods. Since we introduce two new evaluation metrics, we carefully reproduce previous works using their open-source codes
+[
+61
+,
+70
+,
+36
+,
+30
+,
+104
+]
+or our own reimplementations
+[
+92
+,
+5
+]
+.
+MoMask++
+[
+30
+]
+is a leading human motion generation method based on a masked generation approach
+[
+14
+]
+. However, its masking schedule is heuristically determined without a theoretical foundation, and its multi-scale tokenization introduces error accumulation during inference, leading to inferior performance than SOKE.
+For fairness, we also report the performance of SOKE when using Qwen3-0.6B as the LM, instead of the originally adopted mBART-Large
+[
+42
+]
+. Although both LMs have a similar size (0.6B), we observe that employing Qwen3 leads to slightly better performance, which can be attributed to the larger pretraining corpus of the Qwen3 series.
+Furthermore, we report the performance of an MDLM baseline obtained by directly training an MDLM on sign language datasets, without any of our proposed techniques (pretraining, UTC, or MoP).
+Notably, this baseline performs on par with SOKE, which utilizes external sign dictionaries, while offering 40% higher throughout (
+Fig.
+6
+a). This highlights the potential of MDLMs for SLG.
+Finally, our proposed MaDiS achieves new SOTA results across the test sets of all three datasets and all evaluation metrics.
+Figure 6
+:
+(a) Comparison of throughput measured in output tokens per second. (b-d) Efficiency-quality trade-off on three datasets. The generation length is fixed to 100 tokens, and the number of sampling steps is set to 100, 50, 25 (default), and 10, corresponding to decoding 1, 2, 4, and 10 tokens per step, respectively.
+Figure 7
+:
+(a) User study with professional CSL signers. We report average ratings of the previous SOTA method, SOKE
+[
+104
+]
+, our proposed MaDiS, ground-truth motions, and ground-truth RGB videos. Error bars indicate 95% confidence intervals. (b) Absolute values of Spearman’s rank correlation coefficient
+[
+68
+]
+between signers’ ratings and metric scores. DTW and SiBLEU refer to the average of Body and Hands. (c) Visualization of attention maps from the penultimate Transformer layer.
+Efficiency.
+As shown in
+Fig.
+6
+a, across all test samples of the three datasets, our method achieves a throughput of 132 tokens/sec, representing a 40% improvement over SOKE with KV caching. This high throughput enables the generation of a 400-frame (100-token) video in only 0.76s, thereby satisfying real-time requirements. This improvement stems from the highly efficient parallel token generation enabled by the reverse process in MDLMs.
+In
+Fig.
+6
+b-d, we observe that MaDiS provides a flexible trade-off between generation quality and efficiency, where quality is measured by DTW and SiBLEU scores (averaged over Body and Hands). When the number of sampling steps is set to 100, corresponding to sampling one token at a time, the model achieves the highest generation quality but the lowest throughput. In contrast, with only 10 sampling steps, inference becomes extremely fast (exceeding 300 tokens/sec) at the cost of degraded performance. Using 25 sampling steps yields a balance between generation quality and efficiency.
+Human Evaluation.
+To assess the intelligibility of the generated signs, we conducted a user study involving five professional CSL signers with 4 to 13 years of signing experience. They were asked to rate the alignment between generated signs and text annotations on a scale from 1 to 10, where higher scores indicate higher sign accuracy and better semantic conveyance. Ground-truth motions and RGB videos were also included for reference. Specifically, we provided 15 generated signs from SOKE and from our proposed MaDiS, together with the corresponding ground-truth motions and videos. The order of all samples was randomly shuffled to avoid potential bias. All participants were compensated above the average hourly rate in China.
+As shown in
+Fig.
+7
+a, our method achieves an average rating of 6.9, substantially outperforming SOKE, which receives an average rating of 4.6. The ground-truth motions obtain an average rating of 8.4, further demonstrating the feasibility of using motions as effective sign language representations.
+Furthermore, we report the absolute values of Spearman’s rank correlation coefficient
+[
+68
+]
+(1 means high correlation while 0 means no correlation) to study the alignment of the metric scores with human preference (signers’ ratings). As shown in
+Fig.
+7
+b, SiBLEU and SiCLIP exhibit strong correlation, whereas DTW, based on minimum-distance alignment, shows weaker correlation.
+4.2
+Ablation Studies
+We conduct all ablation studies on CSL-Daily unless otherwise specified.
+Usage of Bidirectional Contexts.
+To verify that the MDLM effectively models bidirectional contexts, we visualize attention maps from the penultimate Transformer layer at the final sampling step, which captures rich contextual interactions while being less influenced by the task-specific output projection of the final layer
+[
+18
+,
+73
+]
+. As shown in
+Fig.
+7
+c, we select the three attention heads with the highest future-attention ratios, defined as
+[MATH: \sum_{i,j>i}\mathbf{A}_{i,j}/\sum_{i,j}\mathbf{A}_{i,j}]
+, where
+[MATH: \mathbf{A}]
+denotes the attention map, and visualize their patterns. The results show that the model allocates substantial attention to future tokens (upper triangular region), indicating effective bidirectional modeling. Quantitatively, the average future-attention ratio reaches 41% across all heads over the test set.
+Token
+Latent
+Physical
+DTW-JPE
+[MATH: \downarrow]
+SiBLEU
+[MATH: \uparrow]
+SiCLIP
+[MATH: \uparrow]
+Sign
+Text
+Body
+Hands
+Body
+Hands
+R@1
+6.93
+9.27
+3.48
+2.84
+31.49
+✓
+6.81
+8.90
+3.76
+2.97
+33.01
+✓
+✓
+6.41
+8.64
+4.18
+3.24
+34.76
+✓
+✓
+✓
+6.22
+8.39
+4.45
+3.67
+35.96
+✓
+✓
+✓
+✓
+5.99
+7.96
+4.87
+4.08
+38.61
+Table 2:
+Ablation study for the tri-level cross-modal pretraining.
+Figure 8:
+Visualization of reconstructed signs from mask tokens.
+Tri-Level Cross-Modal Pretraining.
+We pretrain the model across three spaces (token, latent, and physical) to fully exploit the benefits from multi-level sign representations. Results in
+Tab.
+2
+validate the effectiveness of each pretraining level.
+First, at the token level, masking both sign and text tokens yields better performance than masking sign tokens alone, demonstrating the benefit of cross-modal training. This observation is consistent with previous findings on alignment-based pretraining in sign language translation
+[
+38
+,
+100
+,
+44
+]
+.
+Second, predicting latent features proves effective in reducing DTW errors and enhancing sentence-level semantic alignment.
+Finally, incorporating physical-space training by reconstructing sign motions leads to the best overall performance.
+This design also enables the pretrained model to learn physically grounded representations, allowing it to accurately reconstruct sign motions from masked tokens (
+Fig.
+8
+).
+Quantitatively, when
+[MATH: t=0.75]
+(
+i.e
+.
+, masking 25% of tokens), the reconstructed signs achieve mean position errors of 24.79/5.64mm on body/hand joints, comparable to the performance of the sign tokenizer
+[
+104
+]
+.
+Checkpoint
+DTW-JPE
+[MATH: \downarrow]
+SiBLEU
+[MATH: \uparrow]
+SiCLIP
+[MATH: \uparrow]
+(distribution, noise level)
+Body
+Hands
+Body
+Hands
+R@1
+N/A
+6.61
+9.05
+3.87
+3.11
+32.81
+Uniform,
+[MATH: t=0.75]
+6.33
+8.73
+4.15
+3.52
+34.09
+Uniform,
+[MATH: t=0.5]
+6.18
+8.23
+4.63
+3.94
+36.73
+Uniform,
+[MATH: t=0.75/0.5]
+5.99
+7.96
+4.87
+4.08
+38.61
+Contiguous,
+[MATH: t=0.75/0.5]
+6.28
+8.44
+4.31
+3.80
+34.85
+Table 3:
+Ablation study for unmasking with temporal checkpoints.
+Figure 9:
+Visualization of training loss (left) and validation performance (average of SiBLEU-Body and SiBLEU-Hands, right).
+Unmasking with Temporal Checkpoints (UTC).
+To accelerate model convergence, we propose a novel unmasking strategy with temporal checkpoints, which substantially reduces the complexity of unmasking orders in a coarse-to-fine manner. As shown in
+Tab.
+3
+, inserting checkpoints composed of uniformly distributed tokens at either
+[MATH: t=0.75]
+(
+[MATH: T/4]
+temporal resolution) or
+[MATH: t=0.5]
+(
+[MATH: T/2]
+temporal resolution) yields superior performance over the no-checkpoint setting.
+We further construct a baseline that retains only the first
+[MATH: 1/4]
+or
+[MATH: 1/2]
+contiguous tokens at the pivot states. While this design also reduces the order complexity, it does not explicitly model the coarse-to-fine prior. Although this baseline outperforms the no-checkpoint setting, the best performance is achieved when both checkpoints are applied with uniformly distributed tokens, indicating the benefits of both the reduced complexity and the coarse-to-fine design.
+Finally, we visualize the training loss (
+[MATH: \mathcal{L}_{tok}]
+) and validation performance in
+Fig.
+9
+. The curves demonstrate that our UTC leads to faster convergence, which is reflected by lower training loss and higher validation performance at the same epoch.
+Condition
+Fusion Strategy
+DTW-JPE
+[MATH: \downarrow]
+SiBLEU
+[MATH: \uparrow]
+SiCLIP
+[MATH: \uparrow]
+Body
+Hands
+Body
+Hands
+R@1
+N/A
+Average
+[
+104
+]
+6.35
+8.50
+4.06
+3.42
+35.95
+Codebook
+Average
+6.19
+8.25
+4.45
+3.73
+36.98
+MLP
+6.22
+8.29
+4.19
+3.86
+37.02
+Transformer
+6.17
+8.13
+4.33
+3.62
+36.49
+Sparse MoE (Top-1)
+6.48
+8.74
+3.76
+3.27
+35.65
+Sparse MoE (Top-2)
+6.29
+8.41
+3.91
+3.50
+36.87
+Dense MoE (ours)
+5.99
+7.96
+4.87
+4.08
+38.61
+Table 4:
+Ablation study for the MoP embedding.
+Figure 10:
+Visualization of the learned gating weights
+[MATH: \mathbf{G}]
+.
+Category
+Left
+Right
+Two
+Weights
+.41/.47/.12
+.47/.08/.45
+.32/.31/.37
+Table 5:
+Weight distribution.
+Mixture-of-Parts (MoP) Embedding Layer.
+Our MoP sign embedding layer dynamically fuses token embeddings from different body parts via a learnable gate. As shown in
+Sec.
+4.2
+, MoP significantly outperforms the prior design that simply averages randomly initialized part-wise token embeddings
+[
+104
+]
+.
+When conditioned on well-trained codebooks, we evaluate three standard fusion strategies: 1) averaging, 2) an MLP applied to the concatenation of part-wise code embeddings, and 3) a two-layer Transformer equipped with a
+[MATH: |\mathrm{CLS}|]
+token. Results show that all conditioned fusion strategies outperform the non-conditioned baseline
+[
+104
+]
+, validating the effectiveness of codebook conditioning.
+Our MoP is built upon a dense mixture-of-experts (MoE) formulation
+[
+11
+]
+, where all experts (corresponding to body parts) are activated and weighted by the gating network. As reported in
+Sec.
+4.2
+, we compare this design against sparse MoE variants that fuse only the body parts associated with the top-1 or top-2 gate activations. These sparse configurations consistently yield inferior performance relative to the default dense setting.
+To further analyze the learned gating behavior, we visualize MoP gate weights for four example signs in
+Fig.
+10
+. For single-handed signs (left two examples), the MoP layer assigns higher weights to the active hand, indicating that it effectively captures hand dominance. In contrast, for two-handed signs, the layer learns comparable weights for both hands, reflecting balanced contributions during generation.
+Quantitatively, we identify the signing hand using a simple rule based on wrist position relative to the spine-01 joint
+[
+52
+]
+, and accordingly classify signs as single- or two-handed.
+Tab.
+5
+reports the correlation between MoP gate weights (body/left hand/right hand) and hand dominance, indicating that the learned gates align with interpretable physical structure.
+Method
+CSL-Daily
+[MATH: \uparrow]
+Phoenix
+[MATH: \uparrow]
+How2Sign
+[MATH: \uparrow]
+R@1
+R@5
+R@1
+R@5
+R@1
+R@5
+Baseline (CLIP)
+[
+37
+]
+41.07
+81.97
+58.41
+88.01
+9.27
+28.47
++ Decoupled encoders
+45.07
+85.88
+61.84
+90.03
+12.13
+38.48
++ Fine-grained loss
+59.10
+95.66
+68.85
+95.64
+41.33
+88.43
+Table 6:
+Ablation study for the SiCLIP.
+SiCLIP.
+To better evaluate the semantic alignment between texts and generated signs, we follow established practices in related fields
+[
+74
+,
+46
+]
+and train a CLIP model over ground-truth sign motions and texts, referred to as SiCLIP. We assess its performance using the sign-to-text retrieval task.
+As shown in
+Tab.
+6
+, simply using a contrastive loss
+[
+37
+]
+results in low retrieval performance. Introducing decoupled sign encoders
+[
+104
+]
+yields noticeable improvements. Most of the gains come from the fine-grained contrastive loss
+[
+17
+]
+, which implicitly learns precise word-level alignments.
+The final retrieval performance is on par with that of a leading motion retrieval model
+[
+53
+]
+, validating the reliability of SiCLIP as an SLG evaluator.
+5
+Conclusion
+We present MaDiS, a novel SLG approach built upon MDLMs that enable bidirectional context modeling and efficient generation.
+To effectively inject sign language knowledge into MDLMs, we design a tri-level cross-modal pretraining framework that jointly learns from token, latent, and 3D physical spaces.
+To improve training efficiency of MDLMs, we simplify unmasking orders by proposing a novel unmasking strategy with temporal checkpoints.
+Moreover, a mixture-of-parts sign embedding layer is introduced to enhance part-wise token integration through gated, codebook-conditioned fusion.
+Experiments on standard SLG benchmarks demonstrate that MaDiS achieves SOTA performance, while improving inference throughput by 40%.
+Acknowledgements.
+S. Zafeiriou and part of the research was funded by the EPSRC Fellowship DEFORM (EP/S010203/1), EPSRC Project GNOMON (EP/X011364/1) and Turing AI Fellowship (EP/Z534699/1). R.A. Potamias and R. Zuo were supported by EPSRC Project GNOMON (EP/X011364/1). J. Deng was supported by the NVIDIA Academic Grant.
+We would also like to thank Yuecong Min for coordinating the user study, and the anonymous signers who participated in it.
+The authors acknowledge the use of resources provided by the Isambard-AI National AI Research Resource (AIRR). Isambard-AI
+[
+45
+]
+is operated by the University of Bristol and is funded by the UK Government’s Department for Science, Innovation and Technology (DSIT) via UK Research and Innovation; and the Science and Technology Facilities Council [ST/AIRR/I-A-I/1023].
+References
+[1]
+R. S. Arkushin, A. Moryossef, and O. Fried
+(2023)
+Ham2Pose: animating sign language notation into pose sequences
+.
+In
+CVPR
+,
+pp. 21046–21056
+.
+Cited by:
+§2
+,
+§3.4
+.
+[2]
+M. Assran, Q. Duval, I. Misra, P. Bojanowski, P. Vincent, M. Rabbat, Y. LeCun, and N. Ballas
+(2023)
+Self-supervised learning from images with a joint-embedding predictive architecture
+.
+In
+CVPR
+,
+Cited by:
+§3.2
+.
+[3]
+M. Assran, A. Bardes, D. Fan, Q. Garrido, R. Howes, M. Muckley, A. Rizvi, C. Roberts, K. Sinha, A. Zholus,
+et al.
+(2025)
+V-jepa 2: self-supervised video models enable understanding, prediction and planning
+.
+arXiv preprint arXiv:2506.09985
+.
+Cited by:
+§1
+,
+§3.2
+.
+[4]
+F. Baldassarre, M. Szafraniec, B. Terver, V. Khalidov, F. Massa, Y. LeCun, P. Labatut, M. Seitzer, and P. Bojanowski
+(2025)
+Back to the features: dino as a foundation for video world models
+.
+arXiv preprint arXiv:2507.19468
+.
+Cited by:
+§1
+.
+[5]
+V. Baltatzis, R. A. Potamias, E. Ververas, G. Sun, J. Deng, and S. Zafeiriou
+(2024)
+Neural sign actors: a diffusion model for 3d sign language production from text
+.
+In
+CVPR
+,
+pp. 1985–1995
+.
+Cited by:
+§1
+,
+§2
+,
+§3.4
+,
+§4.1
+,
+Table 1
+,
+Table 1
+.
+[6]
+A. Bardes, Q. Garrido, J. Ponce, X. Chen, M. Rabbat, Y. LeCun, M. Assran, and N. Ballas
+(2024)
+Revisiting feature prediction for learning visual representations from video
+.
+TMLR
+.
+Cited by:
+§1
+,
+§3.2
+.
+[7]
+R. Battison
+(1978)
+Lexical borrowing in american sign language.
+.
+ERIC
+.
+Cited by:
+§3.3
+.
+[8]
+L. Bensabath, M. Petrovich, and G. Varol
+(2025)
+Text-driven 3d hand motion generation from sign language data
+.
+arXiv preprint arXiv:2508.15902
+.
+Cited by:
+§2
+,
+§3.4
+,
+§4
+.
+[9]
+T. Bie, M. Cao, K. Chen, L. Du, M. Gong, Z. Gong, Y. Gu, J. Hu, Z. Huang, Z. Lan,
+et al.
+(2025)
+Llada2. 0: scaling up diffusion language models to 100b
+.
+arXiv preprint arXiv:2512.15745
+.
+Cited by:
+§2
+.
+[10]
+M. J. Black, P. Patel, J. Tesch, and J. Yang
+(2023)
+Bedlam: a synthetic dataset of bodies exhibiting detailed lifelike animated motion
+.
+In
+CVPR
+,
+Cited by:
+§4
+.
+[11]
+W. Cai, J. Jiang, F. Wang, J. Tang, S. Kim, and J. Huang
+(2025)
+A survey on mixture of experts in large language models
+.
+TKDE
+.
+Cited by:
+§4.2
+.
+[12]
+N. C. Camgoz, S. Hadfield, O. Koller, H. Ney, and R. Bowden
+(2018)
+Neural sign language translation
+.
+In
+CVPR
+,
+Cited by:
+Figure 1
+,
+Figure 1
+,
+4th item
+,
+§4
+.
+[13]
+H. Chang, J. Park, S. Ye, S. Yang, Y. Seo, D. Chang, and M. Seo
+(2024)
+How do large language models acquire factual knowledge during pretraining?
+.
+NeurIPS
+.
+Cited by:
+§3.2
+.
+[14]
+H. Chang, H. Zhang, L. Jiang, C. Liu, and W. T. Freeman
+(2022)
+Maskgit: masked generative image transformer
+.
+In
+CVPR
+,
+Cited by:
+§2
+,
+§4.1
+.
+[15]
+Y. Chen, R. Zuo, F. Wei, Y. Wu, S. Liu, and B. Mak
+(2022)
+Two-stream network for sign language recognition and translation
+.
+In
+NeurIPS
+,
+Cited by:
+§1
+.
+[16]
+Z. Chen, B. Zhou, Y. Huang, J. Wan, Y. Hu, H. Shi, Y. Liang, Z. Lei, and D. Zhang
+(2025)
+C2RL: content and context representation learning for gloss-free sign language translation and retrieval
+.
+IEEE TCSVT
+.
+Cited by:
+§2
+.
+[17]
+Y. Cheng, F. Wei, J. Bao, D. Chen, and W. Zhang
+(2023)
+CiCo: domain-aware sign language retrieval via cross-lingual contrastive learning
+.
+In
+CVPR
+,
+Cited by:
+§4.2
+,
+§4
+.
+[18]
+K. Clark, U. Khandelwal, O. Levy, and C. D. Manning
+(2019)
+What does bert look at? an analysis of bert’s attention
+.
+In
+ACL workshop BlackboxNLP
+,
+pp. 276–286
+.
+Cited by:
+§4.2
+.
+[19]
+L. Dong, L. Chaudhary, F. Xu, X. Wang, M. Lary, and I. Nwogu
+(2024)
+SignAvatar: sign language 3d motion reconstruction and generation
+.
+In
+FG
+,
+Cited by:
+§1
+,
+§2
+.
+[20]
+A. Duarte, S. Palaskar, L. Ventura, D. Ghadiyaram, K. DeHaan, F. Metze, J. Torres, and X. Giro-i-Nieto
+(2021)
+How2sign: a large-scale multimodal dataset for continuous american sign language
+.
+In
+CVPR
+,
+pp. 2735–2744
+.
+Cited by:
+Figure 1
+,
+Figure 1
+,
+4th item
+,
+§4
+.
+[21]
+S. Fang, Y. Feng, H. Zhong, Y. Zhang, and D. N. Metaxas
+(2025)
+Stable signer: hierarchical sign language generative model
+.
+arXiv preprint arXiv:2512.04048
+.
+Cited by:
+§2
+.
+[22]
+S. Fang, C. Sui, Y. Zhou, X. Zhang, H. Zhong, Y. Tian, and C. Chen
+(2025)
+SignDiff: diffusion model for american sign language production
+.
+In
+FG
+,
+Cited by:
+§1
+,
+§2
+.
+[23]
+S. Fang, L. Wang, C. Zheng, Y. Tian, and C. Chen
+(2025)
+Signllm: sign languages production large language models
+.
+In
+ICCVW
+,
+Cited by:
+§1
+.
+[24]
+E. Fish and R. Bowden
+(2025)
+Geo-sign: hyperbolic contrastive regularisation for geometrically aware sign language translation
+.
+NeurIPS
+.
+Cited by:
+§1
+.
+[25]
+M. Forte, P. Kulits, C. P. Huang, V. Choutas, D. Tzionas, K. J. Kuchenbecker, and M. J. Black
+(2023)
+Reconstructing signing avatars from video using linguistic priors
+.
+In
+CVPR
+,
+pp. 12791–12801
+.
+Cited by:
+§3.3
+.
+[26]
+S. Gan, Y. Yin, Z. Jiang, L. Xie, S. Lu, and H. Wen
+(2025)
+MixSignGraph: a sign sequence is worth mixed graphs of nodes
+.
+In
+NeurIPS
+,
+Cited by:
+§1
+.
+[27]
+J. Gong, L. G. Foo, Y. He, H. Rahmani, and J. Liu
+(2024)
+Llms are good sign language translators
+.
+In
+CVPR
+,
+pp. 18362–18372
+.
+Cited by:
+§1
+.
+[28]
+S. Gong, S. Agarwal, Y. Zhang, J. Ye, L. Zheng, M. Li, C. An, P. Zhao, W. Bi, J. Han,
+et al.
+(2025)
+Scaling diffusion language models via adaptation from autoregressive models
+.
+In
+ICLR
+,
+Cited by:
+§2
+.
+[29]
+S. Gueuwou, X. Du, G. Shakhnarovich, K. Livescu, and A. H. Liu
+(2025)
+SHuBERT: self-supervised sign language representation learning via multi-stream cluster prediction
+.
+In
+ACL
+,
+Cited by:
+§2
+.
+[30]
+C. Guo, I. Hwang, J. Wang, and B. Zhou
+(2025)
+SnapMoGen: human motion generation from expressive texts
+.
+In
+NeurIPS
+,
+Cited by:
+§2
+,
+§4.1
+,
+Table 1
+,
+Table 1
+.
+[31]
+C. Guo, Y. Mu, M. G. Javed, S. Wang, and L. Cheng
+(2024)
+Momask: generative masked modeling of 3d human motions
+.
+In
+CVPR
+,
+pp. 1900–1910
+.
+Cited by:
+§2
+.
+[32]
+J. Guo, P. Li, and T. Cohn
+(2025)
+Bridging sign and spoken languages: pseudo gloss generation for sign language translation
+.
+NeurIPS
+.
+Cited by:
+§1
+,
+§1
+.
+[33]
+H. Hu, W. Zhao, W. Zhou, and H. Li
+(2023)
+SignBERT+: hand-model-aware self-supervised pre-training for sign language understanding
+.
+TPAMI
+.
+Cited by:
+§1
+,
+§2
+,
+§3.2
+,
+§4
+.
+[34]
+S. Imai, M. İnan, A. Sicilia, and M. Alikhani
+(2025)
+SiLVERScore: semantically-aware embeddings for sign language generation evaluation
+.
+In
+International Conference on Recent Advances in Natural Language Processing
+,
+Cited by:
+§3.4
+.
+[35]
+Y. Jang, H. Raajesh, L. Momeni, G. Varol, and A. Zisserman
+(2025)
+Lost in translation, found in context: sign language translation with contextual cues
+.
+In
+CVPR
+,
+Cited by:
+§1
+.
+[36]
+B. Jiang, X. Chen, W. Liu, J. Yu, G. Yu, and T. Chen
+(2023)
+Motiongpt: human motion as a foreign language
+.
+NeurIPS
+36
+,
+pp. 20067–20079
+.
+Cited by:
+§4.1
+,
+Table 1
+,
+Table 1
+.
+[37]
+Z. Jiang, G. Sant, A. Moryossef, M. Müller, R. Sennrich, and S. Ebling
+(2024)
+SignCLIP: connecting text and sign language by contrastive learning
+.
+In
+EMNLP
+,
+Cited by:
+§3.4
+,
+§4.2
+,
+Table 6
+.
+[38]
+P. Jiao, Y. Min, and X. Chen
+(2024)
+Visual alignment pre-training for sign language translation
+.
+In
+ECCV
+,
+pp. 349–367
+.
+Cited by:
+§1
+,
+§2
+,
+§3.3
+,
+§4.2
+.
+[39]
+J. Kim, H. Jeon, J. Bae, and H. Y. Kim
+(2025)
+Leveraging the power of mllms for gloss-free sign language translation
+.
+In
+ICCV
+,
+Cited by:
+§2
+.
+[40]
+Y. LeCun
+(2022)
+A path towards autonomous machine intelligence
+.
+Open Review
+62
+(
+1
+),
+pp. 1–62
+.
+Cited by:
+§1
+,
+§3.2
+.
+[41]
+Z. Li, W. Zhou, W. Zhao, K. Wu, H. Hu, and H. Li
+(2025)
+Uni-sign: toward unified sign language understanding at scale
+.
+In
+ICLR
+,
+Cited by:
+§1
+,
+§1
+,
+§2
+.
+[42]
+Y. Liu, J. Gu, N. Goyal, X. Li, S. Edunov, M. Ghazvininejad, M. Lewis, and L. Zettlemoyer
+(2020)
+Multilingual denoising pre-training for neural machine translation
+.
+TACL
+8
+,
+pp. 726–742
+.
+Cited by:
+§4.1
+.
+[43]
+I. Loshchilov and F. Hutter
+(2019)
+Decoupled weight decay regularization
+.
+In
+ICLR
+,
+Cited by:
+§4
+.
+[44]
+J. H. Low, O. M. Sincan, and R. Bowden
+(2025)
+SAGE: segment-aware gloss-free encoding for token-efficient sign language translation
+.
+In
+ICCVW
+,
+Cited by:
+§4.2
+.
+[45]
+S. McIntosh-Smith, S. Alam, and C. Woods
+(2024)
+Isambard-ai: a leadership-class supercomputer optimised specifically for artificial intelligence
+.
+In
+Proceedings of the Cray User Group
+,
+pp. 44–54
+.
+Cited by:
+§5
+.
+[46]
+Z. Meng, Y. Xie, X. Peng, Z. Han, and H. Jiang
+(2025)
+Rethinking diffusion for text-driven human motion generation: redundant representations, evaluation, and masked autoregression
+.
+In
+CVPR
+,
+Cited by:
+§3.4
+,
+§4.2
+.
+[47]
+S. Mo and S. Tong
+(2024)
+Connecting joint-embedding predictive architecture with contrastive self-supervised learning
+.
+NeurIPS
+.
+Cited by:
+§1
+.
+[48]
+S. Nie, F. Zhu, C. Du, T. Pang, Q. Liu, G. Zeng, M. Lin, and C. Li
+(2025)
+Scaling up masked diffusion models on text
+.
+In
+ICLR
+,
+Cited by:
+§1
+,
+§2
+,
+§3.1
+.
+[49]
+S. Nie, F. Zhu, Z. You, X. Zhang, J. Ou, J. Hu, J. Zhou, Y. Lin, J. Wen, and C. Li
+(2025)
+Large language diffusion models
+.
+NeurIPS
+.
+Cited by:
+Figure 1
+,
+Figure 1
+,
+§1
+,
+§1
+,
+§2
+,
+Figure 3
+,
+Figure 3
+,
+§3.1
+,
+§3.2
+,
+§3.3
+,
+§4
+.
+[50]
+J. Ou, S. Nie, K. Xue, F. Zhu, J. Sun, Z. Li, and C. Li
+(2025)
+Your absorbing discrete diffusion secretly models the conditional distributions of clean data
+.
+ICLR
+.
+Cited by:
+§1
+,
+§3.1
+.
+[51]
+K. Papineni, S. Roukos, T. Ward, and W. Zhu
+(2002)
+BLEU: a method for automatic evaluation of machine translation
+.
+In
+ACL
+,
+pp. 311–318
+.
+Cited by:
+§3.4
+.
+[52]
+G. Pavlakos, V. Choutas, N. Ghorbani, T. Bolkart, A. A. Osman, D. Tzionas, and M. J. Black
+(2019)
+Expressive body capture: 3D hands, face, and body from a single image
+.
+In
+CVPR
+,
+pp. 10975–10985
+.
+Cited by:
+§3.1
+,
+§4.2
+.
+[53]
+M. Petrovich, M. J. Black, and G. Varol
+(2023)
+Tmr: text-to-motion retrieval using contrastive 3d human motion synthesis
+.
+In
+ICCV
+,
+pp. 9488–9497
+.
+Cited by:
+§3.4
+,
+§4.2
+.
+[54]
+E. Pinyoanuntapong, M. Saleem, K. Karunratanakul, P. Wang, H. Xue, C. Chen, C. Guo, J. Cao, J. Ren, and S. Tulyakov
+(2025)
+MaskControl: spatio-temporal control for masked motion synthesis
+.
+In
+ICCV
+,
+Cited by:
+§2
+.
+[55]
+M. Prabhudesai, M. Wu, A. Zadeh, K. Fragkiadaki, and D. Pathak
+(2025)
+Diffusion beats autoregressive in data-constrained settings
+.
+NeurIPS
+.
+Cited by:
+§1
+,
+§3.3
+.
+[56]
+F. Qi, Y. Duan, C. Xu, and H. Zhang
+(2024)
+SignGen: end-to-end sign language video generation with latent diffusion
+.
+In
+ECCV
+,
+Cited by:
+§2
+.
+[57]
+A. Radford, J. W. Kim, C. Hallacy, A. Ramesh, G. Goh, S. Agarwal, G. Sastry, A. Askell, P. Mishkin, J. Clark,
+et al.
+(2021)
+Learning transferable visual models from natural language supervision
+.
+In
+ICML
+,
+pp. 8748–8763
+.
+Cited by:
+§3.4
+.
+[58]
+R. Rombach, A. Blattmann, D. Lorenz, P. Esser, and B. Ommer
+(2022)
+High-resolution image synthesis with latent diffusion models
+.
+In
+CVPR
+,
+pp. 10684–10695
+.
+Cited by:
+§1
+.
+[59]
+P. Rust, B. Shi, S. Wang, N. C. Camgoz, and J. Maillard
+(2024)
+Towards privacy-aware sign language translation at scale
+.
+In
+ACL
+,
+pp. 8624–8641
+.
+Cited by:
+§2
+,
+§3.2
+.
+[60]
+S. Sahoo, M. Arriola, Y. Schiff, A. Gokaslan, E. Marroquin, J. Chiu, A. Rush, and V. Kuleshov
+(2024)
+Simple and effective masked diffusion language models
+.
+NeurIPS
+.
+Cited by:
+§1
+.
+[61]
+B. Saunders, N. C. Camgoz, and R. Bowden
+(2020)
+Progressive transformers for end-to-end sign language production
+.
+In
+ECCV
+,
+pp. 687–705
+.
+Cited by:
+§1
+,
+§3.4
+,
+§4.1
+,
+Table 1
+,
+Table 1
+.
+[62]
+B. Saunders, N. C. Camgoz, and R. Bowden
+(2021)
+Mixed signals: sign language production via a mixture of motion primitives
+.
+In
+ICCV
+,
+pp. 1919–1929
+.
+Cited by:
+§2
+.
+[63]
+B. Saunders, N. C. Camgoz, and R. Bowden
+(2022)
+Signing at scale: learning to co-articulate signs for large-scale photo-realistic sign language production
+.
+In
+CVPR
+,
+pp. 5141–5151
+.
+Cited by:
+§1
+,
+§1
+,
+§2
+.
+[64]
+J. Shi, K. Han, Z. Wang, A. Doucet, and M. Titsias
+(2024)
+Simplified and generalized masked diffusion for discrete data
+.
+NeurIPS
+.
+Cited by:
+§1
+.
+[65]
+T. Shi, L. Hu, F. Shang, J. Feng, P. Liu, and W. Feng
+(2024)
+Pose-guided fine-grained sign language video generation
+.
+In
+ECCV
+,
+pp. 392–409
+.
+Cited by:
+§2
+.
+[66]
+T. Shi, L. Hu, F. Shang, L. Gao, and W. Feng
+(2025)
+GReg: geometry-aware region refinement for sign language video generation
+.
+In
+ICCV
+,
+Cited by:
+§1
+,
+§2
+.
+[67]
+Y. Song, Z. Zhang, C. Luo, P. Gao, F. Xia, H. Luo, Z. Li, Y. Yang, H. Yu, X. Qu,
+et al.
+(2025)
+Seed diffusion: a large-scale diffusion language model with high-speed inference
+.
+arXiv preprint arXiv:2508.02193
+.
+Cited by:
+§1
+.
+[68]
+C. Spearman
+(1904)
+The proof and measurement of association between two things
+.
+The American Journal of Psychology
+15
+(
+1
+),
+pp. 72–101
+.
+Cited by:
+Figure 7
+,
+Figure 7
+,
+§4.1
+.
+[69]
+S. Stoll, N. C. Camgoz, S. Hadfield, and R. Bowden
+(2020)
+Text2Sign: towards sign language production using neural machine translation and generative adversarial networks
+.
+IJCV
+128
+(
+4
+),
+pp. 891–908
+.
+Cited by:
+§1
+.
+[70]
+S. Stoll, A. Mustafa, and J. Guillemaut
+(2022)
+There and back again: 3d sign language generation from text using back-translation
+.
+In
+3DV
+,
+pp. 187–196
+.
+Cited by:
+§4.1
+,
+Table 1
+,
+Table 1
+.
+[71]
+S. Tang, J. He, L. Cheng, J. Wu, D. Guo, and R. Hong
+(2025)
+Discrete to continuous: generating smooth transition poses from sign language observations
+.
+In
+CVPR
+,
+Cited by:
+§2
+.
+[72]
+S. Tang, R. Hong, D. Guo, and M. Wang
+(2022)
+Gloss semantic-enhanced network with online back-translation for sign language production
+.
+In
+MM
+,
+pp. 5630–5638
+.
+Cited by:
+§2
+.
+[73]
+I. Tenney, D. Das, and E. Pavlick
+(2019)
+BERT rediscovers the classical nlp pipeline
+.
+In
+ACL
+,
+pp. 4593–4601
+.
+Cited by:
+§4.2
+.
+[74]
+G. Tevet, B. Gordon, A. Hertz, A. H. Bermano, and D. Cohen-Or
+(2022)
+Motionclip: exposing human motion generation to clip space
+.
+In
+ECCV
+,
+Cited by:
+§3.4
+,
+§4.2
+.
+[75]
+K. Tian, Y. Jiang, Z. Yuan, B. Peng, and L. Wang
+(2024)
+Visual autoregressive modeling: scalable image generation via next-scale prediction
+.
+NeurIPS
+.
+Cited by:
+§1
+,
+§3.3
+.
+[76]
+K. Tirumala, A. Markosyan, L. Zettlemoyer, and A. Aghajanyan
+(2022)
+Memorization without overfitting: analyzing the training dynamics of large language models
+.
+NeurIPS
+.
+Cited by:
+§3.2
+.
+[77]
+A. Van Den Oord O. Vinyals
+et al.
+(2017)
+Neural discrete representation learning
+.
+NeurIPS
+30
+.
+Cited by:
+§3.1
+.
+[78]
+C. Wang, Z. Deng, Z. Jiang, F. Shen, Y. Yin, S. Gan, Z. Cheng, S. Ge, and Q. Gu
+(2025)
+Advanced sign language video generation with compressed and quantized multi-condition tokenization
+.
+In
+NeurIPS
+,
+Cited by:
+§1
+,
+§2
+.
+[79]
+X. Wang, Z. Zheng, F. Ye, D. Xue, S. Huang, and Q. Gu
+(2024)
+Diffusion language models are versatile protein learners
+.
+In
+ICML
+,
+Cited by:
+§2
+.
+[80]
+X. Wang, S. Tang, L. Cheng, F. Li, S. Wang, and R. Hong
+(2025)
+SignAligner: harmonizing complementary pose modalities for coherent sign language generation
+.
+arXiv preprint arXiv:2506.11621
+.
+Cited by:
+§2
+.
+[81]
+Y. Wen, H. Li, K. Gu, Y. Zhao, T. Wang, and X. Sun
+(2025)
+Llada-vla: vision language diffusion action models
+.
+arXiv preprint arXiv:2509.06932
+.
+Cited by:
+§2
+.
+[82]
+R. Wong, N. C. Camgoz, and R. Bowden
+(2024)
+Sign2GPT: leveraging large language models for gloss-free sign language translation
+.
+In
+ICLR
+,
+Cited by:
+§1
+.
+[83]
+R. Wong, N. C. Camgoz, and R. Bowden
+(2025)
+SignRep: enhancing self-supervised sign representations
+.
+In
+ICCV
+,
+Cited by:
+§1
+,
+§2
+.
+[84]
+J. Z. Wu, Y. Ge, X. Wang, S. W. Lei, Y. Gu, Y. Shi, W. Hsu, Y. Shan, X. Qie, and M. Z. Shou
+(2023)
+Tune-a-video: one-shot tuning of image diffusion models for text-to-video generation
+.
+In
+ICCV
+,
+Cited by:
+§3.4
+.
+[85]
+Y. Xia, Q. Zhan, X. Luo, X. Shi, and Y. Wang
+(2026)
+SignMask: structure-aware masked modeling for holistic 3d sign language production
+.
+ACM TOMM
+22
+(
+1
+),
+pp. 1–28
+.
+Cited by:
+§2
+.
+[86]
+P. Xie, Q. Zhang, P. Taiying, H. Tang, Y. Du, and Z. Li
+(2024)
+G2P-ddm: generating sign pose sequence from gloss sequence with discrete diffusion model
+.
+In
+AAAI
+,
+pp. 6234–6242
+.
+Cited by:
+§2
+.
+[87]
+Z. Xing, Q. Dai, H. Hu, Z. Wu, and Y. Jiang
+(2024)
+Simda: simple diffusion adapter for efficient video generation
+.
+In
+CVPR
+,
+Cited by:
+§3.4
+.
+[88]
+A. Yang, A. Li, B. Yang, B. Zhang, B. Hui, B. Zheng, B. Yu, C. Gao, C. Huang, C. Lv,
+et al.
+(2025)
+Qwen3 technical report
+.
+arXiv preprint arXiv:2505.09388
+.
+Cited by:
+§4
+.
+[89]
+L. Yang, Y. Tian, B. Li, X. Zhang, K. Shen, Y. Tong, and M. Wang
+(2025)
+Mmada: multimodal large diffusion language models
+.
+In
+NeurIPS
+,
+Cited by:
+§1
+,
+§2
+.
+[90]
+H. Yao, W. Zhou, H. Feng, H. Hu, H. Zhou, and H. Li
+(2023)
+Sign language translation with iterative prototype
+.
+In
+ICCV
+,
+pp. 15592–15601
+.
+Cited by:
+§1
+.
+[91]
+J. Ye, X. Wang, W. Jiao, J. Liang, and H. Xiong
+(2024)
+Improving gloss-free sign language translation by reducing representation density
+.
+NeurIPS
+.
+Cited by:
+§2
+.
+[92]
+A. Yin, H. Li, K. Shen, S. Tang, and Y. Zhuang
+(2024)
+T2S-GPT: dynamic vector quantization for autoregressive sign language production from text
+.
+In
+ACL
+,
+Cited by:
+§1
+,
+§2
+,
+§4.1
+,
+Table 1
+,
+Table 1
+.
+[93]
+K. Yin, A. Moryossef, J. Hochgesang, Y. Goldberg, and M. Alikhani
+(2021)
+Including signed languages in natural language processing
+.
+In
+ACL
+,
+pp. 7347–7360
+.
+Cited by:
+§1
+.
+[94]
+Z. You, S. Nie, X. Zhang, J. Hu, J. Zhou, Z. Lu, J. Wen, and C. Li
+(2025)
+Llada-v: large language diffusion models with visual instruction tuning
+.
+arXiv preprint arXiv:2505.16933
+.
+Cited by:
+§1
+.
+[95]
+Z. Yu, S. Huang, Y. Cheng, and T. Birdal
+(2024)
+Signavatars: a large-scale 3d sign language holistic motion dataset and benchmark
+.
+In
+ECCV
+,
+pp. 1–19
+.
+Cited by:
+§1
+,
+§2
+.
+[96]
+B. Zhang, G. Tanzer, and O. Firat
+(2024)
+Scaling sign language translation
+.
+NeurIPS
+.
+Cited by:
+§2
+,
+§4
+.
+[97]
+Y. Zhang, Y. Wei, D. Jiang, X. Zhang, W. Zuo, and Q. Tian
+(2024)
+ControlVideo: training-free controllable text-to-video generation
+.
+In
+ICLR
+,
+Cited by:
+§3.4
+.
+[98]
+W. Zhao, H. Hu, W. Zhou, Y. Mao, M. Wang, and H. Li
+(2024)
+Masa: motion-aware masked autoencoder with semantic alignment for sign language recognition
+.
+IEEE TCSVT
+.
+Cited by:
+§2
+.
+[99]
+W. Zhao, H. Hu, W. Zhou, J. Shi, and H. Li
+(2023)
+BEST: BERT pre-training for sign language recognition with coupling tokenization
+.
+In
+AAAI
+,
+Cited by:
+§2
+.
+[100]
+B. Zhou, Z. Chen, A. Clapés, J. Wan, Y. Liang, S. Escalera, Z. Lei, and D. Zhang
+(2023)
+Gloss-free sign language translation: improving from visual-language pretraining
+.
+In
+ICCV
+,
+pp. 20871–20881
+.
+Cited by:
+§1
+,
+§2
+,
+§4.2
+.
+[101]
+G. Zhou, H. Pan, Y. LeCun, and L. Pinto
+(2025)
+DINO-wm: world models on pre-trained visual features enable zero-shot planning
+.
+In
+ICML
+,
+Cited by:
+§1
+,
+§3.2
+.
+[102]
+H. Zhou, W. Zhou, W. Qi, J. Pu, and H. Li
+(2021)
+Improving sign language translation with monolingual data by sign back-translation
+.
+In
+CVPR
+,
+Cited by:
+Figure 1
+,
+Figure 1
+,
+4th item
+,
+§4
+.
+[103]
+W. Zhou, W. Zhao, H. Hu, Z. Li, and H. Li
+(2025)
+Scaling up multimodal pre-training for sign language understanding
+.
+TPAMI
+.
+Cited by:
+§1
+,
+§2
+,
+§3.2
+.
+[104]
+R. Zuo, R. A. Potamias, E. Ververas, J. Deng, and S. Zafeiriou
+(2025)
+Signs as tokens: a retrieval-enhanced multilingual sign language generator
+.
+In
+ICCV
+,
+Cited by:
+Figure 1
+,
+Figure 1
+,
+§1
+,
+§1
+,
+§2
+,
+Figure 4
+,
+Figure 4
+,
+Figure 5
+,
+Figure 5
+,
+§3.1
+,
+§3.4
+,
+Figure 7
+,
+Figure 7
+,
+§4.1
+,
+§4.1
+,
+§4.2
+,
+§4.2
+,
+§4.2
+,
+§4.2
+,
+Table 1
+,
+Table 1
+,
+Table 1
+,
+§4
+,
+§4
+,
+§4
+.
+[105]
+R. Zuo, F. Wei, Z. Chen, B. Mak, J. Yang, and X. Tong
+(2024)
+A simple baseline for spoken language to sign language translation with 3d avatars
+.
+In
+ECCV
+,
+Cited by:
+§1
+,
+§2
+,
+§3.4
+.

@@ -1,0 +1,63 @@
+{
+  "key": "signrr",
+  "requested_id": "2608.28568",
+  "retrieved_at": "2026-11-05T01:09:34.814149+00:00",
+  "reading_level": "unread",
+  "artifacts": [
+    {
+      "kind": "metadata",
+      "url": "https://arxiv.org/abs/2608.28568",
+      "path": "sources/signrr/metadata.html",
+      "sha256": "b71f8f172183071318048bad6b341e05ad869d089fa7436b0de5b87d8bdfa14e",
+      "bytes": 41893
+    },
+    {
+      "kind": "html",
+      "url": "https://arxiv.org/html/2608.28568",
+      "path": "sources/signrr/html.html",
+      "sha256": "8dd33513dac6d2e9cdd10de941525bbbd7c94c77a97dfa968f33bc929e85aad2",
+      "bytes": 384430
+    }
+  ],
+  "title": "SignRR: Retrieve and Refine Real Motion for Sign Language Production",
+  "history": "Submission history From: Fidel Omar Tito Cruz [ view email ] [v1] Fri, 28 Aug 2026 17:45:14 UTC (1,059 KB) [v2] Tue, 1 Sep 2026 15:13:52 UTC (1,059 KB) [v3] Mon, 26 Oct 2026 23:11:07 UTC (1,059 KB)",
+  "canonical_ids": [
+    "2608.28568v3"
+  ],
+  "headings": [
+    "SignRR: Retrieve and Refine Real Motion for Sign Language Production",
+    "1 Introduction",
+    "2 Related Work",
+    "3 Method",
+    "3.1 Gloss-Motion Dictionary",
+    "3.2 Part-aware Residual VQ-VAE",
+    "3.3 Inference: Assembly and Refinement",
+    "4 Experiments and Results",
+    "4.1 Experimental Setup",
+    "4.2 Comparison with State-of-the-Arts",
+    "4.3 Ablation Studies",
+    "4.4 Analysis",
+    "5 Limitations",
+    "6 Conclusion",
+    "References",
+    "A Keypoint Representation",
+    "B Gloss-Motion Dictionary Construction",
+    "Boundary estimation.",
+    "Candidate filtering.",
+    "Candidate scoring.",
+    "Boundary descriptors.",
+    "C Dynamic Programming Segment Selection",
+    "Out-of-dictionary glosses.",
+    "Boundary cost.",
+    "Dynamic-programming recurrence.",
+    "Backtracking.",
+    "D Implementation Details",
+    "Refinement model.",
+    "Gloss encoder and length prediction.",
+    "Training objective.",
+    "Dictionary configuration.",
+    "E Synthetic Motion Generation",
+    "F Robustness to Dictionary Segmentation",
+    "G Inference Time"
+  ]
+}

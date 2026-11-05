@@ -1,0 +1,46 @@
+{
+  "key": "transition",
+  "requested_id": "2411.16810",
+  "retrieved_at": "2026-11-05T01:27:15.129913+00:00",
+  "reading_level": "unread",
+  "artifacts": [
+    {
+      "kind": "metadata",
+      "url": "https://arxiv.org/abs/2411.16810",
+      "path": "sources/transition/metadata.html",
+      "sha256": "19f9210bab11c835366ddcaec75998e64136456d7deded11c68d751c5a3cbee4",
+      "bytes": 42254
+    },
+    {
+      "kind": "html",
+      "url": "https://arxiv.org/html/2411.16810",
+      "path": "sources/transition/html.html",
+      "sha256": "3d0ab8c32aeda6d47359cd7124ac25907eba91ce50ddf2227c8b4467c330f838",
+      "bytes": 222104
+    }
+  ],
+  "title": "Discrete to Continuous: Generating Smooth Transition Poses from Sign Language Observation",
+  "history": "Submission history From: Shengeng Tang [ view email ] [v1] Mon, 25 Nov 2024 15:06:49 UTC (1,363 KB)",
+  "canonical_ids": [
+    "2411.16810v1"
+  ],
+  "headings": [
+    "Discrete to Continuous: Generating Smooth Transition Poses from Sign Language Observations",
+    "1 Introduction",
+    "2 Related Work",
+    "2.1 Sign Language Production & Synthesis",
+    "2.2 Diffusion-based Generative Models",
+    "3 Methodology",
+    "3.1 Preliminary",
+    "3.2 Core Idea: Unsupervised to Supervised",
+    "3.3 Sign-D2C Framework",
+    "3.4 Training",
+    "4 Experiments",
+    "4.1 Experimental Settings",
+    "4.2 Ablation Study",
+    "4.3 Comparison with State-of-the-Arts",
+    "4.4 Qualitative Results",
+    "5 Conclusions",
+    "References"
+  ]
+}

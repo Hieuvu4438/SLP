@@ -1,0 +1,15 @@
+{
+  "key": "nmm_asl",
+  "requested_id": "10.1371/journal.pone.0086268",
+  "title": "Discriminant Features and Temporal Structure of Nonmanuals in American Sign Language",
+  "canonical_ids": [],
+  "reading_level": "unread",
+  "artifacts": [
+    {
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3916328/",
+      "sha256": "aa40959779ef8bfaf564c05490f637e2abd727912468915943268a19205e8162",
+      "kind": "html",
+      "path": "sources/nmm_asl/article.html"
+    }
+  ]
+}

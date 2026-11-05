@@ -1,0 +1,48 @@
+{
+  "key": "motionhiflow",
+  "requested_id": "2604.23264",
+  "retrieved_at": "2026-11-04T17:02:05.128709+00:00",
+  "reading_level": "unread",
+  "artifacts": [
+    {
+      "kind": "metadata",
+      "url": "https://arxiv.org/abs/2604.23264",
+      "path": "sources/motionhiflow/metadata.html",
+      "sha256": "6b9a2327d695ed3b390dbbe2811c02c59535029ba9f1a9e1af4113fe5e31e450",
+      "bytes": 42827
+    },
+    {
+      "kind": "html",
+      "url": "https://arxiv.org/html/2604.23264",
+      "path": "sources/motionhiflow/html.html",
+      "sha256": "f14fd37da4b437a07a87858840c509e99bbe774135980f6315ef3d87caaddd11",
+      "bytes": 340155
+    }
+  ],
+  "title": "MotionHiFlow: Text-to-motion via hierarchical flow matching",
+  "history": "Submission history From: Xiaotong Lin [ view email ] [v1] Sat, 25 Apr 2026 12:16:37 UTC (1,320 KB)",
+  "canonical_ids": [
+    "2604.23264v1"
+  ],
+  "headings": [
+    "MotionHiFlow: Text-to-Motion via Hierarchical Flow Matching",
+    "1 Introduction",
+    "2 Related work",
+    "2.1 Text-Conditioned Motion Generation",
+    "2.2 Flow Generative Models",
+    "3 Method",
+    "3.1 Problem Formulation",
+    "3.2 Overview",
+    "3.3 Preliminaries: Flow Matching",
+    "3.4 Hierarchical Flow Matching Framework",
+    "3.5 Model Architecture",
+    "3.6 Training and Inference",
+    "4 Experiments",
+    "4.1 Experimental Setup",
+    "4.2 Comparison with State-of-the-art Methods",
+    "4.3 Ablation Study",
+    "5 Conclusion",
+    "Acknowledgements",
+    "References"
+  ]
+}

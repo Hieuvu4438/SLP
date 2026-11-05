@@ -1,0 +1,60 @@
+{
+  "key": "finemotion",
+  "requested_id": "2507.19850",
+  "retrieved_at": "2026-11-04T17:02:05.492671+00:00",
+  "reading_level": "unread",
+  "artifacts": [
+    {
+      "kind": "metadata",
+      "url": "https://arxiv.org/abs/2507.19850",
+      "path": "sources/finemotion/metadata.html",
+      "sha256": "78c44351e908469e982530c2379fbd63400110a35562ff9305d5e0f021ed8166",
+      "bytes": 42540
+    },
+    {
+      "kind": "html",
+      "url": "https://arxiv.org/html/2507.19850",
+      "path": "sources/finemotion/html.html",
+      "sha256": "71daf0bb6802b3c28fb2f2933738c7d92c0c64a68972b3445c2de4274c1a7c95",
+      "bytes": 289922
+    }
+  ],
+  "title": "FineMotion: A Dataset and Benchmark with both Spatial and Temporal Annotation for Fine-grained Motion Generation and Editing",
+  "history": "Submission history From: Bizhu Wu [ view email ] [v1] Sat, 26 Jul 2025 07:54:29 UTC (6,169 KB)",
+  "canonical_ids": [
+    "2507.19850v1"
+  ],
+  "headings": [
+    "FineMotion: A Dataset and Benchmark with both Spatial and Temporal Annotation for Fine-grained Motion Generation and Editing",
+    "1 Introduction",
+    "2 Related Work",
+    "3 The proposed FineMotion dataset",
+    "3.1 Dataset Construction Pipeline",
+    "3.1.1 Snippet Segmentation",
+    "3.1.2 Snippet Description Generation",
+    "3.1.3 Paragraph Generation",
+    "3.2 Statistics Analysis",
+    "4 Experiments",
+    "4.1 Data Preprocessing",
+    "4.2 Evaluation Metrics",
+    "4.3 Baseline Models",
+    "4.4 Evaluation of the Textual Annotation Pipeline",
+    "4.5 Impact on Text-driven Motion Generation",
+    "4.6 Zero-shot Fine-Grained Motion Editing",
+    "5 Conclusion",
+    "Acknowledgements",
+    "References",
+    "6 License",
+    "7 Discussion on Selecting of optimal [MATH: T_{s}]",
+    "8 Data Format Examples",
+    "9 More Dataset Examples",
+    "10 Baseline Model Details",
+    "11 More Implementation Details",
+    "12 More Discussion on Motion Generation with Fine-grained Texts Only",
+    "13 More Discussion on Table 2",
+    "14 Ablation Study on Baseline Model Design",
+    "15 Metrics and Results for Temporal Alignment",
+    "16 Limitations and Future Work",
+    "17 User Study"
+  ]
+}

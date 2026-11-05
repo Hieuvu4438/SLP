@@ -1,0 +1,45 @@
+{
+  "key": "nsa",
+  "requested_id": "2312.02702",
+  "retrieved_at": "2026-11-05T01:08:22.053954+00:00",
+  "reading_level": "unread",
+  "artifacts": [
+    {
+      "kind": "metadata",
+      "url": "https://arxiv.org/abs/2312.02702",
+      "path": "sources/nsa/metadata.html",
+      "sha256": "477407e2f8ad73e9b44732ca95897add450fc7d407568f4c07a7d903f7112018",
+      "bytes": 41714
+    },
+    {
+      "kind": "html",
+      "url": "https://arxiv.org/html/2312.02702",
+      "path": "sources/nsa/html.html",
+      "sha256": "211d70cbba5dd9176a9aac9f6b23de9453e6effb0c02cbcb16f95fb957767209",
+      "bytes": 209124
+    }
+  ],
+  "title": "Neural Sign Actors: A diffusion model for 3D sign language production from text",
+  "history": "Submission history From: Vasileios Baltatzis [ view email ] [v1] Tue, 5 Dec 2023 12:04:34 UTC (15,334 KB) [v2] Fri, 5 Apr 2024 13:49:17 UTC (7,004 KB)",
+  "canonical_ids": [
+    "2312.02702v2"
+  ],
+  "headings": [
+    "Neural Sign Actors: A diffusion model for 3D sign language production from text",
+    "1 Introduction",
+    "2 Related Work",
+    "2.1 Sign Language Production",
+    "2.2 Sign Language Datasets",
+    "3 Dataset",
+    "4 Method",
+    "4.1 Forward Diffusion Process",
+    "4.2 Reverse Diffusion Process",
+    "5 Experiments",
+    "5.1 Dataset Evaluation",
+    "5.2 Sign Language Production",
+    "5.3 User-Study",
+    "5.4 Ablation",
+    "6 Conclusion",
+    "References"
+  ]
+}

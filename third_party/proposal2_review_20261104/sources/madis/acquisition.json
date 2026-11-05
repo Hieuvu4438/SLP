@@ -1,0 +1,42 @@
+{
+  "key": "madis",
+  "requested_id": "2601.19577",
+  "retrieved_at": "2026-11-05T01:07:57.033846+00:00",
+  "reading_level": "unread",
+  "artifacts": [
+    {
+      "kind": "metadata",
+      "url": "https://arxiv.org/abs/2601.19577",
+      "path": "sources/madis/metadata.html",
+      "sha256": "070abfe10c12ba854cc4c0715670fc0d4a9a331c41eb02c292fbc24b8ce514fc",
+      "bytes": 42681
+    },
+    {
+      "kind": "html",
+      "url": "https://arxiv.org/html/2601.19577",
+      "path": "sources/madis/html.html",
+      "sha256": "e669c9e43e2d1f9f9d05157fe67e2b4d9d3e9752f37f1adbbf5a15d5e5da213d",
+      "bytes": 354812
+    }
+  ],
+  "title": "MaDiS: Taming Masked Diffusion Language Models for Sign Language Generation",
+  "history": "Submission history From: Ronglai Zuo [ view email ] [v1] Tue, 27 Jan 2026 13:06:47 UTC (1,187 KB) [v2] Fri, 13 Mar 2026 17:48:22 UTC (1,552 KB)",
+  "canonical_ids": [
+    "2601.19577v2"
+  ],
+  "headings": [
+    "MaDiS: Taming Masked Diffusion Language Models for Sign Language Generation",
+    "1 Introduction",
+    "2 Related Work",
+    "3 Methodology",
+    "3.1 Preliminaries",
+    "3.2 Tri-Level Cross-Modal Pretraining",
+    "3.3 Supervised Fine-Tuning",
+    "3.4 SiBLEU and SiCLIP",
+    "4 Experiments",
+    "4.1 Comparison with State-of-the-Art Methods",
+    "4.2 Ablation Studies",
+    "5 Conclusion",
+    "References"
+  ]
+}

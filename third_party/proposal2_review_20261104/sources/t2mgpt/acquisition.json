@@ -1,0 +1,71 @@
+{
+  "key": "t2mgpt",
+  "requested_id": "2301.06052",
+  "retrieved_at": "2026-11-04T16:53:21.801724+00:00",
+  "reading_level": "unread",
+  "artifacts": [
+    {
+      "kind": "metadata",
+      "url": "https://arxiv.org/abs/2301.06052",
+      "path": "sources/t2mgpt/metadata.html",
+      "sha256": "53589a3ecc03920b93e62041be54213263f89d4f9350b499174bc413655b990e",
+      "bytes": 42394
+    },
+    {
+      "kind": "html",
+      "url": "https://arxiv.org/html/2301.06052",
+      "path": "sources/t2mgpt/html.html",
+      "sha256": "10183709ae6b4ca78956720525c0ad4691ef97396b6c19d1358114248ff456b4",
+      "bytes": 412219
+    }
+  ],
+  "title": "T2M-GPT: Generating Human Motion from Textual Descriptions with Discrete Representations",
+  "history": "Submission history From: Jianrong Zhang [ view email ] [v1] Sun, 15 Jan 2023 09:34:42 UTC (9,070 KB) [v2] Wed, 18 Jan 2023 11:56:01 UTC (6,350 KB) [v3] Tue, 28 Feb 2023 05:23:51 UTC (6,350 KB) [v4] Sun, 24 Sep 2023 17:00:32 UTC (6,331 KB)",
+  "canonical_ids": [
+    "2301.06052v4"
+  ],
+  "headings": [
+    "T2M-GPT: Generating Human Motion from Textual Descriptions with Discrete Representations",
+    "1 Introduction",
+    "2 Related work",
+    "VQ-VAE.",
+    "Human motion synthesis.",
+    "Text-driven human motion generation.",
+    "3 Method",
+    "3.1 Motion VQ-VAE",
+    "Optimization goal.",
+    "Quantization strategy.",
+    "Architecture.",
+    "3.2 T2M-GPT",
+    "Optimization goal.",
+    "Causal Self-attention.",
+    "Corrupted sequences for the training-testing discrepancy.",
+    "4 Experiment",
+    "4.1 Datasets and evaluation metric",
+    "Implementation details.",
+    "Evaluation metric.",
+    "4.2 Comparison to state-of-the-art approaches",
+    "Qualitative comparison.",
+    "4.3 Discussion",
+    "Quantization strategies.",
+    "Impact of dataset size.",
+    "5 Conclusion",
+    "Acknowledgement",
+    "References",
+    "Appendix A Ablation study of T2M-GPT architecture",
+    "Appendix B Impact of the reconstruction loss in motion VQ-VAE",
+    "Appendix C Impact of [MATH: \\tau] for the corruption strategy in T2M-GPT training",
+    "Appendix D Ablation study of the number of codes in VQ-VAE",
+    "Appendix E More details on the evaluation metrics and the motion representations.",
+    "E.1 Evaluation metrics",
+    "FID.",
+    "MM-Dist.",
+    "Diversity.",
+    "MModality.",
+    "E.2 Motion representations",
+    "Appendix F VQ-VAE Architecture",
+    "Dilation rate.",
+    "Appendix G Limitations",
+    "Appendix H Funding Support"
+  ]
+}

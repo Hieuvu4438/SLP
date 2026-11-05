@@ -1,0 +1,16 @@
+{
+  "key": "gp_hsmm",
+  "title": "Segmenting Continuous Motions with Hidden Semi-markov Models and Gaussian Processes",
+  "requested_id": "10.3389/fnbot.2017.00067",
+  "canonical_ids": [],
+  "reading_level": "unread",
+  "retrieved_at": "2026-11-05T01:56:06.438137+00:00",
+  "artifacts": [
+    {
+      "url": "https://www.frontiersin.org/journals/neurorobotics/articles/10.3389/fnbot.2017.00067/pdf",
+      "kind": "official_pdf",
+      "sha256": "85ef5557a829a678984361f7b9535a5adf5645c23afa68a8fbe6aaa1c8472fe1",
+      "path": "sources/gp_hsmm/paper.pdf"
+    }
+  ]
+}

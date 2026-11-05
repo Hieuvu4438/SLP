@@ -1,0 +1,54 @@
+{
+  "key": "act",
+  "requested_id": "2304.13705",
+  "retrieved_at": "2026-11-05T00:57:54.306886+00:00",
+  "reading_level": "unread",
+  "artifacts": [
+    {
+      "kind": "metadata",
+      "url": "https://arxiv.org/abs/2304.13705",
+      "path": "sources/act/metadata.html",
+      "sha256": "bc5f190c682a819c21b8ad55d03079c921d89b5492a4df988490040122288282",
+      "bytes": 40730
+    },
+    {
+      "kind": "html",
+      "url": "https://arxiv.org/html/2304.13705",
+      "path": "sources/act/html.html",
+      "sha256": "73ded0e57571cc75e4e03c7f9be74b4d3225cf5f73cfdda641a2382c6fd8f79c",
+      "bytes": 252501
+    }
+  ],
+  "title": "Learning Fine-Grained Bimanual Manipulation with Low-Cost Hardware",
+  "history": "Submission history From: Tony Zhao [ view email ] [v1] Sun, 23 Apr 2023 19:10:53 UTC (4,495 KB)",
+  "canonical_ids": [
+    "2304.13705v1"
+  ],
+  "headings": [
+    "Learning Fine-Grained Bimanual Manipulation with Low-Cost Hardware",
+    "I Introduction",
+    "II Related Work",
+    "III ALOHA: A L ow-cost O pen-source Ha rdware System for Bimanual Teleoperation",
+    "IV Action Chunking with Transformers",
+    "IV-A Action Chunking and Temporal Ensemble",
+    "IV-B Modeling human data",
+    "IV-C Implementing ACT",
+    "V Experiments",
+    "V-A Tasks",
+    "V-B Data Collection",
+    "V-C Experiment Results",
+    "VI Ablations",
+    "VI-A Action Chunking and Temporal Ensembling",
+    "VI-B Training with CVAE",
+    "VI-C Is High-Frequency Necessary?",
+    "VII Limitations and Conclusion",
+    "Acknowledgement",
+    "References",
+    "-A Comparing ALOHA with Prior Teleoperation Setups",
+    "-B Example Image Observations",
+    "-C Detailed Architecture Diagram",
+    "-D Experiment Details and Hyperparameters",
+    "-E User Study Details",
+    "-F Limitations"
+  ]
+}

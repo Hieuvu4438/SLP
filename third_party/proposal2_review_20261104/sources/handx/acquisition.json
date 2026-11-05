@@ -1,0 +1,63 @@
+{
+  "key": "handx",
+  "requested_id": "2603.28766",
+  "retrieved_at": "2026-11-04T17:02:04.406908+00:00",
+  "reading_level": "unread",
+  "artifacts": [
+    {
+      "kind": "metadata",
+      "url": "https://arxiv.org/abs/2603.28766",
+      "path": "sources/handx/metadata.html",
+      "sha256": "70267fed5bcb2f5c85ff37ed320cf5745787160a9ae5d6451bbe1ed8de835a19",
+      "bytes": 43057
+    },
+    {
+      "kind": "html",
+      "url": "https://arxiv.org/html/2603.28766",
+      "path": "sources/handx/html.html",
+      "sha256": "83958f4f5309fbc122b1e405e2044b466b01b5d67b6fb13f4262931b4fa6e242",
+      "bytes": 427437
+    }
+  ],
+  "title": "HandX: Scaling Bimanual Motion and Interaction Generation",
+  "history": "Submission history From: Sirui Xu [ view email ] [v1] Mon, 30 Mar 2026 17:59:49 UTC (7,644 KB)",
+  "canonical_ids": [
+    "2603.28766v1"
+  ],
+  "headings": [
+    "HandX: Scaling Bimanual Motion and Interaction Generation",
+    "1 Introduction",
+    "2 Related Work",
+    "3 Dataset",
+    "4 Bimanual Motion Captioning",
+    "5 Bimanual Motion Generation",
+    "5.1 Diffusion Model",
+    "5.2 Autoregressive Model",
+    "6 Experiments",
+    "6.1 Implementation Details",
+    "6.2 Metrics",
+    "6.3 Quantitative Evaluation",
+    "6.4 Qualitative Evaluation",
+    "7 Conclusion",
+    "Acknowledgments.",
+    "References",
+    "Appendix A HandX Dataset",
+    "A.1 Motion Capture",
+    "A.2 Data Consolidation and Unification",
+    "A.3 Clip Extraction",
+    "A.4 Clip Filtering",
+    "A.5 Dataset Metrics",
+    "Appendix B Additional Details on Motion Captioning",
+    "Appendix C Hand Motion Representation",
+    "Appendix D Versatile Bimanual Motion Generation",
+    "D.1 Masked Partial Denoising for Skeleton Control",
+    "D.2 Task-Specific Mask Construction",
+    "Appendix E Evaluation Details",
+    "E.1 Contact Metrics",
+    "E.2 Evaluator Details",
+    "E.3 User Study on Data Quality",
+    "E.4 User Study on Scaling Trend",
+    "Appendix F License",
+    "Appendix G Discussion"
+  ]
+}

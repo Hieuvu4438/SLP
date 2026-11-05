@@ -1,0 +1,43 @@
+{
+  "key": "momask",
+  "requested_id": "2312.00063",
+  "retrieved_at": "2026-11-04T16:53:21.148437+00:00",
+  "reading_level": "unread",
+  "artifacts": [
+    {
+      "kind": "metadata",
+      "url": "https://arxiv.org/abs/2312.00063",
+      "path": "sources/momask/metadata.html",
+      "sha256": "e7b235d0a8d73833a6847f412fcd871e44b2adf3a92ec23fb643553ca11a6e32",
+      "bytes": 41359
+    },
+    {
+      "kind": "html",
+      "url": "https://arxiv.org/html/2312.00063",
+      "path": "sources/momask/html.html",
+      "sha256": "bb8d6cb4e1ac889783e29d25376cd4b0575753f76028027175c2ad2d2cdc0888",
+      "bytes": 247441
+    }
+  ],
+  "title": "MoMask: Generative Masked Modeling of 3D Human Motions",
+  "history": "Submission history From: Chuan Guo [ view email ] [v1] Wed, 29 Nov 2023 19:04:10 UTC (20,219 KB)",
+  "canonical_ids": [
+    "2312.00063v1"
+  ],
+  "headings": [
+    "MoMask: Generative Masked Modeling of 3D Human Motions",
+    "1 Introduction",
+    "2 Related Work",
+    "3 Approach",
+    "3.1 Training: Motion Residual VQ-VAE",
+    "3.2 Training: Masked Transformer",
+    "3.3 Training: Residual Transformer",
+    "3.4 Inference",
+    "4 Experiments",
+    "4.1 Comparison to state-of-the-art approaches",
+    "4.2 Component Analysis",
+    "4.3 Application: Temporal Inpainting",
+    "5 Discussion and Conclusion",
+    "References"
+  ]
+}

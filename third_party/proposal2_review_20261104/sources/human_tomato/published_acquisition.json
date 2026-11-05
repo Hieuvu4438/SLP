@@ -1,0 +1,10 @@
+{
+  "metadata_url": "https://proceedings.mlr.press/v235/lu24b.html",
+  "pdf_url": "https://raw.githubusercontent.com/mlresearch/v235/main/assets/lu24b/lu24b.pdf",
+  "sha256": "1d006cfad2fdc4b7c44ad0a6cbf288d49f06cc662ade061ec910caa2b94c4399",
+  "pages": 39,
+  "parser": "PyMuPDF get_text default order",
+  "reading_level": "D_scoped",
+  "reading_scope": "main sections 3\u20134, Appendix B/C/K; not full39pages",
+  "preflight": "UNAVAILABLE: pypdf not installed"
+}

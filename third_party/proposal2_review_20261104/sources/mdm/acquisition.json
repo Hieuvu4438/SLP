@@ -1,0 +1,44 @@
+{
+  "key": "mdm",
+  "requested_id": "2209.14916",
+  "retrieved_at": "2026-11-04T16:53:21.500925+00:00",
+  "reading_level": "unread",
+  "artifacts": [
+    {
+      "kind": "metadata",
+      "url": "https://arxiv.org/abs/2209.14916",
+      "path": "sources/mdm/metadata.html",
+      "sha256": "e39fc6e3fb1f8d2601add2c90640d5e61d32cd3f97158d494ae70b1f995f8262",
+      "bytes": 41486
+    },
+    {
+      "kind": "html",
+      "url": "https://arxiv.org/html/2209.14916",
+      "path": "sources/mdm/html.html",
+      "sha256": "3d62cb2de280cec523d8e1a6fc48492be14273e922ffccd6c3a8cc389dd5fac5",
+      "bytes": 204871
+    }
+  ],
+  "title": "Human Motion Diffusion Model",
+  "history": "Submission history From: Guy Tevet [ view email ] [v1] Thu, 29 Sep 2022 16:27:53 UTC (11,215 KB) [v2] Mon, 3 Oct 2022 09:17:41 UTC (11,213 KB)",
+  "canonical_ids": [
+    "2209.14916v2"
+  ],
+  "headings": [
+    "Human Motion Diffusion Model",
+    "1 Introduction",
+    "2 Related Work",
+    "2.1 Human Motion Generation",
+    "2.2 Diffusion Generative Models",
+    "3 Motion Diffusion Model",
+    "4 Experiments",
+    "4.1 Text-to-Motion",
+    "4.2 Action-to-Motion",
+    "5 Additional Applications",
+    "5.1 Motion Editing",
+    "5.2 Unconstrained Synthesis",
+    "6 Discussion",
+    "Acknowledgements",
+    "References"
+  ]
+}

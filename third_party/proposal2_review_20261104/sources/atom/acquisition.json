@@ -1,0 +1,57 @@
+{
+  "key": "atom",
+  "requested_id": "2411.18654",
+  "retrieved_at": "2026-11-04T17:02:05.329614+00:00",
+  "reading_level": "unread",
+  "artifacts": [
+    {
+      "kind": "metadata",
+      "url": "https://arxiv.org/abs/2411.18654",
+      "path": "sources/atom/metadata.html",
+      "sha256": "b0abadbee39d23dfac355ba3f54c2e6d72dfad096e5d3376a64ae876f461c63a",
+      "bytes": 42113
+    },
+    {
+      "kind": "html",
+      "url": "https://arxiv.org/html/2411.18654",
+      "path": "sources/atom/html.html",
+      "sha256": "81195f8a41de56920e1aa13ad3acc71066f77c010d9504e01463f41ea17e61f5",
+      "bytes": 309699
+    }
+  ],
+  "title": "AToM: Aligning Text-to-Motion Model at Event-Level with GPT-4Vision Reward",
+  "history": "Submission history From: Haonan Han [ view email ] [v1] Wed, 27 Nov 2024 05:32:18 UTC (3,804 KB)",
+  "canonical_ids": [
+    "2411.18654v1"
+  ],
+  "headings": [
+    "AToM: Aligning Text-to-Motion Model at Event-Level with GPT-4Vision Reward",
+    "1 Introduction",
+    "2 Related Works",
+    "2.1 Text-to-Motion Generative Models",
+    "2.2 Aligning Models with Human/AI Feedback",
+    "3 Method",
+    "3.1 Dataset Construction",
+    "3.2 Reward Paradigm Design",
+    "3.3 Text-to-Motion Model Fine-tuning",
+    "4 Experiments",
+    "4.1 Implementation Details",
+    "4.2 Main Results",
+    "4.3 Ablation study",
+    "Motion Injection Forms in Questioning",
+    "5 Conclusion",
+    "References",
+    "6 Additional Results",
+    "6.1 More Qualitative Results",
+    "6.2 Number of Iterations for Fine-tuning",
+    "6.3 Hyper-parameter [MATH: \\beta] of IPO",
+    "6.4 Preference Accuracy Comparison: GPT-4V vs. Contrastive Encoders on Human Preference Datasets",
+    "6.5 GPT-4V Finetuned v.s. Constrastive Encoders Finetuned",
+    "6.6 Influence of Preference Dataset Volume on Model Performance",
+    "7 Details of MotionPrefer Construction",
+    "7.1 GPT-4 Instruction for Prompt Construction",
+    "7.2 GPT Instruction for Scoring",
+    "7.3 Motion Injection Forms in Questioning",
+    "8 Human Evaluation"
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "key": "signspark",
+  "requested_id": "2603.10446",
+  "retrieved_at": "2026-11-05T01:08:22.052056+00:00",
+  "reading_level": "unread",
+  "artifacts": [
+    {
+      "kind": "metadata",
+      "url": "https://arxiv.org/abs/2603.10446",
+      "path": "sources/signspark/metadata.html",
+      "sha256": "20184a815f1656b9c85c87a5b6170c671d74ad37fef0cfc4357f02a1eba929c9",
+      "bytes": 42942
+    },
+    {
+      "kind": "html",
+      "url": "https://arxiv.org/html/2603.10446",
+      "path": "sources/signspark/html.html",
+      "sha256": "59297db4875ace71946ed2e3c99c01852125872e733c02436a4bdf490c2ccf5f",
+      "bytes": 312570
+    }
+  ],
+  "title": "SignSparK: Efficient Multilingual Sign Language Production via Sparse Keyframe Learning",
+  "history": "Submission history From: Jian He Low [ view email ] [v1] Wed, 11 Mar 2026 06:02:36 UTC (8,122 KB) [v2] Thu, 12 Mar 2026 03:43:26 UTC (8,122 KB) [v3] Mon, 23 Mar 2026 03:30:31 UTC (8,121 KB) [v4] Thu, 25 Jun 2026 16:22:23 UTC (9,473 KB)",
+  "canonical_ids": [
+    "2603.10446v4"
+  ],
+  "headings": [
+    "SignSparK: Efficient Multilingual Sign Language Production via Sparse Keyframe Learning",
+    "1 Introduction",
+    "2 Related Work",
+    "3 Methodology",
+    "3.1 Sign Language Segmentation",
+    "3.2 Sparse Keyframe-conditioned Training via Flow Matching",
+    "4 Experiments",
+    "4.1 Sign Language Segmentation",
+    "4.2 Sign Language Production",
+    "4.3 Ablation Studies",
+    "4.4 Qualitative Results",
+    "4.5 Facial Expression Evaluation",
+    "5 Conclusions",
+    "Acknowledgements",
+    "References"
+  ]
+}

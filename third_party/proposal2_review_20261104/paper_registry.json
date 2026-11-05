@@ -1,0 +1,3261 @@
+[
+  {
+    "key": "act",
+    "requested_id": "2304.13705",
+    "retrieved_at": "2026-11-05T00:57:54.306886+00:00",
+    "reading_level": "D",
+    "artifacts": [
+      {
+        "kind": "metadata",
+        "url": "https://arxiv.org/abs/2304.13705",
+        "path": "sources/act/metadata.html",
+        "sha256": "bc5f190c682a819c21b8ad55d03079c921d89b5492a4df988490040122288282",
+        "bytes": 40730
+      },
+      {
+        "kind": "html",
+        "url": "https://arxiv.org/html/2304.13705",
+        "path": "sources/act/html.html",
+        "sha256": "73ded0e57571cc75e4e03c7f9be74b4d3225cf5f73cfdda641a2382c6fd8f79c",
+        "bytes": 252501
+      }
+    ],
+    "title": "Learning Fine-Grained Bimanual Manipulation with Low-Cost Hardware",
+    "history": "Submission history From: Tony Zhao [ view email ] [v1] Sun, 23 Apr 2023 19:10:53 UTC (4,495 KB)",
+    "canonical_ids": [
+      "2304.13705v1"
+    ],
+    "headings": [
+      "Learning Fine-Grained Bimanual Manipulation with Low-Cost Hardware",
+      "I Introduction",
+      "II Related Work",
+      "III ALOHA: A L ow-cost O pen-source Ha rdware System for Bimanual Teleoperation",
+      "IV Action Chunking with Transformers",
+      "IV-A Action Chunking and Temporal Ensemble",
+      "IV-B Modeling human data",
+      "IV-C Implementing ACT",
+      "V Experiments",
+      "V-A Tasks",
+      "V-B Data Collection",
+      "V-C Experiment Results",
+      "VI Ablations",
+      "VI-A Action Chunking and Temporal Ensembling",
+      "VI-B Training with CVAE",
+      "VI-C Is High-Frequency Necessary?",
+      "VII Limitations and Conclusion",
+      "Acknowledgement",
+      "References",
+      "-A Comparing ALOHA with Prior Teleoperation Setups",
+      "-B Example Image Observations",
+      "-C Detailed Architecture Diagram",
+      "-D Experiment Details and Hyperparameters",
+      "-E User Study Details",
+      "-F Limitations"
+    ],
+    "reading_scope": "§§IV–VII, AppF; chưa từng hyperparameter table/code",
+    "note": "evidence/M17_cross_domain_transfer.md",
+    "venue_status": "RSS2023 — official proceedings verified"
+  },
+  {
+    "key": "atom",
+    "requested_id": "2411.18654",
+    "retrieved_at": "2026-11-04T17:02:05.329614+00:00",
+    "reading_level": "unread",
+    "artifacts": [
+      {
+        "kind": "metadata",
+        "url": "https://arxiv.org/abs/2411.18654",
+        "path": "sources/atom/metadata.html",
+        "sha256": "b0abadbee39d23dfac355ba3f54c2e6d72dfad096e5d3376a64ae876f461c63a",
+        "bytes": 42113
+      },
+      {
+        "kind": "html",
+        "url": "https://arxiv.org/html/2411.18654",
+        "path": "sources/atom/html.html",
+        "sha256": "81195f8a41de56920e1aa13ad3acc71066f77c010d9504e01463f41ea17e61f5",
+        "bytes": 309699
+      }
+    ],
+    "title": "AToM: Aligning Text-to-Motion Model at Event-Level with GPT-4Vision Reward",
+    "history": "Submission history From: Haonan Han [ view email ] [v1] Wed, 27 Nov 2024 05:32:18 UTC (3,804 KB)",
+    "canonical_ids": [
+      "2411.18654v1"
+    ],
+    "headings": [
+      "AToM: Aligning Text-to-Motion Model at Event-Level with GPT-4Vision Reward",
+      "1 Introduction",
+      "2 Related Works",
+      "2.1 Text-to-Motion Generative Models",
+      "2.2 Aligning Models with Human/AI Feedback",
+      "3 Method",
+      "3.1 Dataset Construction",
+      "3.2 Reward Paradigm Design",
+      "3.3 Text-to-Motion Model Fine-tuning",
+      "4 Experiments",
+      "4.1 Implementation Details",
+      "4.2 Main Results",
+      "4.3 Ablation study",
+      "Motion Injection Forms in Questioning",
+      "5 Conclusion",
+      "References",
+      "6 Additional Results",
+      "6.1 More Qualitative Results",
+      "6.2 Number of Iterations for Fine-tuning",
+      "6.3 Hyper-parameter [MATH: \\beta] of IPO",
+      "6.4 Preference Accuracy Comparison: GPT-4V vs. Contrastive Encoders on Human Preference Datasets",
+      "6.5 GPT-4V Finetuned v.s. Constrastive Encoders Finetuned",
+      "6.6 Influence of Preference Dataset Volume on Model Performance",
+      "7 Details of MotionPrefer Construction",
+      "7.1 GPT-4 Instruction for Prompt Construction",
+      "7.2 GPT Instruction for Scoring",
+      "7.3 Motion Injection Forms in Questioning",
+      "8 Human Evaluation"
+    ],
+    "reading_scope": "chỉ acquisition/metadata extraction, chưa có ghi chú đọc",
+    "note": null,
+    "venue_status": "CVPR2025 — official CVF metadata acquired",
+    "official_venue_metadata": {
+      "venue": "CVPR2025",
+      "title": "AToM: Aligning Text-to-Motion Model at Event-Level with GPT-4Vision Reward",
+      "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Han_AToM_Aligning_Text-to-Motion_Model_at_Event-Level_with_GPT-4Vision_Reward_CVPR_2025_paper.html",
+      "sha256": "679dfe61bbcbb8827cd474dbf0ff1d2c7fbebc1e3b1aba610d0686c60f642ef7",
+      "links": [
+        {
+          "label": "pdf",
+          "url": "https://openaccess.thecvf.com/content/CVPR2025/papers/Han_AToM_Aligning_Text-to-Motion_Model_at_Event-Level_with_GPT-4Vision_Reward_CVPR_2025_paper.pdf"
+        },
+        {
+          "label": "supp",
+          "url": "https://openaccess.thecvf.com/content/CVPR2025/supplemental/Han_AToM_Aligning_Text-to-Motion_CVPR_2025_supplemental.pdf"
+        },
+        {
+          "label": "arXiv",
+          "url": "http://arxiv.org/abs/2411.18654"
+        }
+      ],
+      "abstract": "Recently, text-to-motion models open new possibilities for creating realistic human motion with greater efficiency and flexibility. However, aligning motion generation with event-level textual descriptions presents unique challenges due to the complex, nuanced relationship between textual prompts and desired motion outcomes. To address this issue, we introduce AToM, a framework that enhances the alignment between generated motion and text prompts by leveraging reward from GPT-4Vision. AToM comprises three main stages: Firstly, we construct a dataset MotionPrefer that pairs three types of event-level textual prompts with generated motions, which cover the integrity, temporal relationship and the frequency of motion. Secondly, we design a paradigm that utilizes GPT-4Vision for detailed motion annotation, including visual data formatting, task-specific instructions and scoring rules for each sub-task. Finally, we fine-tune an existing text-to-motion model using reinforcement learning guided by this paradigm. Experimental results demonstrate that AToM significantly improves the event-level alignment quality of text-to-motion generation."
+    }
+  },
+  {
+    "key": "blanc",
+    "requested_id": "2610.24109",
+    "retrieved_at": "2026-11-05T01:35:09.876104+00:00",
+    "reading_level": "D",
+    "artifacts": [
+      {
+        "kind": "metadata",
+        "url": "https://arxiv.org/abs/2610.24109",
+        "path": "sources/blanc/metadata.html",
+        "sha256": "7523fdaa68a411b46c68639a2a0dad516518e154b17bb74b33b7f6d9720199d6",
+        "bytes": 41360
+      },
+      {
+        "kind": "html",
+        "url": "https://arxiv.org/html/2610.24109",
+        "path": "sources/blanc/html.html",
+        "sha256": "72bdbe176fdc998e3a58570256e8fd1c6d950cfe175232bd3f8efe9fad333e9b",
+        "bytes": 447135
+      }
+    ],
+    "title": "BLANC: Adaptive Temporal Scheduling for Sign Language Production",
+    "history": "Submission history From: Youngmin Kim [ view email ] [v1] Fri, 16 Oct 2026 18:36:26 UTC (2,437 KB)",
+    "canonical_ids": [
+      "2610.24109v1"
+    ],
+    "headings": [
+      "BLANC: Adaptive Temporal Scheduling for Sign Language Production",
+      "1 Introduction",
+      "2 Related Works",
+      "3 Method",
+      "3.1 Background: Block Diffusion Modeling",
+      "3.2 Motion Representation and Tokenization",
+      "3.3 BLANC",
+      "3.3.1 Learning the Latent Articulatory Clock",
+      "3.3.2 Block-wise Motion Generation",
+      "4 Experiments",
+      "4.1 Comparison with State-of-the-Art Methods",
+      "4.2 Ablation Studies",
+      "5 Conclusion",
+      "Limitations",
+      "References",
+      "Appendix A 3D Pose Fitting and Refinement",
+      "Appendix B Additional Details of the Multi-Rate Vector Quantizer",
+      "B.1 Quantization and Codebook Optimization",
+      "B.2 Motion Reconstruction",
+      "B.3 Training Objectives",
+      "Appendix C Additional Details of Blanc",
+      "C.1 Multi-Scale Motion Teacher",
+      "C.2 Latent Articulatory Clock",
+      "C.3 Training Objectives",
+      "C.4 Inference and Hand Refinement",
+      "Appendix D Experimental Details",
+      "D.1 Dataset Documentation and Statistics",
+      "D.2 Evaluation Metrics",
+      "D.3 Baseline Implementation Details",
+      "D.4 Hardware, Model Size, and Computational Budget",
+      "D.5 Hyperparameter Settings",
+      "Appendix E Additional Experiments",
+      "E.1 Qualitative Results of MRVQ",
+      "E.2 Semantic Preservation of Motion Tokenizers",
+      "E.3 Ablation of Refinement",
+      "Appendix F Discussion",
+      "F.1 Broader Impacts and Ethical Considerations",
+      "F.2 Data Privacy, Licenses, and Release",
+      "F.3 Use of AI Assistants"
+    ],
+    "reading_scope": "§§3–5/Tables 1–6, App B/C/D.1–D.5; chưa toàn phần cuối appendix/video/code",
+    "note": "evidence/S09_blanc.md",
+    "venue_status": "preprint 10/2026; project under review"
+  },
+  {
+    "key": "discord",
+    "requested_id": "2411.19527",
+    "retrieved_at": "2026-11-04T17:02:06.370678+00:00",
+    "reading_level": "D",
+    "artifacts": [
+      {
+        "kind": "metadata",
+        "url": "https://arxiv.org/abs/2411.19527",
+        "path": "sources/discord/metadata.html",
+        "sha256": "900530ecdff944fe2d785ab797448ff522a742d982d333ece3f669790277d5b3",
+        "bytes": 43399
+      },
+      {
+        "kind": "html",
+        "url": "https://arxiv.org/html/2411.19527",
+        "path": "sources/discord/html.html",
+        "sha256": "2724525e22ef34f1c606579f7497b7c42ba8ae4880a2765424f6fda73fe6943d",
+        "bytes": 419826
+      }
+    ],
+    "title": "DisCoRD: Discrete Tokens to Continuous Motion via Rectified Flow Decoding",
+    "history": "Submission history From: Jungbin Cho [ view email ] [v1] Fri, 29 Nov 2024 07:54:56 UTC (10,801 KB) [v2] Mon, 2 Dec 2024 03:34:45 UTC (17,233 KB) [v3] Fri, 18 Apr 2025 08:49:08 UTC (11,956 KB) [v4] Thu, 7 Aug 2025 08:03:29 UTC (7,562 KB)",
+    "canonical_ids": [
+      "2411.19527v4"
+    ],
+    "headings": [
+      "DisCoRD: Dis crete Tokens to Co ntinuous Motion via R ectified Flow D ecoding",
+      "1 Introduction",
+      "2 Related Work",
+      "Human Motion Generation from Diverse Signals.",
+      "Continuous Human Motion Generation.",
+      "Discrete Human Motion Generation.",
+      "3 Method",
+      "3.1 Preliminaries",
+      "Rectified Flow.",
+      "Motion Tokenization.",
+      "3.2 DisCoRD",
+      "Condition Projection.",
+      "Rectified Flow Decoder.",
+      "Training.",
+      "4 Experiments",
+      "4.1 Dataset and Evaluation",
+      "Evaluation.",
+      "Symmetric Jerk Percentage Error.",
+      "4.2 Quantitative results",
+      "Natural Motion Reconstruction.",
+      "Natural Motion Generation.",
+      "Performance on Various Tasks.",
+      "Effect of Sample Steps.",
+      "Effect of Residual Quantization.",
+      "Ablation Studies.",
+      "4.3 Qualitative Results",
+      "5 Conclusion and Discussion",
+      "Acknowledgments.",
+      "References",
+      "Appendix A Implementation Details",
+      "Appendix B Datasets and Evaluations",
+      "B.1 Datasets.",
+      "B.2 Evaluations.",
+      "Appendix C Additional Analysis on sJPE",
+      "C.1 Visualization of Fine-Grained Motion",
+      "C.2 Details on sJPE.",
+      "Noise sJPE and Static sJPE.",
+      "C.3 Qualitative Results on Joint Trajectory and Jerk",
+      "C.4 Correlation between sJPE and human perception.",
+      "Appendix D Additional Quantitative Results",
+      "D.1 Performance on Text-to-Motion Generation.",
+      "D.2 Performance on Various Tasks.",
+      "Appendix E Additional Qualitative Results",
+      "E.1 Motion visualization.",
+      "E.2 User preference study details."
+    ],
+    "reading_scope": "§§3–4, Tables1–6, AppA,C.4; chưa code/đầy đủ auxiliary-task supplement",
+    "note": "evidence/M13_discord.md",
+    "venue_status": "ICCV2025 — official CVF metadata acquired",
+    "official_venue_metadata": {
+      "venue": "ICCV2025",
+      "title": "DisCoRD: Discrete Tokens to Continuous Motion via Rectified Flow Decoding",
+      "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Cho_DisCoRD_Discrete_Tokens_to_Continuous_Motion_via_Rectified_Flow_Decoding_ICCV_2025_paper.html",
+      "sha256": "04ab55b1ce3a262b5270144320de2ddb626606b8c140299ed5e345778a5e8931",
+      "links": [
+        {
+          "label": "pdf",
+          "url": "https://openaccess.thecvf.com/content/ICCV2025/papers/Cho_DisCoRD_Discrete_Tokens_to_Continuous_Motion_via_Rectified_Flow_Decoding_ICCV_2025_paper.pdf"
+        },
+        {
+          "label": "supp",
+          "url": "https://openaccess.thecvf.com/content/ICCV2025/supplemental/Cho_DisCoRD_Discrete_Tokens_ICCV_2025_supplemental.pdf"
+        },
+        {
+          "label": "arXiv",
+          "url": "http://arxiv.org/abs/2411.19527"
+        }
+      ],
+      "abstract": "Human motion is inherently continuous and dynamic, posing significant challenges for generative models. While discrete generation methods are widely used, they suffer from limited expressiveness and frame-wise noise artifacts. In contrast, continuous approaches produce smoother, more natural motion but often struggle to adhere to conditioning signals due to high-dimensional complexity and limited training data. To resolve this discord between discrete and continuous representations we introduce DisCoRD: Discrete Tokens to Continuous Motion via Rectified Flow Decoding, a novel method that leverages rectified flow to decode discrete motion tokens in the continuous, raw motion space. Our core idea is to frame token decoding as a conditional generation task, ensuring that DisCoRD captures fine-grained dynamics and achieves smoother, more natural motions. Compatible with any discrete-based framework, our method enhances naturalness without compromising faithfulness to the conditioning signals on diverse settings. Extensive evaluations demonstrate that DisCoRD achieves state-of-the-art performance, with FID of 0.032 on HumanML3D and 0.169 on KIT-ML. These results establish DisCoRD as a robust solution for bridging the divide between discrete efficiency and continuous realism. Code and checkpoints will be released."
+    }
+  },
+  {
+    "key": "emage",
+    "requested_id": "2401.00374",
+    "retrieved_at": "2026-11-04T17:02:06.400813+00:00",
+    "reading_level": "D",
+    "artifacts": [
+      {
+        "kind": "metadata",
+        "url": "https://arxiv.org/abs/2401.00374",
+        "path": "sources/emage/metadata.html",
+        "sha256": "7205769b88c2a2e5b6067fcb5b8e83443354f2173384ca74d6408aed5eee339a",
+        "bytes": 44061
+      },
+      {
+        "kind": "html",
+        "url": "https://arxiv.org/html/2401.00374",
+        "path": "sources/emage/html.html",
+        "sha256": "7ad718d46c97a54a1342d6ece0513a8447a92a2d3a62eb36a73f5d5cfd042ab6",
+        "bytes": 327408
+      }
+    ],
+    "title": "EMAGE: Towards Unified Holistic Co-Speech Gesture Generation via Expressive Masked Audio Gesture Modeling",
+    "history": "Submission history From: Haiyang Liu [ view email ] [v1] Sun, 31 Dec 2023 02:25:41 UTC (4,339 KB) [v2] Tue, 2 Jan 2024 08:05:02 UTC (4,339 KB) [v3] Mon, 25 Mar 2024 13:01:27 UTC (15,189 KB) [v4] Wed, 27 Mar 2024 04:06:36 UTC (15,189 KB) [v5] Sat, 30 Mar 2024 04:15:34 UTC (15,451 KB)",
+    "canonical_ids": [
+      "2401.00374v5"
+    ],
+    "headings": [
+      "EMAGE: Towards Unified Holistic Co-Speech Gesture Generation via Expressive Masked Audio Gesture Modeling",
+      "1 Introduction",
+      "2 Related Work",
+      "3 BEAT2",
+      "3.1 Body Parameters Initialization via MoSh++",
+      "3.2 Body Parameters Refinement",
+      "3.3 Blendshape Weights to FLAME Parameters",
+      "4 EMAGE",
+      "4.1 Compositional Discrete Face and Body Prior",
+      "4.2 Content and Rhythm Self-Attention",
+      "4.3 Masked Audio-Conditioned Gesture Modeling",
+      "4.4 Face and Translation Decoding",
+      "5 Experiments",
+      "5.1 Dataset Quality Evaluation",
+      "5.2 Model Ability Evaluation",
+      "5.2.1 Quantitative and Qualitative Analysis",
+      "5.2.2 Ablation Analysis",
+      "5.2.3 Ability of Multi-Dataset Training.",
+      "6 Conclusion",
+      "References",
+      "Appendix A Evaluation Metrics",
+      "Fréchet Gesture Distance",
+      "L1 Diversity",
+      "Beat Constancy (BC)",
+      "Appendix B BEAT2 Dataset Details",
+      "Statistics",
+      "Loss Terms of MoSh++",
+      "Details of FLAME Parameter Optimization",
+      "Appendix C Baselines Reproduction Details",
+      "Number of Joints",
+      "Autoregressive Training",
+      "Adversarial Training",
+      "Lower Body VQ-VAE for TalkShow",
+      "Appendix D Settings of EMAGE",
+      "Training",
+      "Structure of VQ-VAE",
+      "Global Motion Predictor",
+      "Appendix E Visualization Blender Add-on",
+      "Appendix F Training time",
+      "Appendix G Importance of lower body motion"
+    ],
+    "reading_scope": "§§3–5, AppB statistics, C/D/F; chưa code/video",
+    "note": "evidence/M09_emage.md",
+    "venue_status": "CVPR2024 — official CVF metadata acquired",
+    "official_venue_metadata": {
+      "venue": "CVPR2024",
+      "title": "EMAGE: Towards Unified Holistic Co-Speech Gesture Generation via Expressive Masked Audio Gesture Modeling",
+      "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Liu_EMAGE_Towards_Unified_Holistic_Co-Speech_Gesture_Generation_via_Expressive_Masked_CVPR_2024_paper.html",
+      "sha256": "b201d92a95b2e01566cd9bc7be0eb21b25c958e71c4af54a3578c816810c035c",
+      "links": [
+        {
+          "label": "pdf",
+          "url": "https://openaccess.thecvf.com/content/CVPR2024/papers/Liu_EMAGE_Towards_Unified_Holistic_Co-Speech_Gesture_Generation_via_Expressive_Masked_CVPR_2024_paper.pdf"
+        },
+        {
+          "label": "supp",
+          "url": "https://openaccess.thecvf.com/content/CVPR2024/supplemental/Liu_EMAGE_Towards_Unified_CVPR_2024_supplemental.pdf"
+        },
+        {
+          "label": "arXiv",
+          "url": "http://arxiv.org/abs/2401.00374"
+        }
+      ],
+      "abstract": "We propose EMAGE a framework to generate full-body human gestures from audio and masked gestures encompassing facial local body hands and global movements. To achieve this we first introduce BEAT2 (BEAT-SMPLX-FLAME) a new mesh-level holistic co-speech dataset. BEAT2 combines a MoShed SMPL-X body with FLAME head parameters and further refines the modeling of head neck and finger movements offering a community-standardized high-quality 3D motion captured dataset. EMAGE leverages masked body gesture priors during training to boost inference performance. It involves a Masked Audio Gesture Transformer facilitating joint training on audio-to-gesture generation and masked gesture reconstruction to effectively encode audio and body gesture hints. Encoded body hints from masked gestures are then separately employed to generate facial and body movements. Moreover EMAGE adaptively merges speech features from the audio's rhythm and content and utilizes four compositional VQ-VAEs to enhance the results' fidelity and diversity. Experiments demonstrate that EMAGE generates holistic gestures with state-of-the-art performance and is flexible in accepting predefined spatial-temporal gesture inputs generating complete audio-synchronized results. Our code and dataset are available. https://pantomatrix.github.io/EMAGE/"
+    }
+  },
+  {
+    "key": "eventt2m",
+    "requested_id": "2602.04292",
+    "retrieved_at": "2026-11-04T16:53:18.874797+00:00",
+    "reading_level": "D",
+    "artifacts": [
+      {
+        "kind": "metadata",
+        "url": "https://arxiv.org/abs/2602.04292",
+        "path": "sources/eventt2m/metadata.html",
+        "sha256": "964caea5c0186e73220f1229c2eaed82613f56ba5e0f53a1ad433dc27b5948a1",
+        "bytes": 42019
+      },
+      {
+        "kind": "html",
+        "url": "https://arxiv.org/html/2602.04292",
+        "path": "sources/eventt2m/html.html",
+        "sha256": "b0bae3d0d04e18327e63f4b3693eb37b29905a4d81c45c501522e7b076ae7c3d",
+        "bytes": 729029
+      }
+    ],
+    "title": "Event-T2M: Event-level Conditioning for Complex Text-to-Motion Synthesis",
+    "history": "Submission history From: Seong-Eun Hong [ view email ] [v1] Wed, 4 Feb 2026 07:45:21 UTC (9,482 KB) [v2] Wed, 7 Oct 2026 11:08:34 UTC (9,482 KB)",
+    "canonical_ids": [
+      "2602.04292v2"
+    ],
+    "headings": [
+      "Event-T2M: Event-level Conditioning for Complex Text-to-Motion Synthesis",
+      "1 Introduction",
+      "2 Related Works",
+      "2.1 Complex Text-to-Motion Synthesis",
+      "2.2 Token-level Condition for Fine-grained Alignment",
+      "3 Method",
+      "3.1 Text to Event Tokens",
+      "3.2 Architecture Overview",
+      "Block overview.",
+      "Local Information Modeling Module (LIMM).",
+      "Adaptive Textual Information Injector (ATII).",
+      "Conformer for global and local sequencing.",
+      "Event-based Cross-attention (ECA).",
+      "3.3 Diffusion Objective and Sampling",
+      "4 Experiments",
+      "4.1 Benchmarks and Metrics",
+      "Standard Benchmarks.",
+      "Event-stratified Subset: HumanML3D-E.",
+      "Evaluation Metrics.",
+      "4.2 Main Results",
+      "Standard test sets (HumanML3D, KIT-ML, and Motion-X).",
+      "Event-stratified sets (HumanML3D-E).",
+      "Efficiency analysis.",
+      "4.3 Ablations and Analysis",
+      "Effect of ECA.",
+      "Effect of Text Encoder.",
+      "4.4 User study",
+      "Study 1: Validating event decomposition.",
+      "Study 2: Perceptual Validation of Event-T2M.",
+      "4.5 Qualitative Results",
+      "5 Failure case analysis",
+      "6 Conclusion",
+      "7 Reproducibility Statement",
+      "References",
+      "Appendix A Appendix",
+      "A.1 Implementation Details",
+      "A.2 Evaluation Metrics Details",
+      "A.3 Details On HumanML3D and KIT-ML",
+      "A.4 Further Results Of Ablation Study",
+      "A.5 Details On HumanML3D-E",
+      "A.6 Details of Study 1: Validating event decomposition",
+      "A.7 Details of Study 2: Perceptual Validation of Event-T2M",
+      "A.8 Further visualization",
+      "A.9 Results of Decomposition by LLM Prompts",
+      "A.10 LLM Usage Statement",
+      "A.11 Validating the accuracy of LLM-generated event labels.",
+      "A.12 Evaluation on more datasets",
+      "A.13 Comparison with Retrieval-based Motion Synthesis",
+      "A.14 Verb-aware vs. Event-aware Conditioning",
+      "A.15 Evaluation on a Human-Annotated, LLM-Free Event Test Set",
+      "A.16 Evaluation in Model Configurations Employing the TMR Encoder",
+      "A.17 Extended Ablations and Role of Each Module",
+      "A.18 Computational Cost and LLM Overhead"
+    ],
+    "reading_scope": "§§3–6; AppA.1,5–7,9,11,14–18; Table15 chưa đọc mọi hàng",
+    "note": "evidence/M04_event_t2m.md",
+    "venue_status": "ICLR2026 — official proceedings entry verified"
+  },
+  {
+    "key": "f5tts",
+    "requested_id": "2410.06885",
+    "retrieved_at": "2026-11-05T00:57:54.305859+00:00",
+    "reading_level": "D",
+    "artifacts": [
+      {
+        "kind": "metadata",
+        "url": "https://arxiv.org/abs/2410.06885",
+        "path": "sources/f5tts/metadata.html",
+        "sha256": "1f0d98fe879334fae2f521bc32c92daf0cfad65b6bbf4017cc09e7645a2d0dee",
+        "bytes": 43354
+      },
+      {
+        "kind": "html",
+        "url": "https://arxiv.org/html/2410.06885",
+        "path": "sources/f5tts/html.html",
+        "sha256": "a55f9ace2221d4d557478183fc14fbd19c1cea40f682396c08a4a5abaaa4f96c",
+        "bytes": 293617
+      }
+    ],
+    "title": "F5-TTS: A Fairytaler that Fakes Fluent and Faithful Speech with Flow Matching",
+    "history": "Submission history From: Yushen Chen [ view email ] [v1] Wed, 9 Oct 2024 13:46:34 UTC (3,487 KB) [v2] Tue, 15 Oct 2024 04:52:10 UTC (3,487 KB) [v3] Tue, 20 May 2025 15:53:10 UTC (7,126 KB)",
+    "canonical_ids": [
+      "2410.06885v3"
+    ],
+    "headings": [
+      "F5-TTS: A Fairytaler that Fakes Fluent and Faithful Speech with Flow Matching",
+      "1 Introduction",
+      "2 Preliminaries",
+      "2.1 Flow Matching",
+      "2.2 Classifier-Free Guidance",
+      "3 Method",
+      "3.1 Pipeline",
+      "3.2 F5-TTS",
+      "4 Experimental Setup",
+      "5 Experimental Results",
+      "5.1 Ablation of Model Architecture",
+      "5.2 Ablation of Sway Sampling",
+      "6 Conclusion",
+      "Limitations",
+      "Ethics Statements",
+      "References",
+      "Appendix A Baseline Details",
+      "Appendix B Experimental Result Supplements",
+      "B.1 Small Model Configuration",
+      "B.2 Ablation study on Input Condition",
+      "B.3 Sway Sampling Effectiveness on Base Models",
+      "B.4 Comparison of ODE Solvers",
+      "B.5 ELLA-V Hard Sentences Evaluation",
+      "B.6 Comparison of Vocoders and between PC and non-PC",
+      "B.7 Training and Inference Performance with Different Dataset Scales",
+      "Appendix C Subjective Evaluation Details"
+    ],
+    "reading_scope": "§§3–5 vàAppB.2; chưa mọi solver/data-scale/userstudy table/code",
+    "note": "evidence/M17_cross_domain_transfer.md",
+    "venue_status": "ACL2025 — official Anthology entry verified"
+  },
+  {
+    "key": "fgdm",
+    "requested_id": "CVPR2026-Yu-FGDM",
+    "retrieved_at": "2026-11-05T01:32:04.684876+00:00",
+    "reading_level": "M",
+    "title": "Focal-General Diffusion Model with Semantic Consistent Guidance for Sign Language Production",
+    "canonical_ids": [],
+    "artifacts": [
+      {
+        "kind": "official_pdf",
+        "url": "https://openaccess.thecvf.com/content/CVPR2026/papers/Yu_Focal-General_Diffusion_Model_with_Semantic_Consistent_Guidance_for_Sign_Language_CVPR_2026_paper.pdf",
+        "sha256": "367980f2edda72d0d98c1322a111f0780e2063675b11ea4e30112f3242b3144c",
+        "path": "sources/fgdm/paper.pdf"
+      }
+    ],
+    "reading_scope": "§3.1/forward diffusion/focal overview, §3.3 SCG, §4.2 narrative; chưa full ASGCN/ablations/code",
+    "note": "evidence/S08_fgdm.md",
+    "venue_status": "CVPR2026 — official CVF PDF"
+  },
+  {
+    "key": "finemotion",
+    "requested_id": "2507.19850",
+    "retrieved_at": "2026-11-04T17:02:05.492671+00:00",
+    "reading_level": "unread",
+    "artifacts": [
+      {
+        "kind": "metadata",
+        "url": "https://arxiv.org/abs/2507.19850",
+        "path": "sources/finemotion/metadata.html",
+        "sha256": "78c44351e908469e982530c2379fbd63400110a35562ff9305d5e0f021ed8166",
+        "bytes": 42540
+      },
+      {
+        "kind": "html",
+        "url": "https://arxiv.org/html/2507.19850",
+        "path": "sources/finemotion/html.html",
+        "sha256": "71daf0bb6802b3c28fb2f2933738c7d92c0c64a68972b3445c2de4274c1a7c95",
+        "bytes": 289922
+      }
+    ],
+    "title": "FineMotion: A Dataset and Benchmark with both Spatial and Temporal Annotation for Fine-grained Motion Generation and Editing",
+    "history": "Submission history From: Bizhu Wu [ view email ] [v1] Sat, 26 Jul 2025 07:54:29 UTC (6,169 KB)",
+    "canonical_ids": [
+      "2507.19850v1"
+    ],
+    "headings": [
+      "FineMotion: A Dataset and Benchmark with both Spatial and Temporal Annotation for Fine-grained Motion Generation and Editing",
+      "1 Introduction",
+      "2 Related Work",
+      "3 The proposed FineMotion dataset",
+      "3.1 Dataset Construction Pipeline",
+      "3.1.1 Snippet Segmentation",
+      "3.1.2 Snippet Description Generation",
+      "3.1.3 Paragraph Generation",
+      "3.2 Statistics Analysis",
+      "4 Experiments",
+      "4.1 Data Preprocessing",
+      "4.2 Evaluation Metrics",
+      "4.3 Baseline Models",
+      "4.4 Evaluation of the Textual Annotation Pipeline",
+      "4.5 Impact on Text-driven Motion Generation",
+      "4.6 Zero-shot Fine-Grained Motion Editing",
+      "5 Conclusion",
+      "Acknowledgements",
+      "References",
+      "6 License",
+      "7 Discussion on Selecting of optimal [MATH: T_{s}]",
+      "8 Data Format Examples",
+      "9 More Dataset Examples",
+      "10 Baseline Model Details",
+      "11 More Implementation Details",
+      "12 More Discussion on Motion Generation with Fine-grained Texts Only",
+      "13 More Discussion on Table 2",
+      "14 Ablation Study on Baseline Model Design",
+      "15 Metrics and Results for Temporal Alignment",
+      "16 Limitations and Future Work",
+      "17 User Study"
+    ],
+    "reading_scope": "chỉ acquisition/metadata extraction, chưa có ghi chú đọc",
+    "note": null,
+    "venue_status": "ICCV2025 — official CVF metadata acquired",
+    "official_venue_metadata": {
+      "venue": "ICCV2025",
+      "title": "FineMotion: A Dataset and Benchmark with both Spatial and Temporal Annotation for Fine-grained Motion Generation and Editing",
+      "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Wu_FineMotion_A_Dataset_and_Benchmark_with_both_Spatial_and_Temporal_ICCV_2025_paper.html",
+      "sha256": "b18d0221362c020fde94d23f021f071b762a7e49e2bc1a01ad4332549477d573",
+      "links": [
+        {
+          "label": "pdf",
+          "url": "https://openaccess.thecvf.com/content/ICCV2025/papers/Wu_FineMotion_A_Dataset_and_Benchmark_with_both_Spatial_and_Temporal_ICCV_2025_paper.pdf"
+        },
+        {
+          "label": "arXiv",
+          "url": "http://arxiv.org/abs/2507.19850"
+        }
+      ],
+      "abstract": "Generating realistic human motions from textual descriptions has undergone significant advancements. However, existing methods often overlook specific body part movements and their timing. In this paper, we address this issue by enriching the textual description with more details. Specifically, we propose the FineMotion dataset, which contains over 442,000 human motion snippets -- short segments of human motion sequences -- and their corresponding detailed descriptions of human body part movements. Additionally, the dataset includes about 95k detailed paragraphs describing the movements of human body parts in entire motion sequences. Experimental results demonstrate the significance of our dataset on the text-driven fine-grained human motion generation task, especially with a remarkable +15.3% improvement in Top-3 accuracy for the MDM model. Notably, we further support a zero-shot pipeline of fine-grained motion editing, which focuses on detailed editing in both spatial and temporal dimensions via text. Dataset and code available at: CVI-SZU/FineMotion"
+    }
+  },
+  {
+    "key": "flowmdm",
+    "requested_id": "2402.15509",
+    "retrieved_at": "2026-11-05T00:57:54.304030+00:00",
+    "reading_level": "D",
+    "artifacts": [
+      {
+        "kind": "metadata",
+        "url": "https://arxiv.org/abs/2402.15509",
+        "path": "sources/flowmdm/metadata.html",
+        "sha256": "f16375bbe0e6b0ea96fe3caac3413235e7849c64a488388c294aadb5a8c74087",
+        "bytes": 41346
+      },
+      {
+        "kind": "html",
+        "url": "https://arxiv.org/html/2402.15509",
+        "path": "sources/flowmdm/html.html",
+        "sha256": "16084eeb79baa4c7ba22fedce011143474068d0201dac464a647bc53ef899f4f",
+        "bytes": 663900
+      }
+    ],
+    "title": "Seamless Human Motion Composition with Blended Positional Encodings",
+    "history": "Submission history From: German Barquero [ view email ] [v1] Fri, 23 Feb 2024 18:59:40 UTC (15,139 KB)",
+    "canonical_ids": [
+      "2402.15509v1"
+    ],
+    "headings": [
+      "Seamless Human Motion Composition with Blended Positional Encodings",
+      "1 Introduction",
+      "2 Related work",
+      "3 Methodology",
+      "3.1 Bidirectional diffusion",
+      "3.2 Blended positional encodings",
+      "3.3 Pose-centric cross-attention",
+      "4 Experiments",
+      "4.1 Experimental setup",
+      "4.2 Quantitative analysis",
+      "4.3 Qualitative results",
+      "5 Conclusion",
+      "References",
+      "A Further implementation details",
+      "B Evaluation details",
+      "C More experimental results",
+      "C.1 Fine-grained comparison",
+      "C.2 On the attention horizon",
+      "C.3 On the diffusion schedule",
+      "C.4 On the classifier-free guidance",
+      "D Qualitative results"
+    ],
+    "reading_scope": "§§3–4, Tables1–4, supplementaryA/B; chưa đầy đủ sweeps/video/code",
+    "note": "evidence/M16_temporal_planning.md",
+    "venue_status": "CVPR2024 — official CVF entry verified"
+  },
+  {
+    "key": "frankenmotion",
+    "requested_id": "2601.10909",
+    "retrieved_at": "2026-11-04T16:53:18.872726+00:00",
+    "reading_level": "D-main",
+    "artifacts": [
+      {
+        "kind": "metadata",
+        "url": "https://arxiv.org/abs/2601.10909",
+        "path": "sources/frankenmotion/metadata.html",
+        "sha256": "e6b690230db43a6c393e9e3a0e7ddad1f081009aaf20b938f83041d51f6f2979",
+        "bytes": 42082
+      },
+      {
+        "kind": "html",
+        "url": "https://arxiv.org/html/2601.10909",
+        "path": "sources/frankenmotion/html.html",
+        "sha256": "0529c97047dbcb9c06dfa8cf307e30e89e4e74dd41c3e0339529cc46b322b606",
+        "bytes": 249297
+      }
+    ],
+    "title": "FrankenMotion: Part-level Human Motion Generation and Composition",
+    "history": "Submission history From: Chuqiao Li [ view email ] [v1] Thu, 15 Jan 2026 23:50:07 UTC (2,493 KB)",
+    "canonical_ids": [
+      "2601.10909v1"
+    ],
+    "headings": [
+      "FrankenMotion: Part-level Human Motion Generation and Composition",
+      "1 Introduction",
+      "2 Related Work",
+      "3 FrankenStein Dataset Construction",
+      "3.1 Data Source",
+      "3.2 LLM-based Annotation Framework",
+      "3.3 Comparison with Existing Datasets",
+      "4 FrankenMotion: Part-Based Spatiotemporal Composition",
+      "4.1 Preliminaries",
+      "4.2 Spatio-temporal Embedding",
+      "4.3 Robust FrankenMotion Training",
+      "5 Experiments",
+      "5.1 Dataset Quality",
+      "5.2 Fine-grained Motion Generation",
+      "5.3 Ablation Study",
+      "5.4 Flexible Input Control Applications",
+      "6 Conclusion and Limitation",
+      "References"
+    ],
+    "reading_scope": "main §§3–6, Tables1–3; supplementary/code/video chưa đọc",
+    "note": "evidence/M02_frankenmotion.md",
+    "venue_status": "CVPR2026 — official CVF index"
+  },
+  {
+    "key": "fusion",
+    "requested_id": "2601.03959",
+    "retrieved_at": "2026-11-04T17:02:07.087491+00:00",
+    "reading_level": "unread",
+    "artifacts": [
+      {
+        "kind": "metadata",
+        "url": "https://arxiv.org/abs/2601.03959",
+        "path": "sources/fusion/metadata.html",
+        "sha256": "8a28504c2253501d67ca28c50c51b3328fd25f4cfec4c9bb131f8cb290b14218",
+        "bytes": 42777
+      },
+      {
+        "kind": "html",
+        "url": "https://arxiv.org/html/2601.03959",
+        "path": "sources/fusion/html.html",
+        "sha256": "195d9ed252a9560724c03e5af1d60df7be21017f10d12985e6f36da76b33129c",
+        "bytes": 515518
+      }
+    ],
+    "title": "FUSION: Full-Body Unified Motion Prior for Body and Hands via Diffusion",
+    "history": "Submission history From: Enes Duran [ view email ] [v1] Wed, 7 Jan 2026 14:18:59 UTC (2,307 KB)",
+    "canonical_ids": [
+      "2601.03959v1"
+    ],
+    "headings": [
+      "FUSION : Full-Body Unified Motion Prior for Body and Hands via Diffusion",
+      "1 Introduction",
+      "2 Related Work",
+      "2.1 Human Motion Synthesis",
+      "2.2 Spatial Control for Human Motion Synthesis",
+      "2.3 Controlling Diffusion Models",
+      "3 Method",
+      "3.1 Curating the Dataset",
+      "3.2 Motion Representation",
+      "3.3 FUSION Formulation",
+      "3.4 FUSION Implementation details",
+      "3.5 Diffusion Noise Optimization",
+      "4 Applications",
+      "4.1 Human–Object Interaction",
+      "4.2 Self-Interaction using LLMs",
+      "5 Experiments",
+      "5.1 Comparison with SOTA methods",
+      "5.2 Qualitative Comparison",
+      "5.3 Quantitative Analysis of LLM",
+      "5.4 Ablation Studies",
+      "6 Conclusion",
+      "References",
+      "7 Architecture",
+      "8 Optimization Hyperparameters",
+      "9 Evaluation Metrics",
+      "10 Dataset Curation",
+      "11 Qualitative Results",
+      "12 Self-Interaction",
+      "12.1 Sampling Body Vertices",
+      "12.2 Quantitative Evaluation"
+    ],
+    "reading_scope": "chỉ acquisition/metadata extraction, chưa có ghi chú đọc",
+    "note": null,
+    "venue_status": "chưa xác minh"
+  },
+  {
+    "key": "gesture_eval",
+    "requested_id": "2610.11669",
+    "retrieved_at": "2026-11-04T17:02:07.024517+00:00",
+    "reading_level": "unread",
+    "artifacts": [
+      {
+        "kind": "metadata",
+        "url": "https://arxiv.org/abs/2610.11669",
+        "path": "sources/gesture_eval/metadata.html",
+        "sha256": "5684e3be3369e432cd3e47e922524e2dae2ff44b4345a7700bde74e89ac0d6ca",
+        "bytes": 43933
+      },
+      {
+        "kind": "html",
+        "url": "https://arxiv.org/html/2610.11669",
+        "path": "sources/gesture_eval/html.html",
+        "sha256": "f38f80a60fd04d47fdae97a3e6a42956e97a0a0acfdc9a09c4a0f0edbb45668d",
+        "bytes": 316589
+      }
+    ],
+    "title": "Perceptually Grounded and Semantics-Aware Evaluation for Holistic Co-Speech Gesture Generation",
+    "history": "Submission history From: Lanmiao Liu [ view email ] [v1] Thu, 8 Oct 2026 10:43:37 UTC (3,258 KB)",
+    "canonical_ids": [
+      "2610.11669v1"
+    ],
+    "headings": [
+      "Perceptually Grounded and Semantics-Aware Evaluation for Holistic Co-Speech Gesture Generation",
+      "1 Introduction",
+      "2 Related Work",
+      "2.1 Co-speech gesture generation",
+      "2.2 Human-Centered Validation of Objective Metrics",
+      "2.3 Assessing Semantic Grounding in Co-Speech Gestures",
+      "3 Methodology",
+      "3.1 Benchmark Objective Metrics",
+      "3.1.1 Latent-space Distribution-Based Metrics",
+      "Fréchet Gesture Distance (FGD)",
+      "Density",
+      "Coverage",
+      "3.1.2 Geometric Fidelity Metrics",
+      "Chamfer Distance",
+      "Hausdorff Distance",
+      "Mean Joint Distance",
+      "Dice Coefficient",
+      "3.1.3 Motion Quality and Physical Plausibility Metrics",
+      "Foot Contact",
+      "Log Dimensionless Jerk (LDLJ)",
+      "3.1.4 Speech-Motion Alignment Metrics",
+      "Beat Consistency",
+      "3.1.5 Semantics-Aware Metrics",
+      "SRGR",
+      "Semantic Score",
+      "Semantic Gesture Preservation (SGP)",
+      "3.2 LLM-Based Semantic Gesture Annotation",
+      "3.3 Benchmark Models",
+      "3.3.1 EMAGE",
+      "3.3.2 GestureLSM",
+      "3.3.3 SemTalk",
+      "3.3.4 SemConFlow",
+      "3.4 Perception Study Design",
+      "4 Experiments",
+      "4.1 Datasets",
+      "4.2 Implementation Detail",
+      "4.3 Objective Evaluation",
+      "4.4 Subjective Evaluation",
+      "4.4.1 Main Analysis.",
+      "4.4.2 Relationship among perceptual dimensions.",
+      "4.5 Objective–Subjective Correlation Analysis",
+      "4.6 Target-Specific Composite Metrics and Analysis",
+      "4.6.1 Learning Target-Specific Perceptual Composites",
+      "4.6.2 Cross-Validated Perceptual Alignment",
+      "5 Conclusions",
+      "6 Limitations and Discussion",
+      "References",
+      "7 Appendix",
+      "7.1 User Study Interface and Instructions",
+      "8 LLM-Based Semantic Gesture Annotation",
+      "8.1 Annotation Procedure",
+      "8.2 Annotation Example",
+      "8.3 Human Validation"
+    ],
+    "reading_scope": "chỉ acquisition/metadata extraction, chưa có ghi chú đọc",
+    "note": null,
+    "venue_status": "chưa xác minh"
+  },
+  {
+    "key": "gesture_token_semantics",
+    "requested_id": "2610.03765",
+    "retrieved_at": "2026-11-04T17:02:06.531178+00:00",
+    "reading_level": "D",
+    "artifacts": [
+      {
+        "kind": "metadata",
+        "url": "https://arxiv.org/abs/2610.03765",
+        "path": "sources/gesture_token_semantics/metadata.html",
+        "sha256": "dcd4da12f4ef1e0282550f179158babadd314018cbc99e2c4f5aafcc8cf4d348",
+        "bytes": 40331
+      },
+      {
+        "kind": "html",
+        "url": "https://arxiv.org/html/2610.03765",
+        "path": "sources/gesture_token_semantics/html.html",
+        "sha256": "437da40cd36a98a036e84c8ddff566926db1fb7ad5c7a46a1b90b9c865c99bcc",
+        "bytes": 167918
+      }
+    ],
+    "title": "Do Motion Tokenizers for Co-Speech Gesture Generation Encode Gesture Semantics?",
+    "history": "Submission history From: Varsha Suresh [ view email ] [v1] Mon, 28 Sep 2026 08:50:46 UTC (1,444 KB)",
+    "canonical_ids": [
+      "2610.03765v1"
+    ],
+    "headings": [
+      "Do Motion Tokenizers for Co-Speech Gesture Generation Encode Gesture Semantics?",
+      "1 Introduction",
+      "2 Related Work",
+      "2.1 Gesture representations and descriptors",
+      "2.2 Probing learned representations",
+      "3 Data and Method",
+      "3.1 Descriptor Panel",
+      "3.2 Codebook Architecture and Training",
+      "3.3 Probing Setup",
+      "Linear and nonlinear probing.",
+      "Code-level activation analysis.",
+      "Reconstruction fidelity.",
+      "4 Results",
+      "4.1 Gesture Descriptor Probing",
+      "Accessibility from pooled representations.",
+      "Structure in discrete code usage.",
+      "Relationship with reconstruction metrics",
+      "4.2 Generalization to Another Codebook",
+      "5 Qualitative Case Study",
+      "6 Conclusion",
+      "Limitations",
+      "Acknowledgments",
+      "References",
+      "Appendix A Appendix",
+      "A.1 Additional Details: Data and Method",
+      "A.1.1 Descriptor Classes",
+      "A.1.2 Codebook Architecture and Training",
+      "A.1.3 Probing Setup",
+      "A.2 Additional Results",
+      "A.2.1 Code-Level Activation Procedure & Results",
+      "A.2.2 Further examples for the code-level metrics."
+    ],
+    "reading_scope": "main+appendix, Tables1–5; chưa code/temporal probes",
+    "note": "evidence/M06_gesture_token_semantics.md",
+    "venue_status": "preprint; venue chưa xác minh"
+  },
+  {
+    "key": "glowtts",
+    "requested_id": "2005.11129",
+    "retrieved_at": "2026-11-05T00:57:54.846605+00:00",
+    "reading_level": "D",
+    "artifacts": [
+      {
+        "kind": "metadata",
+        "url": "https://arxiv.org/abs/2005.11129",
+        "path": "sources/glowtts/metadata.html",
+        "sha256": "ba9c81bd1c0dd58e39688faa9d700beccc683b54df4643dcd4b5d9cd2b223987",
+        "bytes": 40496
+      },
+      {
+        "kind": "html",
+        "url": "https://arxiv.org/html/2005.11129",
+        "path": "sources/glowtts/html.html",
+        "sha256": "73b3acb065264bdffabadb55a288e741ed9e9b8581d48243bf4574d2d1de30de",
+        "bytes": 186501
+      }
+    ],
+    "title": "Glow-TTS: A Generative Flow for Text-to-Speech via Monotonic Alignment Search",
+    "history": "Submission history From: Sungwon Kim [ view email ] [v1] Fri, 22 May 2020 12:06:46 UTC (1,022 KB) [v2] Fri, 23 Oct 2020 01:53:58 UTC (814 KB)",
+    "canonical_ids": [
+      "2005.11129v2"
+    ],
+    "headings": [
+      "Glow-TTS: A Generative Flow for Text-to-Speech via Monotonic Alignment Search",
+      "1 Introduction",
+      "2 Related Work",
+      "3 Glow-TTS",
+      "3.1 Training and Inference Procedures",
+      "3.2 Monotonic Alignment Search",
+      "3.3 Model Architecture",
+      "Decoder.",
+      "Encoder and Duration Predictor.",
+      "4 Experiments",
+      "5 Results",
+      "5.1 Audio Quality",
+      "5.2 Sampling Speed and Robustness",
+      "5.3 Diversity and Controllability",
+      "5.4 Multi-Speaker TTS",
+      "6 Conclusion",
+      "Broader Impact",
+      "Acknowledgments",
+      "References",
+      "Appendix A",
+      "A.1. Details of the Model Architecture",
+      "A.2. Hyper-parameters",
+      "Appendix B",
+      "B.1. Attention Error Analysis",
+      "B.2. Side-by-side Evaluation between Glow-TTS and Tacotron 2",
+      "B.3. Voice Conversion Method"
+    ],
+    "reading_scope": "§§3–5.3 vàAppB.1; chưa voice conversion/code",
+    "note": "evidence/M17_cross_domain_transfer.md",
+    "venue_status": "NeurIPS2020 — official proceedings verified"
+  },
+  {
+    "key": "gp_hsmm",
+    "title": "Segmenting Continuous Motions with Hidden Semi-markov Models and Gaussian Processes",
+    "requested_id": "10.3389/fnbot.2017.00067",
+    "canonical_ids": [],
+    "reading_level": "M",
+    "retrieved_at": "2026-11-05T01:56:06.438137+00:00",
+    "artifacts": [
+      {
+        "url": "https://www.frontiersin.org/journals/neurorobotics/articles/10.3389/fnbot.2017.00067/pdf",
+        "kind": "official_pdf",
+        "sha256": "85ef5557a829a678984361f7b9535a5adf5645c23afa68a8fbe6aaa1c8472fe1",
+        "path": "sources/gp_hsmm/paper.pdf"
+      }
+    ],
+    "reading_scope": "§3/Algorithm 2, selected §§4.1–4.2 setup, §5 limitations; chưa all tables/code",
+    "note": "evidence/M19_segmental_uncertainty.md",
+    "venue_status": "Frontiers in Neurorobotics2017 — official DOI/full text"
+  },
+  {
+    "key": "handmdm",
+    "requested_id": "2508.15902",
+    "retrieved_at": "2026-11-05T01:27:15.125581+00:00",
+    "reading_level": "V+intro",
+    "artifacts": [
+      {
+        "kind": "metadata",
+        "url": "https://arxiv.org/abs/2508.15902",
+        "path": "sources/handmdm/metadata.html",
+        "sha256": "791b7f0a56c20c59c729c5a42d3bc148e1dac574d5073d35261e1d4c679d265f",
+        "bytes": 41668
+      },
+      {
+        "kind": "html",
+        "url": "https://arxiv.org/html/2508.15902",
+        "path": "sources/handmdm/html.html",
+        "sha256": "440299691073d8d8c348f66ac9632aa96ba749c35bd07f8121b578d99d094459",
+        "bytes": 1117222
+      }
+    ],
+    "title": "Text-Driven 3D Hand Motion Generation from Sign Language Data",
+    "history": "Submission history From: Léore Bensabath [ view email ] [v1] Thu, 21 Aug 2025 18:02:47 UTC (32,109 KB)",
+    "canonical_ids": [
+      "2508.15902v1"
+    ],
+    "headings": [
+      "Text-Driven 3D Hand Motion Generation from Sign Language Data",
+      "1 Introduction",
+      "2 Related work",
+      "3 Methodology",
+      "3.1 Automatic data collection",
+      "3.2 Diffusion training with SMPL-X support",
+      "4 Experiments",
+      "4.1 Data and evaluation metrics",
+      "4.2 Ablation studies",
+      "4.3 Transfer to other datasets",
+      "4.4 Qualitative analysis and limitations",
+      "5 Conclusion",
+      "References",
+      "Appendix A Glossary",
+      "Appendix B BOBSL3DT Dataset Analysis",
+      "B.1 Statistics",
+      "B.2 Noise estimation",
+      "B.3 Test set verification",
+      "Appendix C Implementation Details",
+      "C.1 HandMDM training and inference",
+      "C.2 THMR training",
+      "C.3 Stitching HAMER hands to SMPLer-X body",
+      "C.4 SignBank dictionary attributes",
+      "C.5 HandMotionScript",
+      "C.6 LLM prompting",
+      "C.7 SignBank gloss assignment for BOBSL motions",
+      "Appendix D Additional results",
+      "D.1 Motion-to-text retrieval metrics on BOBSL3DT-Test",
+      "D.2 Testing on SignBank motions",
+      "D.3 Qualitative results for the LLM",
+      "D.4 Additional qualitative visualizations"
+    ],
+    "reading_scope": "abstract và introduction/task/data source; chưa method/results",
+    "note": "evidence/S10_scope_checks.md",
+    "venue_status": "CVPR2026 — official CVF metadata acquired"
+  },
+  {
+    "key": "handx",
+    "requested_id": "2603.28766",
+    "retrieved_at": "2026-11-04T17:02:04.406908+00:00",
+    "reading_level": "D",
+    "artifacts": [
+      {
+        "kind": "metadata",
+        "url": "https://arxiv.org/abs/2603.28766",
+        "path": "sources/handx/metadata.html",
+        "sha256": "70267fed5bcb2f5c85ff37ed320cf5745787160a9ae5d6451bbe1ed8de835a19",
+        "bytes": 43057
+      },
+      {
+        "kind": "html",
+        "url": "https://arxiv.org/html/2603.28766",
+        "path": "sources/handx/html.html",
+        "sha256": "83958f4f5309fbc122b1e405e2044b466b01b5d67b6fb13f4262931b4fa6e242",
+        "bytes": 427437
+      }
+    ],
+    "title": "HandX: Scaling Bimanual Motion and Interaction Generation",
+    "history": "Submission history From: Sirui Xu [ view email ] [v1] Mon, 30 Mar 2026 17:59:49 UTC (7,644 KB)",
+    "canonical_ids": [
+      "2603.28766v1"
+    ],
+    "headings": [
+      "HandX: Scaling Bimanual Motion and Interaction Generation",
+      "1 Introduction",
+      "2 Related Work",
+      "3 Dataset",
+      "4 Bimanual Motion Captioning",
+      "5 Bimanual Motion Generation",
+      "5.1 Diffusion Model",
+      "5.2 Autoregressive Model",
+      "6 Experiments",
+      "6.1 Implementation Details",
+      "6.2 Metrics",
+      "6.3 Quantitative Evaluation",
+      "6.4 Qualitative Evaluation",
+      "7 Conclusion",
+      "Acknowledgments.",
+      "References",
+      "Appendix A HandX Dataset",
+      "A.1 Motion Capture",
+      "A.2 Data Consolidation and Unification",
+      "A.3 Clip Extraction",
+      "A.4 Clip Filtering",
+      "A.5 Dataset Metrics",
+      "Appendix B Additional Details on Motion Captioning",
+      "Appendix C Hand Motion Representation",
+      "Appendix D Versatile Bimanual Motion Generation",
+      "D.1 Masked Partial Denoising for Skeleton Control",
+      "D.2 Task-Specific Mask Construction",
+      "Appendix E Evaluation Details",
+      "E.1 Contact Metrics",
+      "E.2 Evaluator Details",
+      "E.3 User Study on Data Quality",
+      "E.4 User Study on Scaling Trend",
+      "Appendix F License",
+      "Appendix G Discussion"
+    ],
+    "reading_scope": "main§§3–6; AppA.2–5,C,E.1–3,G; chưa toàn bộ fitting/control/userstudy/code",
+    "note": "evidence/M15_handx.md",
+    "venue_status": "CVPR2026 — official CVF metadata acquired",
+    "official_venue_metadata": {
+      "venue": "CVPR2026",
+      "title": "HandX: Scaling Bimanual Motion and Interaction Generation",
+      "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Zhang_HandX_Scaling_Bimanual_Motion_and_Interaction_Generation_CVPR_2026_paper.html",
+      "sha256": "2b15f154d629201d5083eef0166b829cac8e186219c33c1cba4d632095ee08a9",
+      "links": [
+        {
+          "label": "pdf",
+          "url": "https://openaccess.thecvf.com/content/CVPR2026/papers/Zhang_HandX_Scaling_Bimanual_Motion_and_Interaction_Generation_CVPR_2026_paper.pdf"
+        },
+        {
+          "label": "supp",
+          "url": "https://openaccess.thecvf.com/content/CVPR2026/supplemental/Zhang_HandX_Scaling_Bimanual_CVPR_2026_supplemental.pdf"
+        },
+        {
+          "label": "arXiv",
+          "url": "https://arxiv.org/abs/2603.28766"
+        }
+      ],
+      "abstract": "Synthesizing human motion has advanced rapidly, yet realistic hand motion and bimanual interaction remain underexplored. Whole-body models often miss the fine-grained cues that drive dexterous behavior, finger articulation, contact timing, and inter-hand coordination, and existing resources lack high-fidelity bimanual sequences that capture nuanced finger dynamics and collaboration. To fill this gap, we present HandX, a unified foundation spanning data, annotation, and evaluation. We consolidate and filter existing datasets for quality, and collect a new motion-capture dataset targeting underrepresented bimanual interactions with detailed finger dynamics. For scalable annotation, we introduce a decoupled paradigm that extracts representative motion features, e.g., contact events and finger flexion, and then leverages reasoning from large language models to produce fine-grained, semantically rich descriptions aligned with these features. Building on the resulting data and annotations, we benchmark diffusion and autoregressive models with versatile conditioning modes. Experiments demonstrate high-quality dexterous motion generation, supported by our newly proposed hand-focused metrics. We further observe clear scaling trends: larger models trained on larger, higher-quality datasets produce more semantically coherent bimanual motion. Our dataset is released to support future research."
+    }
+  },
+  {
+    "key": "human_tomato",
+    "requested_id": "2310.12978",
+    "retrieved_at": "2026-11-04T16:53:21.999437+00:00",
+    "reading_level": "D",
+    "artifacts": [
+      {
+        "kind": "metadata",
+        "url": "https://arxiv.org/abs/2310.12978",
+        "path": "sources/human_tomato/metadata.html",
+        "sha256": "c46b47602018bbc235606413a619893e1257d891fd6848b6640ec471a8a5bd5f",
+        "bytes": 42364
+      },
+      {
+        "kind": "html",
+        "url": "https://arxiv.org/html/2310.12978",
+        "path": "sources/human_tomato/html.html",
+        "sha256": "0ba1dc7bb0aba4ab48b0067bdad8aa23d80c5cb0964153e3a202ff6866716d93",
+        "bytes": 480942
+      }
+    ],
+    "title": "HumanTOMATO: Text-aligned Whole-body Motion Generation",
+    "history": "Submission history From: Ling-Hao Chen [ view email ] [v1] Thu, 19 Oct 2023 17:59:46 UTC (5,112 KB)",
+    "canonical_ids": [
+      "2310.12978v1"
+    ],
+    "headings": [
+      "HumanTOMATO: Text-aligned Whole-body Motion Generation",
+      "1 Introduction",
+      "2 Methodology",
+      "2.1 Problem Formulation",
+      "2.2 Learning Discrete Whole-body Representations",
+      "2.3 Hierarchical Whole-body Motion Generation",
+      "2.4 Pre-trained Text-motion Retrieval Model as a Prior",
+      "2.5 Model Training and Inference",
+      "3 Experiments",
+      "3.1 Datasets and Evaluation",
+      "3.1.1 Whole-body and Body-only Datasets",
+      "3.1.2 Evaluation",
+      "3.2 Implementation Details",
+      "3.3 Main Results Analysis (RQ1)",
+      "3.4 Abaltion on Hierarchical Discrete Representations (RQ2)",
+      "3.5 Text-motion Retrieval Model As A Prior (RQ3)",
+      "3.6 Analysis on Evaluation Metrics (RQ4)",
+      "4 Conclusion",
+      "References",
+      "Appendix A Related Work",
+      "Appendix B Implementation Details",
+      "B.1 Motion Representation",
+      "B.2 Implementation Details of Hierarchical Motion VQ-VAE",
+      "B.3 Implementation Details of the Hierarchical-GPT.",
+      "B.4 Facial cVAE",
+      "Appendix C Algorithm Flow of H 2 VQ and comparison with Residual Vector Quantization",
+      "C.1 Training and Inference of H 2 VQ",
+      "C.2 Comparsion with Residual Vector Quantization (RVQ)",
+      "Appendix D Training Details and Evaluation on Text-motion Retrieval Pre-training",
+      "D.1 Train Details",
+      "D.2 Evaluation of the Retrieval Model",
+      "Appendix E Failure Cases of Baselines",
+      "Appendix F More Details on Main Results (RQ1)",
+      "F.1 Quantitative Comparison",
+      "Appendix G Comparison on Different Vector Quantization Methods (RQ2)",
+      "Appendix H Text-motion Retrieval Model As A Prior (RQ3)",
+      "H.1 Quantitative Results on HumanML3D",
+      "H.2 Pre-trained Text-motion Retrieval Model as a Prior",
+      "Appendix I Details on the Evaluation Metrics (RQ4)",
+      "Appendix J Broader Impact and Limitation"
+    ],
+    "reading_scope": "arXivv1 §§2–3/AppB/C; published ICML2024 §§3–4, AppB/C/K, scoped version comparison; PDFpreflight UNAVAILABLE",
+    "note": "evidence/M08_human_tomato.md",
+    "venue_status": "ICML2024 — official PMLR235/lu24b",
+    "additional_published_artifact": {
+      "metadata_url": "https://proceedings.mlr.press/v235/lu24b.html",
+      "pdf_url": "https://raw.githubusercontent.com/mlresearch/v235/main/assets/lu24b/lu24b.pdf",
+      "sha256": "1d006cfad2fdc4b7c44ad0a6cbf288d49f06cc662ade061ec910caa2b94c4399",
+      "pages": 39,
+      "parser": "PyMuPDF get_text default order",
+      "reading_level": "D_scoped",
+      "reading_scope": "main sections 3–4, Appendix B/C/K; not full39pages",
+      "preflight": "UNAVAILABLE: pypdf not installed"
+    }
+  },
+  {
+    "key": "imprecise_semicrf",
+    "title": "Learning Time Series Segmentation Models from Temporally Imprecise Labels",
+    "requested_id": "UAI2018-Adams-Marlin",
+    "canonical_ids": [],
+    "reading_level": "M",
+    "retrieved_at": "2026-11-05T01:56:00.315477+00:00",
+    "artifacts": [
+      {
+        "url": "https://raw.githubusercontent.com/mlresearch/r16/main/assets/adams18a/adams18a.pdf",
+        "kind": "official_pdf",
+        "sha256": "64fd1f711774f52b1d7c4460d0008f42a38cdf7c9c369d857e498c0e71a39725",
+        "path": "sources/imprecise_semicrf/paper.pdf"
+      }
+    ],
+    "reading_scope": "semi-CRF background, §§4.1–4.2, sleep setup, selected HNS/runtime; chưa supplementary/all experiments",
+    "note": "evidence/M19_segmental_uncertainty.md",
+    "venue_status": "UAI2018 — official PMLR R16 reissued2026"
+  },
+  {
+    "key": "ksl_nms",
+    "requested_id": "10.3390/s26134245",
+    "title": "Text-to-Korean Sign Language Pose Sequence Generation Using Non-Manual Signal Conditioning and Multi-Scale Temporal Refinement",
+    "canonical_ids": [],
+    "reading_level": "M",
+    "artifacts": [
+      {
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC13363759/",
+        "sha256": "51db6acde244b04f18ce65e81e1f96bdd697f2c5f3d14d926504fff4ec081701",
+        "kind": "html",
+        "path": "sources/ksl_nms/article.html"
+      }
+    ],
+    "reading_scope": "§3.3 và §§4.1–4.4; chưa deep results/ablations/code",
+    "note": "evidence/S10_scope_checks.md",
+    "venue_status": "Sensors2026 — DOI/publisher/PubMed verified"
+  },
+  {
+    "key": "lgtok",
+    "requested_id": "2602.08337",
+    "retrieved_at": "2026-11-04T16:53:18.874308+00:00",
+    "reading_level": "D",
+    "artifacts": [
+      {
+        "kind": "metadata",
+        "url": "https://arxiv.org/abs/2602.08337",
+        "path": "sources/lgtok/metadata.html",
+        "sha256": "10e3b56a6d5218b9524b4d82eebd51f0d7bfe620fa9ad3865eb2a9ca1c52b220",
+        "bytes": 43035
+      },
+      {
+        "kind": "html",
+        "url": "https://arxiv.org/html/2602.08337",
+        "path": "sources/lgtok/html.html",
+        "sha256": "aa39c575935292749d4677eb41a08240fb3f2f23ef6b6e4a75485ff34f369efb",
+        "bytes": 665260
+      }
+    ],
+    "title": "Language-Guided Transformer Tokenizer for Human Motion Generation",
+    "history": "Submission history From: Sheng Yan [ view email ] [v1] Mon, 9 Feb 2026 07:22:14 UTC (14,494 KB) [v2] Thu, 2 Jul 2026 05:59:45 UTC (12,789 KB)",
+    "canonical_ids": [
+      "2602.08337v2"
+    ],
+    "headings": [
+      "Language-Guided Transformer Tokenizer for Human Motion Generation",
+      "1 Introduction",
+      "2 Related Work",
+      "3 Method",
+      "3.1 Preliminary",
+      "3.2 Transformer-based Tokenizer",
+      "3.3 Language-Guided Tokenization",
+      "3.4 Language-Drop Scheme",
+      "4 Experiment",
+      "4.1 Experimental Setup",
+      "4.2 Text-driven Motion Generation Comparison",
+      "4.3 Comparison of Discrete Tokenizers",
+      "4.4 In-depth Analysis of Language-Drop Scheme",
+      "4.5 Ablation Studies",
+      "4.6 Tokenizer Analysis",
+      "4.7 Reconstruction–Generation Trade-off Analysis",
+      "5 Conclusion",
+      "Acknowledgements",
+      "References",
+      "Appendix A Overview",
+      "Appendix B Complete Tokenization-Generation-Detokenization Pipeline",
+      "Appendix C Quantitative Evaluation on the KIT-ML Dataset",
+      "Appendix D Feature Extractor Training on the Motion-X Dataset",
+      "Appendix E Details of Baseline Reproduction on the Motion-X Dataset",
+      "Appendix F Application: Motion Editing",
+      "Appendix G Evaluation of Average Inference Time",
+      "Appendix H Qualitative Comparison for Text Guidance",
+      "Appendix I The Role of Language Guidance in the Detokenization Stage during Generation",
+      "Appendix J More Qualitative Results",
+      "Appendix K Limitations"
+    ],
+    "reading_scope": "§§3–4; AppB/D/E/G/I/K; chưa đọc kỹ AppC/KIT-ML",
+    "note": "evidence/M03_lgtok.md",
+    "venue_status": "ECCV2026 — author-reported acceptance, proceedings chưa đối chiếu"
+  },
+  {
+    "key": "madis",
+    "requested_id": "2601.19577",
+    "retrieved_at": "2026-11-05T01:07:57.033846+00:00",
+    "reading_level": "D+C",
+    "artifacts": [
+      {
+        "kind": "metadata",
+        "url": "https://arxiv.org/abs/2601.19577",
+        "path": "sources/madis/metadata.html",
+        "sha256": "070abfe10c12ba854cc4c0715670fc0d4a9a331c41eb02c292fbc24b8ce514fc",
+        "bytes": 42681
+      },
+      {
+        "kind": "html",
+        "url": "https://arxiv.org/html/2601.19577",
+        "path": "sources/madis/html.html",
+        "sha256": "e669c9e43e2d1f9f9d05157fe67e2b4d9d3e9752f37f1adbbf5a15d5e5da213d",
+        "bytes": 354812
+      }
+    ],
+    "title": "MaDiS: Taming Masked Diffusion Language Models for Sign Language Generation",
+    "history": "Submission history From: Ronglai Zuo [ view email ] [v1] Tue, 27 Jan 2026 13:06:47 UTC (1,187 KB) [v2] Fri, 13 Mar 2026 17:48:22 UTC (1,552 KB)",
+    "canonical_ids": [
+      "2601.19577v2"
+    ],
+    "headings": [
+      "MaDiS: Taming Masked Diffusion Language Models for Sign Language Generation",
+      "1 Introduction",
+      "2 Related Work",
+      "3 Methodology",
+      "3.1 Preliminaries",
+      "3.2 Tri-Level Cross-Modal Pretraining",
+      "3.3 Supervised Fine-Tuning",
+      "3.4 SiBLEU and SiCLIP",
+      "4 Experiments",
+      "4.1 Comparison with State-of-the-Art Methods",
+      "4.2 Ablation Studies",
+      "5 Conclusion",
+      "References"
+    ],
+    "reading_scope": "main method/setup/ablations/humanstudy; static generation/loss/SiBLEU audit + synthetic metric diagnostic; chưa full SiCLIP/supplement",
+    "note": "evidence/S02_madis.md",
+    "venue_status": "preprint; peer-review status chưa xác minh"
+  },
+  {
+    "key": "mar",
+    "requested_id": "2406.11838",
+    "retrieved_at": "2026-11-05T00:57:54.303902+00:00",
+    "reading_level": "D",
+    "artifacts": [
+      {
+        "kind": "metadata",
+        "url": "https://arxiv.org/abs/2406.11838",
+        "path": "sources/mar/metadata.html",
+        "sha256": "f0a6fd308cae36d5d502499347193d4f789f65661c30739d88fd9cdb80076c78",
+        "bytes": 41002
+      },
+      {
+        "kind": "html",
+        "url": "https://arxiv.org/html/2406.11838",
+        "path": "sources/mar/html.html",
+        "sha256": "ffe0d62009e8992c041ca87cffa54a7ff3a97418a89c8135f16f426539b8d604",
+        "bytes": 367950
+      }
+    ],
+    "title": "Autoregressive Image Generation without Vector Quantization",
+    "history": "Submission history From: Tianhong Li [ view email ] [v1] Mon, 17 Jun 2024 17:59:58 UTC (5,459 KB) [v2] Sun, 28 Jul 2024 05:30:08 UTC (5,447 KB) [v3] Fri, 1 Nov 2024 14:45:36 UTC (8,971 KB)",
+    "canonical_ids": [
+      "2406.11838v3"
+    ],
+    "headings": [
+      "Autoregressive Image Generation without Vector Quantization",
+      "1 Introduction",
+      "2 Related Work",
+      "Sequence Models for Image Generation",
+      "Diffusion for Representation Learning",
+      "Diffusion for Policy Learning",
+      "3 Method",
+      "3.1 Rethinking Discrete-Valued Tokens",
+      "3.2 Diffusion Loss",
+      "Loss function",
+      "Sampler",
+      "3.3 Diffusion Loss for Autoregressive Models",
+      "3.4 Unifying Autoregressive and Masked Generative Models",
+      "Bidirectional attention can perform autoregression",
+      "Autoregressive models in random orders",
+      "Masked autoregressive models",
+      "4 Implementation",
+      "4.1 Diffusion Loss",
+      "Diffusion Process",
+      "Denoising MLP",
+      "4.2 Autoregressive and Masked Autoregressive Image Generation",
+      "Tokenizer",
+      "Transformer",
+      "Autoregressive baseline",
+      "Masked autoregressive models",
+      "5 Experiments",
+      "5.1 Properties of Diffusion Loss",
+      "Diffusion Loss vs . Cross-entropy Loss",
+      "Flexibility of Diffusion Loss",
+      "Denoising MLP in Diffusion Loss",
+      "5.2 Properties of Generalized Autoregressive Models",
+      "From AR to MAR",
+      "Speed/accuracy Trade-off",
+      "5.3 Benchmarking with Previous Systems",
+      "6 Discussion and Conclusion",
+      "Acknowledgements.",
+      "References",
+      "Appendix A Limitations and Broader Impacts",
+      "Appendix B Additional Implementation Details",
+      "Classifier-free guidance (CFG)",
+      "Training",
+      "Implementation Details of Table 3",
+      "Pseudo-code of Diffusion Loss",
+      "Compute Resources",
+      "Appendix C Comparison between MAR and MAGE",
+      "Appendix D Additional Comparisons",
+      "D.1 Autoregressive Image Generation in Pixel Space",
+      "D.2 ImageNet 512 [MATH: \\times] 512",
+      "D.3 L2 Loss vs. Diff Loss"
+    ],
+    "reading_scope": "§§3–5, Tables1–2, ablations, AppA,D.3; chưa code",
+    "note": "evidence/M17_cross_domain_transfer.md",
+    "venue_status": "NeurIPS2024 — official proceedings verified"
+  },
+  {
+    "key": "mardm",
+    "requested_id": "2411.16575",
+    "retrieved_at": "2026-11-04T17:02:04.406539+00:00",
+    "reading_level": "D",
+    "artifacts": [
+      {
+        "kind": "metadata",
+        "url": "https://arxiv.org/abs/2411.16575",
+        "path": "sources/mardm/metadata.html",
+        "sha256": "b1d57db10a305140f0e3e5c62fba6a79e9b5dd6f2bea4cac072cc4e95a7751b9",
+        "bytes": 42413
+      },
+      {
+        "kind": "html",
+        "url": "https://arxiv.org/html/2411.16575",
+        "path": "sources/mardm/html.html",
+        "sha256": "c1d1adee9319be675ce42bf7b6c540cd27146672f0d524b1262ec5211ed0477a",
+        "bytes": 503050
+      }
+    ],
+    "title": "Rethinking Diffusion for Text-Driven Human Motion Generation: Redundant Representations, Evaluation, and Masked Autoregression",
+    "history": "Submission history From: Zichong Meng [ view email ] [v1] Mon, 25 Nov 2024 16:59:42 UTC (2,437 KB) [v2] Tue, 8 Jul 2025 20:15:01 UTC (2,442 KB)",
+    "canonical_ids": [
+      "2411.16575v2"
+    ],
+    "headings": [
+      "Rethinking Diffusion for Text-Driven Human Motion Generation: Redundant Representations, Evaluation, and Masked Autoregression",
+      "1 Introduction",
+      "2 Diagnosis: Motion Data Representation and Distribution",
+      "2.1 Prelimenary",
+      "2.2 Impacts on Training and Sampling",
+      "2.3 Impact on Method Evaluation Robustness",
+      "3 Revisiting Motion Diffusion",
+      "3.1 Reforming Motion Representations",
+      "3.2 Diffusion: An Autoregressive Approach",
+      "3.2.1 Masked Autoregressive Motion Generation",
+      "3.2.2 Autoregressive Generation Branch",
+      "3.3 Evaluation: More Robust Evaluators.",
+      "4 Experiment",
+      "4.1 Datasets and Evaluation Protocols.",
+      "4.2 Results and Analysis",
+      "4.3 Ablation Study",
+      "5 Related Work",
+      "6 Conclusion",
+      "References",
+      "Appendix A Detailed Deduction",
+      "A.1 Detailed Deduction for Eq. 4",
+      "Appendix B Detailed Related Works",
+      "Appendix C Implementation Details",
+      "Appendix D Additional Quantitative Results",
+      "D.1 AutoEncoder Reconstruction Results",
+      "D.2 Baseline Methods Training With Reformed Data Representation and Distribution",
+      "D.3 Original Evaluation Results",
+      "D.4 Further Ablation Study and Optimize Routine",
+      "D.5 Model Scalability",
+      "Appendix E Temporal Editing",
+      "Appendix F Additional Qualitative Results",
+      "Appendix G Limitations"
+    ],
+    "reading_scope": "main §§2–4, Tables1–6; AppA/C/D/G, TablesA1–A6; chưa code",
+    "note": "evidence/M05_mardm.md",
+    "venue_status": "CVPR2025 — official CVF metadata acquired",
+    "official_venue_metadata": {
+      "venue": "CVPR2025",
+      "title": "Rethinking Diffusion for Text-Driven Human Motion Generation: Redundant Representations, Evaluation, and Masked Autoregression",
+      "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Meng_Rethinking_Diffusion_for_Text-Driven_Human_Motion_Generation_Redundant_Representations_Evaluation_CVPR_2025_paper.html",
+      "sha256": "77988882b7e35f81ab0348c97c705d46359f72810c2ed469612f5fac76fce072",
+      "links": [
+        {
+          "label": "pdf",
+          "url": "https://openaccess.thecvf.com/content/CVPR2025/papers/Meng_Rethinking_Diffusion_for_Text-Driven_Human_Motion_Generation_Redundant_Representations_Evaluation_CVPR_2025_paper.pdf"
+        },
+        {
+          "label": "arXiv",
+          "url": "http://arxiv.org/abs/2411.16575"
+        }
+      ],
+      "abstract": "Since 2023, Vector Quantization (VQ)-based discrete generation methods have rapidly dominated human motion generation, primarily surpassing diffusion-based continuous generation methods in standard performance metrics. However, VQ-based methods have inherent limitations. Representing continuous motion data as limited discrete tokens leads to inevitable information loss, reduces the diversity of generated motions, and restricts their ability to function effectively as motion priors or generation guidance. In contrast, the continuous space generation nature of diffusion-based methods makes them well-suited to address these limitations and with even potential for model scalability. In this work, we systematically investigate why current VQ-based methods perform well and explore the limitations of existing diffusion-based methods from the perspective of motion data representation and distribution. Drawing on these insights, we preserve the inherent strengths of a diffusion-based human motion generation model and gradually optimize it with inspiration from VQ-based approaches. Our approach introduces a human motion diffusion model enabled to perform masked autoregression, optimized with a reformed data representation and distribution. Additionally, we propose a more robust evaluation method to assess different approaches. Extensive experiments on various datasets demonstrate our method outperforms previous methods and achieves state-of-the-art performances."
+    }
+  },
+  {
+    "key": "mdm",
+    "requested_id": "2209.14916",
+    "retrieved_at": "2026-11-04T16:53:21.500925+00:00",
+    "reading_level": "D",
+    "artifacts": [
+      {
+        "kind": "metadata",
+        "url": "https://arxiv.org/abs/2209.14916",
+        "path": "sources/mdm/metadata.html",
+        "sha256": "e39fc6e3fb1f8d2601add2c90640d5e61d32cd3f97158d494ae70b1f995f8262",
+        "bytes": 41486
+      },
+      {
+        "kind": "html",
+        "url": "https://arxiv.org/html/2209.14916",
+        "path": "sources/mdm/html.html",
+        "sha256": "3d62cb2de280cec523d8e1a6fc48492be14273e922ffccd6c3a8cc389dd5fac5",
+        "bytes": 204871
+      }
+    ],
+    "title": "Human Motion Diffusion Model",
+    "history": "Submission history From: Guy Tevet [ view email ] [v1] Thu, 29 Sep 2022 16:27:53 UTC (11,215 KB) [v2] Mon, 3 Oct 2022 09:17:41 UTC (11,213 KB)",
+    "canonical_ids": [
+      "2209.14916v2"
+    ],
+    "headings": [
+      "Human Motion Diffusion Model",
+      "1 Introduction",
+      "2 Related Work",
+      "2.1 Human Motion Generation",
+      "2.2 Diffusion Generative Models",
+      "3 Motion Diffusion Model",
+      "4 Experiments",
+      "4.1 Text-to-Motion",
+      "4.2 Action-to-Motion",
+      "5 Additional Applications",
+      "5.1 Motion Editing",
+      "5.2 Unconstrained Synthesis",
+      "6 Discussion",
+      "Acknowledgements",
+      "References"
+    ],
+    "reading_scope": "§§3–6; text-to-motion setup, Tables1–4, geometric ablations/action task; chưa code/video",
+    "note": "evidence/M11_generator_foundations.md",
+    "venue_status": "ICLR2023 — official OpenReview published PDF verified"
+  },
+  {
+    "key": "mld",
+    "requested_id": "2212.04048",
+    "retrieved_at": "2026-11-04T16:53:21.539122+00:00",
+    "reading_level": "D",
+    "artifacts": [
+      {
+        "kind": "metadata",
+        "url": "https://arxiv.org/abs/2212.04048",
+        "path": "sources/mld/metadata.html",
+        "sha256": "e8e096b742b3a765a616dcda43efb3b218ef02b448eb0c171b8a59c2f072bf6c",
+        "bytes": 43402
+      },
+      {
+        "kind": "html",
+        "url": "https://arxiv.org/html/2212.04048",
+        "path": "sources/mld/html.html",
+        "sha256": "ec49524b595ae01bc0223e4cc9ab5d55ebd02304a24d873d68c3a81c8348a768",
+        "bytes": 548498
+      }
+    ],
+    "title": "Executing your Commands via Motion Diffusion in Latent Space",
+    "history": "Submission history From: Xin Chen [ view email ] [v1] Thu, 8 Dec 2022 03:07:00 UTC (3,139 KB) [v2] Fri, 24 Mar 2023 06:59:39 UTC (42,031 KB) [v3] Fri, 19 May 2023 08:14:04 UTC (42,030 KB)",
+    "canonical_ids": [
+      "2212.04048v3"
+    ],
+    "headings": [
+      "Executing your Commands via Motion Diffusion in Latent Space",
+      "1 Introduction",
+      "2 Related Work",
+      "3 Method",
+      "3.1 Motion Representation in Latents",
+      "3.2 Motion Latent Diffusion Model",
+      "3.3 Conditional Motion Latent Diffusion Model",
+      "4 Experiments",
+      "4.1 Datasets and Evaluation Metrics",
+      "4.2 Implementation Details",
+      "4.3 Comparisons on Text-to-motion",
+      "4.4 Comparisons on Action-to-motion",
+      "4.5 Comparisons on Unconditional Generation",
+      "5 Ablation Studies",
+      "6 Disscusion",
+      "7 Acknowledgements",
+      "References",
+      "Appendix",
+      "A Qualitative Results",
+      "B Additional Experiments",
+      "B.1 Evaluation of Language Models [MATH: \\tau_{\\theta}^{w}]",
+      "B.2 Effectiveness of Long Skip Connection",
+      "B.3 Diffusion on Autoencoder or VAE",
+      "B.4 Prediction of Denoising",
+      "C Inference time",
+      "D Latent space visualization",
+      "E Evaluation of Hyperparameters",
+      "F User Study",
+      "G Motion Representations",
+      "H Details on Motion Latent Diffusion Models",
+      "H.1 Details Information on Variational Autoencoder Models",
+      "H.2 Network Architectures",
+      "H.3 Implementation Details",
+      "I Metric Definitions"
+    ],
+    "reading_scope": "§3,§4.1–4.2,§5/Tables4–6, AppB.3/B.4,C,H.3; chưa code",
+    "note": "evidence/M11_generator_foundations.md",
+    "venue_status": "CVPR2023 — official CVF entry verified"
+  },
+  {
+    "key": "mobius",
+    "requested_id": "2611.05279",
+    "retrieved_at": "2026-11-04T16:53:19.680384+00:00",
+    "reading_level": "M",
+    "artifacts": [
+      {
+        "kind": "metadata",
+        "url": "https://arxiv.org/abs/2611.05279",
+        "path": "sources/mobius/metadata.html",
+        "sha256": "f4f2e6d52349103c706068715eb56f8daeb7b9c630c037999b787eaaf5b246be",
+        "bytes": 41727
+      },
+      {
+        "kind": "html",
+        "url": "https://arxiv.org/html/2611.05279",
+        "path": "sources/mobius/html.html",
+        "sha256": "b1df7d0ef2d9462de5426cae0f794a8c653d3a65fb2d7a69f5fa0ed9d8201652",
+        "bytes": 416525
+      }
+    ],
+    "title": "Möbius: A Unified Motion-Language Model Bridging Understanding and Generation",
+    "history": "Submission history From: Chengfeng Zhao [ view email ] [v1] Tue, 3 Nov 2026 17:59:16 UTC (3,319 KB)",
+    "canonical_ids": [
+      "2611.05279v1"
+    ],
+    "headings": [
+      "Möbius : A Unified Motion-Language Model Bridging Understanding and Generation",
+      "1 Introduction",
+      "2 Related Work",
+      "Unified Multimodal Models.",
+      "Human Motion Modeling.",
+      "Unified Motion Understanding and Generation.",
+      "3 Method",
+      "3.1 Frame-level raw motion representation",
+      "3.2 Unified feature space attention with MoT",
+      "Routing scheme.",
+      "Bidirectional attention for motion.",
+      "3.3 Curriculum training strategy",
+      "Phase I: motion understanding.",
+      "Phase II: motion generation.",
+      "Unified motion editing and completion.",
+      "4 Experiments",
+      "4.1 Experimental Setup",
+      "Text-to-motion generation and motion captioning.",
+      "Motion editing and completion.",
+      "4.2 Quantitative Evaluation",
+      "Results.",
+      "Analysis.",
+      "4.3 Qualitative Evaluation",
+      "4.4 Ablation Studies",
+      "5 Discussion and Conclusion",
+      "AI use statement",
+      "References",
+      "Appendix A Experimental Details and Inference",
+      "A.1 Datasets",
+      "A.2 Continuous Motion Interface",
+      "A.3 Task Construction",
+      "A.4 Inference",
+      "A.5 Inference Efficiency",
+      "Appendix B Metrics and Evaluation Protocols",
+      "B.1 Evaluation Protocols",
+      "Text-to-motion.",
+      "Motion-to-text.",
+      "Editing and temporal completion.",
+      "B.2 Evaluation Metrics",
+      "Appendix C More Results",
+      "C.1 Text-to-Motion Generation",
+      "C.2 Motion-to-Text Generation",
+      "C.3 Motion Knowledge Question Answering",
+      "C.4 Temporal Completion",
+      "Effect of multi-task training on T2M and M2T.",
+      "Why report two training variants?"
+    ],
+    "reading_scope": "abstract/metadata; method§3.1–3.3 đến PhaseII; chưa đọc experiments/ablations",
+    "note": null,
+    "venue_status": "preprint 03/11/2026"
+  },
+  {
+    "key": "molingo",
+    "requested_id": "2512.13840",
+    "retrieved_at": "2026-11-04T16:53:18.872517+00:00",
+    "reading_level": "D+C",
+    "artifacts": [
+      {
+        "kind": "metadata",
+        "url": "https://arxiv.org/abs/2512.13840",
+        "path": "sources/molingo/metadata.html",
+        "sha256": "bfefd505b656a68f38bc11082b523b978f3a3c778cb984c09f025ed16d231db2",
+        "bytes": 42119
+      },
+      {
+        "kind": "html",
+        "url": "https://arxiv.org/html/2512.13840",
+        "path": "sources/molingo/html.html",
+        "sha256": "c8931dda63d4ce0c23e5f385d8c9626c4733bce677d40b6b0858f41d544126e4",
+        "bytes": 484645
+      }
+    ],
+    "title": "MoLingo: Motion-Language Alignment for Text-to-Human Motion Generation",
+    "history": "Submission history From: Yannan He [ view email ] [v1] Mon, 15 Dec 2025 19:22:40 UTC (2,771 KB) [v2] Thu, 26 Mar 2026 13:28:36 UTC (2,774 KB) [v3] Mon, 13 Jul 2026 14:30:21 UTC (2,774 KB)",
+    "canonical_ids": [
+      "2512.13840v3"
+    ],
+    "headings": [
+      "MoLingo: Motion–Language Alignment for Text-to-Human Motion Generation",
+      "1 Introduction",
+      "2 Related Work",
+      "Human motion generation",
+      "Motion parameterization and evaluation protocols",
+      "Representation learning for diffusion models",
+      "3 Method",
+      "Human motion generation task",
+      "Method overview",
+      "3.1 Encoding Motions into Latents",
+      "Semantically aligned autoencoder (SAE)",
+      "Training objective",
+      "3.2 Masked Auto-regressive Motion Generation",
+      "Input preparation",
+      "Auto-regressive flow-based latent denoising",
+      "Inference",
+      "4 Experiments",
+      "4.1 Setup",
+      "Implementation details",
+      "Evaluation protocol",
+      "4.2 Ablation Studies",
+      "Text condition mechanism",
+      "Effect of SAE",
+      "Exploration with the latent size",
+      "4.3 Comparison with SOTA Methods",
+      "Qualitative comparison",
+      "Quantitative comparison using MARDM-67 protocol",
+      "User study",
+      "Transfer to human robots",
+      "5 Conclusion and Limitation",
+      "Limitations",
+      "Acknowledgments:",
+      "References",
+      "6 More Implementation Details",
+      "Autoencoder training",
+      "Obtaining text labels for a specific motion latent",
+      "Auto-regressive motion latent denoising",
+      "User study interface",
+      "Integrate MoLingo with RL tracking controller",
+      "Details of evaluation metrics",
+      "7 More Quantitative Results",
+      "Effect of the text adapter",
+      "Comparison with MotionStreamer",
+      "Quantitative results on the TMR-263 evaluator [ 46 ]",
+      "Effect of repetitive token filtering"
+    ],
+    "reading_scope": "§§3–5; supplement §§6–7; Tables1–3,5–10; scoped code audit",
+    "note": "evidence/M01_molingo.md",
+    "venue_status": "CVPR2026 — official CVF index"
+  },
+  {
+    "key": "momask",
+    "requested_id": "2312.00063",
+    "retrieved_at": "2026-11-04T16:53:21.148437+00:00",
+    "reading_level": "D",
+    "artifacts": [
+      {
+        "kind": "metadata",
+        "url": "https://arxiv.org/abs/2312.00063",
+        "path": "sources/momask/metadata.html",
+        "sha256": "e7b235d0a8d73833a6847f412fcd871e44b2adf3a92ec23fb643553ca11a6e32",
+        "bytes": 41359
+      },
+      {
+        "kind": "html",
+        "url": "https://arxiv.org/html/2312.00063",
+        "path": "sources/momask/html.html",
+        "sha256": "bb8d6cb4e1ac889783e29d25376cd4b0575753f76028027175c2ad2d2cdc0888",
+        "bytes": 247441
+      }
+    ],
+    "title": "MoMask: Generative Masked Modeling of 3D Human Motions",
+    "history": "Submission history From: Chuan Guo [ view email ] [v1] Wed, 29 Nov 2023 19:04:10 UTC (20,219 KB)",
+    "canonical_ids": [
+      "2312.00063v1"
+    ],
+    "headings": [
+      "MoMask: Generative Masked Modeling of 3D Human Motions",
+      "1 Introduction",
+      "2 Related Work",
+      "3 Approach",
+      "3.1 Training: Motion Residual VQ-VAE",
+      "3.2 Training: Masked Transformer",
+      "3.3 Training: Residual Transformer",
+      "3.4 Inference",
+      "4 Experiments",
+      "4.1 Comparison to state-of-the-art approaches",
+      "4.2 Component Analysis",
+      "4.3 Application: Temporal Inpainting",
+      "5 Discussion and Conclusion",
+      "References"
+    ],
+    "reading_scope": "main §§3–5, Tables1–2 và limitations; chưa code/video",
+    "note": "evidence/M07_momask.md",
+    "venue_status": "CVPR2024 — official CVF index"
+  },
+  {
+    "key": "motionhiflow",
+    "requested_id": "2604.23264",
+    "retrieved_at": "2026-11-04T17:02:05.128709+00:00",
+    "reading_level": "unread",
+    "artifacts": [
+      {
+        "kind": "metadata",
+        "url": "https://arxiv.org/abs/2604.23264",
+        "path": "sources/motionhiflow/metadata.html",
+        "sha256": "6b9a2327d695ed3b390dbbe2811c02c59535029ba9f1a9e1af4113fe5e31e450",
+        "bytes": 42827
+      },
+      {
+        "kind": "html",
+        "url": "https://arxiv.org/html/2604.23264",
+        "path": "sources/motionhiflow/html.html",
+        "sha256": "f14fd37da4b437a07a87858840c509e99bbe774135980f6315ef3d87caaddd11",
+        "bytes": 340155
+      }
+    ],
+    "title": "MotionHiFlow: Text-to-motion via hierarchical flow matching",
+    "history": "Submission history From: Xiaotong Lin [ view email ] [v1] Sat, 25 Apr 2026 12:16:37 UTC (1,320 KB)",
+    "canonical_ids": [
+      "2604.23264v1"
+    ],
+    "headings": [
+      "MotionHiFlow: Text-to-Motion via Hierarchical Flow Matching",
+      "1 Introduction",
+      "2 Related work",
+      "2.1 Text-Conditioned Motion Generation",
+      "2.2 Flow Generative Models",
+      "3 Method",
+      "3.1 Problem Formulation",
+      "3.2 Overview",
+      "3.3 Preliminaries: Flow Matching",
+      "3.4 Hierarchical Flow Matching Framework",
+      "3.5 Model Architecture",
+      "3.6 Training and Inference",
+      "4 Experiments",
+      "4.1 Experimental Setup",
+      "4.2 Comparison with State-of-the-art Methods",
+      "4.3 Ablation Study",
+      "5 Conclusion",
+      "Acknowledgements",
+      "References"
+    ],
+    "reading_scope": "chỉ acquisition/metadata extraction, chưa có ghi chú đọc",
+    "note": null,
+    "venue_status": "CVPR2026 — official CVF metadata acquired",
+    "official_venue_metadata": {
+      "venue": "CVPR2026",
+      "title": "MotionHiFlow: Text-to-Motion via Hierarchical Flow Matching",
+      "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Li_MotionHiFlow_Text-to-Motion_via_Hierarchical_Flow_Matching_CVPR_2026_paper.html",
+      "sha256": "8e9a60497da860114bcf29fa7dec8b739d89a2ed55ed7204fa5c80eb1ec7176c",
+      "links": [
+        {
+          "label": "pdf",
+          "url": "https://openaccess.thecvf.com/content/CVPR2026/papers/Li_MotionHiFlow_Text-to-Motion_via_Hierarchical_Flow_Matching_CVPR_2026_paper.pdf"
+        },
+        {
+          "label": "arXiv",
+          "url": "https://arxiv.org/abs/2604.23264"
+        }
+      ],
+      "abstract": "Text-to-motion generation aims to generate 3D human motions that are tightly aligned with the input text while remaining physically plausible and rich in fine-grained detail. Although recent approaches can produce complex and natural movements, they usually operate at only one temporal scale, which limits both semantic alignment and temporal coherence. Inspired by the fact that complex motions are conceptualized hierarchically rather than at a single temporal scale in the human cognitive system, we propose MotionHiFlow, a hierarchical flow matching framework to generate motion progressively by constructing flow path from low to high temporal scales. The flows at lower scales capture high-level semantics and coarse motion structures, while flows at higher scales refine temporal details. To link the flows across scales, we introduce a novel cross-scale transition process, ensuring continuity and preserving noise consistency. Furthermore, by integrating a Text-Motion Diffusion Transformer and a topology-aware Motion VAE, MotionHiFlow explicitly models structural dependencies among joints via joint-aware positional encoding and skeletal topology, enabling precise semantic alignment alongside fine-grained motion details. Extensive experiments on HumanML3D and KIT-ML benchmarks demonstrate state-of-the-art performance, with ablation studies confirming the effectiveness of the hierarchical design and key components."
+    }
+  },
+  {
+    "key": "motionlab",
+    "requested_id": "2502.02358",
+    "retrieved_at": "2026-11-04T16:53:20.867036+00:00",
+    "reading_level": "unread",
+    "artifacts": [
+      {
+        "kind": "metadata",
+        "url": "https://arxiv.org/abs/2502.02358",
+        "path": "sources/motionlab/metadata.html",
+        "sha256": "a4496d4b4336bf93be283cf0b3d21414a9993303aff061d440071feea543e8c6",
+        "bytes": 43825
+      },
+      {
+        "kind": "html",
+        "url": "https://arxiv.org/html/2502.02358",
+        "path": "sources/motionlab/html.html",
+        "sha256": "0f4263a08389f93a4c713b5d3279f8589643ad917e51331b715ad2ae08f16254",
+        "bytes": 307911
+      }
+    ],
+    "title": "MotionLab: Unified Human Motion Generation and Editing via the Motion-Condition-Motion Paradigm",
+    "history": "Submission history From: Ziyan Guo [ view email ] [v1] Tue, 4 Feb 2025 14:43:26 UTC (2,144 KB) [v2] Wed, 5 Feb 2025 04:36:10 UTC (2,144 KB) [v3] Thu, 6 Feb 2025 15:03:54 UTC (2,144 KB) [v4] Wed, 12 Mar 2025 11:59:19 UTC (2,150 KB) [v5] Tue, 22 Jul 2025 13:47:07 UTC (2,244 KB)",
+    "canonical_ids": [
+      "2502.02358v5"
+    ],
+    "headings": [
+      "MotionLab: Unified Human Motion Generation and Editing via the Motion-Condition-Motion Paradigm",
+      "1 Introduction",
+      "2 Related Work",
+      "3 Preliminary: Rectified Flows",
+      "4 Motion-Condition-Motion",
+      "5 MotionLab",
+      "5.1 MotionFlow Transformer",
+      "5.2 Task Instruction Modulation",
+      "5.3 Motion Curriculum Learning",
+      "6 Experiments",
+      "6.1 Quantitative Results",
+      "6.2 Qualitative Results",
+      "6.3 Ablation Studies",
+      "7 Conclusion",
+      "References",
+      "8 Details of Rectified Flows",
+      "9 MotionLab Inference",
+      "10 Memory Usage and Time Cost",
+      "11 Additional Quantitative Results",
+      "12 Additional Ablation Studies",
+      "13 Representation for Each Modality",
+      "14 Instructions for Each Task",
+      "15 Classifier Free Guidance for Each Task",
+      "16 3D Assets"
+    ],
+    "reading_scope": "chỉ acquisition/metadata extraction, chưa có ghi chú đọc",
+    "note": null,
+    "venue_status": "chưa xác minh"
+  },
+  {
+    "key": "motionstreamer",
+    "requested_id": "2503.15451",
+    "retrieved_at": "2026-11-04T17:02:05.867563+00:00",
+    "reading_level": "D",
+    "artifacts": [
+      {
+        "kind": "metadata",
+        "url": "https://arxiv.org/abs/2503.15451",
+        "path": "sources/motionstreamer/metadata.html",
+        "sha256": "002f7c8c91f8cc8133c62c0be55b05e03387e1aaed6ad9d052fbd828f8bab44e",
+        "bytes": 42647
+      },
+      {
+        "kind": "html",
+        "url": "https://arxiv.org/html/2503.15451",
+        "path": "sources/motionstreamer/html.html",
+        "sha256": "a3c38cd49d94b87856b640b031c24aa6025613dfd109ba9820a56697dfb22e32",
+        "bytes": 332019
+      }
+    ],
+    "title": "MotionStreamer: Streaming Motion Generation via Diffusion-based Autoregressive Model in Causal Latent Space",
+    "history": "Submission history From: Lixing Xiao [ view email ] [v1] Wed, 19 Mar 2025 17:32:24 UTC (4,629 KB) [v2] Wed, 16 Apr 2025 12:35:53 UTC (4,629 KB) [v3] Thu, 7 Aug 2025 05:21:41 UTC (2,592 KB)",
+    "canonical_ids": [
+      "2503.15451v3"
+    ],
+    "headings": [
+      "MotionStreamer: Streaming Motion Generation via Diffusion-based Autoregressive Model in Causal Latent Space",
+      "1 Introduction",
+      "2 Related Work",
+      "3 Method",
+      "3.1 Problem Formulation",
+      "3.2 Causal Temporal AutoEncoder",
+      "3.3 MotionStreamer",
+      "4 Experiment",
+      "4.1 Experimental Setup",
+      "4.2 Quantitative Results",
+      "4.3 Qualitative Results",
+      "4.4 Ablation Study",
+      "4.5 Applications",
+      "5 Conclusion",
+      "Acknowledgement",
+      "References",
+      "Appendix of “MotionStreamer: Streaming Motion Generation via Diffusion-based Autoregressive Model in Causal Latent Space”",
+      "A Implementation Details",
+      "B Causal TAE Architecture",
+      "C AR Model Architecture",
+      "D Classifier-free guidance",
+      "E Failure of Inverse Kinematics",
+      "F Limitations and Future work"
+    ],
+    "reading_scope": "§§3–4, Tables1–4, AppA/E/F; chưa code/đầy đủ sweeps/video",
+    "note": "evidence/M12_motionstreamer.md",
+    "venue_status": "ICCV2025 — official CVF metadata acquired",
+    "official_venue_metadata": {
+      "venue": "ICCV2025",
+      "title": "MotionStreamer: Streaming Motion Generation via Diffusion-based Autoregressive Model in Causal Latent Space",
+      "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Xiao_MotionStreamer_Streaming_Motion_Generation_via_Diffusion-based_Autoregressive_Model_in_Causal_ICCV_2025_paper.html",
+      "sha256": "278e69ddeb9e770fdcb420d1f67a743485e4a62ffdf9a4d4b90de3ef412a9d0d",
+      "links": [
+        {
+          "label": "pdf",
+          "url": "https://openaccess.thecvf.com/content/ICCV2025/papers/Xiao_MotionStreamer_Streaming_Motion_Generation_via_Diffusion-based_Autoregressive_Model_in_Causal_ICCV_2025_paper.pdf"
+        },
+        {
+          "label": "supp",
+          "url": "https://openaccess.thecvf.com/content/ICCV2025/supplemental/Xiao_MotionStreamer_Streaming_Motion_ICCV_2025_supplemental.pdf"
+        },
+        {
+          "label": "arXiv",
+          "url": "http://arxiv.org/abs/2503.15451"
+        }
+      ],
+      "abstract": "This paper addresses the challenge of text-conditioned streaming motion generation, which requires us to predict the next-step human pose based on variable-length historical motions and incoming texts. Existing methods struggle to achieve streaming motion generation, e.g., diffusion models are constrained by pre-defined motion lengths, while GPT-based methods suffer from delayed response and error accumulation problem due to discretized non-causal tokenization. To solve these problems, we propose MotionStreamer, a novel framework that incorporates a continuous causal latent space into a probabilistic autoregressive model. The continuous latents mitigate information loss caused by discretization and effectively reduce error accumulation during long-term autoregressive generation. In addition, by establishing temporal causal dependencies between current and historical motion latents, our model fully utilizes the available information to achieve accurate online motion decoding. Experiments show that our method outperforms existing approaches while offering more applications, including multi-round generation, long-term generation, and dynamic motion composition. Project Page: https://zju3dv.github.io/MotionStreamer/"
+    }
+  },
+  {
+    "key": "nextscale",
+    "requested_id": "2604.03799",
+    "retrieved_at": "2026-11-04T17:02:04.408673+00:00",
+    "reading_level": "unread",
+    "artifacts": [
+      {
+        "kind": "metadata",
+        "url": "https://arxiv.org/abs/2604.03799",
+        "path": "sources/nextscale/metadata.html",
+        "sha256": "e7a721474b526f43496055c8becb79aebd8670916d18b0f299f8b9c83659f2b2",
+        "bytes": 40858
+      },
+      {
+        "kind": "html",
+        "url": "https://arxiv.org/html/2604.03799",
+        "path": "sources/nextscale/html.html",
+        "sha256": "6cd94059d7db38ed41015040d48c67812595d1c895ce665672622338eaa59832",
+        "bytes": 335100
+      }
+    ],
+    "title": "Next-Scale Autoregressive Models for Text-to-Motion Generation",
+    "history": "Submission history From: Zhiwei Zheng [ view email ] [v1] Sat, 4 Apr 2026 17:07:37 UTC (9,289 KB) [v2] Tue, 26 May 2026 23:21:25 UTC (9,289 KB)",
+    "canonical_ids": [
+      "2604.03799v2"
+    ],
+    "headings": [
+      "Next-Scale Autoregressive Models for Text-to-Motion Generation",
+      "1 Introduction",
+      "2 Related Work",
+      "3 Preliminaries",
+      "4 Method",
+      "4.1 Next-Scale Motion Generation",
+      "4.2 Cross-Scale Hierarchical Refinement",
+      "4.3 In-Scale Temporal Refinement",
+      "4.4 Model Training and Inference",
+      "5 Experiments",
+      "5.1 Text-to-Motion Performance",
+      "5.2 Zero-shot Generalization",
+      "5.3 Ablation Studies",
+      "6 Conclusion",
+      "References",
+      "Appendix A Coarse to Fine Visualization",
+      "Appendix B Details of Residual VQVAE",
+      "B.1 Model Architecture"
+    ],
+    "reading_scope": "chỉ acquisition/metadata extraction, chưa có ghi chú đọc",
+    "note": null,
+    "venue_status": "CVPR2026 — official CVF metadata acquired",
+    "official_venue_metadata": {
+      "venue": "CVPR2026",
+      "title": "Next-Scale Autoregressive Models for Text-to-Motion Generation",
+      "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Zheng_Next-Scale_Autoregressive_Models_for_Text-to-Motion_Generation_CVPR_2026_paper.html",
+      "sha256": "8b954aff0e536522f80335028907bb439cb87a89d164f4279c5adb6405431b42",
+      "links": [
+        {
+          "label": "pdf",
+          "url": "https://openaccess.thecvf.com/content/CVPR2026/papers/Zheng_Next-Scale_Autoregressive_Models_for_Text-to-Motion_Generation_CVPR_2026_paper.pdf"
+        },
+        {
+          "label": "arXiv",
+          "url": "https://arxiv.org/abs/2604.03799"
+        }
+      ],
+      "abstract": "Autoregressive (AR) models offer stable and efficient training, but standard next-token prediction is not well aligned with the temporal structure required for text-conditioned motion generation. We introduce MoScale, a next-scale AR framework that generates motion hierarchically from coarse to fine temporal resolutions. By providing global semantics at the coarsest scale and refining them progressively, MoScale establishes a causal hierarchy better suited for long-range motion structure. To improve robustness under limited text-motion data, we further incorporate cross-scale hierarchical refinement for improving per-scale initial predictions and in-scale temporal refinement for selective bidirectional re-prediction. MoScale achieves SOTA text-to-motion performance with high training efficiency, scales effectively with model size, and generalizes zero-shot to diverse motion generation and editing tasks. Code and additional materials are available on the webpage."
+    }
+  },
+  {
+    "key": "nmm_asl",
+    "requested_id": "10.1371/journal.pone.0086268",
+    "title": "Discriminant Features and Temporal Structure of Nonmanuals in American Sign Language",
+    "canonical_ids": [],
+    "reading_level": "M",
+    "artifacts": [
+      {
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3916328/",
+        "sha256": "aa40959779ef8bfaf564c05490f637e2abd727912468915943268a19205e8162",
+        "kind": "html",
+        "path": "sources/nmm_asl/article.html"
+      }
+    ],
+    "reading_scope": "abstract và introduction, timing/linguistic scope only; chưa methods/results deep",
+    "note": "evidence/S10_scope_checks.md",
+    "venue_status": "PLOS ONE2014 — DOI/PMC verified"
+  },
+  {
+    "key": "nsa",
+    "requested_id": "2312.02702",
+    "retrieved_at": "2026-11-05T01:08:22.053954+00:00",
+    "reading_level": "D",
+    "artifacts": [
+      {
+        "kind": "metadata",
+        "url": "https://arxiv.org/abs/2312.02702",
+        "path": "sources/nsa/metadata.html",
+        "sha256": "477407e2f8ad73e9b44732ca95897add450fc7d407568f4c07a7d903f7112018",
+        "bytes": 41714
+      },
+      {
+        "kind": "html",
+        "url": "https://arxiv.org/html/2312.02702",
+        "path": "sources/nsa/html.html",
+        "sha256": "211d70cbba5dd9176a9aac9f6b23de9453e6effb0c02cbcb16f95fb957767209",
+        "bytes": 209124
+      }
+    ],
+    "title": "Neural Sign Actors: A diffusion model for 3D sign language production from text",
+    "history": "Submission history From: Vasileios Baltatzis [ view email ] [v1] Tue, 5 Dec 2023 12:04:34 UTC (15,334 KB) [v2] Fri, 5 Apr 2024 13:49:17 UTC (7,004 KB)",
+    "canonical_ids": [
+      "2312.02702v2"
+    ],
+    "headings": [
+      "Neural Sign Actors: A diffusion model for 3D sign language production from text",
+      "1 Introduction",
+      "2 Related Work",
+      "2.1 Sign Language Production",
+      "2.2 Sign Language Datasets",
+      "3 Dataset",
+      "4 Method",
+      "4.1 Forward Diffusion Process",
+      "4.2 Reverse Diffusion Process",
+      "5 Experiments",
+      "5.1 Dataset Evaluation",
+      "5.2 Sign Language Production",
+      "5.3 User-Study",
+      "5.4 Ablation",
+      "6 Conclusion",
+      "References"
+    ],
+    "reading_scope": "fitting/generator/setup/Tables 1–3/human study; chưa code hoặc toàn supplementary",
+    "note": "evidence/S05_nsa.md",
+    "venue_status": "CVPR2024 — official CVF paper"
+  },
+  {
+    "key": "omnimotion",
+    "requested_id": "2510.14954",
+    "retrieved_at": "2026-11-04T16:53:19.270757+00:00",
+    "reading_level": "V",
+    "artifacts": [
+      {
+        "kind": "metadata",
+        "url": "https://arxiv.org/abs/2510.14954",
+        "path": "sources/omnimotion/metadata.html",
+        "sha256": "754b378ccbb6ee4776990ee82c2941e98f94d9481ed61c98b57e950b32b24c13",
+        "bytes": 41060
+      },
+      {
+        "kind": "html",
+        "url": "https://arxiv.org/html/2510.14954",
+        "path": "sources/omnimotion/html.html",
+        "sha256": "fad73ef334c142b65945bb260efec5a8239379bf03eca6733e4847fd8ed28c66",
+        "bytes": 284584
+      }
+    ],
+    "title": "OmniMotion: Multimodal Motion Generation with Continuous Masked Autoregression",
+    "history": "Submission history From: Zhe Li [ view email ] [v1] Thu, 16 Oct 2025 17:57:53 UTC (5,978 KB)",
+    "canonical_ids": [
+      "2510.14954v1"
+    ],
+    "headings": [
+      "OmniMotion: Multimodal Motion Generation with Continuous Masked Autoregression",
+      "1 Introduction",
+      "2 Related Work",
+      "Text-based Motion Generation.",
+      "Multimodal Motion Generation.",
+      "3 Method",
+      "3.1 Overview",
+      "3.2 Continuous Autoencoder",
+      "3.3 Continuous Masked Autoregression",
+      "Gated Linear Mechanism.",
+      "RMSNorm.",
+      "3.4 Diffusion Transformer",
+      "3.5 Text-to-motion Pretraining and Multimodal Control Adaptation",
+      "3.6 Inference",
+      "4 Experiments",
+      "4.1 Experiment Settings",
+      "4.2 Evaluation",
+      "4.3 Ablation Study",
+      "5 Conclusion",
+      "References",
+      "Appendix A Appendix",
+      "A.1 Training Details",
+      "Encoding of Speech and Music",
+      "Training of AE",
+      "Motion Representation",
+      "A.2 Datasets.",
+      "A.3 Metrics",
+      "Text-based Motion Generation",
+      "Speech-based Motion Generation",
+      "Music-based Motion Generation",
+      "A.4 Additional Experiment Results",
+      "More Results on Text-to-motion",
+      "Text-to-motion Evaluation after fine-tuning",
+      "Evaluation of OmniMotion Variants",
+      "A.5 More Visualization"
+    ],
+    "reading_scope": "abstract gốc qua search; chưa đọc method",
+    "note": null,
+    "venue_status": "preprint; OpenReview decision chưa xác minh"
+  },
+  {
+    "key": "open_t2m",
+    "requested_id": "2603.18623",
+    "retrieved_at": "2026-11-04T16:53:20.910633+00:00",
+    "reading_level": "M",
+    "artifacts": [
+      {
+        "kind": "metadata",
+        "url": "https://arxiv.org/abs/2603.18623",
+        "path": "sources/open_t2m/metadata.html",
+        "sha256": "b7441f92e7f5de3d7a46512475f5460196f5c4f2a116d6b1e737781ec45b89c0",
+        "bytes": 42126
+      },
+      {
+        "kind": "html",
+        "url": "https://arxiv.org/html/2603.18623",
+        "path": "sources/open_t2m/html.html",
+        "sha256": "1b3e0ab9e158895b9c7b50f39c8d00ead6fe48187e4287edfdf473696b5af396",
+        "bytes": 251229
+      }
+    ],
+    "title": "OpenT2M: No-frill Motion Generation with Open-source,Large-scale, High-quality Data",
+    "history": "Submission history From: Bin Cao [ view email ] [v1] Thu, 19 Mar 2026 08:43:16 UTC (5,033 KB)",
+    "canonical_ids": [
+      "2603.18623v1"
+    ],
+    "headings": [
+      "OpenT2M: No-frill Motion Generation with Open-source, Large-scale, High-quality Data",
+      "1 Introduction",
+      "2 Related Work",
+      "3 The OpenT2M Dataset",
+      "4 The MonoFrill Model",
+      "5 Experiments",
+      "5.1 Experimental Setup",
+      "5.2 Effectiveness of OpenT2M Dataset",
+      "5.3 Effectiveness of 2D-PRQ",
+      "6 Conclusion",
+      "References",
+      "7 Additional Analysis of OpenT2M",
+      "7.1 Data Distribution",
+      "7.2 Comparison of Long-horizon Datasets",
+      "7.3 Second-wise Text Annotation",
+      "8 Additional Details of 2D-PRQ",
+      "9 Evaluation Metrics",
+      "10 Visualization Examples"
+    ],
+    "reading_scope": "§§3–4 và5.1: data curation/2D-PRQ/instruction tuning; chưa đọc kết quả/ablations",
+    "note": null,
+    "venue_status": "CVPR2026 — official CVF index"
+  },
+  {
+    "key": "party",
+    "requested_id": "2603.09611",
+    "retrieved_at": "2026-11-04T17:02:04.407944+00:00",
+    "reading_level": "D",
+    "artifacts": [
+      {
+        "kind": "metadata",
+        "url": "https://arxiv.org/abs/2603.09611",
+        "path": "sources/party/metadata.html",
+        "sha256": "48159ef85054703d368cb18ab7ce6bfe26856197d2ad6779732994a640e01061",
+        "bytes": 41866
+      },
+      {
+        "kind": "html",
+        "url": "https://arxiv.org/html/2603.09611",
+        "path": "sources/party/html.html",
+        "sha256": "a0eed194bc49ee093b9447fe8cbab597a382a4233103e34d6ea433b8958432e3",
+        "bytes": 794807
+      }
+    ],
+    "title": "ParTY: Part-Guidance for Expressive Text-to-Motion Synthesis",
+    "history": "Submission history From: KunHo Heo [ view email ] [v1] Tue, 10 Mar 2026 12:53:12 UTC (3,705 KB)",
+    "canonical_ids": [
+      "2603.09611v1"
+    ],
+    "headings": [
+      "ParTY: Part-Guidance for Expressive Text-to-Motion Synthesis",
+      "1 Introduction",
+      "2 Related Works",
+      "3 Method",
+      "3.1 Temporal-aware VQ-VAE",
+      "3.2 Part-aware Text Grounding",
+      "3.3 Part-Guided Network",
+      "4 Experiments",
+      "4.1 Evaluation Metrics",
+      "4.1.1 Part-level Evaluation Metrics",
+      "4.1.2 Coherence-level Evaluation Metrics",
+      "4.2 Quantitative Evaluation",
+      "4.3 Qualitative Evaluation",
+      "4.4 Discussions",
+      "5 Conclusion",
+      "Acknowledgments",
+      "References",
+      "Contents",
+      "A Implementation Details",
+      "A.1 Networks & Training",
+      "A.2 Body Part Division",
+      "B Part-level Evaluation Metrics Details",
+      "B.1 Design Details",
+      "B.2 Quantitative Results & Ablation Studies",
+      "C Coherence-level Evaluation Metrics Details",
+      "C.1 Design Details",
+      "C.2 Hyperparameter Analysis",
+      "C.3 Quantitative Results",
+      "C.4 Ablation Studies",
+      "D Additional Qualitative Results",
+      "D.1 Part-Text Alignment & Coherence",
+      "D.2 Long & Complex",
+      "E Additional Quantitative Results",
+      "E.1 Detailed Results & Ablation Studies",
+      "E.2 Computational Complexity",
+      "E.3 Temporal-aware VQ-VAE",
+      "E.3.1 Porting to Additional Model",
+      "E.3.2 Ablation Studies",
+      "E.4 Part-aware Text Grounding",
+      "E.4.1 Analysis of the Number of Embeddings",
+      "E.4.2 Ablation Studies on Auxilary Loss",
+      "E.4.3 LLM Prompt Details",
+      "E.4.4 Quality Evaluation of Generated Text",
+      "E.4.5 Group of Text Descriptions",
+      "E.5 Part Guidance",
+      "E.5.1 Analysis of the Size of Window",
+      "E.6 Holistic-Part Fusion",
+      "E.6.1 Additional Visualization of Attention Map",
+      "F User Study Details"
+    ],
+    "reading_scope": "main §§3–4; AppA,E.1–E.4; chưa toàn bộ metric supplement/userstudy/code",
+    "note": "evidence/M10_party.md",
+    "venue_status": "CVPR2026 — official CVF metadata acquired",
+    "official_venue_metadata": {
+      "venue": "CVPR2026",
+      "title": "ParTY: Part-Guidance for Expressive Text-to-Motion Synthesis",
+      "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Heo_ParTY_Part-Guidance_for_Expressive_Text-to-Motion_Synthesis_CVPR_2026_paper.html",
+      "sha256": "38e888972ab26c2ffc070d60860cc131037c07dd01968d784bf3afdd2e137bf1",
+      "links": [
+        {
+          "label": "pdf",
+          "url": "https://openaccess.thecvf.com/content/CVPR2026/papers/Heo_ParTY_Part-Guidance_for_Expressive_Text-to-Motion_Synthesis_CVPR_2026_paper.pdf"
+        },
+        {
+          "label": "supp",
+          "url": "https://openaccess.thecvf.com/content/CVPR2026/supplemental/Heo_ParTY_Part-Guidance_for_CVPR_2026_supplemental.pdf"
+        },
+        {
+          "label": "arXiv",
+          "url": "https://arxiv.org/abs/2603.09611"
+        }
+      ],
+      "abstract": "Text-to-motion synthesis aims to generate natural and expressive human motions from textual descriptions. While existing approaches primarily focus on generating holistic motions from text descriptions, they struggle to accurately reflect actions involving specific body parts. Recent part-wise motion generation methods attempt to resolve this but face two critical limitations: (i) they lack explicit mechanisms for aligning textual semantics with individual body parts, and (ii) they often generate incoherent full-body motions due to integrating independently generated part motions. To overcome these issues and resolve the fundamental trade-off in existing methods, we propose ParTY, a novel framework that enhances part expressiveness while generating coherent full-body motions. ParTY comprises: (1) Part-Guided Network, which first generates part motions to obtain part guidance, then uses it to generate holistic motions; (2) Part-aware Text Grounding, which diversely transforms text embeddings and appropriately aligns them with each body part; and (3) Holistic-Part Fusion, which adaptively fuses holistic motions and part motions. Extensive experiments, including part-level and coherence-level evaluations, demonstrate that ParTY achieves substantial improvements over previous methods."
+    }
+  },
+  {
+    "key": "plan_dont_pose",
+    "requested_id": "2605.29906",
+    "retrieved_at": "2026-11-04T16:53:20.766704+00:00",
+    "reading_level": "D",
+    "artifacts": [
+      {
+        "kind": "metadata",
+        "url": "https://arxiv.org/abs/2605.29906",
+        "path": "sources/plan_dont_pose/metadata.html",
+        "sha256": "304a07f8ee1ffd0b52d7a741dab2ba966f736076146e0a61976e3d73f8bf457e",
+        "bytes": 42155
+      },
+      {
+        "kind": "html",
+        "url": "https://arxiv.org/html/2605.29906",
+        "path": "sources/plan_dont_pose/html.html",
+        "sha256": "a11ecfd74f0c0fb1b6012b69d921bcab100ac79c79bbae0092821e0f785fdec0",
+        "bytes": 345676
+      }
+    ],
+    "title": "Plan, Don't Pose: Long Composite Motion Generation with Text-Aligned BFM",
+    "history": "Submission history From: Nikolay Shvetsov [ view email ] [v1] Thu, 28 May 2026 13:24:30 UTC (4,665 KB) [v2] Thu, 11 Jun 2026 14:09:45 UTC (4,665 KB)",
+    "canonical_ids": [
+      "2605.29906v2"
+    ],
+    "headings": [
+      "Plan, Don’t Pose: Long Composite Motion Generation with Text-Aligned BFM",
+      "1 Introduction",
+      "2 Related Work",
+      "Zero-Shot Reinforcement Learning.",
+      "Physics-Based Motion Control.",
+      "Text-to-Motion Generation.",
+      "Language-Aligned Latent Motion Generation.",
+      "3 Method",
+      "4 Experiments",
+      "4.1 Experimental Setup",
+      "4.2 Main Results",
+      "4.3 Compositional Motion Evaluation",
+      "4.4 Ablation Study",
+      "Latent sequence compression.",
+      "Effect of semantic alignment.",
+      "Compression factors.",
+      "Flow Matching VS Diffusion.",
+      "4.5 Conclusion & Limitations",
+      "Code and reproducibility.",
+      "Existing assets.",
+      "Broader impacts.",
+      "References",
+      "Appendix A Technical Details and Hyperparameters",
+      "Stage 1: Semantic VAE.",
+      "Stage 2: Text-to-latent generator.",
+      "Compute resources.",
+      "Appendix B Theoretical Motivation for Text-Aligned Behavioral Compression",
+      "Appendix C Dataset Structure",
+      "Appendix D Additional examples of motion generation using our method"
+    ],
+    "reading_scope": "§§3–4, Tables1–6, AppA; chưa audit propositions/code/simulator",
+    "note": "evidence/M16_temporal_planning.md",
+    "venue_status": "preprint; venue chưa xác minh"
+  },
+  {
+    "key": "sdam",
+    "requested_id": "2608.23279",
+    "retrieved_at": "2026-11-04T16:53:20.160937+00:00",
+    "reading_level": "unread",
+    "artifacts": [
+      {
+        "kind": "metadata",
+        "url": "https://arxiv.org/abs/2608.23279",
+        "path": "sources/sdam/metadata.html",
+        "sha256": "ed27d1eb5d8f49098427b4354a5908d51caa4e4f42b81f0bd08b5bcf1e2f193b",
+        "bytes": 44043
+      },
+      {
+        "kind": "html",
+        "url": "https://arxiv.org/html/2608.23279",
+        "path": "sources/sdam/html.html",
+        "sha256": "5ac2c89cdbeec5d4895eceef2a5a2174e4af1b753ab7a4643ae1e94ec498f4ab",
+        "bytes": 194395
+      }
+    ],
+    "title": "Spatiotemporally Decoupled Autoregressive Diffusion Model for Human Motion Generation",
+    "history": "Submission history From: Chengqun Yang [ view email ] [v1] Mon, 24 Aug 2026 14:04:35 UTC (2,076 KB)",
+    "canonical_ids": [
+      "2608.23279v1"
+    ],
+    "headings": [
+      "Spatiotemporally Decoupled Autoregressive Diffusion Model for Human Motion Generation",
+      "I Introduction",
+      "II Related Work",
+      "III The DeMoDiff Model",
+      "III-A Spatial-Temporal VAE.",
+      "III-B Spatial-Temporal Autoregressive Diffusion.",
+      "IV Experiments",
+      "IV-A Datasets.",
+      "IV-B Evaluation Metrics.",
+      "IV-C Ablation Study.",
+      "IV-D Temporal and Spatial Editing.",
+      "V Conclusion",
+      "References"
+    ],
+    "reading_scope": "chỉ acquisition/metadata extraction, chưa có ghi chú đọc",
+    "note": null,
+    "venue_status": "chưa xác minh"
+  },
+  {
+    "key": "segmo",
+    "requested_id": "WACV2026-Dang-SegMo",
+    "title": "SegMo: Segment-aligned Text to 3D Human Motion Generation",
+    "canonical_ids": [],
+    "reading_level": "D",
+    "retrieved_at": "2026-11-05T01:40:35.208891+00:00",
+    "artifacts": [
+      {
+        "kind": "official_pdf",
+        "url": "https://openaccess.thecvf.com/content/WACV2026/papers/Dang_SegMo_Segment-aligned_Text_to_3D_Human_Motion_Generation_WACV_2026_paper.pdf",
+        "sha256": "8d5044ba8cdd573114681e2f00f04144188a81f8e8e81622ded6ac6e1bcc643a",
+        "path": "sources/segmo/paper.pdf"
+      }
+    ],
+    "reading_scope": "§§3.1–3.5, setup/implementation, §4.2–4.3/Table 3/limitations; chưa supplementary/code",
+    "note": "evidence/M18_segmo.md",
+    "venue_status": "WACV2026 — official CVF PDF"
+  },
+  {
+    "key": "semtalk",
+    "requested_id": "2412.16563",
+    "retrieved_at": "2026-11-04T17:02:05.921660+00:00",
+    "reading_level": "unread",
+    "artifacts": [
+      {
+        "kind": "metadata",
+        "url": "https://arxiv.org/abs/2412.16563",
+        "path": "sources/semtalk/metadata.html",
+        "sha256": "a70daa0e741461777978e5b29c3a5ecb337d98aa39d5a69b3aab28050e5c38ea",
+        "bytes": 44125
+      },
+      {
+        "kind": "html",
+        "url": "https://arxiv.org/html/2412.16563",
+        "path": "sources/semtalk/html.html",
+        "sha256": "f383df381be8f87393554cae1ca529b0521185c7e10f046ed91798786b241c84",
+        "bytes": 209265
+      }
+    ],
+    "title": "SemTalk: Holistic Co-speech Motion Generation with Frame-level Semantic Emphasis",
+    "history": "Submission history From: Xiangyue Zhang [ view email ] [v1] Sat, 21 Dec 2024 10:16:07 UTC (42,278 KB) [v2] Wed, 15 Jan 2025 13:34:12 UTC (29,441 KB) [v3] Tue, 11 Mar 2025 13:04:35 UTC (39,155 KB) [v4] Sun, 16 Aug 2026 15:36:15 UTC (39,154 KB)",
+    "canonical_ids": [
+      "2412.16563v4"
+    ],
+    "headings": [
+      "SemTalk: Holistic Co-speech Motion Generation with Frame-level Semantic Emphasis",
+      "1 Introduction",
+      "2 Related Work",
+      "3 Method",
+      "3.1 Preliminary on RVQ-VAE",
+      "3.2 Overview",
+      "3.3 Generating Rhythm-related Base Motion",
+      "3.4 Generating Semantic-aware Sparse Motion",
+      "3.5 Semantic Score-based motion fusion",
+      "4 Experiments",
+      "4.1 Experimental Setup",
+      "4.2 Qualitative Results",
+      "4.3 Quantitative Results",
+      "5 Conclusion",
+      "References"
+    ],
+    "reading_scope": "chỉ acquisition/metadata extraction, chưa có ghi chú đọc",
+    "note": null,
+    "venue_status": "ICCV2025 — official CVF metadata acquired",
+    "official_venue_metadata": {
+      "venue": "ICCV2025",
+      "title": "SemTalk: Holistic Co-speech Motion Generation with Frame-level Semantic Emphasis",
+      "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Zhang_SemTalk_Holistic_Co-speech_Motion_Generation_with_Frame-level_Semantic_Emphasis_ICCV_2025_paper.html",
+      "sha256": "9f645543877de3206d51e07312896d4427221c036a2fcaf1bf4aa8945f4cea35",
+      "links": [
+        {
+          "label": "pdf",
+          "url": "https://openaccess.thecvf.com/content/ICCV2025/papers/Zhang_SemTalk_Holistic_Co-speech_Motion_Generation_with_Frame-level_Semantic_Emphasis_ICCV_2025_paper.pdf"
+        },
+        {
+          "label": "arXiv",
+          "url": "http://arxiv.org/abs/2412.16563"
+        }
+      ],
+      "abstract": "A good co-speech motion generation cannot be achieved without a careful integration of common rhythmic motion and rare yet essential semantic motion. In this work, we propose SemTalk for holistic co-speech motion generation with frame-level semantic emphasis. Our key insight is to separately learn base motions and sparse motions, and then adaptively fuse them. In particular, coarse2fine cross-attention module and rhythmic consistency learning are explored to establish rhythm-related base motion, ensuring a coherent foundation that synchronizes gestures with the speech rhythm. Subsequently, semantic emphasis learning is designed to generate semantic-aware sparse motion, focusing on frame-level semantic cues. Finally, to integrate sparse motion into the base motion and generate semantic-emphasized co-speech gestures, we further leverage a learned semantic score for adaptive synthesis. Qualitative and quantitative comparisons on two public datasets demonstrate that our method outperforms the state-of-the-art, delivering high-quality co-speech motion with enhanced semantic richness over a stable base motion."
+    }
+  },
+  {
+    "key": "signer",
+    "requested_id": "2506.07460",
+    "retrieved_at": "2026-11-05T01:08:22.053230+00:00",
+    "reading_level": "D",
+    "artifacts": [
+      {
+        "kind": "metadata",
+        "url": "https://arxiv.org/abs/2506.07460",
+        "path": "sources/signer/metadata.html",
+        "sha256": "c88ecb909ba7adc62886294b36f61085ac373492e21a74c3150e73ef38af9c16",
+        "bytes": 43327
+      },
+      {
+        "kind": "html",
+        "url": "https://arxiv.org/html/2506.07460",
+        "path": "sources/signer/html.html",
+        "sha256": "3f381a0cb83792fa73432da32b49a3c354af8c1d8ec913beec7b0d206921c625",
+        "bytes": 337561
+      }
+    ],
+    "title": "SIGNER: Temporally Grounded Sign Language Generation via Time-Resolved Conditioning",
+    "history": "Submission history From: Taeryung Lee [ view email ] [v1] Mon, 9 Jun 2025 06:09:03 UTC (3,784 KB) [v2] Fri, 26 Jun 2026 01:57:11 UTC (4,474 KB)",
+    "canonical_ids": [
+      "2506.07460v2"
+    ],
+    "headings": [
+      "SIGNER: Temporally Grounded Sign Language Generation via Time-Resolved Conditioning",
+      "1 Introduction",
+      "2 Related works",
+      "3 Preliminary",
+      "4 SIGNER",
+      "4.1 Motion latent space learning",
+      "4.2 Temporal-gloss condition",
+      "4.3 Time-resolved conditioning with LTF",
+      "5 Experiment",
+      "5.1 Protocols",
+      "5.2 Ablation Study",
+      "5.3 Comparison to state-of-the-art methods",
+      "6 Conclusion",
+      "Acknowledgements",
+      "References"
+    ],
+    "reading_scope": "main v2 method/setup/results/ablations/limitations + official four-page supplement; chưa code",
+    "note": "evidence/S04_signer.md",
+    "venue_status": "ECCV2026 — author-reported acceptance; proceedings entry chưa đối chiếu",
+    "additional_supplementary_artifact": {
+      "url": "https://taeryunglee.github.io/projects/signer/asset/SIGNER_ECCV2026_suppl.pdf",
+      "sha256": "55eb3b0f9027f164505d56fd6b3c6d9c58fe69f714b36c45a0ae049dc9cd1628",
+      "pages": 4,
+      "parser": "PyMuPDF; no validated page anchors",
+      "reading_level": "D-scoped",
+      "reading_scope": "full four-page supplement, evaluator and human study; no validated PDF page anchors"
+    }
+  },
+  {
+    "key": "signflip",
+    "requested_id": "2609.35225",
+    "retrieved_at": "2026-11-05T01:09:34.816025+00:00",
+    "reading_level": "D",
+    "artifacts": [
+      {
+        "kind": "metadata",
+        "url": "https://arxiv.org/abs/2609.35225",
+        "path": "sources/signflip/metadata.html",
+        "sha256": "cbf577bc106e674a6e57493f68c5825833b65c2d055c785b45c92215eb8ab702",
+        "bytes": 41833
+      },
+      {
+        "kind": "html",
+        "url": "https://arxiv.org/html/2609.35225",
+        "path": "sources/signflip/html.html",
+        "sha256": "ad05517f74cb6efe218979c3e038619f127df8cd9e64f95bfe452a3bd596e7b5",
+        "bytes": 320252
+      }
+    ],
+    "title": "SignFLIP: A Unified Model for Sign Language Translation and Generation via Stage-wise Alignment at Scale",
+    "history": "Submission history From: Zhaoyi An [ view email ] [v1] Mon, 28 Sep 2026 14:08:50 UTC (6,931 KB)",
+    "canonical_ids": [
+      "2609.35225v1"
+    ],
+    "headings": [
+      "SignFLIP: A Unified Model for Sign Language Translation and Generation via Stage-wise Alignment at Scale",
+      "1 Introduction",
+      "2 Related Work",
+      "2.1 Sign Language Pretraining",
+      "2.2 Sign Language Translation",
+      "Gloss-based",
+      "Gloss-free.",
+      "2.3 Sign Language Generation",
+      "3 SignFLIP",
+      "3.1 Model Architecture",
+      "SignFLIP for translation",
+      "SignFLIP for generation",
+      "3.2 Stage 1: Pretraining",
+      "Semantic-aware Pose Reconstruction.",
+      "Sign–Text Pre-alignment.",
+      "3.3 Training on Downstream Task",
+      "Stage 3: SLG training.",
+      "4 Experiments",
+      "4.1 Implementations and Preprocessing",
+      "4.2 Datasets and Evaluations",
+      "Datasets.",
+      "Evaluation metrics.",
+      "4.3 Comparison with Methods",
+      "Results on SLT.",
+      "Results on SLG.",
+      "Transferability to SLR.",
+      "4.4 Ablation Study",
+      "Stage-wise Alignment",
+      "Choice of LLM.",
+      "5 Conclusion",
+      "Limitations",
+      "Acknowledgments",
+      "References",
+      "Appendix A Training Recipe of Each Stage",
+      "Appendix B Statistics of Experimental Datasets",
+      "Appendix C SLT result on OpenASL",
+      "Appendix D Ablation Study: MPM Window Size Impact",
+      "Appendix E Ablation Study: Loss for SLG",
+      "Appendix F Case Study of Translation",
+      "Appendix G Case Study of Generation",
+      "Appendix H Human Evaluation Questionnaire",
+      "Evaluation criteria.",
+      "Scale definition.",
+      "Instructions to participants.",
+      "Questionnaire items.",
+      "Appendix I Potential Risks"
+    ],
+    "reading_scope": "§§3–4, limitations, App A/B/D/E; chưa video/toàn questionnaire/code",
+    "note": "evidence/S07_signflip.md",
+    "venue_status": "preprint; venue chưa xác minh"
+  },
+  {
+    "key": "signrr",
+    "requested_id": "2608.28568",
+    "retrieved_at": "2026-11-05T01:09:34.814149+00:00",
+    "reading_level": "D",
+    "artifacts": [
+      {
+        "kind": "metadata",
+        "url": "https://arxiv.org/abs/2608.28568",
+        "path": "sources/signrr/metadata.html",
+        "sha256": "b71f8f172183071318048bad6b341e05ad869d089fa7436b0de5b87d8bdfa14e",
+        "bytes": 41893
+      },
+      {
+        "kind": "html",
+        "url": "https://arxiv.org/html/2608.28568",
+        "path": "sources/signrr/html.html",
+        "sha256": "8dd33513dac6d2e9cdd10de941525bbbd7c94c77a97dfa968f33bc929e85aad2",
+        "bytes": 384430
+      }
+    ],
+    "title": "SignRR: Retrieve and Refine Real Motion for Sign Language Production",
+    "history": "Submission history From: Fidel Omar Tito Cruz [ view email ] [v1] Fri, 28 Aug 2026 17:45:14 UTC (1,059 KB) [v2] Tue, 1 Sep 2026 15:13:52 UTC (1,059 KB) [v3] Mon, 26 Oct 2026 23:11:07 UTC (1,059 KB)",
+    "canonical_ids": [
+      "2608.28568v3"
+    ],
+    "headings": [
+      "SignRR: Retrieve and Refine Real Motion for Sign Language Production",
+      "1 Introduction",
+      "2 Related Work",
+      "3 Method",
+      "3.1 Gloss-Motion Dictionary",
+      "3.2 Part-aware Residual VQ-VAE",
+      "3.3 Inference: Assembly and Refinement",
+      "4 Experiments and Results",
+      "4.1 Experimental Setup",
+      "4.2 Comparison with State-of-the-Arts",
+      "4.3 Ablation Studies",
+      "4.4 Analysis",
+      "5 Limitations",
+      "6 Conclusion",
+      "References",
+      "A Keypoint Representation",
+      "B Gloss-Motion Dictionary Construction",
+      "Boundary estimation.",
+      "Candidate filtering.",
+      "Candidate scoring.",
+      "Boundary descriptors.",
+      "C Dynamic Programming Segment Selection",
+      "Out-of-dictionary glosses.",
+      "Boundary cost.",
+      "Dynamic-programming recurrence.",
+      "Backtracking.",
+      "D Implementation Details",
+      "Refinement model.",
+      "Gloss encoder and length prediction.",
+      "Training objective.",
+      "Dictionary configuration.",
+      "E Synthetic Motion Generation",
+      "F Robustness to Dictionary Segmentation",
+      "G Inference Time"
+    ],
+    "reading_scope": "main §§3–5/Tables 2–6 + supplementary A–G; chưa code",
+    "note": "evidence/S06_signrr.md",
+    "venue_status": "preprint; venue chưa xác minh"
+  },
+  {
+    "key": "signspark",
+    "requested_id": "2603.10446",
+    "retrieved_at": "2026-11-05T01:08:22.052056+00:00",
+    "reading_level": "D+C",
+    "artifacts": [
+      {
+        "kind": "metadata",
+        "url": "https://arxiv.org/abs/2603.10446",
+        "path": "sources/signspark/metadata.html",
+        "sha256": "20184a815f1656b9c85c87a5b6170c671d74ad37fef0cfc4357f02a1eba929c9",
+        "bytes": 42942
+      },
+      {
+        "kind": "html",
+        "url": "https://arxiv.org/html/2603.10446",
+        "path": "sources/signspark/html.html",
+        "sha256": "59297db4875ace71946ed2e3c99c01852125872e733c02436a4bdf490c2ccf5f",
+        "bytes": 312570
+      }
+    ],
+    "title": "SignSparK: Efficient Multilingual Sign Language Production via Sparse Keyframe Learning",
+    "history": "Submission history From: Jian He Low [ view email ] [v1] Wed, 11 Mar 2026 06:02:36 UTC (8,122 KB) [v2] Thu, 12 Mar 2026 03:43:26 UTC (8,122 KB) [v3] Mon, 23 Mar 2026 03:30:31 UTC (8,121 KB) [v4] Thu, 25 Jun 2026 16:22:23 UTC (9,473 KB)",
+    "canonical_ids": [
+      "2603.10446v4"
+    ],
+    "headings": [
+      "SignSparK: Efficient Multilingual Sign Language Production via Sparse Keyframe Learning",
+      "1 Introduction",
+      "2 Related Work",
+      "3 Methodology",
+      "3.1 Sign Language Segmentation",
+      "3.2 Sparse Keyframe-conditioned Training via Flow Matching",
+      "4 Experiments",
+      "4.1 Sign Language Segmentation",
+      "4.2 Sign Language Production",
+      "4.3 Ablation Studies",
+      "4.4 Qualitative Results",
+      "4.5 Facial Expression Evaluation",
+      "5 Conclusions",
+      "Acknowledgements",
+      "References"
+    ],
+    "reading_scope": "main v4 method/setup/Tables 1–8; static training/sampling/length/release audit; no separate supplement",
+    "note": "evidence/S03_signspark.md",
+    "venue_status": "ECCV2026 — author-reported acceptance; proceedings entry chưa đối chiếu"
+  },
+  {
+    "key": "soke",
+    "requested_id": "2411.17799",
+    "retrieved_at": "2026-11-05T01:07:57.032584+00:00",
+    "reading_level": "D+C",
+    "artifacts": [
+      {
+        "kind": "metadata",
+        "url": "https://arxiv.org/abs/2411.17799",
+        "path": "sources/soke/metadata.html",
+        "sha256": "684b72ecd549670b287323b0c47aafa4fcc246d172e15442b10ced94839079a1",
+        "bytes": 42139
+      },
+      {
+        "kind": "html",
+        "url": "https://arxiv.org/html/2411.17799",
+        "path": "sources/soke/html.html",
+        "sha256": "68601100dfa348168d397aaaaf2594e159320980f333a5ddb33e286afe44ecf5",
+        "bytes": 359722
+      }
+    ],
+    "title": "Signs as Tokens: A Retrieval-Enhanced Multilingual Sign Language Generator",
+    "history": "Submission history From: Ronglai Zuo [ view email ] [v1] Tue, 26 Nov 2024 18:28:09 UTC (4,155 KB) [v2] Sat, 8 Mar 2025 16:19:35 UTC (4,333 KB) [v3] Tue, 29 Jul 2025 07:20:47 UTC (4,335 KB)",
+    "canonical_ids": [
+      "2411.17799v3"
+    ],
+    "headings": [
+      "Signs as Tokens: A Retrieval-Enhanced Multilingual Sign Language Generator",
+      "1 Introduction",
+      "2 Related Work",
+      "3 Methodology",
+      "3.1 Data Preparation",
+      "3.2 Decoupled Tokenizer",
+      "3.3 Autoregressive Multilingual Generator",
+      "3.4 Retrieval-Enhanced SLG",
+      "4 Experiments",
+      "4.1 Comparison with State-of-the-Art Methods",
+      "4.2 Ablation Study",
+      "4.3 User Study",
+      "5 Conclusion",
+      "References",
+      "Appendix A Curating SMPL-X Poses",
+      "Appendix B Additional Qualitative Results",
+      "Appendix C Additional Quantitative Results",
+      "Appendix D Illustration of Decoupled Tokenizer",
+      "Appendix E Discussion"
+    ],
+    "reading_scope": "main+appendices; static audit representation/grouping/default config và DTW/alignment; chưa generation/BT đầy đủ",
+    "note": "evidence/S01_soke.md",
+    "venue_status": "ICCV2025 — official CVF entry verified"
+  },
+  {
+    "key": "stride",
+    "requested_id": "2609.32462",
+    "retrieved_at": "2026-11-04T16:53:19.895016+00:00",
+    "reading_level": "D",
+    "artifacts": [
+      {
+        "kind": "metadata",
+        "url": "https://arxiv.org/abs/2609.32462",
+        "path": "sources/stride/metadata.html",
+        "sha256": "f79d2681f9a56386c1e3326ddf8ab39a823a84283c6c049a6904513748665ca8",
+        "bytes": 41786
+      },
+      {
+        "kind": "html",
+        "url": "https://arxiv.org/html/2609.32462",
+        "path": "sources/stride/html.html",
+        "sha256": "c1004b8227f43ffd072150bf725850582d6553933611752b781a376dccef39e1",
+        "bytes": 290550
+      }
+    ],
+    "title": "Can Motion-Language Models Ground Structure? STRIDE for Evaluating the Evaluators",
+    "history": "Submission history From: Lixing Tan [ view email ] [v1] Sat, 26 Sep 2026 10:52:20 UTC (8,408 KB)",
+    "canonical_ids": [
+      "2609.32462v1"
+    ],
+    "headings": [
+      "Can Motion-Language Models Ground Structure? STRIDE for Evaluating the Evaluators",
+      "1 Introduction",
+      "2 The STRIDE benchmark: When do evaluators miss structure?",
+      "2.1 Structural perturbations",
+      "2.2 Benchmark construction",
+      "2.3 Evaluation with unrelated-motion controls",
+      "2.4 Evaluation results",
+      "3 Why can structural errors be missed?",
+      "3.1 Limitations of retrieval-based evaluations",
+      "3.2 Limitations of contrastive learning-based training",
+      "4 A simple fix: structural hard negatives",
+      "5 Related work",
+      "6 Conclusion",
+      "AI usage statement",
+      "Ethics statement",
+      "Reproducibility statement",
+      "References",
+      "Appendix A Benchmark construction and coverage",
+      "A.1 Construction steps",
+      "Generate edits.",
+      "Check candidates.",
+      "Filter and balance.",
+      "A.2 Vocabulary and motion coverage",
+      "Appendix B Human audits",
+      "Appendix C Evaluation implementation",
+      "Appendix D Additional experiments",
+      "D.1 Released-evaluator grounding results",
+      "D.2 Adapted generative and vision-language models",
+      "Motion-to-text likelihood adapters.",
+      "Vision-language forced-choice interface.",
+      "Results and analysis.",
+      "Appendix E Structural hard-negative training and results",
+      "E.1 Losses and training settings",
+      "E.2 Detailed intervention results",
+      "Appendix F Qualitative failure cases"
+    ],
+    "reading_scope": "§§2–4, AppA–C,E; chưa toàn bộ adapted-VLM tests/code",
+    "note": "evidence/M14_stride.md",
+    "venue_status": "preprint; venue chưa xác minh"
+  },
+  {
+    "key": "t2mbench",
+    "requested_id": "2602.13751",
+    "retrieved_at": "2026-11-04T16:53:19.773374+00:00",
+    "reading_level": "V",
+    "artifacts": [
+      {
+        "kind": "metadata",
+        "url": "https://arxiv.org/abs/2602.13751",
+        "path": "sources/t2mbench/metadata.html",
+        "sha256": "f64e84fc2fec8c1acd363df3cac0fc071705c1968f57f7cddc67863ad0e2fa34",
+        "bytes": 41674
+      },
+      {
+        "kind": "html",
+        "url": "https://arxiv.org/html/2602.13751",
+        "path": "sources/t2mbench/html.html",
+        "sha256": "24d54fd0347114a63bc17faa277a3bd8b08915b8e928e2470c0a3f10e3056391",
+        "bytes": 742593
+      }
+    ],
+    "title": "T2MBench: A Benchmark for Out-of-Distribution Text-to-Motion Generation",
+    "history": "Submission history From: Weisheng Xu [ view email ] [v1] Sat, 14 Feb 2026 12:49:04 UTC (15,367 KB)",
+    "canonical_ids": [
+      "2602.13751v1"
+    ],
+    "headings": [
+      "T2MBench: A Benchmark for Out-of-Distribution Text-to-Motion Generation",
+      "1 Introduction",
+      "2 Related Works",
+      "2.1 T2M Models and Datasets.",
+      "2.2 Evolution of Motion Evaluation.",
+      "3 T2MBench",
+      "3.1 OOD Text Prompt Dataset",
+      "Construction Pipeline.",
+      "Dataset Type.",
+      "OOD Validation.",
+      "3.2 Text-to-Motion Baselines",
+      "3.3 Evaluation",
+      "3.3.1 LLM-based Evaluation",
+      "Motion Rendering and Normalization.",
+      "Color-coded Body-Part Strip.",
+      "3.3.2 Multi-Factor Motion Evaluation",
+      "Dimension 1: Semantic Alignment.",
+      "Dimension 2: Generalizability.",
+      "Dimension 3: Physical Quality.",
+      "3.3.3 Fine-grained Accuracy Evaluation",
+      "4 Experiment and Findings",
+      "4.1 Setup",
+      "4.2 Results and Analysis",
+      "4.2.1 LLM-Based Evaluation",
+      "4.2.2 Multi-Factor Motion Evaluation",
+      "4.2.3 Fine-Grained Accuracy Evaluation",
+      "4.3 SOTA datasets",
+      "5 Conclusion",
+      "Impact Statement",
+      "References",
+      "Appendix A System Prompt for LLM-Based Generation of the OOD Text Prompt Dataset",
+      "Appendix B OOD Text Prompt Dataset Cloud Picture",
+      "Appendix C Evaluation methodology details",
+      "C.1 Multi-Factor Motion Evaluation",
+      "Dimension 1: Semantic Alignment.",
+      "Dimension 2: Generalizability.",
+      "Dimension 3: Physical Quality.",
+      "C.2 Fine-grained accuracy evaluation",
+      "(1) Whole-body motion assessment.",
+      "(2) Body-part motion assessment.",
+      "Appendix D The physical quality scoring formula",
+      "Appendix E Normalization Details",
+      "Appendix F LLM Evaluation Prompt",
+      "Appendix G Multi-Factor Motion Evaluation Detailed Results",
+      "Appendix H Detailed results of the PHC+ tracking on the released physical attribute dataset",
+      "Appendix I Radar charts by baselines"
+    ],
+    "reading_scope": "arXiv abstract qua search; chưa đọc method",
+    "note": null,
+    "venue_status": "preprint; venue chưa xác minh"
+  },
+  {
+    "key": "t2mgpt",
+    "requested_id": "2301.06052",
+    "retrieved_at": "2026-11-04T16:53:21.801724+00:00",
+    "reading_level": "D",
+    "artifacts": [
+      {
+        "kind": "metadata",
+        "url": "https://arxiv.org/abs/2301.06052",
+        "path": "sources/t2mgpt/metadata.html",
+        "sha256": "53589a3ecc03920b93e62041be54213263f89d4f9350b499174bc413655b990e",
+        "bytes": 42394
+      },
+      {
+        "kind": "html",
+        "url": "https://arxiv.org/html/2301.06052",
+        "path": "sources/t2mgpt/html.html",
+        "sha256": "10183709ae6b4ca78956720525c0ad4691ef97396b6c19d1358114248ff456b4",
+        "bytes": 412219
+      }
+    ],
+    "title": "T2M-GPT: Generating Human Motion from Textual Descriptions with Discrete Representations",
+    "history": "Submission history From: Jianrong Zhang [ view email ] [v1] Sun, 15 Jan 2023 09:34:42 UTC (9,070 KB) [v2] Wed, 18 Jan 2023 11:56:01 UTC (6,350 KB) [v3] Tue, 28 Feb 2023 05:23:51 UTC (6,350 KB) [v4] Sun, 24 Sep 2023 17:00:32 UTC (6,331 KB)",
+    "canonical_ids": [
+      "2301.06052v4"
+    ],
+    "headings": [
+      "T2M-GPT: Generating Human Motion from Textual Descriptions with Discrete Representations",
+      "1 Introduction",
+      "2 Related work",
+      "VQ-VAE.",
+      "Human motion synthesis.",
+      "Text-driven human motion generation.",
+      "3 Method",
+      "3.1 Motion VQ-VAE",
+      "Optimization goal.",
+      "Quantization strategy.",
+      "Architecture.",
+      "3.2 T2M-GPT",
+      "Optimization goal.",
+      "Causal Self-attention.",
+      "Corrupted sequences for the training-testing discrepancy.",
+      "4 Experiment",
+      "4.1 Datasets and evaluation metric",
+      "Implementation details.",
+      "Evaluation metric.",
+      "4.2 Comparison to state-of-the-art approaches",
+      "Qualitative comparison.",
+      "4.3 Discussion",
+      "Quantization strategies.",
+      "Impact of dataset size.",
+      "5 Conclusion",
+      "Acknowledgement",
+      "References",
+      "Appendix A Ablation study of T2M-GPT architecture",
+      "Appendix B Impact of the reconstruction loss in motion VQ-VAE",
+      "Appendix C Impact of [MATH: \\tau] for the corruption strategy in T2M-GPT training",
+      "Appendix D Ablation study of the number of codes in VQ-VAE",
+      "Appendix E More details on the evaluation metrics and the motion representations.",
+      "E.1 Evaluation metrics",
+      "FID.",
+      "MM-Dist.",
+      "Diversity.",
+      "MModality.",
+      "E.2 Motion representations",
+      "Appendix F VQ-VAE Architecture",
+      "Dilation rate.",
+      "Appendix G Limitations",
+      "Appendix H Funding Support"
+    ],
+    "reading_scope": "§§3–4.1; training/discussion, Tables3–7/AppA–D; chưa code/video",
+    "note": "evidence/M11_generator_foundations.md",
+    "venue_status": "CVPR2023 — official CVF entry verified"
+  },
+  {
+    "key": "transition",
+    "requested_id": "2411.16810",
+    "retrieved_at": "2026-11-05T01:27:15.129913+00:00",
+    "reading_level": "M",
+    "artifacts": [
+      {
+        "kind": "metadata",
+        "url": "https://arxiv.org/abs/2411.16810",
+        "path": "sources/transition/metadata.html",
+        "sha256": "19f9210bab11c835366ddcaec75998e64136456d7deded11c68d751c5a3cbee4",
+        "bytes": 42254
+      },
+      {
+        "kind": "html",
+        "url": "https://arxiv.org/html/2411.16810",
+        "path": "sources/transition/html.html",
+        "sha256": "3d0ab8c32aeda6d47359cd7124ac25907eba91ce50ddf2227c8b4467c330f838",
+        "bytes": 222104
+      }
+    ],
+    "title": "Discrete to Continuous: Generating Smooth Transition Poses from Sign Language Observation",
+    "history": "Submission history From: Shengeng Tang [ view email ] [v1] Mon, 25 Nov 2024 15:06:49 UTC (1,363 KB)",
+    "canonical_ids": [
+      "2411.16810v1"
+    ],
+    "headings": [
+      "Discrete to Continuous: Generating Smooth Transition Poses from Sign Language Observations",
+      "1 Introduction",
+      "2 Related Work",
+      "2.1 Sign Language Production & Synthesis",
+      "2.2 Diffusion-based Generative Models",
+      "3 Methodology",
+      "3.1 Preliminary",
+      "3.2 Core Idea: Unsupervised to Supervised",
+      "3.3 Sign-D2C Framework",
+      "3.4 Training",
+      "4 Experiments",
+      "4.1 Experimental Settings",
+      "4.2 Ablation Study",
+      "4.3 Comparison with State-of-the-Arts",
+      "4.4 Qualitative Results",
+      "5 Conclusions",
+      "References"
+    ],
+    "reading_scope": "§3 và chọn lọc setup/results tables; completion regime; chưa deep supplementary/code",
+    "note": "evidence/S10_scope_checks.md",
+    "venue_status": "CVPR2025 — official CVF metadata acquired"
+  },
+  {
+    "key": "umf",
+    "requested_id": "2603.27040",
+    "retrieved_at": "2026-11-04T17:02:05.278666+00:00",
+    "reading_level": "M",
+    "artifacts": [
+      {
+        "kind": "metadata",
+        "url": "https://arxiv.org/abs/2603.27040",
+        "path": "sources/umf/metadata.html",
+        "sha256": "8be5226d11e984e07ab1b02c9259c34ea8c9e47994c8e2a904ba7361f6e5c36c",
+        "bytes": 41465
+      },
+      {
+        "kind": "html",
+        "url": "https://arxiv.org/html/2603.27040",
+        "path": "sources/umf/html.html",
+        "sha256": "0bc3c9fcc76b38447959460201ee1efcd255d51c5e09e7a0fb26c064a2702b61",
+        "bytes": 356155
+      }
+    ],
+    "title": "Unified Number-Free Text-to-Motion Generation Via Flow Matching",
+    "history": "Submission history From: Guanhe Huang [ view email ] [v1] Fri, 27 Mar 2026 23:10:56 UTC (13,315 KB)",
+    "canonical_ids": [
+      "2603.27040v1"
+    ],
+    "headings": [
+      "Unified Number-Free Text-to-Motion Generation Via Flow Matching",
+      "1 Introduction",
+      "2 Related Work",
+      "2.1 Text-conditioned Human Motion Synthesis",
+      "2.2 Unified Motion Synthesis",
+      "3 Preliminaries",
+      "4 Proposed Method",
+      "4.1 Unified Latent Space",
+      "4.2 Unified Motion Flow Matching",
+      "4.2.1 Motion Prior",
+      "4.2.2 Reaction Motion Generation",
+      "4.3 Justification of design choices",
+      "5 Experiments",
+      "5.1 Datasets, Metrics & Implementation Details",
+      "5.2 Quantitative Results",
+      "5.3 Qualitative Results & User Study",
+      "5.4 Ablation Studies",
+      "6 Conclusion",
+      "Acknowledgments",
+      "References"
+    ],
+    "reading_scope": "abstract, §§1–4.2.2 đến Eq14; number-free nói về số agents, không phải duration; chưa đọc experiments/ablations",
+    "note": null,
+    "venue_status": "CVPR2026 — official CVF metadata acquired",
+    "official_venue_metadata": {
+      "venue": "CVPR2026",
+      "title": "Unified Number-Free Text-to-Motion Generation Via Flow Matching",
+      "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Huang_Unified_Number-Free_Text-to-Motion_Generation_Via_Flow_Matching_CVPR_2026_paper.html",
+      "sha256": "759f48ee79b401afc5daf275bf83c9ad1433baafcf020fe5d59473b6d683e1a5",
+      "links": [
+        {
+          "label": "pdf",
+          "url": "https://openaccess.thecvf.com/content/CVPR2026/papers/Huang_Unified_Number-Free_Text-to-Motion_Generation_Via_Flow_Matching_CVPR_2026_paper.pdf"
+        },
+        {
+          "label": "arXiv",
+          "url": "https://arxiv.org/abs/2603.27040"
+        }
+      ],
+      "abstract": "Generative models excel at motion synthesis for a fixed number of agents but struggle to generalize with variable agents. Based on limited, domain-specific data, existing methods employ autoregressive models to generate motion recursively, which suffer from inefficiency and error accumulation. We propose Unified Motion Flow (UMF), which consists of Pyramid Motion Flow (P-Flow) and Semi-Noise Motion Flow (S-Flow). UMF decomposes the number-free motion generation into a single-pass motion prior generation stage and multi-pass reaction generation stages. Specifically, UMF utilizes a unified latent space to bridge the distribution gap between heterogeneous motion datasets, enabling effective unified training. For motion prior generation, P-Flow operates on hierarchical resolutions conditioned on different noise levels, thereby mitigating computational overheads. For reaction generation, S-Flow learns a joint probabilistic path that adaptively performs reaction transformation and context reconstruction, alleviating error accumulation. Extensive results and user studies demonstrate UMF's effectiveness as a generalist model for multi-person motion generation from text. Project page: https://githubhgh.github.io/umf/."
+    }
+  }
+]

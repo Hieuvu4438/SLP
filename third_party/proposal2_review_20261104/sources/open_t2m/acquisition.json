@@ -1,0 +1,47 @@
+{
+  "key": "open_t2m",
+  "requested_id": "2603.18623",
+  "retrieved_at": "2026-11-04T16:53:20.910633+00:00",
+  "reading_level": "unread",
+  "artifacts": [
+    {
+      "kind": "metadata",
+      "url": "https://arxiv.org/abs/2603.18623",
+      "path": "sources/open_t2m/metadata.html",
+      "sha256": "b7441f92e7f5de3d7a46512475f5460196f5c4f2a116d6b1e737781ec45b89c0",
+      "bytes": 42126
+    },
+    {
+      "kind": "html",
+      "url": "https://arxiv.org/html/2603.18623",
+      "path": "sources/open_t2m/html.html",
+      "sha256": "1b3e0ab9e158895b9c7b50f39c8d00ead6fe48187e4287edfdf473696b5af396",
+      "bytes": 251229
+    }
+  ],
+  "title": "OpenT2M: No-frill Motion Generation with Open-source,Large-scale, High-quality Data",
+  "history": "Submission history From: Bin Cao [ view email ] [v1] Thu, 19 Mar 2026 08:43:16 UTC (5,033 KB)",
+  "canonical_ids": [
+    "2603.18623v1"
+  ],
+  "headings": [
+    "OpenT2M: No-frill Motion Generation with Open-source, Large-scale, High-quality Data",
+    "1 Introduction",
+    "2 Related Work",
+    "3 The OpenT2M Dataset",
+    "4 The MonoFrill Model",
+    "5 Experiments",
+    "5.1 Experimental Setup",
+    "5.2 Effectiveness of OpenT2M Dataset",
+    "5.3 Effectiveness of 2D-PRQ",
+    "6 Conclusion",
+    "References",
+    "7 Additional Analysis of OpenT2M",
+    "7.1 Data Distribution",
+    "7.2 Comparison of Long-horizon Datasets",
+    "7.3 Second-wise Text Annotation",
+    "8 Additional Details of 2D-PRQ",
+    "9 Evaluation Metrics",
+    "10 Visualization Examples"
+  ]
+}

@@ -1,0 +1,59 @@
+{
+  "key": "lgtok",
+  "requested_id": "2602.08337",
+  "retrieved_at": "2026-11-04T16:53:18.874308+00:00",
+  "reading_level": "unread",
+  "artifacts": [
+    {
+      "kind": "metadata",
+      "url": "https://arxiv.org/abs/2602.08337",
+      "path": "sources/lgtok/metadata.html",
+      "sha256": "10e3b56a6d5218b9524b4d82eebd51f0d7bfe620fa9ad3865eb2a9ca1c52b220",
+      "bytes": 43035
+    },
+    {
+      "kind": "html",
+      "url": "https://arxiv.org/html/2602.08337",
+      "path": "sources/lgtok/html.html",
+      "sha256": "aa39c575935292749d4677eb41a08240fb3f2f23ef6b6e4a75485ff34f369efb",
+      "bytes": 665260
+    }
+  ],
+  "title": "Language-Guided Transformer Tokenizer for Human Motion Generation",
+  "history": "Submission history From: Sheng Yan [ view email ] [v1] Mon, 9 Feb 2026 07:22:14 UTC (14,494 KB) [v2] Thu, 2 Jul 2026 05:59:45 UTC (12,789 KB)",
+  "canonical_ids": [
+    "2602.08337v2"
+  ],
+  "headings": [
+    "Language-Guided Transformer Tokenizer for Human Motion Generation",
+    "1 Introduction",
+    "2 Related Work",
+    "3 Method",
+    "3.1 Preliminary",
+    "3.2 Transformer-based Tokenizer",
+    "3.3 Language-Guided Tokenization",
+    "3.4 Language-Drop Scheme",
+    "4 Experiment",
+    "4.1 Experimental Setup",
+    "4.2 Text-driven Motion Generation Comparison",
+    "4.3 Comparison of Discrete Tokenizers",
+    "4.4 In-depth Analysis of Language-Drop Scheme",
+    "4.5 Ablation Studies",
+    "4.6 Tokenizer Analysis",
+    "4.7 Reconstruction–Generation Trade-off Analysis",
+    "5 Conclusion",
+    "Acknowledgements",
+    "References",
+    "Appendix A Overview",
+    "Appendix B Complete Tokenization-Generation-Detokenization Pipeline",
+    "Appendix C Quantitative Evaluation on the KIT-ML Dataset",
+    "Appendix D Feature Extractor Training on the Motion-X Dataset",
+    "Appendix E Details of Baseline Reproduction on the Motion-X Dataset",
+    "Appendix F Application: Motion Editing",
+    "Appendix G Evaluation of Average Inference Time",
+    "Appendix H Qualitative Comparison for Text Guidance",
+    "Appendix I The Role of Language Guidance in the Detokenization Stage during Generation",
+    "Appendix J More Qualitative Results",
+    "Appendix K Limitations"
+  ]
+}

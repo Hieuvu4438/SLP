@@ -1,0 +1,60 @@
+{
+  "key": "handmdm",
+  "requested_id": "2508.15902",
+  "retrieved_at": "2026-11-05T01:27:15.125581+00:00",
+  "reading_level": "unread",
+  "artifacts": [
+    {
+      "kind": "metadata",
+      "url": "https://arxiv.org/abs/2508.15902",
+      "path": "sources/handmdm/metadata.html",
+      "sha256": "791b7f0a56c20c59c729c5a42d3bc148e1dac574d5073d35261e1d4c679d265f",
+      "bytes": 41668
+    },
+    {
+      "kind": "html",
+      "url": "https://arxiv.org/html/2508.15902",
+      "path": "sources/handmdm/html.html",
+      "sha256": "440299691073d8d8c348f66ac9632aa96ba749c35bd07f8121b578d99d094459",
+      "bytes": 1117222
+    }
+  ],
+  "title": "Text-Driven 3D Hand Motion Generation from Sign Language Data",
+  "history": "Submission history From: Léore Bensabath [ view email ] [v1] Thu, 21 Aug 2025 18:02:47 UTC (32,109 KB)",
+  "canonical_ids": [
+    "2508.15902v1"
+  ],
+  "headings": [
+    "Text-Driven 3D Hand Motion Generation from Sign Language Data",
+    "1 Introduction",
+    "2 Related work",
+    "3 Methodology",
+    "3.1 Automatic data collection",
+    "3.2 Diffusion training with SMPL-X support",
+    "4 Experiments",
+    "4.1 Data and evaluation metrics",
+    "4.2 Ablation studies",
+    "4.3 Transfer to other datasets",
+    "4.4 Qualitative analysis and limitations",
+    "5 Conclusion",
+    "References",
+    "Appendix A Glossary",
+    "Appendix B BOBSL3DT Dataset Analysis",
+    "B.1 Statistics",
+    "B.2 Noise estimation",
+    "B.3 Test set verification",
+    "Appendix C Implementation Details",
+    "C.1 HandMDM training and inference",
+    "C.2 THMR training",
+    "C.3 Stitching HAMER hands to SMPLer-X body",
+    "C.4 SignBank dictionary attributes",
+    "C.5 HandMotionScript",
+    "C.6 LLM prompting",
+    "C.7 SignBank gloss assignment for BOBSL motions",
+    "Appendix D Additional results",
+    "D.1 Motion-to-text retrieval metrics on BOBSL3DT-Test",
+    "D.2 Testing on SignBank motions",
+    "D.3 Qualitative results for the LLM",
+    "D.4 Additional qualitative visualizations"
+  ]
+}

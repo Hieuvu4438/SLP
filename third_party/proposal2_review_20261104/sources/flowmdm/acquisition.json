@@ -1,0 +1,50 @@
+{
+  "key": "flowmdm",
+  "requested_id": "2402.15509",
+  "retrieved_at": "2026-11-05T00:57:54.304030+00:00",
+  "reading_level": "unread",
+  "artifacts": [
+    {
+      "kind": "metadata",
+      "url": "https://arxiv.org/abs/2402.15509",
+      "path": "sources/flowmdm/metadata.html",
+      "sha256": "f16375bbe0e6b0ea96fe3caac3413235e7849c64a488388c294aadb5a8c74087",
+      "bytes": 41346
+    },
+    {
+      "kind": "html",
+      "url": "https://arxiv.org/html/2402.15509",
+      "path": "sources/flowmdm/html.html",
+      "sha256": "16084eeb79baa4c7ba22fedce011143474068d0201dac464a647bc53ef899f4f",
+      "bytes": 663900
+    }
+  ],
+  "title": "Seamless Human Motion Composition with Blended Positional Encodings",
+  "history": "Submission history From: German Barquero [ view email ] [v1] Fri, 23 Feb 2024 18:59:40 UTC (15,139 KB)",
+  "canonical_ids": [
+    "2402.15509v1"
+  ],
+  "headings": [
+    "Seamless Human Motion Composition with Blended Positional Encodings",
+    "1 Introduction",
+    "2 Related work",
+    "3 Methodology",
+    "3.1 Bidirectional diffusion",
+    "3.2 Blended positional encodings",
+    "3.3 Pose-centric cross-attention",
+    "4 Experiments",
+    "4.1 Experimental setup",
+    "4.2 Quantitative analysis",
+    "4.3 Qualitative results",
+    "5 Conclusion",
+    "References",
+    "A Further implementation details",
+    "B Evaluation details",
+    "C More experimental results",
+    "C.1 Fine-grained comparison",
+    "C.2 On the attention horizon",
+    "C.3 On the diffusion schedule",
+    "C.4 On the classifier-free guidance",
+    "D Qualitative results"
+  ]
+}

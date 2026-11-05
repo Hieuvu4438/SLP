@@ -1,0 +1,47 @@
+{
+  "key": "frankenmotion",
+  "requested_id": "2601.10909",
+  "retrieved_at": "2026-11-04T16:53:18.872726+00:00",
+  "reading_level": "unread",
+  "artifacts": [
+    {
+      "kind": "metadata",
+      "url": "https://arxiv.org/abs/2601.10909",
+      "path": "sources/frankenmotion/metadata.html",
+      "sha256": "e6b690230db43a6c393e9e3a0e7ddad1f081009aaf20b938f83041d51f6f2979",
+      "bytes": 42082
+    },
+    {
+      "kind": "html",
+      "url": "https://arxiv.org/html/2601.10909",
+      "path": "sources/frankenmotion/html.html",
+      "sha256": "0529c97047dbcb9c06dfa8cf307e30e89e4e74dd41c3e0339529cc46b322b606",
+      "bytes": 249297
+    }
+  ],
+  "title": "FrankenMotion: Part-level Human Motion Generation and Composition",
+  "history": "Submission history From: Chuqiao Li [ view email ] [v1] Thu, 15 Jan 2026 23:50:07 UTC (2,493 KB)",
+  "canonical_ids": [
+    "2601.10909v1"
+  ],
+  "headings": [
+    "FrankenMotion: Part-level Human Motion Generation and Composition",
+    "1 Introduction",
+    "2 Related Work",
+    "3 FrankenStein Dataset Construction",
+    "3.1 Data Source",
+    "3.2 LLM-based Annotation Framework",
+    "3.3 Comparison with Existing Datasets",
+    "4 FrankenMotion: Part-Based Spatiotemporal Composition",
+    "4.1 Preliminaries",
+    "4.2 Spatio-temporal Embedding",
+    "4.3 Robust FrankenMotion Training",
+    "5 Experiments",
+    "5.1 Dataset Quality",
+    "5.2 Fine-grained Motion Generation",
+    "5.3 Ablation Study",
+    "5.4 Flexible Input Control Applications",
+    "6 Conclusion and Limitation",
+    "References"
+  ]
+}

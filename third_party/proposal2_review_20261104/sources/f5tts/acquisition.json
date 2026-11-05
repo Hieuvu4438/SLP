@@ -1,0 +1,55 @@
+{
+  "key": "f5tts",
+  "requested_id": "2410.06885",
+  "retrieved_at": "2026-11-05T00:57:54.305859+00:00",
+  "reading_level": "unread",
+  "artifacts": [
+    {
+      "kind": "metadata",
+      "url": "https://arxiv.org/abs/2410.06885",
+      "path": "sources/f5tts/metadata.html",
+      "sha256": "1f0d98fe879334fae2f521bc32c92daf0cfad65b6bbf4017cc09e7645a2d0dee",
+      "bytes": 43354
+    },
+    {
+      "kind": "html",
+      "url": "https://arxiv.org/html/2410.06885",
+      "path": "sources/f5tts/html.html",
+      "sha256": "a55f9ace2221d4d557478183fc14fbd19c1cea40f682396c08a4a5abaaa4f96c",
+      "bytes": 293617
+    }
+  ],
+  "title": "F5-TTS: A Fairytaler that Fakes Fluent and Faithful Speech with Flow Matching",
+  "history": "Submission history From: Yushen Chen [ view email ] [v1] Wed, 9 Oct 2024 13:46:34 UTC (3,487 KB) [v2] Tue, 15 Oct 2024 04:52:10 UTC (3,487 KB) [v3] Tue, 20 May 2025 15:53:10 UTC (7,126 KB)",
+  "canonical_ids": [
+    "2410.06885v3"
+  ],
+  "headings": [
+    "F5-TTS: A Fairytaler that Fakes Fluent and Faithful Speech with Flow Matching",
+    "1 Introduction",
+    "2 Preliminaries",
+    "2.1 Flow Matching",
+    "2.2 Classifier-Free Guidance",
+    "3 Method",
+    "3.1 Pipeline",
+    "3.2 F5-TTS",
+    "4 Experimental Setup",
+    "5 Experimental Results",
+    "5.1 Ablation of Model Architecture",
+    "5.2 Ablation of Sway Sampling",
+    "6 Conclusion",
+    "Limitations",
+    "Ethics Statements",
+    "References",
+    "Appendix A Baseline Details",
+    "Appendix B Experimental Result Supplements",
+    "B.1 Small Model Configuration",
+    "B.2 Ablation study on Input Condition",
+    "B.3 Sway Sampling Effectiveness on Base Models",
+    "B.4 Comparison of ODE Solvers",
+    "B.5 ELLA-V Hard Sentences Evaluation",
+    "B.6 Comparison of Vocoders and between PC and non-PC",
+    "B.7 Training and Inference Performance with Different Dataset Scales",
+    "Appendix C Subjective Evaluation Details"
+  ]
+}

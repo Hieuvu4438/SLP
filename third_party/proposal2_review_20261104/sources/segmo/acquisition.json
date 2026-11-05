@@ -1,0 +1,16 @@
+{
+  "key": "segmo",
+  "requested_id": "WACV2026-Dang-SegMo",
+  "title": "SegMo: Segment-aligned Text to 3D Human Motion Generation",
+  "canonical_ids": [],
+  "reading_level": "unread",
+  "retrieved_at": "2026-11-05T01:40:35.208891+00:00",
+  "artifacts": [
+    {
+      "kind": "official_pdf",
+      "url": "https://openaccess.thecvf.com/content/WACV2026/papers/Dang_SegMo_Segment-aligned_Text_to_3D_Human_Motion_Generation_WACV_2026_paper.pdf",
+      "sha256": "8d5044ba8cdd573114681e2f00f04144188a81f8e8e81622ded6ac6e1bcc643a",
+      "path": "sources/segmo/paper.pdf"
+    }
+  ]
+}

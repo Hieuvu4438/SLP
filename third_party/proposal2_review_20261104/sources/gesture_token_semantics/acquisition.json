@@ -1,0 +1,60 @@
+{
+  "key": "gesture_token_semantics",
+  "requested_id": "2610.03765",
+  "retrieved_at": "2026-11-04T17:02:06.531178+00:00",
+  "reading_level": "unread",
+  "artifacts": [
+    {
+      "kind": "metadata",
+      "url": "https://arxiv.org/abs/2610.03765",
+      "path": "sources/gesture_token_semantics/metadata.html",
+      "sha256": "dcd4da12f4ef1e0282550f179158babadd314018cbc99e2c4f5aafcc8cf4d348",
+      "bytes": 40331
+    },
+    {
+      "kind": "html",
+      "url": "https://arxiv.org/html/2610.03765",
+      "path": "sources/gesture_token_semantics/html.html",
+      "sha256": "437da40cd36a98a036e84c8ddff566926db1fb7ad5c7a46a1b90b9c865c99bcc",
+      "bytes": 167918
+    }
+  ],
+  "title": "Do Motion Tokenizers for Co-Speech Gesture Generation Encode Gesture Semantics?",
+  "history": "Submission history From: Varsha Suresh [ view email ] [v1] Mon, 28 Sep 2026 08:50:46 UTC (1,444 KB)",
+  "canonical_ids": [
+    "2610.03765v1"
+  ],
+  "headings": [
+    "Do Motion Tokenizers for Co-Speech Gesture Generation Encode Gesture Semantics?",
+    "1 Introduction",
+    "2 Related Work",
+    "2.1 Gesture representations and descriptors",
+    "2.2 Probing learned representations",
+    "3 Data and Method",
+    "3.1 Descriptor Panel",
+    "3.2 Codebook Architecture and Training",
+    "3.3 Probing Setup",
+    "Linear and nonlinear probing.",
+    "Code-level activation analysis.",
+    "Reconstruction fidelity.",
+    "4 Results",
+    "4.1 Gesture Descriptor Probing",
+    "Accessibility from pooled representations.",
+    "Structure in discrete code usage.",
+    "Relationship with reconstruction metrics",
+    "4.2 Generalization to Another Codebook",
+    "5 Qualitative Case Study",
+    "6 Conclusion",
+    "Limitations",
+    "Acknowledgments",
+    "References",
+    "Appendix A Appendix",
+    "A.1 Additional Details: Data and Method",
+    "A.1.1 Descriptor Classes",
+    "A.1.2 Codebook Architecture and Training",
+    "A.1.3 Probing Setup",
+    "A.2 Additional Results",
+    "A.2.1 Code-Level Activation Procedure & Results",
+    "A.2.2 Further examples for the code-level metrics."
+  ]
+}

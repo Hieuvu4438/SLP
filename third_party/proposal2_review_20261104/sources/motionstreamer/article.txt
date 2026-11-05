@@ -1,0 +1,2543 @@
+MotionStreamer: Streaming Motion Generation via Diffusion-based Autoregressive Model in Causal Latent Space
+Lixing Xiao     Shunlin Lu     Huaijin Pi     Ke Fan     Liang Pan
+Affiliation:
+Zhejiang University       The Chinese University of Hong Kong (Shenzhen)
+Affiliation:
+The University of Hong Kong     Shanghai Jiao Tong University
+Email:
+lixingxiao0@gmail.com
+Yueer Zhou     Ziyong Feng     Xiaowei Zhou     Sida Peng     Jingbo Wang
+Affiliation:
+DeepGlint                           Shanghai AI Laboratory
+Email:
+pengsida@zju.edu.cn
+Abstract
+This paper addresses the challenge of text-conditioned streaming motion generation, which requires us to predict the next-step human pose based on variable-length historical motions and incoming texts.
+Existing methods struggle to achieve streaming motion generation, e.g.,
+diffusion models are constrained by pre-defined motion lengths, while GPT-based methods suffer from delayed response and error accumulation problem due to discretized non-causal tokenization.
+To solve these problems, we propose MotionStreamer, a novel framework that incorporates a continuous causal latent space into a probabilistic autoregressive model.
+The continuous latents mitigate information loss caused by discretization and effectively reduce error accumulation during long-term autoregressive generation.
+In addition, by establishing temporal causal dependencies between current and historical motion latents, our model fully utilizes the available information to achieve accurate online motion decoding.
+Experiments show that our method outperforms existing approaches
+while offering more applications, including multi-round generation, long-term generation, and dynamic motion composition.
+Project Page:
+https://zju3dv.github.io/MotionStreamer/
+Figure 1
+:
+Visualization of streaming motion generation process
+. Texts are incrementally inputted and motions are generated online.
+†
+†
+footnotetext:
+†
+Corresponding author
+1
+Introduction
+Streaming motion generation aims to incrementally synthesizing human motions while dynamically adapting to online text inputs and maintaining semantic coherence.
+Generating realistic and diverse human motions in a streaming manner is essential for various real-time applications, such as video games, animation, and robotics.
+Streaming motion generation presents a significant challenge due to two fundamental requirements.
+Firstly, the framework must incrementally process sequentially arriving textual inputs while maintaining online response.
+Secondly, the model should be able to continuously synthesize motion sequences that exhibit contextual consistency by effectively integrating historical information with incoming textual conditions, ensuring alignment between progressive text semantics and kinematic continuity across extended timelines.
+Conventional diffusion-based motion generation models
+[
+64
+,
+12
+,
+4
+]
+are constrained by their non-incremental generation paradigm with static text conditioning and fixed-length generation processes.
+This inherently limits their ability to dynamically evolving textual inputs in streaming scenarios.
+Other autoregressive motion generation frameworks
+[
+76
+,
+31
+]
+are able to generate motions in a streaming manner.
+However, they have difficulties in achieving online response due to their non-causal tokenization architecture, which prevents partial token decoding until all sequence is generated.
+Real-time motion generation methods like DART
+[
+80
+]
+face a critical limitation in their reliance on fixed-window local motion primitives,
+which inherently restricts their capacity to model variable-length historical contexts and dynamically align with evolving textual inputs.
+In this work, we propose a novel framework for streaming motion generation, named
+MotionStreamer
+.
+The visualization of the streaming generation process is illustrated in Fig.
+1
+.
+Our core innovation is incorporating a diffusion head into an autoregressive model to predict the next motion latent, while introducing a causal motion compressor to enable online decoding in a streaming manner.
+Specifically, given an input text, we extract the textual feature, combine it with historical motion latents, and use an autoregressive model to generate a condition feature, which guides a diffusion model to generate the next motion latent.
+In contrast to previous methods
+[
+76
+,
+31
+]
+that use vector quantization (VQ) based motion tokenizer and GPT architecture to generate discrete motion tokens, our continuous motion latents can avoid information loss of discrete tokens and accumulation of error during the streaming generation process, as demonstrated by our experimental results in Sec.
+4.2
+.
+A causal temporal AutoEncoder is then employed to convert motion latent into the next human pose.
+The causal network effectively establishes temporally causal dependencies between current and historical motion latents, allowing for online motion decoding.
+The key to achieving streaming generation is enabling the model to dynamically extract relevant information from a variable-length history to guide the next motion prediction.
+To enable the autoregressive model to self-terminate without a pre-defined sequence length, we additionally encode an “impossible pose” to get a reference end latent as the continuous stopping condition.
+During experiments, we found that naive training of our model still suffers from error accumulation and cannot well support multi-round text input.
+To address these issues, we propose two training strategies: Two-forward training and Mixed training.
+Two-forward training strategy first generates motion latents using ground-truth,
+then replaces partial ground-truth latents with first-forward predictions for a hybrid second-forward,
+effectively mitigating the exposure bias inherent in autoregressive training while preserving parallel efficiency.
+Mixed training strategy unifies atomic (text, motion) pairs and contextual (text, history motion, current motion) triplets in a single framework,
+enabling compositional semantics learning and generalization to unseen motion combinations.
+We evaluate our approach on the HumanML3D
+[
+20
+]
+and BABEL
+[
+54
+]
+datasets, which are widely-used for text-to-motion benchmarks.
+Across these datasets, our method achieves state-of-the-art performance on both text-to-motion and long-term motion synthesis tasks.
+We also demonstrate the superiority of our method on abundant applications.
+Such streaming generation framework is suitable for online multi-round generation with progressive text inputs,
+long-term motion generation with multiple texts provided
+and dynamic motion composition where subsequent motions can be regenerated
+by altering textual conditions while preserving the initially generated prefix motion.
+Overall, our contributions can be summarized as follows:
+•
+We propose MotionStreamer, a novel framework combining a diffusion head
+with an autoregressive model to directly predict continuous motion latents,
+which enables streaming motion generation with incremental text inputs.
+•
+We propose a causal motion compressor (Causal TAE) for continuous motion compression,
+which eliminates information loss from discrete quantization and
+establishes temporally causal latent dependencies to support streaming decoding and online response.
+We adopt Two-Forward training strategy to mitigate error accumulation in streaming generation scenarios.
+•
+We demonstrate great performances of our approach on benchmark datasets.
+We also show various downstream applications,
+including online multi-round generation, long-term generation and dynamic motion composition.
+Figure 2
+:
+Overview of MotionStreamer.
+During inference,
+the AR model streamingly predicts next motion latents conditioned on the current text and previous motion latents. Each latent can be decoded into motion frames online as soon as it is generated.
+2
+Related Work
+Text-conditioned motion generation.
+Text-conditioned motion generation aims to synthesize 3D human motions from natural language descriptions
+[
+20
+]
+.
+Various approaches
+[
+45
+,
+71
+,
+35
+,
+8
+,
+73
+,
+75
+,
+29
+,
+51
+,
+44
+,
+50
+,
+9
+,
+49
+,
+69
+,
+70
+,
+79
+,
+10
+,
+28
+]
+have explored diverse architectures and methodologies to enhance the naturalness and expressiveness for digital human and motion animation.
+Previous works
+[
+20
+,
+47
+,
+2
+]
+leverage VAE
+[
+32
+]
+to learn cross-modal mappings between text and motion spaces.
+Some works
+[
+64
+,
+12
+,
+14
+,
+77
+,
+4
+,
+59
+,
+72
+,
+3
+,
+33
+,
+17
+,
+68
+,
+30
+]
+also apply diffusion models
+[
+27
+]
+to this task.
+Another line of works
+[
+76
+,
+31
+,
+78
+,
+82
+,
+81
+,
+39
+,
+40
+,
+19
+]
+first discretize motions into discrete tokens and employ autoregressive models (e.g., GPT) for sequential token prediction.
+Furthermore, some approaches
+[
+22
+,
+53
+,
+52
+,
+18
+,
+43
+]
+adopt a BERT-style
+[
+15
+]
+bidirectional Transformer architecture
+[
+7
+]
+to reconstruct masked motion segments under text guidance.
+However, most existing works only focus on offline generation, where the entire motion sequence is generated at once.
+More recently, CAMDM
+[
+11
+]
+and AMDM
+[
+60
+]
+apply diffusion models into an autoregerssive manner for real-time interactive character control.
+Ready-to-React
+[
+6
+]
+further explores this idea in two-character interaction.
+CLoSD
+[
+65
+]
+and DART
+[
+80
+]
+apply it for real-time text driven motion control.
+However, these methods are not strictly causal,
+as they rely on a fixed-length context window while our method could handle variable-length historical information
+and incrementally generate motions in a streaming manner.
+Motion compression.
+Following the success of image generation
+[
+57
+]
+, previous works
+[
+12
+,
+76
+]
+first encode the raw motion sequences into a latent space and then generate motions within it.
+The most popular method is to use Vector Quantized Variational AutoEncoders (VQ-VAE)
+[
+67
+]
+for motion tokenization.
+TM2T
+[
+21
+]
+first introduces vector quantization for motion discretization.
+T2M-GPT
+[
+76
+]
+employs VQ-VAE to compress motion sequences into a discrete latent space and then uses a GPT for motion generation.
+MoMask
+[
+22
+]
+leverages Residual VQ-VAE (RVQ-VAE)
+[
+34
+]
+to progressively reduce quantization errors.
+In contrast, MLD
+[
+12
+]
+utilizes standard VAEs
+[
+32
+]
+to convert a motion sequence into an embedding and then use a diffusion model to generate the latent.
+However, existing methods require a whole motion sequence to be encoded and decoded, which is not suitable for streaming generation.
+In this paper, we propose a causal motion compression approach to achieve streaming motion generation with online response.
+3
+Method
+We address the task of streaming motion generation with online response by introducing a novel framework, named MotionStreamer.
+The overview of the proposed framework is illustrated in Fig.
+2
+.
+In section
+3.1
+, we first introduce the problem formulation of streaming motion generation and the motion representation used in this work.
+In section
+3.2
+, we introduce a Causal Temporal AutoEncoder for continuous motion compression and online decoding.
+In section
+3.3
+, we present a diffusion-based autoregressive motion generator and the streaming generation process.
+3.1
+Problem Formulation
+Task definition.
+We first introduce the formulation of streaming motion generation.
+In contrast to previous text-to-motion generation
+[
+20
+]
+which is conditioned on a pre-defined fixed text prompt, we consider the case where a series of text prompts are given sequentially.
+Given a streaming sequence of text prompts
+[MATH: \{\mathcal{P}_{i}\}_{i=1}^{M}]
+, the goal is to generate a sequence of motion frames
+[MATH: \{x_{j}\}_{j=1}^{N}]
+online,
+where
+[MATH: \mathcal{P}_{i}]
+is the
+[MATH: i]
+-th text prompt and
+[MATH: x_{j}]
+is the
+[MATH: j]
+-th frame pose.
+Motion Representation.
+Previous works
+[
+20
+,
+31
+,
+78
+,
+22
+,
+64
+]
+mainly uses the 263-dimensional pose representation
+[
+20
+]
+for motion generation.
+However, this representation requires an additional post-processing step
+[
+5
+]
+,
+which is time-consuming and introduces rotation error
+[
+16
+]
+to be converted to SMPL
+[
+37
+]
+body parameters.
+To overcome this issue, we slightly modify it and directly use SMPL-based 6D rotation
+[
+37
+]
+as joint rotations.
+Similar to prior works on character control
+[
+62
+,
+61
+]
+, each pose
+[MATH: x]
+is represented by a 272-dimensional vector:
+[MATH: x=\{\dot{r}^{x},\dot{r}^{z},\dot{r}^{a},\,j^{p},\,j^{v},\,j^{r}\}.]
+(1)
+where we project the root on the XZ-plane (ground plane),
+[MATH: (\dot{r}^{x},\dot{r}^{z}\in\mathbb{R})]
+are root linear velocities on the XZ-plane,
+[MATH: \dot{r}^{a}\in\mathbb{R}^{6}]
+denotes root angular velocity represented in 6D rotations,
+[MATH: j^{p}\in\mathbb{R}^{3K}]
+,
+[MATH: j^{v}\in\mathbb{R}^{3K}]
+, and
+[MATH: j^{r}\in\mathbb{R}^{6K}]
+are local joint positions, local velocities, and local rotations
+relative to the root space,
+[MATH: K]
+is the number of joints.
+For SMPL
+[
+37
+]
+character,
+[MATH: K=22]
+, then we get the
+[MATH: 2+6+3\times 22+3\times 22+6\times 22=272]
+dimensions.
+This representation removes the post-processing step and we could directly use it for animating a SMPL character model.
+3.2
+Causal Temporal AutoEncoder
+Streaming motion generation requires online motion decoding for dynamic text inputs.
+However, most existing works
+[
+76
+,
+31
+,
+78
+,
+22
+]
+utilize temporal VQ-VAE to decode the whole sequence at once, where each frame inherently depends on past and future frames.
+Furthremore, the reliance on discrete tokenization induces quantization error accumulation across tokens, progressively degrading motion coherence in streaming generation scenarios.
+To address these issues, we introduce a Causal Temporal AutoEncoder (Causal TAE) to enable motion generation in a causal latent space.
+Architecture.
+Causal TAE is designed to achieve continuous motion compression while explicitly modeling temporal dependencies and enforcing causal constraints for sequential motion representation.
+Fig.
+3
+shows the proposed Causal TAE network.
+We employ 1D causal convolution
+[
+74
+]
+for constructing temporal encoder
+[MATH: \mathcal{E}]
+and decoder
+[MATH: \mathcal{D}]
+to convert raw motion sequences into a causal latent space.
+The causality is guaranteed by a temporal padding scheme.
+Specifically, for a convolution layer with kernel size
+[MATH: k_{t}]
+, stride
+[MATH: s_{t}]
+and dilation rate
+[MATH: d_{t}]
+,
+we pad
+[MATH: (k_{t}-1)\times d_{t}+(1-s_{t})]
+frames at the beginning of the sequence.
+In this way, each frame only depends on the frames before it and the future frames are not involved in the computation.
+Moreover, explicitly modeling temporal causal structures in the latent space enables the model to
+learn temporal and causal dependencies inherent in the causally-related motion data.
+Given a motion sequence
+[MATH: X=\{x_{1},x_{2},\cdots,x_{N}\}]
+with
+[MATH: x_{t}\in\mathbb{R}^{D}]
+,
+where
+[MATH: N]
+is the number of frames and
+[MATH: D]
+is the motion dimension (
+[MATH: D=272]
+),
+we could obtain a set of temporal Gaussian distribution parameters
+[MATH: \{\mu_{1:N/l},\sigma^{2}_{1:N/l}\}]
+and preform reparameterization
+[
+32
+]
+to get continuous motion latent representation
+[MATH: Z=\{z_{1},z_{2},\cdots,z_{N/l}\}]
+with
+[MATH: z_{i}\in\mathbb{R}^{d_{c}}]
+,
+[MATH: l]
+represents the temporal downsampling rate of the Encoder
+[MATH: \mathcal{E}]
+.
+This architecture reconstructs motion frames while strictly preserving temporal causality across the sequence.
+Training Objective.
+We use the same loss function as
+[MATH: \sigma]
+-VAE
+[
+58
+]
+to train the Causal TAE.
+In order to further enhance the reconstruction stability of the root joint, we add a root joint loss
+[MATH: \mathcal{L}_{root}]
+.
+The full loss function is defined as:
+[MATH: \mathcal{L}=\mathcal{L}_{recon}+D_{KL}(q(z|x)||p(z))+\lambda\mathcal{L}_{root}.]
+(2)
+where
+[MATH: \mathcal{L}_{recon}=\sum_{d=1}^{D}\sum_{i=1}^{N}(\frac{(x_{di}-\hat{x}_{di})^{2}}{2\sigma^{*^{2}}}+ln\sigma^{*}),]
+(3)
+[MATH: \mathcal{L}_{root}=\sum_{d=1}^{D_{root}}\sum_{i=1}^{N}(\frac{(x_{di}-\hat{x}_{di})^{2}}{2\sigma^{*^{2}}}+ln\sigma^{*}),]
+(4)
+[MATH: \sigma^{*^{2}}=MSE(x,\hat{x})=\frac{1}{DN}\sum_{d=1}^{D}\sum_{i=1}^{N}(x_{di}-\hat{x}_{di})^{2},]
+(5)
+[MATH: D_{KL}(q(z|x)||p(z))=\frac{1}{2}\sum_{d=1}^{d_{c}}\sum_{i^{\prime}=1}^{N/l}(\mu_{di^{\prime}}^{2}+\sigma_{di^{\prime}}^{2}-ln(\sigma_{di^{\prime}}^{2})-1).]
+(6)
+[MATH: D]
+,
+[MATH: D_{root}]
+and
+[MATH: d_{c}]
+represent the dimensions of the motion, root joint and the latent representation respectively.
+Specifically,
+[MATH: D=272]
+,
+[MATH: D_{root}=8]
+(the first 8 dims relate to the root joint).
+[MATH: d_{c}=16]
+is the best choice in our experiments.
+[MATH: N]
+and
+[MATH: l]
+represent the number of frames and temporal downsampling rate,
+[MATH: l]
+is set to
+[MATH: 4]
+here.
+[MATH: x_{di}]
+and
+[MATH: \hat{x}_{di}]
+are the ground-truth motion and the reconstructed motion at the
+[MATH: i]
+-th frame of the
+[MATH: d]
+-th dimension,
+[MATH: \sigma^{*}]
+is the analytic solution of the standard deviation
+[
+58
+]
+.
+[MATH: D_{KL}]
+represents the KL divergence,
+[MATH: q(z|x)]
+is the distribution of latents given the motions,
+[MATH: p(z)=\mathcal{N}(0,I)]
+is the prior distribution.
+(
+[MATH: \mu_{di^{\prime}}]
+,
+[MATH: \sigma_{di^{\prime}}^{2}]
+) are the Gaussian distribution parameters at the
+[MATH: i^{\prime}]
+-th latent of the
+[MATH: d]
+-th latent dimension, which derive from the Causal TAE Encoder
+[MATH: \mathcal{E}]
+.
+[MATH: \lambda]
+is the balancing hyperparameter.
+Causal TAE offers distinct technical advantages for motion compression.
+Its causal property inherently supports online decoding without requiring access to future frames, which is critical for streaming generation.
+With the employment of continuous token representation, it bypasses the discretization bottleneck of existing VQ-based methods.
+Figure 3
+:
+Architecture of Causal TAE.
+1D temporal causal convolution is applied in both the encoder and decoder.
+Variables
+[MATH: z_{1:n}]
+are sampled as continuous motion latent representations.
+3.3
+MotionStreamer
+In this section, we present MotionStreamer, a streaming generation pipeline based on a causally-structured latent space.
+In order to handle coherence between arriving text inputs and historical generated motions, we hypothesize that current motion should only be conditioned on previous motion and current text.
+As illustrated in Fig.
+2
+, MotionStreamer comprises a pre-trained text encoder, a diffusion-based autoregressive model, and the online motion decoder (the learned Causal TAE decoder).
+Training.
+Each training sample can be represented as:
+[MATH: S_{i}=(T_{i},C_{i},Z_{i})]
+,
+where
+[MATH: T_{i}\in\mathbb{R}^{1\times d_{t}}]
+is the text embedding obtained via a pre-trained language model (e.g. T5-XXL
+[
+56
+]
+),
+[MATH: C_{i}\in\mathbb{R}^{k\times d_{c}}]
+and
+[MATH: Z_{i}\in\mathbb{R}^{n\times d_{c}}]
+are the previous motion latents and current motion latents encoded by the learned Causal TAE,
+where
+[MATH: k]
+,
+[MATH: n]
+,
+[MATH: d_{t}]
+and
+[MATH: d_{c}]
+denote the lengths of previous motion latents, current motion latents,
+the text embedding dimension and the latent dimension respectively.
+We concatenate them along temporal axis to form a sequence
+[MATH: S_{i}=[T_{i},C_{i},Z_{i}]]
+.
+We employ a diffusion-based autoregressive Transformer to predict motion latents.
+The latent sequence
+[MATH: S]
+is first processed by the Transformer and a causal mask is applied to ensure the temporal causality
+[
+76
+]
+.
+After the Transformer processing, we obtain the intermediate latents
+[MATH: \{c_{i}^{1},c_{i}^{2},\cdots,c_{i}^{n}\}]
+, which serve as the condition for
+the diffusion head (a small MLP) to predict motion latents
+[MATH: \{\hat{z}_{i}^{1},\hat{z}_{i}^{2},\cdots,End_{i}\}]
+.
+[MATH: End_{i}]
+is the reference end latent inserted at the end of a sequence as the continuous stopping condition, which we will elaborate later.
+Following
+[
+36
+,
+27
+]
+, the loss function is defined as:
+[MATH: \mathcal{L}=\mathbb{E}_{\epsilon,t}[||\epsilon-\epsilon_{\theta}(Z_{t}|t,C_{i},T_{i})||^{2}].]
+(7)
+where
+[MATH: t]
+denotes the timestep of noise schedule.
+We employ QK normalization (i.e., normalize both queries and keys)
+[
+24
+]
+before self-attention layer to enhance training stability.
+Two-Forward strategy.
+We observe that using teacher-forcing
+[
+1
+]
+directly during training often leads to error accumulation in the autoregressive generation process.
+To this end, we propose a Two-Forward strategy that progressively introduces the test-time distribution during training.
+Specifically, after the first forward pass, we replace a subset of ground-truth motion latents with their generated counterparts, creating a mixture of real and generated motion latents.
+This hybrid input is then used in the second forward pass, where gradients are backpropagated.
+We employ a cosine scheduler to control the proportion of replaced motion latents. More details are provided in Sec.A of the appendix.
+Mixed training.
+The datasets contain two types of training samples, so we set
+[MATH: C_{i}]
+to Null if there is no historical motion in the dataset.
+We find that this simple strategy enables a seamless transition between two consecutive motions.
+Continuous stopping condition.
+Streaming generation requires automatically determining the generation length for each text prompt.
+Previous method
+[
+42
+]
+uses a binary classifier to determine whether to stop generation, which suffers from a strong class imbalance.
+In contrast, we introduce an “impossible pose” prior (i.e., all-zero vectors
+[MATH: \mathbf{0}\in\mathbb{R}^{D}]
+) as the stopping condition and use the causal TAE to convert it into the latent space.
+The encoded latent serves as the reference end latent.
+The generation should stop when the distance between the currently generated latent and the reference end latent is less than a threshold.
+Therefore, MotionStreamer is able to stop generation automatically and enables online and multi-round generation.
+Inference.
+During inference, given a stream of text prompts
+[MATH: \{\mathcal{P}_{i}\}_{i=1}^{M}]
+,
+the first text embedding
+[MATH: T_{1}]
+is first fed into the autoregressive motion generator to generate the first predicted motion latent sequence
+[MATH: \hat{Z}_{1}=\{\hat{z}_{1}^{1},\hat{z}_{1}^{2},\cdots,\hat{z}_{1}^{n_{1}}\}]
+.
+As soon as a motion latent is predicted, it can be immediately processed by the online motion decoder (i.e., the learned Causal TAE decoder) to get the output motion frames, benefiting from its causal property.
+If the distance between the currently predicted motion latent and the reference end latent is lower than a threshold, the generation process of this prompt stops.
+Then, we replace
+[MATH: T_{1}]
+with
+[MATH: T_{2}]
+as the current text embedding.
+The already generated motion latent sequence
+[MATH: \hat{Z}_{1}]
+is appended to the end of the second text embedding, forming the contextual latents used as input for the next autoregressive step.
+We then generate the second predicted motion latent sequence
+[MATH: \hat{Z}_{2}=\{\hat{z}_{2}^{1},\hat{z}_{2}^{2},\cdots,\hat{z}_{2}^{n_{2}}\}]
+.
+Next, we replace
+[MATH: T_{2}]
+with future text embedding, removes
+[MATH: \hat{Z}_{1}]
+from the condition latents and uses
+[MATH: \hat{Z}_{2}]
+as the historical motion latents.
+Therefore, the third sequence could be predicted.
+This streaming generation process is repeated until the entire motion sequence
+[MATH: \{\hat{Z}_{i}\}_{i=1}^{N}]
+is generated, ensuring online response during streaming generation process.
+4
+Experiment
+4.1
+Experimental Setup
+Dataset.
+We evaluate the proposed MotionStreamer on HumanML3D
+[
+20
+]
+and BABEL
+[
+54
+]
+datasets, with the original train and test splits.
+The HumanML3D dataset integrates motion sequences
+with three distinct textual descriptions.
+The BABEL dataset provides frame-level textual descriptions with explicit inter-segment transition labels.
+Unlike recent methods
+[
+59
+,
+4
+]
+that use different motion representations for both HumanML3D and BABEL datasets,
+we employ the 272-dimensional motion representation as mentioned in Sec.
+3.1
+for both datasets.
+All motion sequences are uniformly resampled to 30 FPS.
+Evaluation Metrics.
+We adopt the metrics from
+[
+20
+]
+for evaluation,
+including: (1) Frechet Inception Distance (FID)
+[
+25
+]
+, indicating the distribution distance between the generated and real motion;
+(2) Mean Per Joint Position Error (MPJPE), the average distance between the predicted and ground-truth joint positions, measuring the reconstruction quality;
+(3) R-Precision (Top-1, Top-2, and Top-3 accuracy), the accuracy of the top-k retrieved motions;
+(4) Multimodal Distance (MM-Dist), the average Euclidean distances between the generated motion feature and its text feature.
+(5) Diversity, the average Euclidean distances of the randomly sampled 300 motion pairs, measuring the diversity of motions.
+(6) Peak Jerk (PJ)
+[
+4
+]
+, the maximum value throughout the transition motion over all joints.
+(7) Area Under the Jerk (AUJ)
+[
+4
+]
+, the area under the jerk curve. Both PJ and AUJ measures the smoothness of motions.
+4.2
+Quantitative Results
+Comparison on Text-to-Motion Generation.
+We trained an evaluator based on TMR
+[
+48
+]
+to evaluate the quality of the generated motions.
+We use the processed 272-dimensional motion data from HumanML3D
+[
+20
+]
+train set for text-to-motion model training.
+All baselines are trained from scratch following their original implementations.
+As shown in Tab.
+1
+, our method receives better performance across multiple metrics on HumanML3D
+[
+20
+]
+test set .
+Methods
+FID
+[MATH: \downarrow]
+R@1
+[MATH: \uparrow]
+R@2
+[MATH: \uparrow]
+R@3
+[MATH: \uparrow]
+MM-D
+[MATH: \downarrow]
+Div
+[MATH: \rightarrow]
+Real motion
+0.002
+0.702
+0.864
+0.914
+15.151
+27.492
+MDM
+[
+64
+]
+23.454
+0.523
+0.692
+0.764
+17.423
+26.325
+MLD
+[
+12
+]
+18.236
+0.546
+0.730
+0.792
+16.638
+26.352
+T2M-GPT
+[
+76
+]
+12.475
+0.606
+0.774
+0.838
+16.812
+27.275
+MotionGPT
+[
+31
+]
+14.375
+0.456
+0.598
+0.628
+17.892
+27.114
+MoMask
+[
+22
+]
+12.232
+0.621
+0.784
+0.846
+16.138
+27.127
+AttT2M
+[
+81
+]
+15.428
+0.592
+0.765
+0.834
+15.726
+26.674
+Ours
+11.790
+0.631
+0.802
+0.859
+16.081
+27.284
+Table 1:
+Comparison with baseline text-to-motion generation methods
+on HumanML3D
+[
+20
+]
+test set.
+MM-D and Div denote Multimodal Distance and Diversity respectively.
+Comparison on Long-Term Motion Generation.
+We adopt a Mix Training Strategy for streaming long-term generation training.
+Specifically, we create training samples by pairing adjacent subsequences from long motion sequences in BABEL.
+Additionally, we incorporate text-motion pairs from the HumanML3D dataset for mix training.
+The comparison results on BABEL
+[
+54
+]
+dataset are demonstrated in Tab.
+2
+.
+Following FlowMDM
+[
+4
+]
+, the motion transition length is set to 30 frames.
+We modified T2M-GPT to support streaming generation (marked as T2M-GPT*)
+and also adapted our model to use VQ for discretization (marked as VQ-LLaMA).
+Experimental results show that neither the existing long-term generation baseline nor the discrete autoregressive model performs as well as our streaming generation approach in the continuous latent space.
+Methods
+Subsequence
+Transition
+R@3
+[MATH: \uparrow{}]
+FID
+[MATH: \downarrow{}]
+Div
+[MATH: \rightarrow]
+MM-D
+[MATH: \downarrow{}]
+FID
+[MATH: \downarrow{}]
+Div
+[MATH: \rightarrow{}]
+PJ
+[MATH: \rightarrow{}]
+AUJ
+[MATH: \downarrow{}]
+GT
+0.634
+0.000
+24.907
+17.543
+0.000
+21.472
+0.03
+0.00
+DoubleTake
+[
+59
+]
+0.452
+23.937
+22.732
+21.783
+51.232
+18.892
+0.48
+1.83
+FlowMDM
+[
+4
+]
+0.492
+18.736
+23.847
+20.253
+34.721
+20.293
+0.06
+0.51
+T2M-GPT*
+[
+76
+]
+0.364
+39.482
+24.317
+20.692
+43.823
+20.797
+0.12
+1.43
+VQ-LLaMA
+0.383
+24.342
+19.329
+38.285
+36.293
+19.932
+0.08
+1.20
+Ours
+0.568
+15.743
+23.546
+15.397
+32.888
+19.986
+0.04
+0.90
+Table 2
+:
+Comparison with long-term motion generation methods
+on BABEL
+[
+54
+]
+dataset.
+Comparison on First-frame Latency.
+As streaming generation requires the model to generate motion progressively and respond online.
+Therefore, we adopt the First-frame Latency to evaluate the efficiency of different methods.
+First-frame Latency refers to the time taken by the model to produce its first predicted frame,
+serving as a key metric for evaluating online response ability.
+Experimental results in Fig.
+4
+show that our proposed Causal TAE achieves the lowest First-frame Latency,
+benefiting from the causal property of motion latents, which can be decoded immediately after generation.
+In contrast, non-causal VAE must wait until the entire sequence is generated before decoding,
+causing First-frame Latency to increase as the number of generated frames grows.
+Another fixed-length generation methods like
+[
+64
+,
+22
+]
+exhibit higher First-frame Latency
+as they process the entire sequence at once rather than generating frames progressively in a streaming manner.
+Figure 4
+:
+Comparison on the First-frame Latency
+of different methods.
+Horizontal axis: the number of generated frames.
+Vertical axis: the time required to produce the first output frame.
+Figure 5
+:
+Visualization results
+between our method and some baseline methods
+[
+76
+,
+22
+,
+81
+,
+4
+]
+.
+The first row shows text-to-motion generation results, the second row shows long-term generation results
+and the third row shows the application of dynamic motion composition.
+4.3
+Qualitative Results
+Figure
+5
+shows the qualitative results of our method compared with T2M-GPT
+[
+76
+]
+, MoMask
+[
+22
+]
+, AttT2M
+[
+81
+]
+, and FlowMDM
+[
+4
+]
+.
+For the text-to-motion generation, we observe that VQ-based methods
+have difficulty in generating motions that are accurate and aligned with the textual description.
+In the case of “a man jumps on one leg.”, T2M-GPT
+[
+76
+]
+and AttT2M
+[
+81
+]
+generate a motion where the person jumps with both legs instead.
+MoMask
+[
+22
+]
+employs residual vector quantization (RVQ) to reduce quantization errors but still suffers from fine-grained motion details loss.
+Specifically, the generated motion starts with a one-leg jump but later switches to two-leg jumps or alternating legs, along with noticeable sliding artifacts.
+However, our method can generate motions that are more accurate with more details preserved as we use a continuous latent space without discretization process.
+For long-term motion generation, we compare with FlowMDM
+[
+4
+]
+with a stream of prompts: [“a man walks forward with arms swinging.”, “then he jumps up.”, “he turns around.”, “he faces another side.”].
+The visualization results show that FlowMDM fails to generate the initial “walking” motion,
+instead producing in-place stepping.
+However, we can generate more coherent and natural long-term motions streamingly as our model has the ability to dynamically extract relevant information from variable-length motion histories.
+Please refer to the supplementary videos in our project page for more dynamic visualizations.
+Figure 6
+:
+Dynamic motion composition.
+Our model supports composition of multiple motions with different textual descriptions while
+maintaining previous motions unchanged.
+4.4
+Ablation Study
+Architecture of the Causal TAE.
+We comprehensively evaluate the reconstruction performance and the corresponding generation quality
+of different Causal TAE architectures on the HumanML3D
+[
+20
+]
+test set, as shown in Tab.
+3
+.
+We replace the motion compression stage with VQ-VAE
+[
+76
+]
+to discretize the motions,
+while keeping the second-stage model architecture identical to ours.
+We also experimented with replacing Causal TAE with a non-causal temporal VAE and a standard temporal AE without vector quantization.
+The results show that our continuous representation avoids the VQ process,
+effectively reducing information loss and minimizing quantization error, thus performs better than
+the VQ-VAE baseline.
+The non-causal VAE performs worse than Causal TAE in both reconstruction and generation,
+as Causal TAE inherently models the causal structure of motion data during compression.
+This causal latent space is better suited for autoregressive generation, aligning naturally with the causal masking process.
+While AE achieves the best reconstruction quality by learning a near-identity mapping,
+its generation performance is significantly worse.
+This highlights the crucial role of latent space representation in determining the effectiveness of subsequent motion generation.
+We provide a more detailed ablation on the latent dimension and hidden size of Causal TAE,
+as shown in Sec.B in the appendix.
+Notably, we observe that
+a larger latent dimension results in less compression rate, improving reconstruction quality.
+However, this comes at the cost of poorer generation performance,
+as insufficient compression and ineffective latent space representation makes it harder for the model to learn meaningful motion generation.
+Meanwhile, the hidden size determines the model’s capacity,
+requiring a careful balance between compression rate and hidden size to ensure high reconstruction quality while enhancing generation performance.
+Ablation on the hyperparameter
+[MATH: \lambda]
+is provided in Sec.A of the appendix.
+Design choices of AR Model.
+We analyze the impact of different design choices of the AR model,
+as shown in Tab.
+4
+.
+The results show that the QK normalization and Two-forward strategy are effective.
+We also remove the diffusion head and use MSE loss for autoregressive training,
+which leads to a significant drop in generation quality.
+Moreover, we find that using T5-XXL
+[
+56
+]
+improves the generation performance compared with the CLIP
+[
+55
+]
+tokenizer.
+We found that applying a binary classifier to predict whether to stop generation, as in
+[
+42
+]
+,
+fails to learn the correct stopping condition.
+As a result, we did not evaluate the model without the proposed continuous stopping condition.
+Methods
+Reconstruction
+Generation
+FID
+[MATH: \downarrow]
+MPJPE
+[MATH: \downarrow]
+FID
+[MATH: \downarrow]
+R@3
+[MATH: \uparrow]
+MM-D
+[MATH: \downarrow]
+Div
+[MATH: \rightarrow]
+Real motion
+-
+-
+0.002
+0.914
+15.151
+27.492
+VQ-VAE
+5.173
+63.9
+13.226
+0.824
+16.746
+27.024
+AE
+0.001
+1.7
+43.828
+0.463
+22.040
+27.382
+VAE
+2.092
+26.2
+19.902
+0.735
+17.926
+27.312
+Ours
+0.661
+22.9
+11.790
+0.859
+16.081
+27.284
+Table 3:
+Ablation Study of different motion compressors
+on HumanML3D
+[
+20
+]
+test set.
+MPJPE is measured in millimeters.
+4.5
+Applications
+MotionStreamer offers various applications, including multi-round generation, long-term generation, and dynamic motion composition.
+(1)
+Multi-round generation
+requires iteratively generating motion in response to sequential or interactive textual inputs.
+Our model can process incremental text inputs, respond online, and autonomously determine when to stop generation.
+(2)
+Long-term generation
+requires smoothly generating long motion sequences in response to sequential textual inputs.
+(3)
+Dynamic motion composition
+refers to the capability of seamlessly integrating diverse motion sequences while preserving the consistency of previously generated motion prefix, as shown in Fig.
+6
+.
+Our Causal TAE enables this application,
+which eliminates the need for full-sequence re-decoding
+during the generation of subsequent motion latents,
+requiring only the decoding of the newly generated motion latents.
+AR Design choices
+FID
+[MATH: \downarrow]
+R@3
+[MATH: \uparrow]
+MM-D
+[MATH: \downarrow]
+Div
+[MATH: \rightarrow]
+Real motion
+0.002
+0.914
+15.151
+27.492
+w/o QK Norm
+12.324
+0.836
+16.524
+27.126
+w/o Two-Forward
+12.944
+0.842
+16.432
+27.282
+w/o Diffusion Head
+59.296
+0.360
+22.864
+27.325
+CLIP
+14.234
+0.791
+17.534
+27.316
+Ours
+11.790
+0.859
+16.081
+27.284
+Table 4:
+Analysis of design choices of the AR model
+on HumanML3D
+[
+20
+]
+test set.
+CLIP indicates the use of CLIP model
+[
+55
+]
+as the text encoder to extract text features.
+5
+Conclusion
+We present MotionStreamer, a novel framework for streaming motion generation that
+integrates diffusion-based autoregressive model to directly predict causal motion latents.
+By introducing Causal TAE,
+MotionStreamer supports online response with progressive textual inputs.
+We propose a Two-Forward training strategy to mitigate cumulative errors in streaming generation process.
+Our method outperforms baseline approaches, demonstrating its competitiveness in motion generation while providing greater flexibility. It can be applied to multi-round motion generation, long-term motion generation, and dynamic motion composition.
+Acknowledgement
+This work was partially supported by the National Key R&D Program of China (No. 2024YFB2809102), NSFC (No. 62402427, NO. U24B20154), Zhejiang Provincial Natural Science Foundation of China (No. LR25F020003), DeepGlint, Zhejiang University Education Foundation Qizhen Scholar Foundation, and Information Technology Center and State Key Lab of CAD&CG, Zhejiang University,
+the National Key R&D Program of China (2022ZD0160201), and Shanghai Artificial Intelligence Laboratory.
+References
+[1]
+Kushal Arora, Layla El Asri, Hareesh Bahuleyan, and Jackie Chi Kit Cheung.
+Why exposure bias matters: An imitation learning perspective of error accumulation in language generation.
+arXiv preprint arXiv:2204.01171
+, 2022.
+[2]
+Nikos Athanasiou, Mathis Petrovich, Michael J. Black, and Gül Varol.
+Teach: Temporal action compositions for 3d humans.
+In
+International Conference on 3D Vision (3DV)
+, 2022.
+[3]
+Omer Bar-Tal, Lior Yariv, Yaron Lipman, and Tali Dekel.
+Multidiffusion: Fusing diffusion paths for controlled image generation.
+2023.
+[4]
+German Barquero, Sergio Escalera, and Cristina Palmero.
+Seamless human motion composition with blended positional encodings.
+In
+Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition
+, pages 457–469, 2024.
+[5]
+Federica Bogo, Angjoo Kanazawa, Christoph Lassner, Peter Gehler, Javier Romero, and Michael J. Black.
+Keep it SMPL: Automatic estimation of 3D human pose and shape from a single image.
+In
+Computer Vision – ECCV 2016
+. Springer International Publishing, 2016.
+[6]
+Zhi Cen, Huaijin Pi, Sida Peng, Qing Shuai, Yujun Shen, Hujun Bao, Xiaowei Zhou, and Ruizhen Hu.
+Ready-to-react: Online reaction policy for two-character interaction generation.
+In
+ICLR
+, 2025.
+[7]
+Huiwen Chang, Han Zhang, Lu Jiang, Ce Liu, and William T Freeman.
+Maskgit: Masked generative image transformer.
+In
+Proceedings of the IEEE/CVF conference on computer vision and pattern recognition
+, pages 11315–11325, 2022.
+[8]
+Junhao Chen, Mingjin Chen, Jianjin Xu, Xiang Li, Junting Dong, Mingze Sun, Puhua Jiang, Hongxiang Li, Yuhang Yang, Hao Zhao, et al.
+Dancetogether! identity-preserving multi-person interactive video generation.
+arXiv preprint arXiv:2505.18078
+, 2025.
+[9]
+Ling-Hao Chen, Jiawei Zhang, Yewen Li, Yiren Pang, Xiaobo Xia, and Tongliang Liu.
+Humanmac: Masked motion completion for human motion prediction.
+In
+Proceedings of the IEEE/CVF international conference on computer vision
+, pages 9544–9555, 2023a.
+[10]
+Ling-Hao Chen, Shunlin Lu, Ailing Zeng, Hao Zhang, Benyou Wang, Ruimao Zhang, and Lei Zhang.
+Motionllm: Understanding human behaviors from human motions and videos.
+arXiv preprint arXiv:2405.20340
+, 2024a.
+[11]
+Rui Chen, Mingyi Shi, Shaoli Huang, Ping Tan, Taku Komura, and Xuelin Chen.
+Taming diffusion probabilistic models for character control.
+In
+ACM SIGGRAPH 2024 Conference Papers
+, pages 1–10, 2024b.
+[12]
+Xin Chen, Biao Jiang, Wen Liu, Zilong Huang, Bin Fu, Tao Chen, and Gang Yu.
+Executing your commands via motion diffusion in latent space.
+In
+Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition
+, pages 18000–18010, 2023b.
+[13]
+Wenxun Dai, Ling-Hao Chen, Yufei Huo, Jingbo Wang, Jinpeng Liu, Bo Dai, and Yansong Tang.
+Real-time controllable motion generation via latent consistency model.
+[14]
+Wenxun Dai, Ling-Hao Chen, Jingbo Wang, Jinpeng Liu, Bo Dai, and Yansong Tang.
+Motionlcm: Real-time controllable motion generation via latent consistency model.
+In
+European Conference on Computer Vision
+, pages 390–408. Springer, 2024.
+[15]
+Jacob Devlin, Ming-Wei Chang, Kenton Lee, and Kristina Toutanova.
+Bert: Pre-training of deep bidirectional transformers for language understanding.
+In
+Proceedings of the 2019 conference of the North American chapter of the association for computational linguistics: human language technologies, volume 1 (long and short papers)
+, pages 4171–4186, 2019.
+[16]
+GitHub discussion.
+rotation discussion.
+https://github.com/EricGuo5513/HumanML3D/issues/26
+, 2023.
+2023-03-04.
+[17]
+Ke Fan, Junshu Tang, Weijian Cao, Ran Yi, Moran Li, Jingyu Gong, Jiangning Zhang, Yabiao Wang, Chengjie Wang, and Lizhuang Ma.
+Freemotion: A unified framework for number-free text-to-motion synthesis.
+In
+European Conference on Computer Vision
+, pages 93–109. Springer, 2024a.
+[18]
+Ke Fan, Jiangning Zhang, Ran Yi, Jingyu Gong, Yabiao Wang, Yating Wang, Xin Tan, Chengjie Wang, and Lizhuang Ma.
+Textual decomposition then sub-motion-space scattering for open-vocabulary motion generation.
+arXiv preprint arXiv:2411.04079
+, 2024b.
+[19]
+Ke Fan, Shunlin Lu, Minyue Dai, Runyi Yu, Lixing Xiao, Zhiyang Dou, Junting Dong, Lizhuang Ma, and Jingbo Wang.
+Go to zero: Towards zero-shot motion generation with million-scale data.
+arXiv preprint arXiv:2507.07095
+, 2025.
+[20]
+Chuan Guo, Shihao Zou, Xinxin Zuo, Sen Wang, Wei Ji, Xingyu Li, and Li Cheng.
+Generating diverse and natural 3d human motions from text.
+In
+Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)
+, pages 5152–5161, 2022a.
+[21]
+Chuan Guo, Xinxin Zuo, Sen Wang, and Li Cheng.
+Tm2t: Stochastic and tokenized modeling for the reciprocal generation of 3d human motions and texts.
+In
+European Conference on Computer Vision
+, pages 580–597. Springer, 2022b.
+[22]
+Chuan Guo, Yuxuan Mu, Muhammad Gohar Javed, Sen Wang, and Li Cheng.
+Momask: Generative masked modeling of 3d human motions.
+In
+Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition
+, pages 1900–1910, 2024.
+[23]
+Kaiming He, Xiangyu Zhang, Shaoqing Ren, and Jian Sun.
+Deep residual learning for image recognition.
+In
+Proceedings of the IEEE conference on computer vision and pattern recognition
+, pages 770–778, 2016.
+[24]
+Alex Henry, Prudhvi Raj Dachapally, Shubham Pawar, and Yuxuan Chen.
+Query-key normalization for transformers.
+arXiv preprint arXiv:2010.04245
+, 2020.
+[25]
+Martin Heusel, Hubert Ramsauer, Thomas Unterthiner, Bernhard Nessler, and Sepp Hochreiter.
+Gans trained by a two time-scale update rule converge to a local nash equilibrium.
+Advances in neural information processing systems
+, 30, 2017.
+[26]
+Jonathan Ho and Tim Salimans.
+Classifier-free diffusion guidance.
+arXiv preprint arXiv:2207.12598
+, 2022.
+[27]
+Jonathan Ho, Ajay Jain, and Pieter Abbeel.
+Denoising diffusion probabilistic models.
+Advances in neural information processing systems
+, 33:6840–6851, 2020.
+[28]
+Bin Ji, Ye Pan, Yichao Yan, Ruizhao Chen, and Xiaokang Yang.
+Stylevr: Stylizing character animations with normalizing flows.
+IEEE Transactions on Visualization and Computer Graphics
+, 30(7):4183–4196, 2023.
+[29]
+Bin Ji, Ye Pan, Zhimeng Liu, Shuai Tan, Xiaogang Jin, and Xiaokang Yang.
+Pomp: Physics-consistent motion generative model through phase manifolds.
+In
+Proceedings of the Computer Vision and Pattern Recognition Conference
+, pages 22690–22701, 2025a.
+[30]
+Bin Ji, Ye Pan, Zhimeng Liu, Shuai Tan, and Xiaokang Yang.
+Sport: From zero-shot prompts to real-time motion generation.
+IEEE Transactions on Visualization and Computer Graphics
+, 2025b.
+[31]
+Biao Jiang, Xin Chen, Wen Liu, Jingyi Yu, Gang Yu, and Tao Chen.
+Motiongpt: Human motion as a foreign language.
+Advances in Neural Information Processing Systems
+, 36:20067–20079, 2023.
+[32]
+Diederik P Kingma, Max Welling, et al.
+Auto-encoding variational bayes, 2013.
+[33]
+Hanyang Kong, Kehong Gong, Dongze Lian, Michael Bi Mi, and Xinchao Wang.
+Priority-centric human motion generation in discrete latent space.
+In
+Proceedings of the IEEE/CVF International Conference on Computer Vision
+, pages 14806–14816, 2023.
+[34]
+Doyup Lee, Chiheon Kim, Saehoon Kim, Minsu Cho, and Wook-Shin Han.
+Autoregressive image generation using residual quantization.
+In
+Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition
+, pages 11523–11532, 2022.
+[35]
+Hongxiang Li, Yaowei Li, Yuhang Yang, Junjie Cao, Zhihong Zhu, Xuxin Cheng, and Long Chen.
+Dispose: Disentangling pose guidance for controllable human image animation.
+arXiv preprint arXiv:2412.09349
+, 2024a.
+[36]
+Tianhong Li, Yonglong Tian, He Li, Mingyang Deng, and Kaiming He.
+Autoregressive image generation without vector quantization.
+arXiv preprint arXiv:2406.11838
+, 2024b.
+[37]
+Matthew Loper, Naureen Mahmood, Javier Romero, Gerard Pons-Moll, and Michael J Black.
+Smpl: A skinned multi-person linear model.
+In
+Seminal Graphics Papers: Pushing the Boundaries, Volume 2
+, pages 851–866. 2023.
+[38]
+Ilya Loshchilov and Frank Hutter.
+Decoupled weight decay regularization.
+arXiv preprint arXiv:1711.05101
+, 2017.
+[39]
+Shunlin Lu, Ling-Hao Chen, Ailing Zeng, Jing Lin, Ruimao Zhang, Lei Zhang, and Heung-Yeung Shum.
+Humantomato: Text-aligned whole-body motion generation.
+arXiv preprint arXiv:2310.12978
+, 2023.
+[40]
+Shunlin Lu, Jingbo Wang, Zeyu Lu, Ling-Hao Chen, Wenxun Dai, Junting Dong, Zhiyang Dou, Bo Dai, and Ruimao Zhang.
+Scamo: Exploring the scaling law in autoregressive motion generation model.
+arXiv preprint arXiv:2412.14559
+, 2024.
+[41]
+Naureen Mahmood, Nima Ghorbani, Nikolaus F Troje, Gerard Pons-Moll, and Michael J Black.
+Amass: Archive of motion capture as surface shapes.
+In
+Proceedings of the IEEE/CVF international conference on computer vision
+, pages 5442–5451, 2019.
+[42]
+Lingwei Meng, Long Zhou, Shujie Liu, Sanyuan Chen, Bing Han, Shujie Hu, Yanqing Liu, Jinyu Li, Sheng Zhao, Xixin Wu, et al.
+Autoregressive speech synthesis without vector quantization.
+arXiv preprint arXiv:2407.08551
+, 2024a.
+[43]
+Zichong Meng, Yiming Xie, Xiaogang Peng, Zeyu Han, and Huaizu Jiang.
+Rethinking diffusion for text-driven human motion generation.
+arXiv preprint arXiv:2411.16575
+, 2024b.
+[44]
+Zichong Meng, Zeyu Han, Xiaogang Peng, Yiming Xie, and Huaizu Jiang.
+Absolute coordinates make motion generation easy.
+arXiv preprint arXiv:2505.19377
+, 2025.
+[45]
+Liang Pan, Zeshi Yang, Zhiyang Dou, Wenjia Wang, Buzhen Huang, Bo Dai, Taku Komura, and Jingbo Wang.
+Tokenhsi: Unified synthesis of physical human-scene interactions through task tokenization.
+In
+Proceedings of the Computer Vision and Pattern Recognition Conference
+, pages 5379–5391, 2025.
+[46]
+William Peebles and Saining Xie.
+Scalable diffusion models with transformers.
+In
+Proceedings of the IEEE/CVF international conference on computer vision
+, pages 4195–4205, 2023.
+[47]
+Mathis Petrovich, Michael J Black, and Gül Varol.
+Temos: Generating diverse human motions from textual descriptions.
+In
+European Conference on Computer Vision
+, pages 480–497. Springer, 2022.
+[48]
+Mathis Petrovich, Michael J Black, and Gül Varol.
+Tmr: Text-to-motion retrieval using contrastive 3d human motion synthesis.
+In
+Proceedings of the IEEE/CVF International Conference on Computer Vision
+, pages 9488–9497, 2023.
+[49]
+Huaijin Pi, Sida Peng, Minghui Yang, Xiaowei Zhou, and Hujun Bao.
+Hierarchical generation of human-object interactions with diffusion probabilistic models.
+In
+Proceedings of the IEEE/CVF International Conference on Computer Vision
+, pages 15061–15073, 2023.
+[50]
+Huaijin Pi, Ruoxi Guo, Zehong Shen, Qing Shuai, Zechen Hu, Zhumei Wang, Yajiao Dong, Ruizhen Hu, Taku Komura, Sida Peng, et al.
+Motion-2-to-3: Leveraging 2d motion data to boost 3d motion generation.
+arXiv preprint arXiv:2412.13111
+, 2024.
+[51]
+Huaijin Pi, Zhi Cen, Zhiyang Dou, and Taku Komura.
+Coda: Coordinated diffusion noise optimization for whole-body manipulation of articulated objects.
+arXiv preprint arXiv:2505.21437
+, 2025.
+[52]
+Ekkasit Pinyoanuntapong, Muhammad Usama Saleem, Pu Wang, Minwoo Lee, Srijan Das, and Chen Chen.
+Bamm: bidirectional autoregressive motion model.
+In
+European Conference on Computer Vision
+, pages 172–190. Springer, 2024a.
+[53]
+Ekkasit Pinyoanuntapong, Pu Wang, Minwoo Lee, and Chen Chen.
+Mmm: Generative masked motion model.
+In
+Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition
+, pages 1546–1555, 2024b.
+[54]
+Abhinanda R. Punnakkal, Arjun Chandrasekaran, Nikos Athanasiou, Alejandra Quiros-Ramirez, and Michael J. Black.
+BABEL: Bodies, action and behavior with english labels.
+In
+Proceedings IEEE/CVF Conf. on Computer Vision and Pattern Recognition (CVPR)
+, pages 722–731, 2021.
+[55]
+Alec Radford, Jong Wook Kim, Chris Hallacy, Aditya Ramesh, Gabriel Goh, Sandhini Agarwal, Girish Sastry, Amanda Askell, Pamela Mishkin, Jack Clark, et al.
+Learning transferable visual models from natural language supervision.
+In
+International conference on machine learning
+, pages 8748–8763. PmLR, 2021.
+[56]
+Colin Raffel, Noam Shazeer, Adam Roberts, Katherine Lee, Sharan Narang, Michael Matena, Yanqi Zhou, Wei Li, and Peter J Liu.
+Exploring the limits of transfer learning with a unified text-to-text transformer.
+Journal of machine learning research
+, 21(140):1–67, 2020.
+[57]
+Robin Rombach, Andreas Blattmann, Dominik Lorenz, Patrick Esser, and Björn Ommer.
+High-resolution image synthesis with latent diffusion models.
+In
+Proceedings of the IEEE/CVF conference on computer vision and pattern recognition
+, pages 10684–10695, 2022.
+[58]
+Oleh Rybkin, Kostas Daniilidis, and Sergey Levine.
+Simple and effective vae training with calibrated decoders.
+In
+International conference on machine learning
+, pages 9179–9189. PMLR, 2021.
+[59]
+Yonatan Shafir, Guy Tevet, Roy Kapon, and Amit H Bermano.
+Human motion diffusion as a generative prior.
+arXiv preprint arXiv:2303.01418
+, 2023.
+[60]
+Yi Shi, Jingbo Wang, Xuekun Jiang, Bingkun Lin, Bo Dai, and Xue Bin Peng.
+Interactive character control with auto-regressive motion diffusion models.
+ACM Transactions on Graphics (TOG)
+, 43(4):1–14, 2024a.
+[61]
+Yi Shi, Jingbo Wang, Xuekun Jiang, Bingkun Lin, Bo Dai, and Xue Bin Peng.
+Interactive character control with auto-regressive motion diffusion models.
+ACM Transactions on Graphics (TOG)
+, 43(4):1–14, 2024b.
+[62]
+Sebastian Starke, He Zhang, Taku Komura, and Jun Saito.
+Neural state machine for character-scene interactions.
+ACM Transactions on Graphics
+, 38(6):178, 2019.
+[63]
+Jianlin Su, Murtadha Ahmed, Yu Lu, Shengfeng Pan, Wen Bo, and Yunfeng Liu.
+Roformer: Enhanced transformer with rotary position embedding.
+Neurocomputing
+, 568:127063, 2024.
+[64]
+Guy Tevet, Sigal Raab, Brian Gordon, Yoni Shafir, Daniel Cohen-or, and Amit Haim Bermano.
+Human motion diffusion model.
+In
+The Eleventh International Conference on Learning Representations
+, 2023.
+[65]
+Guy Tevet, Sigal Raab, Setareh Cohan, Daniele Reda, Zhengyi Luo, Xue Bin Peng, Amit H Bermano, and Michiel van de Panne.
+Closd: Closing the loop between simulation and diffusion for multi-task character control.
+arXiv preprint arXiv:2410.03441
+, 2024.
+[66]
+Hugo Touvron, Thibaut Lavril, Gautier Izacard, Xavier Martinet, Marie-Anne Lachaux, Timothée Lacroix, Baptiste Rozière, Naman Goyal, Eric Hambro, Faisal Azhar, et al.
+Llama: Open and efficient foundation language models.
+arXiv preprint arXiv:2302.13971
+, 2023.
+[67]
+Aaron Van Den Oord, Oriol Vinyals, et al.
+Neural discrete representation learning.
+Advances in neural information processing systems
+, 30, 2017.
+[68]
+Yin Wang, Zhiying Leng, Frederick WB Li, Shun-Cheng Wu, and Xiaohui Liang.
+Fg-t2m: Fine-grained text-driven human motion generation via diffusion model.
+In
+Proceedings of the IEEE/CVF International Conference on Computer Vision
+, pages 22035–22044, 2023.
+[69]
+Yabiao Wang, Shuo Wang, Jiangning Zhang, Ke Fan, Jiafu Wu, Zhucun Xue, and Yong Liu.
+Timotion: Temporal and interactive framework for efficient human-human motion generation.
+In
+Proceedings of the Computer Vision and Pattern Recognition Conference
+, pages 7169–7178, 2025.
+[70]
+Shuyang Xu, Zhiyang Dou, Mingyi Shi, Liang Pan, Leo Ho, Jingbo Wang, Yuan Liu, Cheng Lin, Yuexin Ma, Wenping Wang, et al.
+Mospa: Human motion generation driven by spatial audio.
+arXiv preprint arXiv:2507.11949
+, 2025.
+[71]
+Yuhang Yang, Fengqi Liu, Yixing Lu, Qin Zhao, Pingyu Wu, Wei Zhai, Ran Yi, Yang Cao, Lizhuang Ma, Zheng-Jun Zha, et al.
+Sigman: Scaling 3d human gaussian generation with millions of assets.
+arXiv preprint arXiv:2504.06982
+, 2025.
+[72]
+Zhao Yang, Bing Su, and Ji-Rong Wen.
+Synthesizing long-term human motions with diffusion models via coherent sampling.
+In
+Proceedings of the 31st ACM International Conference on Multimedia
+, pages 3954–3964, 2023.
+[73]
+Chengjun Yu, Wei Zhai, Yuhang Yang, Yang Cao, and Zheng-Jun Zha.
+Hero: Human reaction generation from videos.
+arXiv preprint arXiv:2503.08270
+, 2025a.
+[74]
+Lijun Yu, José Lezama, Nitesh B Gundavarapu, Luca Versari, Kihyuk Sohn, David Minnen, Yong Cheng, Vighnesh Birodkar, Agrim Gupta, Xiuye Gu, et al.
+Language model beats diffusion–tokenizer is key to visual generation.
+arXiv preprint arXiv:2310.05737
+, 2023.
+[75]
+Runyi Yu, Yinhuai Wang, Qihan Zhao, Hok Wai Tsui, Jingbo Wang, Ping Tan, and Qifeng Chen.
+Skillmimic-v2: Learning robust and generalizable interaction skills from sparse and noisy demonstrations.
+arXiv preprint arXiv:2505.02094
+, 2025b.
+[76]
+Jianrong Zhang, Yangsong Zhang, Xiaodong Cun, Shaoli Huang, Yong Zhang, Hongwei Zhao, Hongtao Lu, and Xi Shen.
+T2m-gpt: Generating human motion from textual descriptions with discrete representations.
+In
+Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)
+, 2023.
+[77]
+Mingyuan Zhang, Zhongang Cai, Liang Pan, Fangzhou Hong, Xinying Guo, Lei Yang, and Ziwei Liu.
+Motiondiffuse: Text-driven human motion generation with diffusion model.
+IEEE transactions on pattern analysis and machine intelligence
+, 46(6):4115–4128, 2024a.
+[78]
+Yaqi Zhang, Di Huang, Bin Liu, Shixiang Tang, Yan Lu, Lu Chen, Lei Bai, Qi Chu, Nenghai Yu, and Wanli Ouyang.
+Motiongpt: Finetuned llms are general-purpose motion generators.
+In
+Proceedings of the AAAI Conference on Artificial Intelligence
+, pages 7368–7376, 2024b.
+[79]
+Yuhong Zhang, Guanlin Wu, Ling-Hao Chen, Zhuokai Zhao, Jing Lin, Xiaoke Jiang, Jiamin Wu, Zhuoheng Li, Hao Frank Yang, Haoqian Wang, et al.
+Humanmm: Global human motion recovery from multi-shot videos.
+In
+Proceedings of the Computer Vision and Pattern Recognition Conference
+, pages 1973–1983, 2025.
+[80]
+Kaifeng Zhao, Gen Li, and Siyu Tang.
+Dart: A diffusion-based autoregressive motion model for real-time text-driven motion control.
+arXiv preprint arXiv:2410.05260
+, 2024.
+[81]
+Chongyang Zhong, Lei Hu, Zihao Zhang, and Shihong Xia.
+Attt2m: Text-driven human motion generation with multi-perspective attention mechanism.
+In
+Proceedings of the IEEE/CVF International Conference on Computer Vision
+, pages 509–519, 2023.
+[82]
+Zixiang Zhou, Yu Wan, and Baoyuan Wang.
+Avatargpt: All-in-one framework for motion understanding planning generation and beyond.
+In
+Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition
+, pages 1357–1366, 2024.
+Appendix of “MotionStreamer: Streaming Motion Generation via Diffusion-based Autoregressive Model in Causal Latent Space”
+A
+Implementation Details
+For the Causal TAE, both the encoder and decoder are based on the 1D causal ResNet blocks
+[
+23
+]
+.
+The temporal downsampling rate
+[MATH: l]
+is set to 4 and all motion sequences are cropped to
+[MATH: N=64]
+frames during training.
+We train the first 1900K iterations with a learning rate of 5e-5 and the remaining 100K iterations with a learning rate of 2.5e-6.
+We use the AdamW optimizer
+[
+38
+]
+with
+[MATH: [\beta_{1},\beta_{2}]=[0.9,0.99]]
+and a batch size of 128. We provide an ablation study on the hyperparameter
+[MATH: \lambda]
+of root loss
+[MATH: L_{root}]
+in Tab.
+5
+.
+The latent dimension
+[MATH: d_{c}]
+and hidden size are set to 16 and 1024, respectively.
+The latent dimension significantly impacts the compression rate,
+while the hidden size affects the model’s capacity.
+Both factors influence reconstruction and subsequent generation quality,
+requiring a careful trade-off between compression efficiency and generative performance.
+Ablation studies on the latent dimension and hidden size are provided in Tab.
+6
+.
+To further improve the quality of the reconstructed motion, we add a linear layer after the embedded Gaussian distribution parameters as a latent adapter to
+get a lower-dimensional and more compact latent space
+for subsequent sampling, as proposed in
+[
+13
+]
+.
+For the Transformer inside the AR model, we use the architecture akin to LLaMA
+[
+66
+]
+with 12 layers,
+12 attention heads and 768 hidden dimension.
+The ablation for different scales of the Transformer is provided in Tab.
+7
+.
+Block size is set to 78 and we choose RoPE
+[
+63
+]
+as the positional encoding.
+For the diffusion head after Transformer, we use MLPs with 1792 hidden dimension and 9 layers.
+The output vectors of the Transformer serve as the condition of denoising via AdaLN
+[
+46
+]
+.
+We adopt a cosine noise schedule with 50 steps for the DDPM
+[
+27
+]
+denoising process following
+[
+64
+]
+.
+During training, the minimum and maximum length of motion sequences are set to 40 and 300 for both datasets.
+We insert an additional reference end latent at the end of each motion sequence to indicate the stop of generation.
+For Two-Forward strategy, a cosine scheduler is employed to control the ratio of replaced motion tokens, which can be formulated as:
+[MATH: \gamma_{t}=\frac{1}{2}(1-\cos(\frac{\pi t}{T}))]
+,
+where
+[MATH: t]
+is current iteration step and
+[MATH: T]
+is the total number of iterations.
+When
+[MATH: t=0]
+,
+[MATH: \gamma_{t}=0]
+, indicating that no generated motion tokens in the first forward pass are replaced, thus relying on the ground-truth motion tokens only.
+When
+[MATH: t=T]
+,
+[MATH: \gamma_{t}=1]
+, indicating that all generated motion tokens in the first forward pass are replaced, thus relying on the generated motion tokens only.
+We use the same optimizer as the Causal TAE and a batch size of 256.
+The initial learning rate is 1e-4 after 10K warmup iterations and decay to 0 for another 90K iterations using cosine learning rate scheduler.
+Our experiments are conducted on A800 GPUs.
+[MATH: \lambda]
+FID
+[MATH: \downarrow]
+MPJPE
+[MATH: \downarrow]
+5.0
+0.696
+25.2
+6.0
+0.684
+24.8
+7.0
+0.661
+22.9
+8.0
+0.682
+24.2
+9.0
+0.704
+26.8
+Table 5
+:
+Analysis of
+[MATH: \lambda]
+on the HumanML3D
+[
+20
+]
+test dataset.
+Methods
+Reconstruction
+Generation
+FID
+[MATH: \downarrow]
+MPJPE
+[MATH: \downarrow]
+FID
+[MATH: \downarrow]
+R@1
+[MATH: \uparrow]
+R@2
+[MATH: \uparrow]
+R@3
+[MATH: \uparrow]
+MM-D
+[MATH: \downarrow]
+Div
+[MATH: \rightarrow]
+Real motion
+-
+-
+0.002
+0.702
+0.864
+0.914
+15.151
+27.492
+(12,512)
+8.862
+38.5
+21.078
+0.600
+0.759
+0.827
+17.143
+27.456
+(12,1024)
+1.710
+31.2
+12.778
+0.628
+0.779
+0.845
+16.756
+27.408
+(12,1280)
+2.035
+32.9
+12.872
+0.624
+0.780
+0.849
+16.587
+27.455
+(12,1792)
+1.563
+28.3
+11.916
+0.628
+0.782
+0.850
+16.468
+27.461
+(12,2048)
+1.732
+28.9
+13.394
+0.611
+0.770
+0.831
+16.852
+27.417
+(14,512)
+2.902
+33.6
+16.612
+0.607
+0.772
+0.836
+16.947
+27.328
+(14,1024)
+0.838
+27.5
+11.933
+0.627
+0.778
+0.840
+16.593
+27.443
+(14,1280)
+0.919
+26.4
+12.603
+0.603
+0.772
+0.841
+16.863
+27.414
+(14,1792)
+0.732
+24.8
+11.828
+0.628
+0.776
+0.848
+16.652
+27.122
+(14,2048)
+1.370
+26.5
+12.261
+0.621
+0.768
+0.841
+16.734
+27.417
+(16,512)
+1.300
+30.3
+14.096
+0.605
+0.770
+0.839
+16.882
+27.306
+(16,1024)
+0.661
+22.9
+11.790
+0.631
+0.802
+0.859
+16.081
+27.284
+(16,1280)
+1.087
+25.0
+12.975
+0.598
+0.761
+0.831
+17.002
+27.403
+(16,1792)
+0.540
+22.0
+11.992
+0.630
+0.767
+0.846
+16.644
+27.419
+(16,2048)
+1.547
+26.2
+12.778
+0.604
+0.755
+0.824
+16.897
+27.306
+(18,512)
+2.043
+27.7
+19.150
+0.553
+0.701
+0.775
+17.776
+27.345
+(18,1024)
+0.656
+23.4
+11.838
+0.619
+0.775
+0.840
+16.816
+27.356
+(18,1280)
+0.820
+23.1
+11.815
+0.629
+0.801
+0.847
+16.816
+27.461
+(18,1792)
+1.045
+22.1
+12.514
+0.612
+0.774
+0.840
+16.915
+27.412
+(18,2048)
+0.595
+21.5
+11.803
+0.613
+0.801
+0.832
+17.004
+27.451
+(20,512)
+0.531
+24.5
+12.247
+0.613
+0.765
+0.832
+16.920
+27.277
+(20,1024)
+0.379
+19.9
+11.814
+0.630
+0.765
+0.847
+16.802
+27.485
+(20,1280)
+0.429
+20.1
+16.465
+0.557
+0.705
+0.774
+17.680
+27.490
+(20,1792)
+0.548
+20.1
+11.845
+0.616
+0.776
+0.842
+16.919
+27.392
+(20,2048)
+0.690
+20.7
+11.910
+0.625
+0.782
+0.844
+16.785
+27.346
+Table 6
+:
+Ablation Study of different Causal TAE architecture designs
+on HumanML3D
+[
+20
+]
+test set. Each generation model remains the same.
+MPJPE is measured in millimeters.
+(16, 1024) indicates the latent dimension and hidden size of the Causal TAE.
+B
+Causal TAE Architecture
+The detailed architecture of the Causal TAE is shown in Fig.
+9
+and Tab.
+8
+.
+Input motion sequences are first encoded into a latent space with a 1D causal ResNet.
+The latent space is then projected to a sequence of Gaussian distribution parameters.
+Then a linear adapter is applied to the embedded Gaussian distribution parameters to lower the dimension of latent space.
+Sampling is performed in the lower-dimensional latent space.
+The decoder comprises a mirror process to progressively reconstruct the motion sequence.
+C
+AR Model Architecture
+We provide an ablation study on the architecture of the AR model, including the number of Transformer layers, attention heads, hidden dimension,
+and the number of diffusion head layers, as shown in Tab.
+7
+.
+We finally leverage the 12-layer, 12-head, 768-hidden dimension, and 9-layer diffusion head architecture.
+D
+Classifier-free guidance
+We adopt the classifier-free guidance (CFG)
+[
+26
+]
+technique to improve the generation quality of the autoregressive motion generator.
+Specifically, during training, we replace 10% of the text within a batch with a blank text as unconditioned samples,
+while during inference, CFG is applied to the denoising process of the diffusion head, which can be formulated as:
+[MATH: \epsilon_{g}=\epsilon_{u}+s(\epsilon_{c}-\epsilon_{u}).]
+(8)
+where
+[MATH: \epsilon_{g}]
+is the guided noise,
+[MATH: \epsilon_{u}]
+is the unconditioned noise,
+[MATH: \epsilon_{c}]
+is the conditioned noise,
+[MATH: s]
+is the CFG scale.
+We provide an ablation study on the CFG scale
+[MATH: s]
+in Fig.
+7
+.
+Finally, we choose
+[MATH: s=4.0]
+for all experiments.
+Figure 7
+:
+Ablation of CFG scale
+on HumanML3D
+[
+20
+]
+test set.
+[MATH: scale=1]
+means do not use CFG.
+AR. layers
+AR. heads
+AR. dim
+Diff. layers
+FID
+[MATH: \downarrow]
+R@1
+[MATH: \uparrow]
+R@2
+[MATH: \uparrow]
+R@3
+[MATH: \uparrow]
+MM-D
+[MATH: \downarrow]
+Div
+[MATH: \rightarrow]
+8
+8
+512
+2
+14.336
+0.598
+0.747
+0.802
+16.983
+27.287
+8
+8
+512
+3
+13.764
+0.602
+0.758
+0.819
+16.972
+27.242
+8
+8
+512
+4
+12.893
+0.608
+0.764
+0.828
+16.661
+27.351
+8
+8
+512
+9
+11.823
+0.623
+0.772
+0.835
+16.655
+27.385
+8
+8
+512
+16
+12.460
+0.621
+0.778
+0.849
+16.784
+27.410
+12
+12
+768
+2
+11.899
+0.601
+0.763
+0.828
+16.952
+27.406
+12
+12
+768
+3
+11.798
+0.630
+0.779
+0.844
+16.761
+27.482
+12
+12
+768
+4
+12.051
+0.604
+0.762
+0.829
+16.940
+27.401
+12
+12
+768
+9
+11.790
+0.631
+0.802
+0.859
+16.081
+27.284
+12
+12
+768
+16
+11.825
+0.624
+0.773
+0.844
+16.757
+27.341
+16
+16
+1024
+2
+12.836
+0.606
+0.765
+0.832
+16.901
+27.319
+16
+16
+1024
+3
+12.436
+0.601
+0.761
+0.830
+16.919
+27.302
+16
+16
+1024
+4
+13.005
+0.614
+0.763
+0.830
+16.967
+27.196
+16
+16
+1024
+9
+12.093
+0.614
+0.778
+0.843
+16.850
+27.308
+16
+16
+1024
+16
+11.812
+0.630
+0.780
+0.846
+16.598
+27.286
+Table 7
+:
+Ablation study of AR Model architecture
+on HumanML3D
+[
+20
+]
+test set.
+For each architecture, we use the same Causal TAE.
+E
+Failure of Inverse Kinematics
+Post-processing for 263-dimensional motion representation.
+Most previous works
+[
+64
+,
+22
+,
+76
+]
+uses 263-dimensional motion representation
+[
+20
+]
+.
+The representation can be written as follows:
+[MATH: x=\{\dot{r}^{a},\dot{r}^{x},\dot{r}^{z},r^{y},\,j^{p},\,j^{v},\,j^{r},c\},]
+(9)
+where the root is projected on the XZ-plane (ground plane),
+[MATH: \dot{r}^{a}\in\mathbb{R}^{1}]
+denotes root angular velocity along the Y-axis,
+[MATH: (\dot{r}^{x},\dot{r}^{z}\in\mathbb{R})]
+are root linear velocities on the XZ-plane,
+[MATH: r^{y}\in\mathbb{R}]
+is the root height,
+[MATH: j^{p}\in\mathbb{R}^{3(K-1)}]
+,
+[MATH: j^{v}\in\mathbb{R}^{3K}]
+, and
+[MATH: j^{r}\in\mathbb{R}^{6(K-1)}]
+are local joint positions, local velocities, and local rotations
+relative to the root,
+[MATH: K]
+is the number of joints (including the root), and
+[MATH: c\in\mathbb{R}^{4}]
+is the contact label.
+For SMPL characters, we have
+[MATH: K=22]
+and we get
+[MATH: 2+1+1+3\times 21+3\times 22+6\times 21+4=263]
+dimensions.
+In the original implementation
+[
+20
+]
+, the joint rotation is directly solved using Inverse Kinematics (IK) with relative joint positions.
+In such way, the joint loses twist rotation and directly applying the joint rotation to the character faces a lot of rotation error
+[
+16
+]
+,
+as shown in Fig.
+8
+.
+To overcome this issue, previous works
+[
+64
+,
+22
+,
+76
+]
+only uses the positions and employs SMPLify
+[
+5
+]
+to solve the real SMPL joint rotation.
+This process is time-consuming (around
+[MATH: 60]
+seconds for a
+[MATH: 10]
+seconds motion clip) and also introduces unnatural results like jittering head
+[
+64
+]
+.
+Most data in the HumanML3D
+[
+20
+]
+dataset comes from the AMASS
+[
+41
+]
+dataset.
+As the AMASS dataset provides the SMPL joint rotation, we slightly modify the motion representation by directly using the SMPL joint rotation and make it a 6D rotation for better learning.
+Consequently, we remove the slow post-processing step and easily drive the SMPL character with the generated rotations.
+The processing scripts to obtain our 272-dim motion representation are available at
+https://github.com/Li-xingXiao/272-dim-Motion-Representation
+.
+F
+Limitations and Future work
+Limitations.
+Despite its effectiveness, the streaming generation paradigm limits the applications of motion in-betweening and localized editing
+of intermediate tokens, as it inherently relies on unidirectional modeling.
+This limitation restricts flexibility in scenarios requiring fine-grained adjustments,
+such as seamlessly inserting new motions between existing frames or interactively refining motion details while preserving global coherence.
+Future work.
+Future work could explore hybrid strategies that allow bidirectional refinement without compromising streaming generation.
+One potential way is to predict a set of future latents at each step,
+which could enable motion in-between and localized editing while preserving streaming manner.
+Figure 8
+:
+Failure of Inverse Kinematics.
+The joint rotation is directly solved using IK with relative joint positions,
+which leads to unnatural results like jittering body parts.
+Components
+Architecture
+Causal TAE Encoder
+(0): CausalConv1D(
+[MATH: D_{in}]
+, 1024, kernel_size=(3,), stride=(1,), dilation=(1,), padding=(2,))
+(1): ReLU()
+(2): 2
+[MATH: \times]
+Sequential(
+(0): CausalConv1D(1024, 1024, kernel_size=(4,), stride=(2,), dilation=(1,), padding=(2,))
+(1): CausalResnet1D(
+(0): CausalResConv1DBlock(
+(activation1): ReLU()
+(conv1): CausalConv1D(1024, 1024, kernel_size=(3,), stride=(1,), dilation=(9,), padding=(18,))
+(activation2): ReLU()
+(conv2): CausalConv1D(1024, 1024, kernel_size=(1,), stride=(1,), dilation=(1,), padding=(0,)))
+(1): CausalResConv1DBlock(
+(activation1): ReLU()
+(conv1): CausalConv1D(1024, 1024, kernel_size=(3,), stride=(1,), dilation=(3,), padding=(6,))
+(activation2): ReLU()
+(conv2): CausalConv1D(1024, 1024, kernel_size=(1,), stride=(1,), dilation=(1,), padding=(0,)))
+(2): CausalResConv1DBlock(
+(activation1): ReLU()
+(conv1): CausalConv1D(1024, 1024, kernel_size=(3,), stride=(1,), dilation=(1,), padding=(2,))
+(activation2): ReLU()
+(conv2): CausalConv1D(1024, 1024, kernel_size=(1,), stride=(1,), dilation=(1,), padding=(0,)))))
+(3): CausalConv1D(1024, 1024, kernel_size=(3,), stride=(1,), dilation=(1,), padding=(2,))
+Causal TAE Decoder
+(0): CausalConv1D(1024, 1024, kernel_size=(3,), stride=(1,), dilation=(1,), padding=(2,))
+(1): ReLU()
+(2): 2
+[MATH: \times]
+Sequential(
+(0): CausalResnet1D(
+(0): CausalResConv1DBlock(
+(activation1): ReLU()
+(conv1): CausalConv1D(1024, 1024, kernel_size=(3,), stride=(1,), dilation=(9,), padding=(18,))
+(activation2): ReLU()
+(conv2): CausalConv1D(1024, 1024, kernel_size=(1,), stride=(1,), dilation=(1,), padding=(0,)))
+(1): CausalResConv1DBlock(
+(activation1): ReLU()
+(conv1): CausalConv1D(1024, 1024, kernel_size=(3,), stride=(1,), dilation=(3,), padding=(6,))
+(activation2): ReLU()
+(conv2): CausalConv1D(1024, 1024, kernel_size=(1,), stride=(1,), dilation=(1,), padding=(0,)))
+(2): CausalResConv1DBlock(
+(activation1): ReLU()
+(conv1): CausalConv1D(1024, 1024, kernel_size=(3,), stride=(1,), dilation=(1,), padding=(2,))
+(activation2): ReLU()
+(conv2): CausalConv1D(1024, 1024, kernel_size=(1,), stride=(1,), dilation=(1,), padding=(0,)))))
+(1): Upsample(scale_factor=2.0, mode=nearest)
+(2): CausalConv1D(1024, 1024, kernel_size=(3,), stride=(1,), dilation=(1,), padding=(2,))
+(3) CausalConv1D(1024, 1024, kernel_size=(3,), stride=(1,), dilation=(1,), padding=(2,))
+(4): ReLU()
+(5): CausalConv1D(1024,
+[MATH: D_{in}]
+, kernel_size=(3,), stride=(1,), dilation=(1,), padding=(2,))
+Table 8
+:
+Detail architecture
+of the proposed Causal TAE.
+Figure 9
+:
+Architecture of Causal TAE.
+Motion latents are sampled in a continuous causal latent space.
+Figure 10
+:
+Architecture of Transformer blocks in AR model.
+QK Norm is applied to enhance training stability.

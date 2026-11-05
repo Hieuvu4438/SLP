@@ -1,0 +1,6 @@
+{
+  "url": "https://raw.githubusercontent.com/vchoutas/smplx/main/smplx/joint_names.py",
+  "sha256": "1515994aaf8fb2539f8c1059bfd7c08e623d5d4f6921223ce3d6c2a482bcbb8c",
+  "read_scope": "JOINT_NAMES first 22 entries; mapping only, not package audit",
+  "retrieved_date": "2026-11-05"
+}

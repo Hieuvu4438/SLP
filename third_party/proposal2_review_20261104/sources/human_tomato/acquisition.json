@@ -1,0 +1,69 @@
+{
+  "key": "human_tomato",
+  "requested_id": "2310.12978",
+  "retrieved_at": "2026-11-04T16:53:21.999437+00:00",
+  "reading_level": "unread",
+  "artifacts": [
+    {
+      "kind": "metadata",
+      "url": "https://arxiv.org/abs/2310.12978",
+      "path": "sources/human_tomato/metadata.html",
+      "sha256": "c46b47602018bbc235606413a619893e1257d891fd6848b6640ec471a8a5bd5f",
+      "bytes": 42364
+    },
+    {
+      "kind": "html",
+      "url": "https://arxiv.org/html/2310.12978",
+      "path": "sources/human_tomato/html.html",
+      "sha256": "0ba1dc7bb0aba4ab48b0067bdad8aa23d80c5cb0964153e3a202ff6866716d93",
+      "bytes": 480942
+    }
+  ],
+  "title": "HumanTOMATO: Text-aligned Whole-body Motion Generation",
+  "history": "Submission history From: Ling-Hao Chen [ view email ] [v1] Thu, 19 Oct 2023 17:59:46 UTC (5,112 KB)",
+  "canonical_ids": [
+    "2310.12978v1"
+  ],
+  "headings": [
+    "HumanTOMATO: Text-aligned Whole-body Motion Generation",
+    "1 Introduction",
+    "2 Methodology",
+    "2.1 Problem Formulation",
+    "2.2 Learning Discrete Whole-body Representations",
+    "2.3 Hierarchical Whole-body Motion Generation",
+    "2.4 Pre-trained Text-motion Retrieval Model as a Prior",
+    "2.5 Model Training and Inference",
+    "3 Experiments",
+    "3.1 Datasets and Evaluation",
+    "3.1.1 Whole-body and Body-only Datasets",
+    "3.1.2 Evaluation",
+    "3.2 Implementation Details",
+    "3.3 Main Results Analysis (RQ1)",
+    "3.4 Abaltion on Hierarchical Discrete Representations (RQ2)",
+    "3.5 Text-motion Retrieval Model As A Prior (RQ3)",
+    "3.6 Analysis on Evaluation Metrics (RQ4)",
+    "4 Conclusion",
+    "References",
+    "Appendix A Related Work",
+    "Appendix B Implementation Details",
+    "B.1 Motion Representation",
+    "B.2 Implementation Details of Hierarchical Motion VQ-VAE",
+    "B.3 Implementation Details of the Hierarchical-GPT.",
+    "B.4 Facial cVAE",
+    "Appendix C Algorithm Flow of H 2 VQ and comparison with Residual Vector Quantization",
+    "C.1 Training and Inference of H 2 VQ",
+    "C.2 Comparsion with Residual Vector Quantization (RVQ)",
+    "Appendix D Training Details and Evaluation on Text-motion Retrieval Pre-training",
+    "D.1 Train Details",
+    "D.2 Evaluation of the Retrieval Model",
+    "Appendix E Failure Cases of Baselines",
+    "Appendix F More Details on Main Results (RQ1)",
+    "F.1 Quantitative Comparison",
+    "Appendix G Comparison on Different Vector Quantization Methods (RQ2)",
+    "Appendix H Text-motion Retrieval Model As A Prior (RQ3)",
+    "H.1 Quantitative Results on HumanML3D",
+    "H.2 Pre-trained Text-motion Retrieval Model as a Prior",
+    "Appendix I Details on the Evaluation Metrics (RQ4)",
+    "Appendix J Broader Impact and Limitation"
+  ]
+}

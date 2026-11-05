@@ -1,0 +1,2578 @@
+MotionHiFlow: Text-to-Motion via Hierarchical Flow Matching
+Heng Li
+1
+Xiaotong Lin
+1
+Ling-An Zeng
+1
+Yulei Kang
+1
+Shuai Li
+2
+Jian-Fang Hu
+1,3,4†
+1
+Sun Yat-sen University
+2
+Shandong University
+3
+Guangdong Province Key Laboratory of Information Security Technology, China
+4
+Key Laboratory of Machine Intelligence and Advanced Computing, Ministry of Education, China
+{liheng36, linxt29, zenglan3, kangylei}@mail2.sysu.edu.cn, shuaili@sdu.edu.cn, hujf5@mail.sysu.edu.cn
+Abstract
+Text-to-motion generation aims to generate 3D human motions that are tightly aligned with the input text while remaining physically plausible and rich in fine-grained detail. Although recent approaches can produce complex and natural movements, they usually operate at only one temporal scale, which limits both semantic alignment and temporal coherence. Inspired by the fact that complex motions are conceptualized hierarchically rather than at a single temporal scale in the human cognitive system, we propose
+MotionHiFlow
+, a hierarchical flow matching framework to generate motion progressively by constructing flow path from low to high temporal scales. The flows at lower scales capture high-level semantics and coarse motion structures, while flows at higher scales refine temporal details. To link the flows across scales, we introduce a novel cross-scale transition process, ensuring continuity and preserving noise consistency. Furthermore, by integrating a Text-Motion Diffusion Transformer and a topology-aware Motion VAE, MotionHiFlow explicitly models structural dependencies among joints via joint-aware positional encoding and skeletal topology, enabling precise semantic alignment alongside fine-grained motion details. Extensive experiments on HumanML3D and KIT-ML benchmarks demonstrate state-of-the-art performance, with ablation studies confirming the effectiveness of the hierarchical design and key components. Code is available at
+https://github.com/ai-lh/MotionHiFlow
+.
+†
+†
+footnotetext:
+†
+Corresponding Author
+1
+Introduction
+Text-to-motion generation aims to synthesize realistic 3D human motions conditioned on natural language descriptions, with broad applications in virtual reality, character animation, and robotics. The generated motions are expected to be semantically consistent with the input text and physically plausible with fine-grained motion details. Benefiting from advances in generative modeling and powerful sequence learning architectures, recent methods
+[
+12
+,
+42
+,
+62
+,
+38
+,
+30
+,
+56
+]
+have made notable progress in generating complex and natural human motions at a single temporal scale.
+In the human cognitive system
+[
+36
+]
+, complex motions are conceptualized hierarchically rather than at a single temporal scale. Humans typically realize human motions by first constructing a high-level framework of key poses (termed as coarse motion), and subsequently refine it with dynamic transitions and fine-grained limb movements to produce coherent fine motion. However, different from such coarse-to-fine cognitive process, recent methods
+[
+12
+,
+42
+,
+62
+]
+simultaneously model semantic alignment and motion details at a single temporal scale, which limits their ability to achieve long-term coherence, naturalness, and precise alignment with textual input. To address this gap, we aim to design a hierarchical coarse-to-fine generation strategy that first produces a coarse motion to capture high-level semantic structure at a low temporal scale, and then progressively refines it by adding fine-grained motion details at higher temporal scales.
+Figure 1
+:
+Text-to-Motion retrieval precision under different downsampling ratios.
+The R-precision remains stable as the down-sampling ratio decrease, which means that models trained on coarse motions can achieve robust semantic alignment.
+To verify this intuition, we first evaluate how much semantic information is preserved when motion is viewed at a lower temporal scale (
+Figure
+1
+). Starting from the original motion, we generate coarse motions by linearly downsampling and evaluate text–motion alignment with the R-precision metric on the HumanML3D
+[
+13
+]
+test set. Remarkably, R-precision remains stable as the downsampling ratio decreases even at 0.2× (i.e., retaining only 20% of the frames), indicating that coarse motions preserve most of the semantics described in the text. Moreover, by training motion generation models at different scales (refer to Table
+2
+), we observe that models trained solely on coarse motions often achieve robust semantic alignment, sometimes even outperforming those trained on fine-scale motions. These observations suggest that overemphasizing fine-grained details may hinder semantic learning, while training on coarse motions promotes stronger alignment with the core textual semantics.
+Building on the above observations, we propose a hierarchical framework
+MotionHiFlow
+to generate motion progressively from low to high temporal scales across multiple stages, aiming to achieve both strong semantic alignment and rich motion details.
+Specifically, we devise a stage-wise flow to link the start (noisier latent) and end (cleaner latent) at each scale.
+Instead of directly upsampling lower-scale noisy data as done in other works
+[
+22
+,
+3
+]
+, here we formulate a novel cross-scale transition process to link flows across scales, which contains: 1) denoising: constructing the clean data at the lower scale by extrapolation; 2) upsampling: generating clean data at higher scale with upsampling; 3) renoising: constructing the noise data at the higher scale via interpolation.
+We define the transition in this way such that noise consistency can be preserved across stages.
+By integrating the cross-scale transition with stage-wise flows, a generative process is established that maps noise to data.
+To operationalize MotionHiFlow, we further introduce
+Text-Motion Diffusion Transformer (TMDiT)
+, a novel motion generation model that harnesses hierarchical flow matching for efficient and smooth motion generation.
+Built upon recent success of diffusion models in image generation
+[
+11
+,
+39
+,
+27
+]
+, TMDiT explicitly incorporates the inherent structural dependencies among human joints through joint-aware positional encoding (Joint RoPE).
+By combining TMDiT with a topology-aware Motion VAE which encodes motion sequence into latent, our model effectively generates motions with both semantic alignment and fine-grained details.
+We conduct quantitative and qualitative comparisons together with extensive ablation studies on the HumanML3D
+[
+13
+]
+and KIT-ML
+[
+44
+]
+datasets to verify the effectiveness of our hierarchical design and each model component.
+In summary, our main contributions are as follows:
+•
+We propose
+MotionHiFlow
+, a hierarchical flow matching framework for text-to-motion generation that progressively and consistently generates motion from low to high temporal scales, achieving strong semantic alignment and rich fine-grained motion details.
+•
+We develop the
+Text-Motion Diffusion Transformer
+(TMDiT), which explicitly incorporates the inherent structural dependencies among human joints through joint-aware positional encoding and skeletal topology.
+•
+We achieve state-of-the-art performance on the HumanML3D and KIT-ML datasets, with comprehensive ablations validating the effectiveness of our approach.
+2
+Related work
+2.1
+Text-Conditioned Motion Generation
+Text-conditioned human motion generation is a challenging task. Early attempts
+[
+1
+,
+13
+,
+40
+]
+primarily focused on learning direct mappings or shared embeddings between text descriptions and motions. For instance, Language2Pose
+[
+1
+]
+proposed learning a common latent representation subspace for both modalities. Despite significant progress, these methods still struggle to generate diverse and high-fidelity motions. More recently, diffusion-like models
+[
+53
+,
+68
+,
+4
+,
+46
+,
+43
+,
+62
+,
+64
+,
+57
+,
+7
+,
+8
+,
+47
+,
+72
+,
+28
+]
+have become the dominant approach for text-conditioned human motion generation, significantly advancing the field. For example, MoGenTS
+[
+62
+]
+builds on this by enhancing the spatial VAE component for improved motion representation. Furthermore, other methods include autoregressive approaches
+[
+67
+,
+14
+,
+20
+,
+2
+,
+73
+]
+, generative masked modeling techniques
+[
+12
+,
+42
+,
+70
+]
+, and additional types
+[
+33
+,
+34
+,
+9
+,
+74
+,
+71
+,
+58
+,
+59
+,
+35
+,
+29
+,
+19
+,
+63
+,
+52
+,
+51
+,
+50
+]
+. Moreover, some works
+[
+9
+,
+21
+,
+65
+,
+55
+,
+60
+,
+23
+,
+26
+,
+41
+,
+24
+]
+explore using supplementary conditions to control the generated motion. However, these models operate at a single temporal scale, which limits their ability to simultaneously capture global trajectory structures (requiring coarse temporal views) and fine-grained motion details (necessitating fine temporal views). In contrast, we develop a hierarchical flow matching framework that enables multi-scale generation, starting with high-level semantic alignment to the text and progressively refining motion details in a top-down manner.
+2.2
+Flow Generative Models
+Flow Matching, a powerful generative modeling paradigm
+[
+31
+,
+32
+]
+, has recently achieved compelling results in domains including image and video generation
+[
+11
+,
+27
+,
+22
+]
+. By leveraging theoretical advantages such as straight flow formulations and direct conditional path probability learning, flow generative models offer benefits in training stability and efficient generation compared to diffusion-based models. For example, Patrick et al.
+[
+11
+]
+propose to learn a continuous path between a high-dimensional simple noise distribution and the target high-resolution image manifold.
+However, flow generative models in 3D human motion generation remain largely underexplored. Although a few methods have made initial attempts
+[
+6
+,
+18
+]
+, they naively apply flow matching for generation in the motion space without adaptation, resulting in suboptimal utilization and generation performance. To address this, we enhance flow matching by integrating Text-Motion Diffusion Transformer with a joint-aware positional encoding, fully unlocking the significant potential of flow matching models for human motion generation.
+3
+Method
+Figure 2
+:
+Overview of our MotionHiFlow, which progressively generates motion from low to high temporal scales across multiple stages. The early stages mainly capture high-level semantics and coarse motion structures, while later stages model fine-grained temporal details via
+cross-scale transition
+and
+flow
+operators. The points along the gradient-colored dashed line in the inset (bottom left) of (a) and in (b) denotes a linear interpolation between its endpoints. Down/Up denotes downsampling/upsampling, respectively.
+3.1
+Problem Formulation
+Given a text query describing human motion or action, our goal is to generate a corresponding 3D human pose sequence
+[MATH: M=\{m_{i}\}]
+of length
+[MATH: L]
+. According to existing works
+[
+13
+,
+12
+]
+, each joint in the 3D human pose is represented by the root angular velocity along the Y-axis, root linear velocities on the XZ plane, root height, and local joint positions, rotations and velocities relative to the root space. Please refer to T2M
+[
+13
+]
+for more detailed information on human pose representation.
+Each human pose is represented as a
+[MATH: J\times D_{j}]
+-shaped tensor, where
+[MATH: J]
+indicates the joint number, and
+[MATH: D_{j}]
+is the dimension of joint representation.
+3.2
+Overview
+To generate semantically aligned, temporally coherent, and detailed motion, we propose a novel hierarchical flow matching framework, MotionHiFlow.
+This framework operates in the latent space encoded by a Motion VAE that provides topology-aware encoding of motion sequences. As shown in
+Figure
+2
+, our framework progressively generates the motion from low to high temporal scales across multiple stages. The early stages mainly capture high-level semantics and coarse motion structures, while later stages add fine-grained temporal details.
+To facilitate the continuity flow matching across stages, we formulate a novel cross-scale transition with denoising-upsampling-renoising process, preserving noise consistency over the entire motion generation process.
+By integrating the cross-scale transition with stage-wise flows, a generative process is established that maps noise to data.
+Other key components include a Motion VAE with a two-stream Graph Convolutional Networks
+[
+48
+]
+for motion tokenization, a Text-Motion Diffusion Transformer (TMDiT) modeling hierarchical flow conditioned on text, and a Joint RoPE mechanism for improved positional encoding. Combining with these components, the clean latents outputted by our MotionHiFlow can be decoded to realistic, expressive motions that closely match textual descriptions.
+3.3
+Preliminaries: Flow Matching
+Flow matching models
+[
+31
+,
+32
+,
+11
+]
+aim to learn a velocity field
+[MATH: u_{t}]
+that transforms noise
+[MATH: \bm{x}_{0}\sim\mathcal{N}(\bm{0},\bm{I})]
+into data samples
+[MATH: \bm{x}_{1}\sim q_{\text{data}}]
+. To achieve this, a neural network
+[MATH: v_{\theta}(\bm{x}_{t},t)]
+parameterized by
+[MATH: \theta]
+, is trained to approximate the target field
+[MATH: u_{t}(\bm{x}_{t}|\bm{x}_{1})]
+by minimizing the following loss:
+[MATH: \mathcal{L}_{FM}(\theta)=\underset{\begin{subarray}{c}t\sim\mathcal{U}(0,1)\\
+p_{t}(\bm{x}_{t}|\bm{x}_{1}),q(\bm{x}_{1})\end{subarray}}{\mathbb{E}}\|v_{\theta}(\bm{x}_{t},t)-u_{t}(\bm{x}_{t}|\bm{x}_{1})\|^{2}.]
+(1)
+Here,
+[MATH: p_{t}(\bm{x}_{t}|\bm{x}_{1})]
+defines the conditional probability path linking intermediate point
+[MATH: \bm{x}_{t}]
+to
+[MATH: \bm{x}_{1}]
+. A common choice
+[
+31
+]
+for
+[MATH: \bm{x}_{t}]
+at this path is linear interpolation between
+[MATH: \bm{x}_{0}]
+and
+[MATH: \bm{x}_{1}]
+:
+[MATH: \bm{x}_{t}=(1-t)\bm{x}_{0}+t\bm{x}_{1}.]
+(2)
+Then, the corresponding target velocity field simplifies to
+[MATH: u_{t}(\bm{x}_{t}|\bm{x}_{1})=\bm{x}_{1}-\bm{x}_{0}]
+. The new data can be constructed by solving the following Ordinary Differential Equation (ODE) with existing solvers (e.g., Euler, RK45
+[
+10
+]
+):
+[MATH: \mathrm{d}\bm{x}_{t}=v_{\theta}(\bm{x}_{t},t)\mathrm{d}t.]
+(3)
+3.4
+Hierarchical Flow Matching Framework
+We propose a hierarchical flow matching framework for the text-to-motion generation task, which generates motion progressively from low to high temporal scales across multiple stages, aiming to achieve both strong semantic alignment, high temporally coherent and rich detailed motion. As illustrated in
+Figure
+2
+(a), our framework contains
+[MATH: K]
+stages of generation, each operates at a certain temporal scales.
+Early stages focus on the semantics of coarse motion and text alignment, and the subsequent stages intend to progressively enrich the details of the motion provided by preceding stage.
+Specifically, in the
+[MATH: k]
+-th stage, our method processes motion at temporal scale
+[MATH: r_{k}\in(0,1]]
+and refines the motion representation within time interval
+[MATH: [t_{k-1},t_{k}]]
+, where
+[MATH: \{t_{k}\}_{k=0}^{K}]
+are time points partitioning the interval
+[MATH: [0,1]]
+.
+We utilize flow matching to learn a flow transformation
+[MATH: S_{k}]
+that maps the start state
+[MATH: \bm{x}_{t_{k-1}}^{(k)}]
+to end state
+[MATH: \bm{x}_{t_{k}}^{(k)}]
+, as defined below:
+Start:
+[MATH: \displaystyle\bm{x}_{t_{k-1}}^{(k)}=\begin{aligned} &(1-t_{k-1})f(\bm{x}_{0},r_{k})\\
+&+t_{k-1}f(f(\bm{x}_{1},r_{k-1}),r_{k}/r_{k-1})\end{aligned},]
+(4)
+End:
+[MATH: \displaystyle\bm{x}_{t_{k}}^{(k)}=(1-t_{k})f(\bm{x}_{0},r_{k})+t_{k}f(\bm{x}_{1},r_{k}).]
+(5)
+Here,
+[MATH: f(\bm{x},r)]
+means performing a temporal resampling on
+[MATH: \bm{x}]
+with a factor
+[MATH: r]
+, it is downsampling when
+[MATH: r\in(0,1)]
+and upsampling when
+[MATH: r>1]
+. The end state
+[MATH: \bm{x}_{t_{k}}^{(k)}]
+at scale
+[MATH: r_{k}]
+is defined as a linear interpolation between noise
+[MATH: \bm{x}_{0}]
+and clean data
+[MATH: \bm{x}_{1}]
+. The start state
+[MATH: \bm{x}_{t_{k-1}}^{(k)}]
+is carefully designed to incorporate the information
+[MATH: f(\bm{x}_{1},r_{k-1})]
+from the previous stage and initial noise
+[MATH: \bm{x}_{0}]
+, maintaining noise consistency across stages.
+By integrating the flow
+[MATH: S_{k}]
+across stages, we define the generative path of MotionHiFlow from noise to data, which can be trained by minimizing the following loss:
+[MATH: \mathcal{L}_{HFM}(\theta)=\underset{\begin{subarray}{c}k,t\end{subarray}}{\mathbb{E}}\left\|v_{\theta}(\bm{x}_{t}^{(k)},t)-(\bm{x}_{t_{k}}^{(k)}-\bm{x}_{t_{k-1}}^{(k)})\right\|^{2}.]
+(6)
+Here,
+[MATH: \bm{x}_{t}^{(k)}]
+represents training points sampled in
+[MATH: k]
+th
+stage, which is defined as:
+[MATH: \bm{x}_{t}^{(k)}=(1-\tau)\bm{x}_{t_{k-1}}^{(k)}+\tau\bm{x}_{t_{k}}^{(k)},]
+(7)
+where
+[MATH: \tau=(t-t_{k-1})/(t_{k}-t_{k-1})]
+is the normalized time within the stage
+[MATH: k]
+.
+During inference,
+instead of directly upsampling lower-scale noisy data as done in other works
+[
+22
+,
+3
+]
+,
+which leads to noise inconsistency and thus degrades generation performance.
+Here we formulate a novel cross-scale transition process to bridge the start state of stage
+[MATH: k+1]
+with the end state of stage
+[MATH: k]
+across scales. This process involves three steps: 1) denoise: constructing the clean data at the lower scale by extrapolation; 2) upsample: generating clean data at the higher scale with upsampling; 3) renoise: constructing the noise data at the higher scale via interpolation.
+Formally, the transition is governed by the following equations:
+denoise:
+[MATH: \displaystyle\hat{\bm{x}}_{1}^{(k)}=\left[\hat{\bm{x}}_{t_{k}}^{(k)}-(1-t_{k})\bm{x}_{0}^{(k)}\right]/{t_{k}},]
+(8)
+upsample:
+[MATH: \displaystyle\hat{\bm{x}}^{\prime(k+1)}_{1}=f(\hat{\bm{x}}_{1}^{(k)},{r_{k+1}}/{r_{k}}),]
+(9)
+renoise:
+[MATH: \displaystyle\hat{\bm{x}}_{t_{k}}^{(k+1)}=(1-t_{k})\bm{x}_{0}^{(k+1)}+t_{k}\hat{\bm{x}}^{\prime(k+1)}_{1}.]
+(10)
+Here,
+[MATH: \bm{x}_{0}^{(k)}]
+denotes
+[MATH: f(\bm{x}_{0},r_{k})]
+, and similarly for
+[MATH: \bm{x}_{0}^{(k+1)}]
+.
+This three-step process preserves noise consistency and ensures smooth transitions across scales, thus facilitating robust inference across all stages.
+The complete inference process is presented in Algorithm
+1
+.
+By integrating the cross-scale transition with stage-wise flows,
+this generative process constitutes a deterministic ODE trajectory from the initial noise
+[MATH: \bm{x}_{0}]
+towards the data distribution, avoiding the need to introduce additional noise between stages as done in related methods
+[
+22
+,
+3
+]
+.
+Algorithm 1
+Hierarchical Flow Matching Inference
+1:
+Trained model parameters
+[MATH: \theta]
+(for
+[MATH: v_{\theta}]
+), scale schedule
+[MATH: r_{1},\dots,r_{K}]
+, time partition intervals
+[MATH: [t_{0},t_{1},\dots,t_{K-1},t_{K}]]
+with
+[MATH: t_{0}=0,t_{K}=1]
+, temporal linear resampling function
+[MATH: f(\cdot,\cdot)]
+, prior distribution for noise (e.g.,
+[MATH: \mathcal{N}(\bm{0},\bm{I})]
+), conditioning
+[MATH: c]
+.
+2:
+Generated clean sample
+[MATH: \hat{\bm{x}}_{1}]
+at full scale.
+3:
+Sample the initial noise
+[MATH: \bm{x}_{0}\sim\mathcal{N}(\bm{0},\bm{I})]
+4:
+Initialize the start state:
+[MATH: \hat{\bm{x}}_{0}^{(k)}\leftarrow f(\bm{x}_{0},r_{1})]
+5:
+for
+[MATH: k=1]
+to
+[MATH: K]
+do
+6:
+Flow from
+[MATH: \hat{\bm{x}}_{t_{k-1}}^{(k)}]
+to
+[MATH: \hat{\bm{x}}_{t_{k}}^{(k)}]
+[MATH: \triangleright]
+Equation (
+3
+)
+7:
+Cross-scale transition, get the start state of the next scale
+[MATH: \hat{\bm{x}}_{t_{k}}^{(k+1)}]
+[MATH: \triangleright]
+Equation (
+8
+), (
+9
+) and (
+10
+)
+8:
+end
+for
+9:
+[MATH: \hat{\bm{x}}_{1}\leftarrow f({\hat{\bm{x}}}_{t_{K}}^{(K)},1/r_{K})]
+[MATH: \triangleright]
+[MATH: r_{K}]
+may be smaller than 1
+10:
+return
+[MATH: \hat{\bm{x}}_{1}]
+Figure 3
+:
+Illustration of two main components in our TMDiT. (a) The TMDiT block employs two separate streams that independently process motion and text features, while self-attention and shared parameters enables information exchange between streams. (b) The Joint RoPE integrates rotations derived from temporal displacement, relative spatial coordinates, and the human body topologies. Here,
+[MATH: x_{j}]
+and
+[MATH: y_{j}]
+denote the
+[MATH: j]
+-th joint’s coordinates in the
+[MATH: xy]
+-plane.
+3.5
+Model Architecture
+For efficient and stable training, we introduce a specific model architecture comprising several key elements.
+First, we employ a Motion VAE to project input motion into a topology-aware latent space and then reconstruct the motions from latent representation.
+Then, we develop the Text-Motion Diffusion Transformer (TMDiT), which explicitly incorporates the inherent structural dependencies among human joints through joint-aware positional encoding (Joint RoPE). These components combined with MotionHiFlow form a strong text-to-motion generation model.
+Motion VAE.
+Our Motion VAE is utilized to encode the input motion
+[MATH: M\in\mathcal{R}^{L\times J\times D_{j}}]
+into a compact latent representation
+[MATH: \bm{x}\in\mathcal{R}^{l\times j\times d}]
+and reconstruct the original motion sequence from this compact latent representation.
+Here,
+[MATH: L]
+,
+[MATH: J]
+, and
+[MATH: D_{j}]
+denote the number of frames, the number of input joints per frame, and the dimension of joint features (e.g., rotation, velocity), respectively.
+Correspondingly,
+[MATH: l]
+is the latent temporal length and
+[MATH: j]
+is the number of latent joints.
+Unlike MoGenTS
+[
+62
+]
+, which primarily employs 2D convolutions, our Motion VAE utilizes Graph Convolutional Networks (GCNs)
+[
+48
+,
+61
+,
+17
+]
+to explicitly capture human body topology. The encoder performs temporal downsampling by a factor
+[MATH: 4]
+(resulting in
+[MATH: l=\lfloor L/4\rfloor)]
+), and spatial graph downsampling (from
+[MATH: J]
+to
+[MATH: j]
+latent joints) using methods such as averaging or learnable pooling
+[
+61
+]
+. This topology-aware encoding yields modest improvements in reconstruction quality, it notably enhances generation quality when combined with our TMDiT and Joint RoPE.
+Text-to-Motion Diffusion Transformer (TMDiT).
+We present the Text-to-Motion Diffusion Transformer (TMDiT), a new architecture for generating human motion conditioned on textual descriptions. Our approach is motivated by recent progress in diffusion transformers, notably MMDiT
+[
+11
+]
+and Flux
+[
+27
+]
+. Crucially, TMDiT departs from conventional methods (e.g.,
+[
+12
+,
+43
+,
+62
+]
+) that typically adapt vanilla Transformers
+[
+54
+]
+by processing motion sequences alongside a single, sentence-level text embedding
+[MATH: {c}_{\text{vec}}]
+. We would like to point out that this prior strategy limits the nuanced interplay required between text and motion.
+As illustrated in Figure
+2
+(b), TMDiT receives noised motion latent
+[MATH: \bm{x}_{t}^{(k)}]
+and conditioning word-level text embedding
+[MATH: \bm{c}]
+encoded by CLIP
+[
+45
+]
+. Information about the current timestep
+[MATH: t]
+, sentence-level text embedding
+[MATH: c_{\text{vec}}]
+and staged scale
+[MATH: r_{k}]
+is fused into an embedding
+[MATH: \bm{y}]
+, which then modulates the TMDiT blocks
+[
+11
+]
+. The output corresponding to the motion component serves as the estimated velocity field for the underlying ODE solver.
+Within a TMDiT block, as shown in Figure
+3
+(a), we employ separate processing streams for the motion features
+[MATH: \bm{x}]
+and text features
+[MATH: \bm{c}]
+. Both
+[MATH: \bm{x}]
+and
+[MATH: \bm{c}]
+are separately fed into distinct linear transformations before and after the attention, as well as within the feedforward MLP. The conditioning embedding
+[MATH: \bm{y}]
+modulates these operations through scaling and shifting (pre-attention and pre-MLP) and gating (post-attention and post-MLP), akin to established practices in diffusion models
+[
+11
+,
+39
+]
+.
+For clarity of presentation in Figure
+3
+(a), LayerNorm operations are not explicitly shown, which precede the scaling/shifting.
+To effectively capture shared representations while preserving modality-specific nuances, TMDiT employs a parameter sharing scheme
+[
+27
+]
+. The early layers of the network utilize separate parameters for motion and text pathways, allowing for independent feature extraction. Conversely, the final
+[MATH: L_{s}]
+layers share parameters. It first refines modality-specific characteristics and then encourages the learning of common representations essential for coherent text-to-motion generation.
+Joint RoPE.
+We introduce Joint RoPE, an adaptation of Rotary Position Embedding
+[
+49
+]
+optimized for skeletal motion generation. Joint RoPE encodes relative positions by integrating rotations derived from temporal displacement, relative spatial coordinates, and the kinematic tree structure. A key innovation is its enforcement of skeletal symmetry, ensuring identical relative rotations for symmetrically equivalent joint pairs (e.g., left-hand to right-hand vs. left-foot to right-foot) at the same temporal offset, embedding structural bias akin to RoPE’s temporal encoding. Within each attention head, feature dimensions are divided into four segments with proportions
+[MATH: [1/2,1/8,1/8,1/4]]
+, each applying a 1D RoPE. The first segment
+[MATH: (1/2)]
+encodes the joint’s temporal position in the motion sequence. The next two segments
+[MATH: (1/8]
+each, totaling
+[MATH: 1/4]
+) encode the joint’s 2D spatial coordinates relative to the pelvis in a reference T-pose. The final segment
+[MATH: (1/4]
+) encodes the joint’s depth in the kinematic tree, with the pelvis as the root. Temporal indices are scaled by a factor
+[MATH: r_{k}]
+before applying RoPE, enabling the TMDiT to generate spatially and structurally coherent motions. By unifying all positional encodings under RoPE framework, Joint RoPE can yield performance improvements, offer potential scalability to varying joint counts, and enhance adaptability across diverse skeletal structures.
+3.6
+Training and Inference
+Two-Stage Training.
+Our training pipeline has two stages.
+In the first stage, we train the Motion VAE by minimizing a composite objective that combines the standard VAE losses (reconstruction and KL loss) and an auxiliary term that improves the temporal robustness of the latent representation.
+For a random subset of each batch, we downsample the latent vector
+[MATH: \bm{x}]
+by a factor
+[MATH: r\in[0.3,1]]
+with a linear resampling function
+[MATH: f]
+, then compute the mean-squared error (MSE) between the Motion VAE decoder output (generated from the downsampled latent) and the corresponding downsampled motion sequence
+[MATH: M]
+:
+[MATH: \mathcal{L}_{\text{aug}}=\|\text{Dec}(f(x,r))-f(M,r)\|^{2}.]
+(11)
+In the second stage, we freeze the Motion VAE and train the TMDiT model
+[MATH: v_{\theta}]
+using the hierarchical flow-matching loss (Eq.
+6
+).
+To enable classifier-free guidance (CFG)
+[
+16
+]
+, we apply condition dropout during training, randomly replacing the text condition
+[MATH: c]
+with a null token
+[MATH: \varnothing]
+at 10 % probability. Training is conducted following the standard flow matching paradigm for each scale
+[MATH: r_{k}]
+, with the timestep
+[MATH: t]
+uniformly sampled from the interval
+[MATH: [t_{k-1},\,t_{k}]]
+.
+Inference.
+Given the well-trained model parameters
+[MATH: {v}_{\theta}]
+and random noise
+[MATH: {\bm{x}}_{0}]
+, we generate the motion latent representations
+[MATH: \hat{\bm{x}}_{1}]
+following the procedure presented in Algorithm
+1
+.
+Specifically, we enhance the velocity estimation with CFG
+[
+16
+]
+. The resulting latent
+[MATH: \hat{\bm{x}}_{1}]
+is finally inputted to the Motion VAE decoder, producing the motion sequence.
+4
+Experiments
+Table 1
+:
+Quantitative comparisons with the current state-of-the-art methods on the HumanML3D (upper half) and KIT-ML (lower half) datasets. Symbol “±” denotes a
+[MATH: 95\%]
+confidence interval. Text in
+bold
+and
+underline
+denote the best and
+second-best
+results, respectively.
+Methods
+Venue
+R-Precision
+[MATH: \uparrow]
+FID
+[MATH: \downarrow]
+MultiModal
+Dist
+[MATH: \downarrow]
+Diversity
+[MATH: \rightarrow]
+Top1
+Top2
+Top3
+On the HumanML3D dataset
+[
+13
+]
+.
+TEMOS
+[
+40
+]
+ECCV
+’22
+[MATH: 0.424^{\pm.002}]
+[MATH: 0.612^{\pm.002}]
+[MATH: 0.722^{\pm.002}]
+[MATH: 3.734^{\pm.028}]
+[MATH: 3.703^{\pm.008}]
+[MATH: 8.973^{\pm.071}]
+T2M-GPT
+[
+67
+]
+CVPR
+’23
+[MATH: 0.492^{\pm.003}]
+[MATH: 0.679^{\pm.002}]
+[MATH: 0.775^{\pm.002}]
+[MATH: 0.141^{\pm.005}]
+[MATH: 3.121^{\pm.009}]
+[MATH: 9.761^{\pm.081}]
+ReMoDiffuse
+[
+69
+]
+ICCV
+’23
+[MATH: 0.510^{\pm.005}]
+[MATH: 0.698^{\pm.006}]
+[MATH: 0.795^{\pm.004}]
+[MATH: 0.103^{\pm.004}]
+[MATH: 2.974^{\pm.016}]
+[MATH: 9.018^{\pm.075}]
+MoMask
+[
+12
+]
+CVPR
+’24
+[MATH: 0.521^{\pm.002}]
+[MATH: 0.713^{\pm.002}]
+[MATH: 0.807^{\pm.002}]
+[MATH: {0.045}^{\pm.002}]
+[MATH: 2.958^{\pm.008}]
+-
+BAMM
+[
+42
+]
+ECCV
+’24
+[MATH: {0.525}^{\pm.002}]
+[MATH: {0.720}^{\pm.003}]
+[MATH: {0.814}^{\pm.003}]
+[MATH: 0.055^{\pm.002}]
+[MATH: 2.919^{\pm.008}]
+[MATH: 9.717^{\pm.089}]
+MoGenTS
+[
+62
+]
+NeurIPS
+’24
+[MATH: {0.529}^{\pm.003}]
+[MATH: {0.719}^{\pm.002}]
+[MATH: {0.812}^{\pm.002}]
+[MATH: \underline{0.033}^{\pm.001}]
+[MATH: {2.867}^{\pm.006}]
+[MATH: 9.570^{\pm.077}]
+Light-T2M
+[
+64
+]
+AAAI
+’25
+[MATH: 0.511^{\pm.003}]
+[MATH: 0.699^{\pm.002}]
+[MATH: 0.795^{\pm.002}]
+[MATH: 0.040^{\pm.002}]
+[MATH: 3.002^{\pm.008}]
+-
+IRG-MotionLLM
+[
+29
+]
+arXiv
+’25
+[MATH: 0.535^{\pm.002}]
+[MATH: 0.725^{\pm.002}]
+[MATH: 0.820^{\pm.002}]
+[MATH: 0.242^{\pm.006}]
+[MATH: 2.785^{\pm.006}]
+[MATH: 9.900^{\pm.094}]
+EnergyMoGen
+[
+66
+]
+CVPR
+’25
+[MATH: 0.526^{\pm.003}]
+[MATH: 0.718^{\pm.003}]
+[MATH: 0.815^{\pm.002}]
+[MATH: 0.176^{\pm.006}]
+[MATH: 2.931^{\pm.007}]
+[MATH: 9.500^{\pm.091}]
+SALAD
+[
+17
+]
+CVPR
+’25
+[MATH: \bm{0.581}^{\pm.003}]
+[MATH: \bm{0.769}^{\pm.003}]
+[MATH: \bm{0.857}^{\pm.002}]
+[MATH: 0.076^{\pm.002}]
+[MATH: \bm{2.649}^{\pm.009}]
+[MATH: 9.696^{\pm.096}]
+MoMask++
+[
+5
+]
+NeurIPS
+’25
+[MATH: {0.528}^{\pm.003}]
+[MATH: {0.718}^{\pm.003}]
+[MATH: {0.811}^{\pm.002}]
+[MATH: {0.072}^{\pm.003}]
+[MATH: {2.912}^{\pm.008}]
+-
+MotionHiFlow (ours)
+-
+[MATH: \underline{0.563}^{\pm.003}]
+[MATH: \underline{0.754}^{\pm.003}]
+[MATH: \underline{0.843}^{\pm.003}]
+[MATH: \bm{0.032}^{\pm.002}]
+[MATH: \underline{2.691}^{\pm.009}]
+[MATH: 9.504^{\pm.071}]
+On the KIT-ML dataset
+[
+44
+]
+.
+TEMOS
+[
+40
+]
+ECCV
+’22
+[MATH: 0.353^{\pm.006}]
+[MATH: 0.561^{\pm.007}]
+[MATH: 0.687^{\pm.005}]
+[MATH: 3.717^{\pm.051}]
+[MATH: 3.417^{\pm.019}]
+[MATH: 10.84^{\pm.100}]
+T2M-GPT
+[
+67
+]
+CVPR
+’23
+[MATH: 0.416^{\pm.006}]
+[MATH: 0.627^{\pm.006}]
+[MATH: 0.745^{\pm.006}]
+[MATH: 0.514^{\pm.029}]
+[MATH: 3.007^{\pm.023}]
+[MATH: 10.86^{\pm.094}]
+ReMoDiffuse
+[
+69
+]
+ICCV
+’23
+[MATH: 0.427^{\pm.014}]
+[MATH: 0.641^{\pm.004}]
+[MATH: 0.765^{\pm.055}]
+[MATH: {0.155}^{\pm.006}]
+[MATH: 2.814^{\pm.012}]
+[MATH: 10.80^{\pm.105}]
+MoMask
+[
+12
+]
+CVPR
+’24
+[MATH: 0.433^{\pm.007}]
+[MATH: 0.656^{\pm.005}]
+[MATH: 0.781^{\pm.005}]
+[MATH: 0.204^{\pm.011}]
+[MATH: 2.779^{\pm.022}]
+-
+BAMM
+[
+42
+]
+ECCV
+’24
+[MATH: {0.438}^{\pm.009}]
+[MATH: {0.661}^{\pm.009}]
+[MATH: {0.788}^{\pm.005}]
+[MATH: 0.183^{\pm.013}]
+[MATH: 2.723^{\pm.026}]
+[MATH: 11.008^{\pm.094}]
+MoGenTS
+[
+62
+]
+NeurIPS
+’24
+[MATH: 0.445^{\pm.006}]
+[MATH: 0.671^{\pm.006}]
+[MATH: 0.797^{\pm.005}]
+[MATH: \underline{0.143}^{\pm.004}]
+[MATH: 2.711^{\pm.024}]
+[MATH: 10.918^{\pm.090}]
+Light-T2M
+[
+64
+]
+AAAI
+’25
+[MATH: 0.444^{\pm.006}]
+[MATH: 0.670^{\pm.007}]
+[MATH: 0.794^{\pm.005}]
+[MATH: 0.161^{\pm.009}]
+[MATH: 2.746^{\pm.016}]
+-
+IRG-MotionLLM
+[
+29
+]
+arXiv
+’25
+[MATH: 0.445^{\pm.005}]
+[MATH: 0.681^{\pm.003}]
+[MATH: 0.781^{\pm.004}]
+[MATH: 0.432^{\pm.013}]
+[MATH: 2.740^{\pm.017}]
+[MATH: 11.115^{\pm.086}]
+EnergyMoGen
+[
+66
+]
+CVPR
+’25
+[MATH: 0.436^{\pm.006}]
+[MATH: 0.651^{\pm.006}]
+[MATH: 0.772^{\pm.006}]
+[MATH: 0.495^{\pm.020}]
+[MATH: 2.861^{\pm.020}]
+[MATH: 11.06^{\pm.101}]
+SALAD
+[
+17
+]
+CVPR
+’25
+[MATH: \underline{0.477}^{\pm.006}]
+[MATH: \bm{0.711}^{\pm.005}]
+[MATH: \bm{0.828}^{\pm.005}]
+[MATH: 0.296^{\pm.012}]
+[MATH: \underline{2.585}^{\pm.016}]
+[MATH: 11.097^{\pm.095}]
+MotionHiFlow (ours)
+-
+[MATH: \bm{0.482}^{\pm.005}]
+[MATH: \underline{0.704}^{\pm.005}]
+[MATH: \underline{0.825}^{\pm.005}]
+[MATH: \bm{0.135}^{\pm.007}]
+[MATH: \bm{2.552}^{\pm.014}]
+[MATH: 10.894^{\pm.117}]
+In this section, we conduct extensive experiments on two widely used benchmark datasets. The results suggest that our MotionHiFlow consistently outperforms the current state-of-the-art methods quantitatively and qualitatively. Furthermore, ablation studies demonstrate the effectiveness of the key designs in our proposed framework.
+4.1
+Experimental Setup
+Datasets.
+We evaluate our MotionHiFlow framework on the widely used benchmark datasets: HumanML3D dataset
+[
+13
+]
+and KIT-ML dataset
+[
+44
+]
+.
+The HumanML3D dataset
+[
+13
+]
+comprises
+[MATH: 14,616]
+human motions derived from the AMASS
+[
+37
+]
+and HumanAct12
+[
+15
+]
+collections. Each motion is annotated with three distinct textual descriptions, resulting in
+[MATH: 44,970]
+motion-text pairs in total. The KIT-ML dataset
+[
+44
+]
+contains
+[MATH: 3,911]
+motions paired with
+[MATH: 6,278]
+textual descriptions. Both datasets are split into training
+[MATH: 80\%]
+, validation
+[MATH: 5\%]
+, and test
+[MATH: 15\%]
+sets.
+Evaluation Metrics.
+We employ the same evaluation configuration as previous works
+[
+13
+,
+67
+,
+68
+,
+12
+]
+. To evaluate the semantic alignment between generated motions and input texts, we adopt
+R-Precision
+and
+Multimodal Distance
+as metrics, which is computed as the top-k recall precision and the multimodal distance between generated motions and input texts, respectively.
+We also employ the
+Fréchet Inception Distance (FID)
+to measure the feature distributional similarity on the latent feature space between ground-truth (GT) and generated motions.
+Additionally, the
+Diversity
+measures the variance across generated motion sequences, computed as the average Euclidean distance between 300 randomly sampled motion pairs. However, this metric typically shows similar values across methods and is thus less emphasized.
+Note that all metrics are calculated using pretrained a text encoder and motion encoder from T2M
+[
+13
+]
+.
+Implementation Details.
+The Graph Convolutional Network (GCN) in our Motion VAE is adapted from 2s-AGCN
+[
+48
+]
+. The encoder comprises two blocks, each integrating GCN and Temporal Convolutional Network (TCN) layers. This reduces the temporal dimension by a factor of
+[MATH: 4]
+(resulting in a sequence length of
+[MATH: L/4]
+) and pools the skeleton graph into
+[MATH: j=6]
+latent joints, representing the torso, pelvis, and four limbs (arms and legs). The weight of the augmentation loss (Eq.
+11
+) is empirically set to
+[MATH: 0.5]
+. For TMDiT, we employ nine blocks, with the first three using distinct parameters for the dual branches and the latter six sharing parameters. The latent dimension is set to 384, with 6 attention heads and a feed-forward dimension of 1536. The hierarchical flow matching comprises three flow layers, operating at scales
+[MATH: r_{k}\in\{1/3,2/3,1\}]
+.
+The MotionVAE is trained for 300,000 steps using AdamW
+[
+25
+]
+with a batch size of 256 and an initial learning rate of
+[MATH: 2\times 10^{-4}]
+. The TMDiT is subsequently trained for 200,000 steps using AdamW, with a batch size of 64 and an initial learning rate of
+[MATH: 2\times 10^{-4}]
+. For both models, we apply a MultiStepLR scheduler, reducing the learning rate by a factor of 0.2 at 50% and 75% of the total training steps.
+4.2
+Comparison with State-of-the-art Methods
+We compare our MotionHiFlow with various state-of-the-art methods, including VAE-based approaches
+[
+40
+]
+, autoregressive models
+[
+67
+,
+29
+]
+, diffusion-based models
+[
+68
+,
+69
+,
+64
+,
+17
+,
+66
+]
+and discrete diffusion-like
+[
+12
+,
+62
+]
+models.
+Quantitative Results.
+Table
+1
+presents the quantitative comparisons between our MotionHiFlow and existing methods on the HumanML3D
+[
+13
+]
+and KIT-ML
+[
+44
+]
+datasets. Each experiment is repeated 20 times, with results reported along with a 95% statistical confidence interval to ensure reliability.
+Table
+1
+shows that MotionHiFlow outperforms every baseline on both HumanML3D and KIT-ML. It achieves the highest R-Precision (0.563 / 0.482) and the lowest FID (0.032 / 0.135), evidencing tighter text–motion alignment and more realistic motion. Simultaneously, it records the smallest MultiModal Distance, indicating outputs that are both semantically coherent and varied. These results validate that our hierarchical flow matching, joint-aware encoding, and diffusion transformer jointly set a new state of the art.
+Figure 4
+:
+Visual comparisons between different methods given three distinct text descriptions. Only key frames are displayed, with arrows indicating the character’s movement direction. Green lines denote correct directions, while red lines indicate incorrect directions that do not match the text content. Refer to the demo video for complete motion clips and more visualization results.
+Qualitative Results.
+Figure
+4
+presents qualitative comparisons of our MotionHiFlow against prior methods, including Momask
+[
+12
+]
+, BAMM
+[
+42
+]
+, and MoGenTS
+[
+62
+]
+. As shown, existing approaches often misinterpret directional cues and specific limb movements. In contrast, MotionHiFlow produces motions with enhanced dynamic realism and strong alignment to textual descriptions, further validating the effectiveness of our hierarchical flow matching framework.
+4.3
+Ablation Study
+In this subsection, we conduct ablation studies on the HumanML3D
+[
+13
+]
+dataset to comprehensively analyze the influence of different components in our MotionHiFlow, including the hierarchical flow matching and the architecture.
+Table 2
+:
+Evaluation of system performance under varying scale settings. R@1 denotes top-1 retrieval precision.
+scales
+[MATH: \{{r_{k}}\}]
+FID
+[MATH: \downarrow]
+R@1
+[MATH: \uparrow]
+MM-Dist
+[MATH: \downarrow]
+[MATH: [0.4]]
+[MATH: 0.106^{\pm.004}]
+[MATH: 0.561^{\pm.003}]
+[MATH: {2.717^{\pm.006}}]
+[MATH: [0.6]]
+[MATH: 0.061^{\pm.003}]
+[MATH: 0.556^{\pm.003}]
+[MATH: 2.729^{\pm.006}]
+[MATH: [0.8]]
+[MATH: 0.058^{\pm.002}]
+[MATH: 0.559^{\pm.003}]
+[MATH: 2.722^{\pm.005}]
+[MATH: [1]]
+[MATH: 0.051^{\pm.002}]
+[MATH: 0.556^{\pm.003}]
+[MATH: 2.723^{\pm.006}]
+[MATH: [1/2,1]]
+[MATH: 0.038^{\pm.001}]
+[MATH: \bm{0.565}^{\pm.002}]
+[MATH: 2.702^{\pm.006}]
+[MATH: [1/3,2/3,1]]
+[MATH: \bm{0.032}^{\pm.002}]
+[MATH: 0.563^{\pm.003}]
+[MATH: \bm{2.691}^{\pm.009}]
+[MATH: [1/4,2/4,3/4,1]]
+[MATH: 0.035^{\pm.002}]
+[MATH: 0.560^{\pm.003}]
+[MATH: 2.693^{\pm.007}]
+Effectiveness of Hierarchical Flow Matching.
+In Table
+2
+, we investigate the effect of hierarchical designs in our MotionHiFlow framework. Specifically, we test the system performance under varying numbers of hierarchical scales and different temporal scales. As can be seen: 1) even trained completely in a single coarse scale, our system can obtain MM-Dist ranging from 2.717 (
+[MATH: \{r_{k}\}=[0.4]]
+) to 2.729 (
+[MATH: \{r_{k}\}=[0.6]]
+), which means that a good semantic alignment is achieved; 2) performing hierarchical flow matching can improve both the FID and MM-Dist metrics.
+Table 3
+:
+Evaluation of key components on the system performance.
+FID
+[MATH: \downarrow]
+R@1
+[MATH: \uparrow]
+MM-Dist
+[MATH: \downarrow]
+Baseline
+[MATH: 0.074^{\pm.003}]
+[MATH: 0.511^{\pm.003}]
+[MATH: 3.043^{.008}]
++ TMDiT
+[MATH: 0.045^{\pm.003}]
+[MATH: 0.557^{\pm.003}]
+[MATH: 2.738^{\pm.007}]
++ topology-aware VAE
+[MATH: \bm{0.032}^{\pm.002}]
+[MATH: \bm{0.563}^{\pm.003}]
+[MATH: \bm{2.691}^{\pm.009}]
+Analysis on the Architecture Designs.
+To evaluate the efficacy of the architectural components in our MotionHiFlow, we begin with the baseline model that employing a standard Transformer Encoder
+[
+54
+]
+augmented with AdaLN
+[
+39
+]
+. We incrementally integrate the TMDiT module and the topology-aware Motion VAE. As reported in Table
+3
+, the incorporation of TMDiT yields a substantial improvement in the MM-Dist metric. We hypothesize that this enhancement stems from the word-level text encoding and the non-shared parameter strategy, validated through extensive experiments detailed in the supplementary material. Furthermore, the enhanced Motion VAE introduces spatial information, facilitating finer-grained motion generation.
+User Study.
+We further conduct user study to compare the results generated by MotionHiFlow and previous methods including MoMask
+[
+12
+]
+, MoGenTS
+[
+62
+]
+, and ground truth. We generate 100 motions for each pair of competitors using the text pool provided in HumanML3D test set and present the visualization results side-by-side. A total of 20 users are asked to vote which result is better from the aspect of realism and text alignment, respectively. The detailed results are presented in Figure
+5
+. As shown, MotionHiFlow is preferred by users over MoMask and MoGenTS in both realism and text alignment, even with a 47% chance of surpassing the ground truth in text alignment.
+Figure 5
+:
+Results of a user study comparing the realism and text alignment of various methods, including our approach, with baseline competitors (MoMask, MoGenTS), and Ground Truth.
+5
+Conclusion
+In this work, we propose MotionHiFlow, a hierarchical flow matching framework for text-to-motion generation that progressively generates the motion from low to high temporal scales. By integrating a topology-aware Motion VAE and Text-Motion Diffusion Transformer, our method generates motions with more superior semantic alignment, temporal coherence, and dynamic realism as compared with existing approaches, which is experimentally demonstrated on the HumanML3D
+[
+13
+]
+and KIT-ML
+[
+44
+]
+datasets.
+Acknowledgements
+This work was supported partially by the NSFC (62476296), Guangdong Natural Science Funds Project (2023B1515040025, 2022B1111010002, 2024A1111120017), Guangdong NSF for DistinguishedYoung Scholar (2022B1515020009), open research fund of Key Laboratory of Machine Intelligence and System Control, Ministry of Education (No. MISC-202407)
+References
+[1]
+C. Ahuja and L. Morency
+(2019)
+Language2pose: natural language grounded pose forecasting
+.
+In
+2019 International Conference on 3D Vision (3DV)
+,
+pp. 719–728
+.
+Cited by:
+§2.1
+.
+[2]
+L. Chen, S. Lu, A. Zeng, H. Zhang, B. Wang, R. Zhang, and L. Zhang
+(2024)
+Motionllm: understanding human behaviors from human motions and videos
+.
+arXiv preprint arXiv:2405.20340
+.
+Cited by:
+§2.1
+.
+[3]
+S. Chen, C. Ge, S. Zhang, P. Sun, and P. Luo
+(2025)
+PixelFlow: pixel-space generative models with flow
+.
+arXiv preprint arXiv:2504.07963
+.
+Cited by:
+§1
+,
+§3.4
+,
+§3.4
+.
+[4]
+X. Chen, B. Jiang, W. Liu, Z. Huang, B. Fu, T. Chen, and G. Yu
+(2023)
+Executing your commands via motion diffusion in latent space
+.
+In
+IEEE/CVF Conference on Computer Vision and Pattern Recognition,
+CVPR 2023, Vancouver, BC, Canada, June 17-24, 2023
+,
+pp. 18000–18010
+.
+External Links:
+Link
+,
+Document
+Cited by:
+§2.1
+.
+[5]
+chuan guo, I. Hwang, J. Wang, and B. Zhou
+(2025)
+SnapMoGen: human motion generation from expressive texts
+.
+In
+The Thirty-ninth Annual Conference on Neural Information Processing Systems
+,
+External Links:
+Link
+Cited by:
+Table 1
+.
+[6]
+M. C. Cuba and J. P. Gois
+(2025)
+FlowMotion: target-predictive flow matching for realistic text-driven human motion generation
+.
+arXiv preprint arXiv:2504.01338
+.
+Cited by:
+§2.2
+.
+[7]
+R. Dabral, M. H. Mughal, V. Golyanik, and C. Theobalt
+(2023)
+Mofusion: a framework for denoising-diffusion-based motion synthesis
+.
+In
+Proceedings of the IEEE/CVF conference on computer vision and pattern recognition
+,
+pp. 9760–9770
+.
+Cited by:
+§2.1
+.
+[8]
+W. Dai, L. Chen, J. Wang, J. Liu, B. Dai, and Y. Tang
+(2024)
+Motionlcm: real-time controllable motion generation via latent consistency model
+.
+Cited by:
+§2.1
+.
+[9]
+M. Diomataris, N. Athanasiou, O. Taheri, X. Wang, O. Hilliges, and M. J. Black
+(2024)
+WANDR: intention-guided human motion generation
+.
+In
+Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition
+,
+pp. 927–936
+.
+Cited by:
+§2.1
+.
+[10]
+J. R. Dormand and P. J. Prince
+(1980)
+A family of embedded runge-kutta formulae
+.
+Journal of computational and applied mathematics
+6
+(
+1
+),
+pp. 19–26
+.
+Cited by:
+§3.3
+.
+[11]
+P. Esser, S. Kulal, A. Blattmann, R. Entezari, J. Müller, H. Saini, Y. Levi, D. Lorenz, A. Sauer, F. Boesel, D. Podell, T. Dockhorn, Z. English, and R. Rombach
+(2024)
+Scaling rectified flow transformers for high-resolution image synthesis
+.
+In
+Forty-first International Conference on Machine Learning, ICML 2024,
+Vienna, Austria, July 21-27, 2024
+,
+External Links:
+Link
+Cited by:
+§1
+,
+§2.2
+,
+§3.3
+,
+§3.5
+,
+§3.5
+.
+[12]
+C. Guo, Y. Mu, M. G. Javed, S. Wang, and L. Cheng
+(2024)
+MoMask: generative masked modeling of 3d human motions
+.
+In
+IEEE/CVF Conference on Computer Vision and Pattern Recognition,
+CVPR 2024, Seattle, WA, USA, June 16-22, 2024
+,
+pp. 1900–1910
+.
+External Links:
+Link
+,
+Document
+Cited by:
+§1
+,
+§1
+,
+§2.1
+,
+§3.1
+,
+§3.5
+,
+§4.1
+,
+§4.2
+,
+§4.2
+,
+§4.3
+,
+Table 1
+,
+Table 1
+.
+[13]
+C. Guo, S. Zou, X. Zuo, S. Wang, W. Ji, X. Li, and L. Cheng
+(2022)
+Generating diverse and natural 3d human motions from text
+.
+In
+CVPR
+,
+pp. 5152–5161
+.
+Cited by:
+§1
+,
+§1
+,
+§2.1
+,
+§3.1
+,
+§4.1
+,
+§4.1
+,
+§4.2
+,
+§4.3
+,
+Table 1
+,
+§5
+.
+[14]
+C. Guo, X. Zuo, S. Wang, and L. Cheng
+(2022)
+Tm2t: stochastic and tokenized modeling for the reciprocal generation of 3d human motions and texts
+.
+In
+ECCV
+,
+pp. 580–597
+.
+Cited by:
+§2.1
+.
+[15]
+C. Guo, X. Zuo, S. Wang, S. Zou, Q. Sun, A. Deng, M. Gong, and L. Cheng
+(2020)
+Action2motion: conditioned generation of 3d human motions
+.
+In
+Proceedings of the 28th ACM International Conference on Multimedia
+,
+pp. 2021–2029
+.
+Cited by:
+§4.1
+.
+[16]
+J. Ho and T. Salimans
+(2022)
+Classifier-free diffusion guidance
+.
+CoRR
+abs/2207.12598
+.
+External Links:
+Link
+,
+Document
+,
+2207.12598
+Cited by:
+§3.6
+,
+§3.6
+.
+[17]
+S. Hong, C. Kim, S. Yoon, J. Nam, S. Cha, and J. Noh
+(2025)
+SALAD: skeleton-aware latent diffusion for text-driven motion generation and editing
+.
+arXiv preprint arXiv:2503.13836
+.
+Cited by:
+§3.5
+,
+§4.2
+,
+Table 1
+,
+Table 1
+.
+[18]
+V. T. Hu, W. Yin, P. Ma, Y. Chen, B. Fernando, Y. M. Asano, E. Gavves, P. Mettes, B. Ommer, and C. G. M. Snoek
+(2023)
+Motion flow matching for human motion synthesis and editing
+.
+CoRR
+abs/2312.08895
+.
+External Links:
+Link
+,
+Document
+,
+2312.08895
+Cited by:
+§2.2
+.
+[19]
+G. Huang, L. Zeng, Z. Zheng, S. Gu, and W. Zheng
+(2025)
+Efficient explicit joint-level interaction modeling with mamba for text-guided HOI generation
+.
+In
+IEEE International Conference on Multimedia and Expo, ICME 2025,
+Nantes, France, June 30 - July 4, 2025
+,
+pp. 1–6
+.
+External Links:
+Link
+,
+Document
+Cited by:
+§2.1
+.
+[20]
+B. Jiang, X. Chen, W. Liu, J. Yu, G. Yu, and T. Chen
+(2023)
+Motiongpt: human motion as a foreign language
+.
+NeurIPS
+36
+,
+pp. 20067–20079
+.
+Cited by:
+§2.1
+.
+[21]
+P. Jin, H. Li, Z. Cheng, K. Li, R. Yu, C. Liu, X. Ji, L. Yuan, and J. Chen
+(2024)
+Local action-guided motion diffusion model for text-to-motion generation
+.
+Cited by:
+§2.1
+.
+[22]
+Y. Jin, Z. Sun, N. Li, K. Xu, K. Xu, H. Jiang, N. Zhuang, Q. Huang, Y. Song, Y. MU, and Z. Lin
+(2025)
+Pyramidal flow matching for efficient video generative modeling
+.
+In
+The Thirteenth International Conference on Learning Representations
+,
+External Links:
+Link
+Cited by:
+§1
+,
+§2.2
+,
+§3.4
+,
+§3.4
+.
+[23]
+K. Karunratanakul, K. Preechakul, S. Suwajanakorn, and S. Tang
+(2023)
+Guided motion diffusion for controllable human motion synthesis
+.
+In
+Proceedings of the IEEE/CVF International Conference on Computer Vision
+,
+pp. 2151–2162
+.
+Cited by:
+§2.1
+.
+[24]
+B. Kim, H. I. Jeong, J. Sung, Y. Cheng, J. Lee, J. Y. Chang, S. Choi, Y. Choi, S. Shin, J. Kim, and H. J. Chang
+(2025)
+PersonaBooth: personalized text-to-motion generation
+.
+In
+IEEE/CVF Conference on Computer Vision and Pattern Recognition,
+CVPR 2025, Nashville, TN, USA, June 11-15, 2025
+,
+pp. 22756–22765
+.
+External Links:
+Link
+,
+Document
+Cited by:
+§2.1
+.
+[25]
+D. P. Kingma and J. Ba
+(2015)
+Adam: A method for stochastic optimization
+.
+In
+3rd International Conference on Learning Representations, ICLR 2015,
+San Diego, CA, USA, May 7-9, 2015, Conference Track Proceedings
+,
+Y. Bengio and Y. LeCun (Eds.)
+,
+External Links:
+Link
+Cited by:
+§4.1
+.
+[26]
+H. Kong, K. Gong, D. Lian, M. B. Mi, and X. Wang
+(2023)
+Priority-centric human motion generation in discrete latent space
+.
+In
+Proceedings of the IEEE/CVF International Conference on Computer Vision
+,
+pp. 14806–14816
+.
+Cited by:
+§2.1
+.
+[27]
+B. F. Labs
+(2024)
+FLUX
+.
+Note:
+https://github.com/black-forest-labs/flux
+Cited by:
+§1
+,
+§2.2
+,
+§3.5
+,
+§3.5
+.
+[28]
+H. Li, X. Liufu, X. Lin, J. Zhu, and J. Hu
+(2025)
+Efficient text-to-motion via multi-head generative masked modeling
+.
+In
+IEEE International Conference on Multimedia and Expo, ICME 2025,
+Nantes, France, June 30 - July 4, 2025
+,
+pp. 1–6
+.
+External Links:
+Link
+,
+Document
+Cited by:
+§2.1
+.
+[29]
+Y. Li, Q. Yang, N. Lei, S. Fu, L. Zeng, J. Hu, X. Wei, and W. Zheng
+(2025)
+IRG-motionllm: interleaving motion generation, assessment and refinement for text-to-motion generation
+.
+arXiv preprint arXiv:2512.10730
+.
+Cited by:
+§2.1
+,
+§4.2
+,
+Table 1
+,
+Table 1
+.
+[30]
+Z. Li, M. Luo, R. Hou, X. Zhao, H. Liu, H. Chang, Z. Liu, and C. Li
+(2025)
+Morph: a motion-free physics optimization framework for human motion generation
+.
+In
+Proceedings of the IEEE/CVF International Conference on Computer Vision (ICCV)
+,
+pp. 14580–14589
+.
+Cited by:
+§1
+.
+[31]
+Y. Lipman, R. T. Q. Chen, H. Ben-Hamu, M. Nickel, and M. Le
+(2023)
+Flow matching for generative modeling
+.
+In
+The Eleventh International Conference on Learning Representations,
+ICLR 2023, Kigali, Rwanda, May 1-5, 2023
+,
+External Links:
+Link
+Cited by:
+§2.2
+,
+§3.3
+,
+§3.3
+.
+[32]
+X. Liu, C. Gong, and Q. Liu
+(2023)
+Flow straight and fast: learning to generate and transfer data with rectified flow
+.
+In
+The Eleventh International Conference on Learning Representations,
+ICLR 2023, Kigali, Rwanda, May 1-5, 2023
+,
+External Links:
+Link
+Cited by:
+§2.2
+,
+§3.3
+.
+[33]
+X. Liu, Y. Li, A. Zeng, Z. Zhou, Y. You, and C. Lu
+(2024)
+Bridging the gap between human motion and action semantics via kinematic phrases
+.
+In
+European Conference on Computer Vision (ECCV)
+,
+Cited by:
+§2.1
+.
+[34]
+S. Lu, L. Chen, A. Zeng, J. Lin, R. Zhang, L. Zhang, and H. Shum
+HumanTOMATO: text-aligned whole-body motion generation
+.
+In
+Forty-first International Conference on Machine Learning
+,
+Cited by:
+§2.1
+.
+[35]
+S. Lu, J. Wang, Z. Lu, L. Chen, W. Dai, J. Dong, Z. Dou, B. Dai, and R. Zhang
+(2025)
+ScaMo: exploring the scaling law in autoregressive motion generation model
+.
+In
+IEEE/CVF Conference on Computer Vision and Pattern Recognition,
+CVPR 2025, Nashville, TN, USA, June 11-15, 2025
+,
+pp. 27872–27882
+.
+External Links:
+Link
+,
+Document
+Cited by:
+§2.1
+.
+[36]
+T. Ma, Y. Nie, C. Long, Q. Zhang, and G. Li
+(2022)
+Progressively generating better initial guesses towards next stages for high-quality human motion prediction
+.
+In
+IEEE/CVF Conference on Computer Vision and Pattern Recognition,
+CVPR 2022, New Orleans, LA, USA, June 18-24, 2022
+,
+pp. 6427–6436
+.
+External Links:
+Link
+,
+Document
+Cited by:
+§1
+.
+[37]
+N. Mahmood, N. Ghorbani, N. F. Troje, G. Pons-Moll, and M. J. Black
+(2019)
+AMASS: archive of motion capture as surface shapes
+.
+In
+Proceedings of the IEEE/CVF international conference on computer vision
+,
+pp. 5442–5451
+.
+Cited by:
+§4.1
+.
+[38]
+Z. Meng, Y. Xie, X. Peng, Z. Han, and H. Jiang
+(2025)
+Rethinking diffusion for text-driven human motion generation: redundant representations, evaluation, and masked autoregression
+.
+In
+IEEE/CVF Conference on Computer Vision and Pattern Recognition,
+CVPR 2025, Nashville, TN, USA, June 11-15, 2025
+,
+pp. 27859–27871
+.
+External Links:
+Link
+,
+Document
+Cited by:
+§1
+.
+[39]
+W. Peebles and S. Xie
+(2023)
+Scalable diffusion models with transformers
+.
+In
+IEEE/CVF International Conference on Computer Vision, ICCV 2023,
+Paris, France, October 1-6, 2023
+,
+pp. 4172–4182
+.
+External Links:
+Link
+,
+Document
+Cited by:
+§1
+,
+§3.5
+,
+§4.3
+.
+[40]
+M. Petrovich, M. J. Black, and G. Varol
+(2022)
+TEMOS: generating diverse human motions from textual descriptions
+.
+In
+Computer Vision - ECCV 2022 - 17th European Conference, Tel Aviv,
+Israel, October 23-27, 2022, Proceedings, Part XXII
+,
+S. Avidan, G. J. Brostow, M. Cissé, G. M. Farinella, and T. Hassner (Eds.)
+,
+Lecture Notes in Computer Science
+, Vol.
+13682
+,
+pp. 480–497
+.
+External Links:
+Link
+,
+Document
+Cited by:
+§2.1
+,
+§4.2
+,
+Table 1
+,
+Table 1
+.
+[41]
+E. Pinyoanuntapong, M. Saleem, K. Karunratanakul, P. Wang, H. Xue, C. Chen, C. Guo, J. Cao, J. Ren, and S. Tulyakov
+(2025)
+MaskControl: spatio-temporal control for masked motion synthesis
+.
+In
+Proceedings of the IEEE/CVF International Conference on Computer Vision (ICCV)
+,
+pp. 9955–9965
+.
+Cited by:
+§2.1
+.
+[42]
+E. Pinyoanuntapong, M. U. Saleem, P. Wang, M. Lee, S. Das, and C. Chen
+(2024)
+BAMM: bidirectional autoregressive motion model
+.
+In
+Computer Vision - ECCV 2024 - 18th European Conference, Milan, Italy,
+September 29-October 4, 2024, Proceedings, Part XV
+,
+A. Leonardis, E. Ricci, S. Roth, O. Russakovsky, T. Sattler, and G. Varol (Eds.)
+,
+Lecture Notes in Computer Science
+, Vol.
+15073
+,
+pp. 172–190
+.
+External Links:
+Link
+,
+Document
+Cited by:
+§1
+,
+§1
+,
+§2.1
+,
+§4.2
+,
+Table 1
+,
+Table 1
+.
+[43]
+E. Pinyoanuntapong, P. Wang, M. Lee, and C. Chen
+(2024)
+MMM: generative masked motion model
+.
+In
+IEEE/CVF Conference on Computer Vision and Pattern Recognition,
+CVPR 2024, Seattle, WA, USA, June 16-22, 2024
+,
+pp. 1546–1555
+.
+External Links:
+Link
+,
+Document
+Cited by:
+§2.1
+,
+§3.5
+.
+[44]
+M. Plappert, C. Mandery, and T. Asfour
+(2016)
+The kit motion-language dataset
+.
+Big data
+4
+(
+4
+),
+pp. 236–252
+.
+Cited by:
+§1
+,
+§4.1
+,
+§4.2
+,
+Table 1
+,
+§5
+.
+[45]
+A. Radford, J. W. Kim, C. Hallacy, A. Ramesh, G. Goh, S. Agarwal, G. Sastry, A. Askell, P. Mishkin, J. Clark, G. Krueger, and I. Sutskever
+(2021)
+Learning transferable visual models from natural language supervision
+.
+In
+Proceedings of the 38th International Conference on Machine Learning,
+ICML 2021, 18-24 July 2021, Virtual Event
+,
+M. Meila and T. Zhang (Eds.)
+,
+Proceedings of Machine Learning Research
+, Vol.
+139
+,
+pp. 8748–8763
+.
+External Links:
+Link
+Cited by:
+§3.5
+.
+[46]
+Z. Ren, S. Huang, and X. Li
+(2024)
+Realistic human motion generation with cross-diffusion models
+.
+Cited by:
+§2.1
+.
+[47]
+A. Sampieri, A. Palma, I. Spinelli, and F. Galasso
+(2024)
+Length-aware motion synthesis via latent diffusion
+.
+Cited by:
+§2.1
+.
+[48]
+L. Shi, Y. Zhang, J. Cheng, and H. Lu
+(2019)
+Two-stream adaptive graph convolutional networks for skeleton-based action recognition
+.
+In
+IEEE Conference on Computer Vision and Pattern Recognition, CVPR
+2019, Long Beach, CA, USA, June 16-20, 2019
+,
+pp. 12026–12035
+.
+External Links:
+Link
+,
+Document
+Cited by:
+§3.2
+,
+§3.5
+,
+§4.1
+.
+[49]
+J. Su, M. H. M. Ahmed, Y. Lu, S. Pan, W. Bo, and Y. Liu
+(2024)
+RoFormer: enhanced transformer with rotary position embedding
+.
+Neurocomputing
+568
+,
+pp. 127063
+.
+External Links:
+Link
+,
+Document
+Cited by:
+§3.5
+.
+[50]
+J. Sun, Z. Lin, X. Han, J. Hu, J. Xu, and W. Zheng
+(2021)
+Action-guided 3d human motion prediction
+.
+In
+Proceedings of the 35th International Conference on Neural Information Processing Systems
+,
+NIPS ’21
+,
+Red Hook, NY, USA
+.
+External Links:
+ISBN 9781713845393
+Cited by:
+§2.1
+.
+[51]
+J. Sun, C. Wang, H. Hu, H. Lai, Z. Jin, and J. Hu
+(2022)
+You never stop dancing: non-freezing dance generation via bank-constrained manifold projection
+.
+In
+Advances in Neural Information Processing Systems
+,
+A. H. Oh, A. Agarwal, D. Belgrave, and K. Cho (Eds.)
+,
+External Links:
+Link
+Cited by:
+§2.1
+.
+[52]
+J. Tang, J. Hu, T. Liang, X. Lin, J. Sun, W. Zheng, and J. Lai
+(2026)
+Human motion prediction via continual prior compensation
+.
+IEEE Transactions on Pattern Analysis and Machine Intelligence
+(
+),
+pp. 1–16
+.
+External Links:
+Document
+Cited by:
+§2.1
+.
+[53]
+G. Tevet, S. Raab, B. Gordon, Y. Shafir, D. Cohen-or, and A. H. Bermano
+(2023)
+Human motion diffusion model
+.
+In
+The Eleventh International Conference on Learning Representations
+,
+External Links:
+Link
+Cited by:
+§2.1
+.
+[54]
+A. Vaswani, N. Shazeer, N. Parmar, J. Uszkoreit, L. Jones, A. N. Gomez, L. Kaiser, and I. Polosukhin
+(2017)
+Attention is all you need
+.
+In
+Advances in Neural Information Processing Systems 30: Annual Conference
+on Neural Information Processing Systems 2017, December 4-9, 2017,
+Long Beach, CA, USA
+,
+I. Guyon, U. von Luxburg, S. Bengio, H. M. Wallach, R. Fergus, S. V. N. Vishwanathan, and R. Garnett (Eds.)
+,
+pp. 5998–6008
+.
+External Links:
+Link
+Cited by:
+§3.5
+,
+§4.3
+.
+[55]
+W. Wan, Z. Dou, T. Komura, W. Wang, D. Jayaraman, and L. Liu
+(2024)
+Tlcontrol: trajectory and language control for human motion synthesis
+.
+Cited by:
+§2.1
+.
+[56]
+R. Wang, C. Ma, G. Li, H. Xu, Y. Li, and Z. Wang
+(2025)
+You think, you act: the new task of arbitrary text to motion generation
+.
+In
+Proceedings of the IEEE/CVF International Conference on Computer Vision (ICCV)
+,
+pp. 12012–12022
+.
+Cited by:
+§1
+.
+[57]
+Y. Wang, Z. Leng, F. W. Li, S. Wu, and X. Liang
+(2023)
+Fg-t2m: fine-grained text-driven human motion generation via diffusion model
+.
+In
+Proceedings of the IEEE/CVF International Conference on Computer Vision
+,
+pp. 22035–22044
+.
+Cited by:
+§2.1
+.
+[58]
+Q. Wu, Y. Zhao, Y. Wang, X. Liu, Y. Tai, and C. Tang
+(2025)
+Motion-agent: a conversational framework for human motion generation with LLMs
+.
+In
+The Thirteenth International Conference on Learning Representations
+,
+External Links:
+Link
+Cited by:
+§2.1
+.
+[59]
+L. Xiao, S. Lu, H. Pi, K. Fan, L. Pan, Y. Zhou, Z. Feng, X. Zhou, S. Peng, and J. Wang
+(2025)
+MotionStreamer: streaming motion generation via diffusion-based autoregressive model in causal latent space
+.
+In
+Proceedings of the IEEE/CVF International Conference on Computer Vision (ICCV)
+,
+pp. 10086–10096
+.
+Cited by:
+§2.1
+.
+[60]
+Y. Xie, V. Jampani, L. Zhong, D. Sun, and H. Jiang
+OmniControl: control any joint at any time for human motion generation
+.
+In
+The Twelfth International Conference on Learning Representations
+,
+Cited by:
+§2.1
+.
+[61]
+Z. Ying, J. You, C. Morris, X. Ren, W. L. Hamilton, and J. Leskovec
+(2018)
+Hierarchical graph representation learning with differentiable pooling
+.
+In
+Advances in Neural Information Processing Systems 31: Annual Conference
+on Neural Information Processing Systems 2018, NeurIPS 2018, December
+3-8, 2018, Montréal, Canada
+,
+S. Bengio, H. M. Wallach, H. Larochelle, K. Grauman, N. Cesa-Bianchi, and R. Garnett (Eds.)
+,
+pp. 4805–4815
+.
+External Links:
+Link
+Cited by:
+§3.5
+.
+[62]
+W. Yuan, Y. He, W. Shen, Y. Dong, X. Gu, Z. Dong, L. Bo, and Q. Huang
+(2024)
+MoGenTS: motion generation based on spatial-temporal joint modeling
+.
+In
+Advances in Neural Information Processing Systems 38: Annual Conference
+on Neural Information Processing Systems 2024, NeurIPS 2024, Vancouver,
+BC, Canada, December 10 - 15, 2024
+,
+A. Globersons, L. Mackey, D. Belgrave, A. Fan, U. Paquet, J. M. Tomczak, and C. Zhang (Eds.)
+,
+External Links:
+Link
+Cited by:
+§1
+,
+§1
+,
+§2.1
+,
+§3.5
+,
+§3.5
+,
+§4.2
+,
+§4.2
+,
+§4.3
+,
+Table 1
+,
+Table 1
+.
+[63]
+L. Zeng, G. Huang, Y. Wei, S. Gu, Y. Tang, J. Meng, and W. Zheng
+(2025)
+ChainHOI: joint-based kinematic chain modeling for human-object interaction generation
+.
+In
+IEEE/CVF Conference on Computer Vision and Pattern Recognition,
+CVPR 2025, Nashville, TN, USA, June 11-15, 2025
+,
+pp. 12358–12369
+.
+External Links:
+Link
+,
+Document
+Cited by:
+§2.1
+.
+[64]
+L. Zeng, G. Huang, G. Wu, and W. Zheng
+(2025)
+Light-t2m: a lightweight and fast model for text-to-motion generation
+.
+In
+Proceedings of the AAAI Conference on Artificial Intelligence
+,
+Vol.
+39
+,
+pp. 9797–9805
+.
+Cited by:
+§2.1
+,
+§4.2
+,
+Table 1
+,
+Table 1
+.
+[65]
+L. Zeng, G. Wu, A. Wu, J. Hu, and W. Zheng
+(2025)
+Progressive human motion generation based on text and few motion frames
+.
+IEEE Transactions on Circuits and Systems for Video Technology
+.
+Cited by:
+§2.1
+.
+[66]
+J. Zhang, H. Fan, and Y. Yang
+(2025)
+EnergyMoGen: compositional human motion generation with energy-based diffusion model in latent space
+.
+In
+IEEE/CVF Conference on Computer Vision and Pattern Recognition,
+CVPR 2025, Nashville, TN, USA, June 11-15, 2025
+,
+pp. 17592–17602
+.
+External Links:
+Link
+,
+Document
+Cited by:
+§4.2
+,
+Table 1
+,
+Table 1
+.
+[67]
+J. Zhang, Y. Zhang, X. Cun, Y. o. Zhang, H. Zhao, H. Lu, X. Shen, and Y. Shan
+(2023)
+Generating human motion from textual descriptions with discrete representations
+.
+In
+CVPR
+,
+pp. 14730–14740
+.
+Cited by:
+§2.1
+,
+§4.1
+,
+§4.2
+,
+Table 1
+,
+Table 1
+.
+[68]
+M. Zhang, Z. Cai, L. Pan, F. Hong, X. Guo, L. Yang, and Z. Liu
+(2024)
+Motiondiffuse: text-driven human motion generation with diffusion model
+.
+TPAMI
+.
+Cited by:
+§2.1
+,
+§4.1
+,
+§4.2
+.
+[69]
+M. Zhang, X. Guo, L. Pan, Z. Cai, F. Hong, H. Li, L. Yang, and Z. Liu
+(2023)
+Remodiffuse: retrieval-augmented motion diffusion model
+.
+In
+ICCV
+,
+pp. 364–373
+.
+Cited by:
+§4.2
+,
+Table 1
+,
+Table 1
+.
+[70]
+Z. Zhang, B. Kong, Q. Liu, and Y. Wang
+(2025)
+Towards robust and controllable text-to-motion via masked autoregressive diffusion
+.
+In
+Proceedings of the 33rd ACM International Conference on Multimedia
+,
+MM ’25
+,
+New York, NY, USA
+,
+pp. 9326–9335
+.
+External Links:
+ISBN 9798400720352
+,
+Link
+,
+Document
+Cited by:
+§2.1
+.
+[71]
+C. Zhong, L. Hu, Z. Zhang, and S. Xia
+(2023)
+AttT2M: text-driven human motion generation with multi-perspective attention mechanism
+.
+In
+Proceedings of the IEEE/CVF International Conference on Computer Vision (ICCV)
+,
+pp. 509–519
+.
+Cited by:
+§2.1
+.
+[72]
+W. Zhou, Z. Dou, Z. Cao, Z. Liao, J. Wang, W. Wang, Y. Liu, T. Komura, W. Wang, and L. Liu
+(2024)
+Emdm: efficient motion diffusion model for fast, high-quality motion generation
+.
+Cited by:
+§2.1
+.
+[73]
+Z. Zhou, Y. Wan, and B. Wang
+(2024)
+AvatarGPT: all-in-one framework for motion understanding planning generation and beyond
+.
+In
+Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition
+,
+pp. 1357–1366
+.
+Cited by:
+§2.1
+.
+[74]
+Q. Zou, S. Yuan, S. Du, Y. Wang, C. Liu, Y. Xu, J. Chen, and X. Ji
+(2024)
+ParCo: part-coordinating text-to-motion synthesis
+.
+In
+Computer Vision - ECCV 2024 - 18th European Conference, Milan, Italy,
+September 29-October 4, 2024, Proceedings, Part LVI
+,
+A. Leonardis, E. Ricci, S. Roth, O. Russakovsky, T. Sattler, and G. Varol (Eds.)
+,
+Lecture Notes in Computer Science
+, Vol.
+15114
+,
+pp. 126–143
+.
+External Links:
+Link
+,
+Document
+Cited by:
+§2.1
+.

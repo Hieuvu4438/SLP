@@ -1,0 +1,3382 @@
+MoLingo: Motion–Language Alignment for Text-to-Human Motion Generation
+Yannan He
+1,2
+Garvita Tiwari
+1,2,3
+Xiaohan Zhang
+1,2,3
+Pankaj Bora
+1,5
+Tolga Birdal
+4
+Jan Eric Lenssen
+3
+Gerard Pons-Moll
+1,2,3
+1
+University of Tübingen, Germany,
+2
+Tübingen AI Center, Germany
+3
+Max Planck Institute for Informatics, Saarland Informatics Campus, Germany
+4
+Imperial College London, UK,
+5
+Zuse School ELIZA, Germany
+https://hynann.github.io/molingo/MoLingo.html
+Abstract
+We introduce MoLingo, a text-to-motion (T2M) model that generates realistic, lifelike human motion by denoising in a continuous latent space. Recent works perform latent space diffusion, either on the whole latent at once or auto-regressively over multiple latents. In this paper, we study how to make diffusion on continuous motion latents work best. We focus on two questions: (1) how to build a semantically aligned latent space so diffusion becomes more effective, and (2) how to best inject text conditioning so the motion follows the description closely. We propose a semantic-aligned motion encoder trained with frame-level text labels so that latents with similar text meaning stay close, which makes the latent space more diffusion-friendly. We also compare single-token conditioning with a multi-token cross-attention scheme and find that cross-attention gives better motion realism and text–motion alignment. With semantically aligned latents, auto-regressive generation, and cross-attention text conditioning, our model sets a new state-of-the-art in human motion generation on standard metrics and in a user study. We will release our code and models for further research and downstream usage.
+Figure 1.
+Left:
+Given text prompts, MoLingo generates realistic and text-aligned motions, ranging from daily movements like sweeping to more challenging movements like dancing.
+Right:
+MoLingo significantly outperforms previous works in both FID and R-Precision scores. The difference can best be seen in motion, hence we urge the reader to view our project page.
+1
+Introduction
+Generating realistic human motion from text is crucial for computer animation, AR/VR entertainment, and building agents that can follow human instructions.
+In recent years, text-labeled human motion datasets
+[
+51
+,
+17
+]
+have kicked off this research area, and diffusion-based generative models have brought a major improvement in generated motion quality.
+Earlier text-to-motion (T2M) works used diffusion models to denoise motion directly in pose space
+[
+59
+,
+75
+,
+76
+,
+4
+,
+87
+,
+27
+,
+8
+,
+13
+,
+35
+,
+23
+,
+31
+]
+and achieved good performance. However, denoising raw pose frames is hard because the joint distribution is very complex, and it can also brings artifacts by preserving mocap noise
+[
+41
+]
+.
+To address this, recent works first encode motion into a compact latent space
+[
+6
+,
+10
+,
+9
+,
+84
+,
+85
+]
+, then run diffusion in that space, and finally decode it back to motion.
+Current methods mainly follow two tracks: (1) diffusion on the whole latent space at once
+[
+6
+,
+10
+,
+9
+,
+26
+]
+, and (2) split the sequence into multiple latents and denoise them auto-regressively
+[
+86
+,
+44
+,
+69
+,
+61
+,
+88
+]
+.
+In this work, we investigate how to most effectively perform text-to-motion diffusion in a continuous latent space.
+There are two key questions here: (1) what makes a good latent space for motion diffusion, and (2) how to inject the text condition most effectively.
+For the first question, we study motion latent spaces w.r.t. latent size and semantic alignment, motivated by recent latent space studies for image generation
+[
+70
+,
+29
+,
+67
+]
+. Specifically, we introduce a semantically aligned motion encoder that preserves key temporal structure and pulls atomic motion latents with similar text semantics closer in the latent space. We additionally use frame-level text labels guiding how motion latents are distributed.
+Altogether results in a model which can follow the text instructions more faithfully.
+For text conditioning, recent works usually either attach a single text token to the motion latents
+[
+59
+,
+6
+,
+73
+,
+16
+,
+50
+,
+49
+]
+, or use that token to modulate the transformer-based diffusion backbone
+[
+44
+,
+43
+]
+. Our experiments show that a single token is not expressive enough. Instead, we employ multiple text tokens with cross-attention to the motion latents. This results in stronger conditioning.
+Based on these insights, we introduce MoLingo, a masked auto-regressive rectified-flow model that combines semantically aligned latent spaces with multi-token cross-attention. MoLingo generates human motion that is both natural and faithful to text instructions, achieving state-of-the-art results in FID, R-Precision, and a user study, including challenging motions such as dancing
+MoLingo: Motion–Language Alignment for Text-to-Human Motion Generation
+.
+In summary, our
+contributions
+are:
+•
+We introduce
+MoLingo
+, setting the new state-of-the-art in human motion generation using masked auto-regressive rectified flow on a continuous latent space to produce natural and realistic motions.
+•
+We propose two variants of our model: one with a semantically aligned latent space of text and motion and one with a plain VAE. We show that alignment helps the model to faithfully follow the text instruction.
+•
+Instead of conditioning on text based on a single token (common), we find that multiple tokens and cross-attention with motion latents yields significant improvement.
+We will make our code and models publicly available for further research and downstream usage.
+2
+Related Work
+Human motion is a vastly studied topic. Different from unconditional generation
+[
+55
+,
+71
+,
+36
+,
+20
+]
+,
+here we review recent advances in text-driven 3D human motion generation, categorized into: human motion generation, evaluation protocols, and representation learning for diffusion models.
+Human motion generation
+Human motions can be parameterized either continuously or discretely.
+For continuous representations, diffusion-based methods generate motions either directly in the pose-frame space
+[
+75
+,
+59
+,
+76
+,
+78
+,
+77
+,
+87
+,
+8
+,
+4
+,
+56
+,
+27
+,
+35
+,
+47
+,
+31
+,
+5
+,
+80
+,
+32
+,
+83
+,
+82
+,
+81
+,
+34
+]
+or in a learned latent space
+[
+6
+,
+10
+,
+9
+,
+84
+,
+85
+,
+44
+,
+43
+,
+69
+,
+61
+]
+.
+While diffusion-based approaches can produce diverse and realistic motions, methods that generate in the pose-frame space suffer from the noise present in mocap-based datasets
+[
+41
+]
+, leading to artifacts in generated motions.
+Latent space diffusion models alleviate the issue by first compressing motions into a compact latent space. However, encoding an entire sequence into a single latent vector
+[
+6
+,
+10
+,
+9
+,
+26
+]
+can lose important temporal details and fine-grained motion cues.
+Vector-quantization (VQ)–based next-token prediction methods
+[
+18
+,
+73
+,
+25
+,
+16
+,
+50
+,
+49
+,
+64
+,
+24
+,
+66
+,
+22
+,
+3
+,
+15
+,
+48
+,
+14
+,
+79
+,
+37
+,
+57
+]
+first discretize continuous motions into a series of codebook tokens, then use auto-regressive transformers to predict subsequent token entry conditioned on text, treating motion as a foreign language.
+While this discretization preserves more temporal information from the input motion and makes training easier via cross-entropy, mapping continuous motion to a finite codebook still introduces quantization error. This reduces fine-grained details and realism, especially for challenging or fast motions.
+More recently, inspired by advances in image generation
+[
+33
+]
+, several works
+[
+44
+,
+69
+,
+88
+,
+61
+,
+74
+]
+have adopted continuous-valued latents for diffusion-based auto-regressive motion generation, improving motion quality and reducing the reconstruction artifacts of VQ-based methods. We follow this line, but introduce with a stronger text-conditioning mechanism and a semantically aligned latent space, which together enable state-of-the-art motion generation performance.
+Figure 2
+:
+Semantically aligned autoencoder architecture.
+The model comprises an encoder–decoder autoencoder for motion sequences and a parallel text-encoding branch that maps frame-level text labels into class tokens. A cosine-similarity loss
+[MATH: \mathcal{L}_{\text{sem}}]
+is applied to align the motion latents with their corresponding class tokens.
+Motion parameterization and evaluation protocols
+Human motion is naturally represented as a sequence of pose frames. Both, how we parameterize the pose configuration and how we quantify motion quality, are crucial for assessing realism and semantic faithfulness.
+FID
+[
+21
+]
+is the most widely used metric to measure realism and diversity for generative models. To better align with human perception, recent works explore directly predicting human preference scores
+[
+63
+,
+65
+]
+.
+In this context, HumanML3D
+[
+17
+]
+introduced a 263-dimensional motion representation together with a motion feature extractor for computing metrics such as FID. In addition to rotations, this representation also contains joint positions, velocities, and foot-contact signals, which serve as extra regularization.
+This Guo-263 protocol enabled robust comparison for a wide range of text-to-motion works
+[
+59
+,
+6
+,
+75
+,
+73
+,
+16
+]
+, but subsequent studies have revealed limitations
+[
+46
+,
+31
+,
+47
+,
+1
+,
+44
+,
+69
+]
+.
+(1)
+[
+44
+]
+pointed out that the 263D representation is redundant. They keep only the first 67 dimensions, corresponding to the pelvis trajectory and local joint positions, resulting in the MARDM-67 protocol.
+(2)
+[
+69
+]
+pointed out that the rotation components in Guo-protocol are derived via inverse kinematics (IK), which introduces errors. They rebuilt the representation into 272 dimensions by taking rotations directly from AMASS
+[
+41
+]
+, thereby avoiding IK artifacts.
+They further adopt a better-designed cross-modal embedding space, TMR
+[
+46
+]
+, which provides a more semantically coherent latent space for evaluation, resulting in the MS-272 protocol.
+Recent works have reported FID using TMR evaluator
+[
+47
+,
+31
+,
+69
+,
+15
+]
+. For the standard 263-dimensional representation, we also employ the TMR evaluator on the original 263D representation, referred to as TMR-263. Together with MARDM-67, we report results across all these evaluators to ensure a fair and comprehensive evaluation.
+Representation learning for diffusion models
+Learning effective latent representations is crucial for high-quality generation with latent diffusion models.
+Recent works have focused on discovering latent spaces suitable to diffusion, exploring what constitutes a “diffusable” representation.
+REPA
+[
+70
+]
+introduces an approach that aligns noisy input states in diffusion models with representations from pretrained visual encoders.
+REPA-E
+[
+29
+]
+proposes to train the diffusion model and its VAE tokenizer end-to-end, achieving stable and effective joint training of both components.
+REG
+[
+67
+]
+proposes to entangle low-level image latents with a single high-level class token from pretrained foundation models, enhancing global control for the denoising process.
+[
+28
+]
+integrates masked autoencoders into the diffusion framework, while recent work has also explored semantic regularization losses
+[
+45
+]
+to improve latent space structure.
+Motivated by these insights, we investigate how to enrich motion latent spaces with semantic information to facilitate the diffusion process and improve generation quality.
+Figure 3
+:
+Auto-regressive flow-based latent denoising.
+Our generation model uses a standard transformer decoder to obtain conditioning vectors
+[MATH: z]
+, which guides an MLP in iteratively refining latents. During training the motion latents are randomly masked and replaced with learnable tokens. During inference, we initialize with
+fully masked latents
+, iteratively denoise them, and decode the final latents to obtain the generated motion.
+3
+Method
+In this section, we introduce our method for realistic human motion generation. We start by giving an overview of the solved task and our method.
+Human motion generation task
+We aim to generate a sequence
+[MATH: \mathbf{m}_{1:N}]
+of 3D human motion with length
+[MATH: N]
+, where each
+[MATH: \mathbf{m}_{i}\in\mathbb{R}^{D}]
+represents a human pose configuration. The generation process is conditioned on a textual description
+[MATH: c]
+.
+Method overview
+As illustrated in Fig.
+2
+and Fig.
+3
+, our approach consists of two key components:
+[MATH: (1)]
+a motion encoder that maps motion sequences to semantically aligned continuous-valued motion latents (Sec.
+3.1
+) and
+[MATH: (2)]
+a masked auto-regressive transformer with rectified flow
+[
+38
+]
+output heads, progressively denoising these latents (Sec.
+3.2
+).
+Similar to
+[
+44
+,
+69
+]
+, we perform auto-regressive generation directly in the continuous domain using a flow-based objective, which avoids poor reconstruction performance observed in earlier methods
+[
+73
+,
+25
+,
+16
+,
+50
+,
+49
+]
+.
+Table 1
+:
+Quantitative results on the MARDM-67 evaluator.
+We compare our method with a broad set of motion generation approaches, from early models
+[
+59
+,
+6
+]
+to recent ones
+[
+43
+,
+15
+]
+, covering pose-frame diffusion
+[
+59
+]
+, single-vector latent diffusion
+[
+6
+,
+9
+]
+, VQ-based next-token prediction
+[
+16
+,
+50
+,
+49
+,
+72
+,
+7
+,
+15
+]
+, and continuous-valued auto-regressive models
+[
+44
+,
+43
+]
+. We report the mean results over 20 independent runs, and the
+[MATH: \pm]
+values indicate the
+[MATH: 95\%]
+confidence interval. Our method achieves state-of-the-art FID, R-Precision, and CLIP-Score. Green cells highlight the best scores, and yellow cells the second best.
+Methods
+FID
+[MATH: \downarrow]
+R-Precision
+CLIP-Score
+[MATH: \uparrow]
+MModality
+[MATH: \uparrow]
+Top 1
+[MATH: \uparrow]
+Top 2
+[MATH: \uparrow]
+Top 3
+[MATH: \uparrow]
+Real
+[MATH: 0.000^{\pm.000}]
+[MATH: 0.503^{\pm.002}]
+[MATH: 0.696^{\pm.001}]
+[MATH: 0.795^{\pm.002}]
+[MATH: 0.639^{\pm.001}]
+-
+MDM-50Step
+[
+59
+]
+[MATH: 0.518^{\pm.032}]
+[MATH: 0.440^{\pm.007}]
+[MATH: 0.636^{\pm.006}]
+[MATH: 0.742^{\pm.004}]
+[MATH: 0.578^{\pm.003}]
+[MATH: 3.604^{\pm.031}]
+MLD
+[
+6
+]
+[MATH: 0.431^{\pm.014}]
+[MATH: 0.461^{\pm.004}]
+[MATH: 0.651^{\pm.004}]
+[MATH: 0.750^{\pm.003}]
+[MATH: 0.610^{\pm.003}]
+[MATH: 3.506^{\pm.031}]
+MoMask
+[
+16
+]
+[MATH: 0.116^{\pm.006}]
+[MATH: 0.490^{\pm.004}]
+[MATH: 0.687^{\pm.003}]
+[MATH: 0.786^{\pm.003}]
+[MATH: 0.637^{\pm.003}]
+[MATH: 1.309^{\pm.058}]
+MMM
+[
+50
+]
+[MATH: 0.132^{\pm.004}]
+[MATH: 0.487^{\pm.003}]
+[MATH: 0.683^{\pm.002}]
+[MATH: 0.782^{\pm.001}]
+[MATH: 0.635^{\pm.003}]
+[MATH: 1.455^{\pm.106}]
+BAMM
+[
+49
+]
+[MATH: 0.147^{\pm.005}]
+[MATH: 0.480^{\pm.003}]
+[MATH: 0.671^{\pm.003}]
+[MATH: 0.772^{\pm.003}]
+[MATH: 0.630^{\pm.001}]
+[MATH: 1.954^{\pm.070}]
+MogenTS
+[
+72
+]
+[MATH: 0.060^{\pm.004}]
+[MATH: 0.500^{\pm.003}]
+[MATH: 0.694^{\pm.002}]
+[MATH: 0.793^{\pm.002}]
+[MATH: 0.636^{\pm.001}]
+[MATH: 0.882^{\pm.032}]
+MLD++
+[
+9
+]
+[MATH: 2.027^{\pm.021}]
+[MATH: 0.500^{\pm.003}]
+[MATH: 0.691^{\pm.002}]
+[MATH: 0.789^{\pm.001}]
+[MATH: 0.639^{\pm.002}]
+[MATH: 1.924^{\pm.065}]
+MotionLCM-V2
+[
+9
+]
+[MATH: 2.267^{\pm.023}]
+[MATH: 0.501^{\pm.002}]
+[MATH: 0.693^{\pm.002}]
+[MATH: 0.790^{\pm.002}]
+[MATH: 0.640^{\pm.003}]
+[MATH: 1.780^{\pm.062}]
+DisCoRD
+[
+7
+]
+[MATH: 0.053^{\pm.004}]
+[MATH: 0.506^{\pm.003}]
+[MATH: 0.699^{\pm.003}]
+[MATH: 0.796^{\pm.003}]
+[MATH: 0.645^{\pm.001}]
+[MATH: 1.303^{\pm.047}]
+MARDM-
+[MATH: \mathbf{v}]
+[
+44
+]
+[MATH: 0.114^{\pm.007}]
+[MATH: 0.500^{\pm.004}]
+[MATH: 0.695^{\pm.003}]
+[MATH: 0.795^{\pm.003}]
+[MATH: 0.642^{\pm.002}]
+[MATH: 2.231^{\pm.071}]
+ACMDM-S-PS22
+[
+43
+]
+[MATH: 0.109^{\pm.005}]
+[MATH: 0.508^{\pm.002}]
+[MATH: 0.701^{\pm.003}]
+[MATH: 0.798^{\pm.003}]
+[MATH: 0.642^{\pm.001}]
+[MATH: 2.156^{\pm.061}]
+ACMDM-XL-PS2
+[
+43
+]
+[MATH: 0.058^{\pm.004}]
+[MATH: 0.522^{\pm.002}]
+[MATH: 0.713^{\pm.003}]
+[MATH: 0.807^{\pm.002}]
+[MATH: 0.652^{\pm.001}]
+[MATH: 2.077^{\pm.083}]
+MoMask++
+[
+15
+]
+[MATH: 0.108^{\pm.007}]
+[MATH: 0.492^{\pm.003}]
+[MATH: 0.683^{\pm.003}]
+[MATH: 0.782^{\pm.002}]
+[MATH: 0.634^{\pm.001}]
+[MATH: 1.259^{\pm.054}]
+MoLingo (VAE)
+[MATH: 0.049^{\pm{.003}}]
+[MATH: 0.528^{\pm{.002}}]
+[MATH: 0.721^{\pm{.002}}]
+[MATH: 0.815^{\pm{.002}}]
+[MATH: 0.672^{\pm{.001}}]
+[MATH: 1.414^{\pm.049}]
+MoLingo (SAE)
+[MATH: 0.066^{\pm{.003}}]
+[MATH: 0.544^{\pm{.002}}]
+[MATH: 0.739^{\pm{.002}}]
+[MATH: 0.832^{\pm{.002}}]
+[MATH: 0.686^{\pm{.001}}]
+[MATH: 1.226^{\pm.063}]
+3.1
+Encoding Motions into Latents
+We consider three variants of motion autoencoders: a variational autoencoder (VAE), a vanilla autoencoder (AE), and we further propose a semantically aligned autoencoder (SAE).
+Since our encoder–decoder is built with 1D temporal convolutions, the sequential structure of the input motion is preserved by encoding
+[MATH: N]
+motion frames into
+[MATH: l=N/h]
+latents, resulting in motion latents
+[MATH: m_{1:l}\in\mathbb{R}^{l\times d}]
+, where
+[MATH: d]
+is the latent dimension. In practice, we adopt a causal architecture
+[
+69
+]
+where both the motion encoder and decoder consist of stacked 1D convolutional layers.
+Semantically aligned autoencoder (SAE)
+We introduce a continuous-valued autoencoder that preserves fine-grained human motion details while maintaining semantic for each latent, as shown in
+Fig.
+2
+.
+To obtain a more structured motion latent space with rich semantics, we encourage motion latents corresponding to similar semantics to be close in the latent space.
+In practice, we use the BABEL dataset
+[
+52
+]
+, which provides frame-level textual label annotations for each motion sequence.
+For each motion latent
+[MATH: m_{j}]
+, we collect the text labels from the motion frames temporally aligned with that latent, encode them using a frozen text encoder, average the resulting embeddings, and apply a linear projection to match the motion latent dimension, getting the class token
+[MATH: \kappa_{j}]
+.
+We then treat these class tokens as the teacher to guide the motion latent distribution.
+For each training batch, we apply a cosine similarity loss to encourage closer alignment between motion latents and their corresponding class tokens.
+However, since BABEL contains highly repetitive frame-level annotations, consecutive motion latents may be assigned an identical class token, leading to overly strong or incorrect alignment. To address this, we first compute a similarity score between consecutive class tokens:
+[MATH: \Delta_{i}=\langle\kappa_{i},\kappa_{i+1}\rangle,1\leq i<B,B=b\times l]
+, and discard class tokens and their corresponding motion latents whose
+[MATH: \Delta_{i}]
+exceeds a threshold
+[MATH: \tau]
+, resulting in the filtered index set
+[MATH: \mathcal{I}]
+. Here
+[MATH: \langle\cdot,\cdot\rangle]
+denotes the cosine similarity, and
+[MATH: b]
+is the batch size.
+We then minimize the semantic loss from the text-induced distribution to the motion-induced one:
+[MATH: \mathcal{L}_{\text{sem}}=\frac{1}{|\mathcal{I}|}\sum_{i\in\mathcal{I}}\left(1-\frac{m_{i}\cdot\kappa_{i}}{\|m_{i}\|\|\kappa_{i}\|}\right)]
+(1)
+Table 2
+:
+Ablation studies.
+We analyze: (1) different text-conditioning mechanisms, and (2) the effect of using a semantically aligned latent space.
+AdaLN
+denotes single-text-token conditioning with DiT-style modulation; note that the first row corresponds to MARDM
+[
+44
+]
+.
+CrossAttn
+denotes multi-token cross-attention conditioning. We conduct all experiments using the MARDM-67 evaluator with 4× downsampling and latent dimensions of
+[MATH: 16]
+. We adopt adapter depth
+[MATH: 6]
+for T5+CrossAttn setting.
+Conditioning
+Text
+Autoencoder
+FID
+[MATH: \downarrow]
+R-Precision
+CLIP-Score
+[MATH: \uparrow]
+Mechanism
+Encoder
+Type
+Top 1
+[MATH: \uparrow]
+Top 2
+[MATH: \uparrow]
+Top 3
+[MATH: \uparrow]
+AdaLN
+CLIP
+AE
+[MATH: 0.114^{\pm{.007}}]
+[MATH: 0.500^{\pm{.004}}]
+[MATH: 0.695^{\pm{.003}}]
+[MATH: 0.795^{\pm{.003}}]
+[MATH: 0.642^{\pm{.002}}]
+T5
+[MATH: 0.077^{\pm{.004}}]
+[MATH: 0.508^{\pm{.003}}]
+[MATH: 0.700^{\pm{.003}}]
+[MATH: 0.795^{\pm{.002}}]
+[MATH: 0.650^{\pm{.001}}]
+CrossAttn
+T5
+VAE
+[MATH: 0.049^{\pm{.003}}]
+[MATH: 0.528^{\pm{.002}}]
+[MATH: 0.721^{\pm{.002}}]
+[MATH: 0.815^{\pm{.002}}]
+[MATH: 0.672^{\pm{.001}}]
+AE
+[MATH: 0.051^{\pm{.002}}]
+[MATH: 0.533^{\pm{.003}}]
+[MATH: 0.727^{\pm{.003}}]
+[MATH: 0.820^{\pm{.002}}]
+[MATH: 0.673^{\pm{.001}}]
+SAE
+[MATH: 0.066^{\pm{.003}}]
+[MATH: 0.544^{\pm{.002}}]
+[MATH: 0.739^{\pm{.002}}]
+[MATH: 0.832^{\pm{.002}}]
+[MATH: 0.686^{\pm{.001}}]
+Training objective
+First, the SAE is trained to preserve motion reconstruction quality via a reconstruction loss:
+[MATH: \mathcal{L}_{\text{recon}}=\mathcal{L}_{\text{feat}}+\lambda_{\text{joint}}\mathcal{L}_{\text{joint}}+\lambda_{\text{vel}}\mathcal{L}_{\text{vel}}]
+(2)
+where,
+[MATH: \mathcal{L}_{\text{feat}}=\|\mathbf{m}-\mathcal{D}(m)\|_{2}^{2}\ \ \ \mathcal{L}_{\text{joint}}=\|\mathcal{T}(\mathbf{m})-\mathcal{T}(\mathcal{D}(m))\|_{2}^{2}]
+(3)
+[MATH: \displaystyle\mathcal{L}_{\text{vel}}=\frac{1}{N-1}\sum_{n=1}^{N-1}\Big\|]
+[MATH: \displaystyle\left(\mathcal{T}(\mathbf{m})_{n+1}-\mathcal{T}(\mathbf{m})_{n}\right)]
+(4)
+[MATH: \displaystyle-\left(\mathcal{T}(\mathcal{D}(m))_{n+1}-\mathcal{T}(\mathcal{D}(m))_{n}\right)\Big\|_{2}^{2}]
+where
+[MATH: \mathcal{T}]
+represents the function that transforms motion representation to body joint positions. These terms respectively penalize differences in motion representations, joint positions and joint velocities. The final loss is:
+[MATH: \mathcal{L}_{\text{SAE}}=\mathcal{L}_{\text{recon}}+\lambda_{\text{sem}}\mathcal{L}_{\text{sem}}+\lambda_{\text{KL}}\mathcal{L}_{\text{KL}}]
+(5)
+with
+[MATH: \mathcal{L}_{\text{KL}}=D_{\text{KL}}(q(m|\mathbf{m})\ \|\ p(m))]
+is the KL Divergence. Please refer to the appendix for more details.
+3.2
+Masked Auto-regressive Motion Generation
+Input preparation
+As shown in Fig.
+3
+, after encoding the input motions into latents
+[MATH: m_{1:l}]
+, we first encode the prompt
+[MATH: c]
+using a frozen T5-Large
+[
+54
+]
+text encoder. To further enhance cross-modal interaction for the subsequent cross-attention, we pass the text embeddings through a text adapter consisting of
+[MATH: l_{\text{adapter}}]
+transformer encoder blocks, obtaining the final text representation
+[MATH: \mathbf{w}=\{w_{1},w_{2},\dots,w_{l_{\text{text}}}\}]
+. We then randomly select a subset of motion latents in
+[MATH: m_{1:l}]
+, and replace them with a learnable mask latent during training. We continue to denote the masked latent sequence as
+[MATH: m_{1:l}]
+for simplicity.
+[MATH: \mathbf{w}]
+and
+[MATH: m_{1:l}]
+then serve as the inputs to the subsequent auto-regressive denoising stage.
+Auto-regressive flow-based latent denoising
+Given the masked sequence of latents
+[MATH: m_{1:l}]
+, we decompose the joint distribution over all latents using the chain rule of probability:
+[MATH: p(m_{1},\dots,m_{l})=\prod_{i=1}^{l}p(m_{i}\ |\ c,m_{1},\dots,m_{i-1})\textnormal{,}]
+(6)
+and generate a motion sequence by iteratively sampling latents followed by decoding with
+[MATH: \mathcal{D}]
+.
+Each step uses a transformer-based network to sample from the conditional probability
+[MATH: p(m_{i}\ |\ c,m_{1},\dots,m_{i-1})]
+walking through a reverse ODE trajectory. In practice, we use rectified flow
+[
+38
+]
+as our flow-based model. To combine the strengths of auto-regression and rectified flow, following
+[
+33
+,
+12
+]
+, we use a standard decoder-only transformer model
+[MATH: \Phi]
+to obtain a conditioning vector
+[MATH: z_{i}=\Phi(w_{1},\dots,w_{l_{\text{text}}};m_{1},\dots,m_{i-1})]
+. Each transformer block consists of self-attention, cross-attention and MLP layers. The self attention and MLP layer operate only on the motion latents
+[MATH: m_{1:l}]
+, for cross attention, output of the self attention serve as the queries and text tokens
+[MATH: \mathbf{w}]
+as keys and values. Then we feed
+[MATH: z_{i}]
+into an MLP
+[MATH: v_{\theta}]
+to approximate the reverse distribution:
+[MATH: \mathcal{L}(z_{i},m_{i})=\mathbb{E}_{m_{i},\epsilon,t}[\|v_{\theta}(m_{i}^{t},t,z_{i})-(\epsilon-m_{i})\|^{2}]\textnormal{,}]
+(7)
+where the noisy
+[MATH: m_{i}^{t}]
+is obtained by linearly interpolating between the Gaussian noise
+[MATH: \epsilon]
+and the clean latent:
+[MATH: m_{i}^{t}=\alpha_{t}m_{i}+\sigma_{t}\epsilon,\epsilon\sim\mathcal{N}(0,\mathbf{I})]
+with
+[MATH: \alpha_{t}=1-t]
+a decreasing and
+[MATH: \sigma_{t}=t]
+an increasing function of time
+[MATH: t]
+.
+During training, we use bidirectional attention so that masked latents can attend to all unmasked latents, and unmasked latents can also see each other.
+Inference
+We initialize all motion latents with the learned mask latent at the start of inference. We then iteratively select one or a subset of latent positions, run the transformer once to obtain the corresponding conditioning vector(s)
+[MATH: z]
+, and feed
+[MATH: z]
+into the MLP to perform the reverse flow-based sampling at those positions, replacing the masked latents with clean ones. This process is repeated until all motion latents are clean. We finally pass the clean latent sequence to the motion decoder
+[MATH: \mathcal{D}]
+to produce the generated motion.
+Figure 4
+:
+Qualitative comparisons
+with MARDM
+[
+44
+]
+, ACMDM
+[
+43
+]
+, and MotionStreamer
+[
+69
+]
+. The color transitions from light to dark to indicate temporal flow. Our method generates more natural and text-aligned motions, ranging from everyday movements to challenging scenarios like cartwheel. In contrast, other methods either fail to follow fine-grained text instructions (e.g.,
+run first, then turn around, then do a cartwheel
+, or
+leaning left while walking
+), or collapse completely (e.g., knees touching elbows). Our method follows the specified action order while preserving realism. For methods using the MARDM-67 representation
+[
+44
+,
+43
+]
+, we employ SimpLify
+[
+2
+]
+to convert their outputs to SMPL
+[
+39
+]
+meshes. We refer readers to the project page for more detailed visualizations of dynamic motions.
+4
+Experiments
+In this section, we first present the experimental setup in Sec.
+4.1
+, followed by ablation studies in Sec.
+4.2
+, qualitative and quantitative comparisons with state-of-the-art methods in Sec.
+4.3
+. To better reflect human perception, we also conduct user studies, reported in Sec.
+4.3
+.
+4.1
+Setup
+Implementation details
+Our models are implemented in PyTorch.
+To ensure a fair comparison with state-of-the-art human motion generation methods, we use the HumanML3D
+[
+17
+]
+dataset for training and evaluation. HumanML3D sources motions from AMASS
+[
+41
+]
+and HumanAct12
+[
+19
+]
+and provides two to three manual text annotations per motion. The full dataset consists of 29,024 motions and 87,834 text descriptions. All motions are unified to 20 FPS and last up to 10 seconds. We further use the 272-dimensional 30 FPS version of HumanML3D to train the model for comparison with
+[
+69
+]
+. For SAE training, we use the intersection between BABEL
+[
+52
+]
+and HumanML3D to apply the semantic loss, and then use the full dataset to apply the remaining losses.
+We train the motion autoencoders with a batch size of
+[MATH: 256]
+for
+[MATH: 5000]
+epochs, using a learning rate of
+[MATH: 5\times 10^{-5}]
+.
+For our auto-regressive latent rectified flow model, we train for about
+[MATH: 800]
+epochs with a batch size of
+[MATH: 256]
+. The learning rate warms up linearly for the first
+[MATH: 100]
+epochs and then remains constant at
+[MATH: 8\times 10^{-4}]
+. We apply Exponential Moving Average (EMA) to stabilize training. The model is trained with classifier-free guidance (CFG) by replacing
+[MATH: 10\%]
+of the text prompts into the same null prompt, and at inference time we sample latents with a CFG scale of
+[MATH: 5.5]
+.
+The entire training process for our best model configuration in
+Tab.
+1
+takes approximately 10 hours with four Nvidia H100 GPUs. Please refer to the supplementary document for further details such as hyperparameter setting, inference speed, etc.
+Table 3
+:
+Performance under different SAE configurations.
+We ablate three design choices for SAE: (1) the semantic regularization loss (cosine similarity vs. InfoNCE), (2) whether KL divergence is applied jointly, and (3) the weight of
+[MATH: \mathcal{L}_{\text{sem}}]
+. The configuration with cosine similarity, KL divergence, and a relatively small weight (
+[MATH: 0.001]
+) gives the best SAE design, significantly improving text–motion alignment (R-Precision and CLIP-score) while maintaining FID comparable to SOTA models.
+semantic
+KL
+[MATH: \lambda_{\text{sem}}]
+FID
+[MATH: \downarrow]
+R-Precision
+[MATH: \uparrow]
+CLIP-Score
+[MATH: \uparrow]
+regularization
+Top 1
+Top 2
+Top 3
+Cosine
+✗
+[MATH: 0.1]
+[MATH: 0.083^{\pm{.003}}]
+[MATH: 0.527^{\pm{.002}}]
+[MATH: 0.719^{\pm{.002}}]
+[MATH: 0.817^{\pm{.002}}]
+[MATH: 0.671^{\pm{.001}}]
+✓
+[MATH: 0.1]
+[MATH: 0.071^{\pm{.003}}]
+[MATH: 0.518^{\pm{.002}}]
+[MATH: 0.712^{\pm{.002}}]
+[MATH: 0.808^{\pm{.002}}]
+[MATH: 0.667^{\pm{.001}}]
+✗
+[MATH: 0.01]
+[MATH: 0.081^{\pm{.003}}]
+[MATH: 0.529^{\pm{.002}}]
+[MATH: 0.720^{\pm{.002}}]
+[MATH: 0.822^{\pm{.002}}]
+[MATH: 0.672^{\pm{.001}}]
+✓
+[MATH: 0.01]
+[MATH: 0.074^{\pm{.003}}]
+[MATH: 0.524^{\pm{.002}}]
+[MATH: 0.722^{\pm{.002}}]
+[MATH: 0.819^{\pm{.002}}]
+[MATH: 0.673^{\pm{.001}}]
+✗
+[MATH: 0.001]
+[MATH: 0.062^{\pm{.003}}]
+[MATH: 0.535^{\pm{.002}}]
+[MATH: 0.731^{\pm{.002}}]
+[MATH: 0.826^{\pm{.002}}]
+[MATH: 0.680^{\pm{.001}}]
+✓
+[MATH: 0.001]
+[MATH: 0.066^{\pm{.003}}]
+[MATH: 0.544^{\pm{.002}}]
+[MATH: 0.739^{\pm{.002}}]
+[MATH: 0.832^{\pm{.002}}]
+[MATH: 0.686^{\pm{.001}}]
+InfoNCE
+✗
+[MATH: 0.001]
+[MATH: 0.129^{\pm{.007}}]
+[MATH: 0.523^{\pm{.002}}]
+[MATH: 0.721^{\pm{.002}}]
+[MATH: 0.813^{\pm{.002}}]
+[MATH: 0.671^{\pm{.001}}]
+Evaluation protocol
+To enable a more comprehensive evaluation, we report metrics using MARDM-67 as our main benchmark, which enables us to compare with the most broad range of works, including
+[
+44
+,
+43
+]
+. Since some other works built on other representations (e.g. 272D), for a fair comparison with methods built on alternative motion representations, we additionally evaluate under their corresponding protocol MS-272. Furthermore, to piorneering a more robust evaluation benchmark for the future research, we for the first time give a most number of previous works and our work on TMR-263 evaluator.
+Specifically, we report a set of metrics under different evaluators. We use
+FID
+to measure the distance between the generated and real motion distributions,
+R-Precision
+and
+CLIP Score
+to assess text–motion alignment, and
+MModality
+to quantify the diversity of motions generated from the same textual description.
+4.2
+Ablation Studies
+We provide a comprehensive ablation on different text-conditioning mechanisms, autoencoder variants followed by an analysis of the effects of different latent sizes in Fig.
+5
+.
+Text condition mechanism
+Tab.
+2
+uses MARDM
+[
+44
+]
+(row 1) as the baseline to demonstrate the effectiveness of our design choices. We observe that using T5 achieves better performance even without multi-text-token cross attention (row 2), indicating the text encoder plays a key role in preserving rich semantics.
+Our multi-token cross attention design achieves clearly better text-motion alignment while achieving lower FID, suggesting that leveraging the full set of text tokens is more expressive.
+Effect of SAE
+As shown in Tab.
+2
+, the proposed SAE clearly outperforms both the vanilla AE and the VAE.
+It consistently achieves the best text–motion alignment scores while maintaining a comparable FID to SOTA models, indicating that enforcing semantic alignment yields a more semantically rich latent space that benefits text–motion alignment.
+We further investigate different forms of semantic regularization and the influence of the weighting factor
+[MATH: \lambda_{\text{sem}}]
+in Tab.
+3
+. The variant that incorporates KL-divergence-based supervision with a small weighting factor achieves the best performance.
+For the semantic regularization strategy, we also compare against InfoNCE supervision, a common choice in contrastive learning
+[
+46
+]
+, but it gives worse results.
+InfoNCE imposes a hard contrastive constraint that not only pulls together motion latents sharing the same label, but also explicitly pushes apart latents associated with different labels. However, as discussed in Sec.
+3.1
+, the available text labels lack diversity: semantically similar motions might all be mapped to the same label.
+However, human motion is continuous and ambiguous, and a motion latent corresponding to one label may also share properties with another category. Therefore, InfoNCE applies an overly rigid constraint, forcing each motion latent to align exactly with a fixed class token.
+In contrast, our method employs a soft cosine-similarity loss that only encourages positive text–motion pairs to move closer, while preserving the unique characteristics of each latent.
+This softer regularization achieves better quantitative results and leads to a more semantically meaningful and well-separated latent space.
+Exploration with the latent size
+There are two key factors that determine the size of our motion latent space: (1) the number of latents, and (2) the dimensionality of each latent. Fig.
+5
+presents a comprehensive ablation over both aspects. We observe that increasing the number of latents, i.e., moving from 4× to 2× compression, leads to consistently better R-Precision scores, indicating stronger text–motion alignment due to the preservation of more fine-grained motion details. In contrast, increasing the latent dimensionality has a negative effect on overall performance.
+4.3
+Comparison with SOTA Methods
+We finally select the model using auto-regressive generation with T5 + CrossAttn conditioning, at 4× temporal downsampling and a 16-d latent space, as our best configuration. We choose two variants with VAE and SAE respectively. In this section, we present qualitative comparisons, quantitative results, and a user study.
+Qualitative comparison
+Fig.
+4
+shows qualitative comparisons with MARDM
+[
+44
+]
+, ACMDM
+[
+43
+]
+and MotionStreamer
+[
+69
+]
+. Our method generates more realistic motions, even for challenging cases like cartwheels and elbow touching knees. As static figures cannot fully capture motion differences, we recommend viewing the supplementary videos for a better comparison.
+Quantitative comparison using MARDM-67 protocol
+We present the comparison in Tab.
+1
+. Our approach outperforms prior methods in both distributional quality and text–motion faithfulness, reducing FID from
+[MATH: 0.053]
+to
+[MATH: 0.049]
+for our VAE variant and improving R-Precision (Top-1) from
+[MATH: 0.522]
+to
+[MATH: 0.542]
+for our SAE variant. All results are computed on the HumanML3D test set over 20 generation runs, and we report the mean along with the
+[MATH: 95\%]
+confidence intervals, ensuring the robustness, motion realism, and semantic faithfulness of our method. For results under other evaluation protocols, we refer readers to the supp. material.
+Figure 5
+:
+Effect of latent dimension and temporal downsampling.
+We vary the latent dimension (
+[MATH: 16]
+–
+[MATH: 128]
+) under two temporal compression settings: (4×) and (2×). Overall, the 4× setting gives comparable or better performance than 2×, showing that is beneficial that a single latent encodes 4 frame, even 2× preserves more fine-grained temporal information.
+User study
+We conducted a user study to evaluate the perceptual quality and text–motion alignment of our generated results. We compare our method against three prior works: the VQ-based methods MoMask
+[
+16
+]
+and DisCoRD
+[
+7
+]
+, and the auto-regressive continuous-space model MotionStreamer
+[
+69
+]
+. We randomly selected 20 pairs of sequences per baseline. To reduce potential bias, the order of the placement of methods were randomized.
+Participants were instructed to evaluate the realism and text-motion alignment of the generated motions. For each comparison, we collected responses from 15 users. Please refer to the supplementary material for details of the user study interface.
+Participants preferred our method over DisCoRD in
+[MATH: 83.75\%]
+of cases, over MoMask
+[
+16
+]
+in
+[MATH: 77.70\%]
+of cases, and over MotionStreamer in
+[MATH: 84.70\%]
+of cases.
+These findings indicate that users consistently perceived our generated motions as more realistic than those of prior works. We generate our results using a
+[MATH: 272]
+D representation when comparing with MotionStreamer, and a
+[MATH: 263]
+D representation when comparing with the other methods, ensuring there are no confounding factors arising from the choice of motion representation.
+Figure 6
+:
+Incorporating MoLingo with RL Tracking Controller
+Our method produces motion with consistently realistic foot–ground interaction across the entire sequence. In contrast, MotionStreamer frequently exhibits balance artifacts. By leveraging MoLingo within the RL tracking controller, our results maintain stable, physically plausible floor contact, leading to more balanced, grounded, and visually convincing character motion. This improved contact behavior also reduces foot sliding and penetration, highlighting the advantage of our approach in capturing physically coherent movement.
+Transfer to human robots
+A main application generative human motion models is to transfer motion to robots
+[
+30
+,
+58
+,
+68
+]
+. To demonstrate the realism of our method, we show that we can directly use a pre-trained controller with physical constraints to transfer our generations to physics simulation. We compare our method to the MotionStreamer on these tasks see Fig.
+6
+. The qualitative and quantitative superiority of our method is also reflected in this task.
+5
+Conclusion and Limitation
+In this work, we present MoLingo, a text-to-motion generation model that performs masked auto-regressive rectified flow in a continuous motion latent space aligned with text. By exploring a more structured latent space and a better text condition mechanism, our method produces natural, smooth motions that better follow the input descriptions and achieves state-of-the-art results on a series of evaluators in terms of FID, R-Precision, and CLIP-based scores. A key finding is that aligning the motion latents with text makes the latent space much more aligned with the semantic structure of text models such improves text–motion alignment a lot while preserving good motion quality. We also showed that using multiple text tokens with cross-attention gives stronger text conditioning than a single token, leading to more accurate and realistic generated motions.
+Limitations
+Since our focus is on main body dynamics, our approach does not generate full-body motion with detailed hand movements, an essential aspect of human motion. We see this as an exciting future direction.
+Acknowledgments:
+We thank Chuqiao Li and István Sárándi for their helpful discussions and proofreading. We also thank Junyu Zhang for valuable discussions regarding the G1 policy training.
+The project was made possible by funding from the Carl Zeiss Foundation.
+This work is supported by the Deutsche Forschungsgemeinschaft (DFG, German Research Foundation) - 409792180 (Emmy Noether Programme, project: Real Virtual Humans) and the German Federal Ministry of Education and Research (BMBF): Tübingen AI Center, FKZ: 01IS18039A.
+JEL is supported by the German Research Foundation (DFG) - 556415750 (Emmy Noether Programme, project: Spatial Modeling and Reasoning).
+GPM is a member of the Machine Learning Cluster of Excellence, EXC number 2064/1 - Project number 390727645. This work was supported by the Engineering and Physical Sciences Research Council [grant number EP/X011364/1]. P. B. is supported by the Konrad Zuse School of Excellence in Learning and Intelligent Systems (ELIZA) through the DAAD programme Konrad Zuse Schools of Excellence in Artificial Intelligence, sponsored by the Federal Ministry of Education and Research. T. B. was supported by a UKRI Future Leaders Fellowship (MR/Y018818/1) as well as a Royal Society Research Grant (RG/R1/241402).
+References
+[1]
+L. Bensabath, M. Petrovich, and G. Varol
+(2024)
+TMR++: a cross-dataset study for text-based 3d human motion retrieval
+.
+In
+CVPR Workshop on Human Motion Generation
+,
+Cited by:
+§2
+.
+[2]
+F. Bogo, A. Kanazawa, C. Lassner, P. Gehler, J. Romero, and M. J. Black
+(2016)
+Keep it smpl: automatic estimation of 3d human pose and shape from a single image
+.
+In
+European conference on computer vision
+,
+pp. 561–578
+.
+Cited by:
+Figure 4
+,
+Figure 4
+.
+[3]
+C. Chen, J. Zhang, S. K. Lakshmikanth, Y. Fang, R. Shao, G. Wetzstein, L. Fei-Fei, and E. Adeli
+(2025)
+The language of motion: unifying verbal and non-verbal language of 3d human motion
+.
+In
+Proceedings of the Computer Vision and Pattern Recognition Conference
+,
+pp. 6200–6211
+.
+Cited by:
+§2
+.
+[4]
+R. Chen, M. Shi, S. Huang, P. Tan, T. Komura, and X. Chen
+(2024)
+Taming diffusion probabilistic models for character control
+.
+In
+ACM SIGGRAPH 2024 Conference Papers
+,
+SIGGRAPH ’24
+,
+New York, NY, USA
+.
+External Links:
+Link
+,
+Document
+Cited by:
+§1
+,
+§2
+.
+[5]
+W. Chen, H. Jia, S. Lai, K. Wu, H. Xiao, L. Hu, and Y. Yue
+(2025)
+Free-t2m: frequency enhanced text-to-motion diffusion model with consistency loss
+.
+arXiv preprint arXiv:2501.18232
+.
+Cited by:
+§2
+.
+[6]
+X. Chen, B. Jiang, W. Liu, Z. Huang, B. Fu, T. Chen, and G. Yu
+(2023)
+Executing your commands via motion diffusion in latent space
+.
+In
+Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition
+,
+pp. 18000–18010
+.
+Cited by:
+§1
+,
+§1
+,
+§2
+,
+§2
+,
+Table 1
+,
+Table 1
+,
+Table 1
+,
+Table 9
+,
+Table 9
+,
+Table 9
+.
+[7]
+J. Cho, J. Kim, J. Kim, M. Kim, M. Kang, S. Hong, T. Oh, and Y. Yu
+(2024)
+DisCoRD: discrete tokens to continuous motion via rectified flow decoding
+.
+arXiv preprint arXiv:2411.19527
+.
+Cited by:
+Table 1
+,
+Table 1
+,
+Table 1
+,
+§4.3
+,
+§6
+,
+Table 9
+,
+Table 9
+,
+Table 9
+.
+[8]
+R. Dabral, M. H. Mughal, V. Golyanik, and C. Theobalt
+(2023)
+MoFusion: a framework for denoising-diffusion-based motion synthesis
+.
+In
+Computer Vision and Pattern Recognition (CVPR)
+,
+Cited by:
+§1
+,
+§2
+.
+[9]
+W. Dai, L. Chen, Y. Huo, J. Wang, J. Liu, B. Dai, and Y. Tang
+(2024)
+Motionlcm-v2: improved compression rate for multi-latent-token diffusion
+.
+External Links:
+Link
+Cited by:
+§1
+,
+§2
+,
+Table 1
+,
+Table 1
+,
+Table 1
+,
+Table 1
+,
+Table 9
+,
+Table 9
+,
+Table 9
+,
+Table 9
+.
+[10]
+W. Dai, L. Chen, J. Wang, J. Liu, B. Dai, and Y. Tang
+(2024)
+MotionLCM: real-time controllable motion generation via latent consistency model
+.
+arXiv preprint arXiv:2404.19759
+.
+Cited by:
+§1
+,
+§2
+.
+[11]
+S. Elfwing, E. Uchibe, and K. Doya
+(2018)
+Sigmoid-weighted linear units for neural network function approximation in reinforcement learning
+.
+Neural networks
+107
+,
+pp. 3–11
+.
+Cited by:
+§6
+.
+[12]
+L. Fan, T. Li, S. Qin, Y. Li, C. Sun, M. Rubinstein, D. Sun, K. He, and Y. Tian
+(2024)
+Fluid: scaling autoregressive text-to-image generative models with continuous tokens
+.
+arXiv preprint arXiv:2410.13863
+.
+Cited by:
+§3.2
+.
+[13]
+A. Ghosh, R. Dabral, V. Golyanik, C. Theobalt, and P. Slusallek
+(2024)
+ReMoS: 3d motion-conditioned reaction synthesis for two-person interactions
+.
+In
+European Conference on Computer Vision (ECCV)
+,
+Cited by:
+§1
+.
+[14]
+A. Ghosh, B. Zhou, R. Dabral, J. Wang, V. Golyanik, C. Theobalt, P. Slusallek, and C. Guo
+(2025)
+Duetgen: music driven two-person dance generation via hierarchical masked modeling
+.
+In
+Proceedings of the Special Interest Group on Computer Graphics and Interactive Techniques Conference Conference Papers
+,
+pp. 1–11
+.
+Cited by:
+§2
+.
+[15]
+C. Guo, I. Hwang, J. Wang, and B. Zhou
+(2025)
+SnapMoGen: human motion generation from expressive texts
+.
+arXiv preprint arXiv:2507.09122
+.
+Cited by:
+§2
+,
+§2
+,
+Table 1
+,
+Table 1
+,
+Table 1
+,
+Table 9
+,
+Table 9
+,
+Table 9
+.
+[16]
+C. Guo, Y. Mu, M. G. Javed, S. Wang, and L. Cheng
+(2024)
+Momask: generative masked modeling of 3d human motions
+.
+In
+Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition
+,
+pp. 1900–1910
+.
+Cited by:
+§1
+,
+§2
+,
+§2
+,
+§3
+,
+Table 1
+,
+Table 1
+,
+Table 1
+,
+§4.3
+,
+§6
+,
+Table 9
+,
+Table 9
+,
+Table 9
+.
+[17]
+C. Guo, S. Zou, X. Zuo, S. Wang, W. Ji, X. Li, and L. Cheng
+(2022)
+Generating diverse and natural 3d human motions from text
+.
+In
+Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)
+,
+Cited by:
+§1
+,
+§2
+,
+§4.1
+,
+§6
+,
+§7
+.
+[18]
+C. Guo, X. Zuo, S. Wang, and L. Cheng
+(2022)
+TM2T: stochastic and tokenized modeling for the reciprocal generation of 3d human motions and texts
+.
+In
+ECCV
+,
+Cited by:
+§2
+.
+[19]
+C. Guo, X. Zuo, S. Wang, S. Zou, Q. Sun, A. Deng, M. Gong, and L. Cheng
+(2020)
+Action2motion: conditioned generation of 3d human motions
+.
+In
+Proceedings of the 28th ACM International Conference on Multimedia
+,
+pp. 2021–2029
+.
+Cited by:
+§4.1
+.
+[20]
+Y. He, G. Tiwari, T. Birdal, J. E. Lenssen, and G. Pons-Moll
+(2024)
+Nrdf: neural riemannian distance fields for learning articulated pose priors
+.
+In
+Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition
+,
+pp. 1661–1671
+.
+Cited by:
+§2
+.
+[21]
+M. Heusel, H. Ramsauer, T. Unterthiner, B. Nessler, and S. Hochreiter
+(2017)
+Gans trained by a two time-scale update rule converge to a local nash equilibrium
+.
+Advances in neural information processing systems
+30
+.
+Cited by:
+§2
+.
+[22]
+F. Hong, V. Guzov, H. J. Kim, Y. Ye, R. Newcombe, Z. Liu, and L. Ma
+(2024)
+EgoLM: multi-modal language model of egocentric motions
+.
+arXiv preprint arXiv:2409.18127
+.
+Cited by:
+§2
+.
+[23]
+Y. Huang, H. Yang, C. Luo, Y. Wang, S. Xu, Z. Zhang, M. Zhang, and J. Peng
+(2024)
+Stablemofusion: towards robust and efficient diffusion-based motion generation framework
+.
+In
+Proceedings of the 32nd ACM International Conference on Multimedia
+,
+pp. 224–232
+.
+Cited by:
+§1
+.
+[24]
+M. G. Javed, C. Guo, L. Cheng, and X. Li
+(2024)
+InterMask: 3d human interaction generation via collaborative masked modelling
+.
+arXiv preprint arXiv:2410.10010
+.
+Cited by:
+§2
+.
+[25]
+B. Jiang, X. Chen, W. Liu, J. Yu, G. Yu, and T. Chen
+(2024)
+MotionGPT: human motion as a foreign language
+.
+Advances in Neural Information Processing Systems
+36
+.
+Cited by:
+§2
+,
+§3
+.
+[26]
+L. Jiang, Y. Wei, and H. Ni
+(2025)
+MotionPCM: real-time motion synthesis with phased consistency model
+.
+arXiv preprint arXiv:2501.19083
+.
+Cited by:
+§1
+,
+§2
+.
+[27]
+K. Karunratanakul, K. Preechakul, S. Suwajanakorn, and S. Tang
+(2023)
+Guided motion diffusion for controllable human motion synthesis
+.
+In
+Proceedings of the IEEE/CVF International Conference on Computer Vision
+,
+pp. 2151–2162
+.
+Cited by:
+§1
+,
+§2
+.
+[28]
+J. Lee, J. Shin, H. Choi, and J. Lee
+(2025)
+Latent diffusion models with masked autoencoders
+.
+In
+Proceedings of the IEEE/CVF International Conference on Computer Vision
+,
+pp. 17422–17431
+.
+Cited by:
+§2
+.
+[29]
+X. Leng, J. Singh, Y. Hou, Z. Xing, S. Xie, and L. Zheng
+(2025)
+REPA-e: unlocking vae for end-to-end tuning with latent diffusion transformers
+.
+arXiv preprint arXiv:2504.10483
+.
+Cited by:
+§1
+,
+§2
+.
+[30]
+B. Li, R. Zhang, H. Liang, J. Zhang, J. Zhang, X. Chen, L. Xu, J. Yu, and J. Wang
+(2025)
+InterAgent: physics-based multi-agent command execution via diffusion on interaction graphs
+.
+arXiv preprint arXiv:2512.07410
+.
+Cited by:
+§4.3
+.
+[31]
+C. Li, J. Chibane, Y. He, N. Pearl, A. Geiger, and G. Pons-Moll
+(2024)
+Unimotion: unifying 3d human motion synthesis and understanding
+.
+arXiv preprint arXiv:2409.15904
+.
+Cited by:
+§1
+,
+§2
+,
+§2
+.
+[32]
+C. Li, X. Xie, Y. Cao, A. Geiger, and G. Pons-Moll
+(2026)
+FrankenMotion: part-level human motion generation and composition
+.
+In
+Conference on Computer Vision and Pattern Recognition (CVPR)
+,
+Cited by:
+§2
+.
+[33]
+T. Li, Y. Tian, H. Li, M. Deng, and K. He
+(2024)
+Autoregressive image generation without vector quantization
+.
+In
+Advances in Neural Information Processing Systems
+,
+Cited by:
+§2
+,
+§3.2
+.
+[34]
+H. Liang, J. Bao, R. Zhang, S. Ren, Y. Xu, S. Yang, X. Chen, J. Yu, and L. Xu
+(2024)
+Omg: towards open-vocabulary motion generation via mixture of controllers
+.
+In
+Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition
+,
+pp. 482–493
+.
+Cited by:
+§2
+.
+[35]
+H. Liang, W. Zhang, W. Li, J. Yu, and L. Xu
+(2024)
+Intergen: diffusion-based multi-human motion generation under complex interactions
+.
+International Journal of Computer Vision
+,
+pp. 1–21
+.
+Cited by:
+§1
+,
+§2
+.
+[36]
+H. Y. Ling, F. Zinno, G. Cheng, and M. Van De Panne
+(2020)
+Character controllers using motion vaes
+.
+ACM Trans. Graph.
+.
+Cited by:
+§2
+.
+[37]
+P. Liu, L. Song, J. Huang, H. Liu, and C. Xu
+(2025)
+GestureLSM: latent shortcut based co-speech gesture generation with spatial-temporal modeling
+.
+arXiv preprint arXiv:2501.18898
+.
+Cited by:
+§2
+.
+[38]
+X. Liu, C. Gong, and Q. Liu
+(2022)
+Flow straight and fast: learning to generate and transfer data with rectified flow
+.
+arXiv preprint arXiv:2209.03003
+.
+Cited by:
+§3
+,
+§3.2
+.
+[39]
+M. Loper, N. Mahmood, J. Romero, G. Pons-Moll, and M. J. Black
+(2015)
+SMPL: a skinned multi-person linear model
+.
+ACM Trans. Graphics (Proc. SIGGRAPH Asia)
+34
+.
+Cited by:
+Figure 4
+,
+Figure 4
+.
+[40]
+Z. Luo, J. Cao, K. Kitani, W. Xu,
+et al.
+(2023)
+Perpetual humanoid control for real-time simulated avatars
+.
+In
+Proceedings of the IEEE/CVF International Conference on Computer Vision
+,
+pp. 10895–10904
+.
+Cited by:
+§6
+.
+[41]
+N. Mahmood, N. Ghorbani, N. F. Troje, G. Pons-Moll, and M. J. Black
+(2019)
+AMASS: archive of motion capture as surface shapes
+.
+In
+IEEE/CVF International Conference on Computer Vision, ICCV
+,
+Cited by:
+§1
+,
+§2
+,
+§2
+,
+§4.1
+.
+[42]
+V. Makoviychuk, L. Wawrzyniak, Y. Guo, M. Lu, K. Storey, M. Macklin, D. Hoeller, N. Rudin, A. Allshire, A. Handa,
+et al.
+(2021)
+Isaac gym: high performance gpu-based physics simulation for robot learning
+.
+arXiv preprint arXiv:2108.10470
+.
+Cited by:
+§6
+.
+[43]
+Z. Meng, Z. Han, X. Peng, Y. Xie, and H. Jiang
+(2025)
+Absolute coordinates make motion generation easy
+.
+arXiv preprint arXiv:2505.19377
+.
+Cited by:
+§1
+,
+§2
+,
+Figure 4
+,
+Figure 4
+,
+Table 1
+,
+Table 1
+,
+Table 1
+,
+Table 1
+,
+§4.1
+,
+§4.3
+,
+Table 9
+,
+Table 9
+.
+[44]
+Z. Meng, Y. Xie, X. Peng, Z. Han, and H. Jiang
+(2024)
+Rethinking diffusion for text-driven human motion generation
+.
+arXiv preprint arXiv:2411.16575
+.
+Cited by:
+§1
+,
+§1
+,
+§2
+,
+§2
+,
+Figure 4
+,
+Figure 4
+,
+§3
+,
+Table 1
+,
+Table 1
+,
+Table 1
+,
+Table 2
+,
+Table 2
+,
+§4.1
+,
+§4.2
+,
+§4.3
+,
+Table 5
+,
+Table 5
+,
+§6
+,
+Table 9
+,
+Table 9
+.
+[45]
+Z. Niu, S. Hu, J. Choi, Y. Chen, P. Chen, P. Zhu, Y. Yang, B. Zhang, J. Zhao, C. Wang,
+et al.
+(2025)
+Semantic-vae: semantic-alignment latent representation for better speech synthesis
+.
+arXiv preprint arXiv:2509.22167
+.
+Cited by:
+§2
+.
+[46]
+M. Petrovich, M. J. Black, and G. Varol
+(2023)
+TMR: text-to-motion retrieval using contrastive 3D human motion synthesis
+.
+In
+International Conference on Computer Vision (ICCV)
+,
+Cited by:
+§2
+,
+§4.2
+,
+Table 8
+,
+Table 8
+,
+§7
+,
+MoLingo: Motion–Language Alignment for Text-to-Human Motion Generation
+.
+[47]
+M. Petrovich, O. Litany, U. Iqbal, M. J. Black, G. Varol, X. B. Peng, and D. Rempe
+(2024)
+STMC: multi-track timeline control for text-driven 3d human motion generation
+.
+arXiv preprint arXiv:2401.08559
+.
+Cited by:
+§2
+,
+§2
+.
+[48]
+E. Pinyoanuntapong, M. Saleem, K. Karunratanakul, P. Wang, H. Xue, C. Chen, C. Guo, J. Cao, J. Ren, and S. Tulyakov
+(2025)
+MaskControl: spatio-temporal control for masked motion synthesis
+.
+In
+Proceedings of the IEEE/CVF International Conference on Computer Vision
+,
+pp. 9955–9965
+.
+Cited by:
+§2
+.
+[49]
+E. Pinyoanuntapong, M. U. Saleem, P. Wang, M. Lee, S. Das, and C. Chen
+(2024)
+BAMM: bidirectional autoregressive motion model
+.
+In
+European Conference on Computer Vision
+,
+pp. 172–190
+.
+Cited by:
+§1
+,
+§2
+,
+§3
+,
+Table 1
+,
+Table 1
+,
+Table 1
+,
+Table 9
+,
+Table 9
+,
+Table 9
+.
+[50]
+E. Pinyoanuntapong, P. Wang, M. Lee, and C. Chen
+(2024)
+MMM: generative masked motion model
+.
+In
+Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)
+,
+Cited by:
+§1
+,
+§2
+,
+§3
+,
+Table 1
+,
+Table 1
+,
+Table 1
+,
+Table 9
+,
+Table 9
+,
+Table 9
+.
+[51]
+M. Plappert, C. Mandery, and T. Asfour
+(2016)
+The kit motion-language dataset
+.
+Big data
+4
+(
+4
+),
+pp. 236–252
+.
+Cited by:
+§1
+.
+[52]
+A. R. Punnakkal, A. Chandrasekaran, N. Athanasiou, A. Quiros-Ramirez, and M. J. Black
+(2021)
+BABEL: bodies, action and behavior with english labels
+.
+In
+Proceedings IEEE/CVF Conf. on Computer Vision and Pattern Recognition (CVPR)
+,
+Cited by:
+§3.1
+,
+§4.1
+.
+[53]
+A. Radford, J. W. Kim, C. Hallacy, A. Ramesh, G. Goh, S. Agarwal, G. Sastry, A. Askell, P. Mishkin, J. Clark, G. Krueger, and I. Sutskever
+(2021)
+Learning transferable visual models from natural language supervision
+.
+External Links:
+2103.00020
+Cited by:
+§6
+.
+[54]
+C. Raffel, N. Shazeer, A. Roberts, K. Lee, S. Narang, M. Matena, Y. Zhou, W. Li, and P. J. Liu
+(2020)
+Exploring the limits of transfer learning with a unified text-to-text transformer
+.
+Journal of machine learning research
+21
+(
+140
+),
+pp. 1–67
+.
+Cited by:
+§3.2
+.
+[55]
+D. Rempe, T. Birdal, A. Hertzmann, J. Yang, S. Sridhar, and L. J. Guibas
+(2021)
+Humor: 3d human motion model for robust pose estimation
+.
+In
+Proceedings of the IEEE/CVF international conference on computer vision
+,
+pp. 11488–11499
+.
+Cited by:
+§2
+.
+[56]
+Y. Shafir, G. Tevet, R. Kapon, and A. H. Bermano
+(2023)
+PriorMDM: human motion diffusion as a generative prior
+.
+In
+ICLR
+,
+Cited by:
+§2
+.
+[57]
+Z. Shan, Y. He, C. Zhao, J. Du, J. Zhang, Q. Zhang, J. Yu, and L. Xu
+(2025)
+Mojito: llm-aided motion instructor with jitter-reduced inertial tokens
+.
+arXiv preprint arXiv:2502.16175
+.
+Cited by:
+§2
+.
+[58]
+G. Tevet, S. Raab, S. Cohan, D. Reda, Z. Luo, X. B. Peng, A. H. Bermano, and M. van de Panne
+(2025)
+CLoSD: closing the loop between simulation and diffusion for multi-task character control
+.
+In
+The Thirteenth International Conference on Learning Representations
+,
+External Links:
+Link
+Cited by:
+§4.3
+.
+[59]
+G. Tevet, S. Raab, B. Gordon, Y. Shafir, D. Cohen-or, and A. H. Bermano
+(2023)
+Human motion diffusion model
+.
+In
+The Eleventh International Conference on Learning Representations
+,
+External Links:
+Link
+Cited by:
+§1
+,
+§1
+,
+§2
+,
+§2
+,
+Table 1
+,
+Table 1
+,
+Table 1
+,
+Table 9
+,
+Table 9
+,
+Table 9
+.
+[60]
+E. Todorov, T. Erez, and Y. Tassa
+(2012)
+Mujoco: a physics engine for model-based control
+.
+In
+2012 IEEE/RSJ international conference on intelligent robots and systems
+,
+pp. 5026–5033
+.
+Cited by:
+§6
+.
+[61]
+L. Tu, L. Meng, Z. Li, H. Ling, and S. Huang
+Autoregressive motion generation with gaussian mixture-guided latent sampling
+.
+In
+The Thirty-ninth Annual Conference on Neural Information Processing Systems
+,
+Cited by:
+§1
+,
+§2
+.
+[62]
+A. Vaswani, N. Shazeer, N. Parmar, J. Uszkoreit, L. Jones, A. N. Gomez, Ł. Kaiser, and I. Polosukhin
+(2017)
+Attention is all you need
+.
+Advances in neural information processing systems
+30
+.
+Cited by:
+§6
+.
+[63]
+J. Voas, Y. Wang, Q. Huang, and R. Mooney
+(2023)
+What is the best automated metric for text to motion generation?
+.
+In
+SIGGRAPH Asia 2023 Conference Papers
+,
+pp. 1–11
+.
+Cited by:
+§2
+.
+[64]
+W. Wan, Z. Dou, T. Komura, W. Wang, D. Jayaraman, and L. Liu
+(2024)
+Tlcontrol: trajectory and language control for human motion synthesis
+.
+In
+European Conference on Computer Vision
+,
+pp. 37–54
+.
+Cited by:
+§2
+.
+[65]
+H. Wang, W. Zhu, L. Miao, Y. Xu, F. Gao, Q. Tian, and Y. Wang
+(2025)
+Aligning motion generation with human perceptions
+.
+In
+International Conference on Learning Representations (ICLR)
+,
+Cited by:
+§2
+.
+[66]
+Y. Wang, chuan guo, Y. Mu, M. G. Javed, X. Zuo, J. Lu, H. Jiang, and L. cheng
+(2025)
+MotionDreamer: one-to-many motion synthesis with localized generative masked transformer
+.
+In
+The Thirteenth International Conference on Learning Representations
+,
+External Links:
+Link
+Cited by:
+§2
+.
+[67]
+G. Wu, S. Zhang, R. Shi, S. Gao, Z. Chen, L. Wang, Z. Chen, H. Gao, Y. Tang, J. Yang,
+et al.
+(2025)
+Representation entanglement for generation: training diffusion transformers is much easier than you think
+.
+arXiv preprint arXiv:2507.01467
+.
+Cited by:
+§1
+,
+§2
+.
+[68]
+Y. Wu, K. Karunratanakul, Z. Luo, and S. Tang
+(2025)
+UniPhys: unified planner and controller with diffusion for flexible physics-based character control
+.
+In
+Proceedings of the IEEE/CVF International Conference on Computer Vision (ICCV)
+,
+Cited by:
+§4.3
+.
+[69]
+L. Xiao, S. Lu, H. Pi, K. Fan, L. Pan, Y. Zhou, Z. Feng, X. Zhou, S. Peng, and J. Wang
+(2025)
+MotionStreamer: streaming motion generation via diffusion-based autoregressive model in causal latent space
+.
+arXiv preprint arXiv:2503.15451
+.
+Cited by:
+§1
+,
+§2
+,
+§2
+,
+Figure 4
+,
+Figure 4
+,
+§3
+,
+§3.1
+,
+§4.1
+,
+§4.3
+,
+§4.3
+,
+§6
+,
+§6
+,
+§6
+,
+Table 8
+,
+Table 8
+,
+Table 8
+,
+§7
+,
+Table 10
+,
+Table 10
+,
+MoLingo: Motion–Language Alignment for Text-to-Human Motion Generation
+.
+[70]
+S. Yu, S. Kwak, H. Jang, J. Jeong, J. Huang, J. Shin, and S. Xie
+(2025)
+Representation alignment for generation: training diffusion transformers is easier than you think
+.
+In
+International Conference on Learning Representations
+,
+Cited by:
+§1
+,
+§2
+.
+[71]
+Z. Yu, S. Foti, L. Zhang, A. Zhao, C. Keskin, S. Zafeiriou, and T. Birdal
+(2025)
+Geometric neural distance fields for learning human motion priors
+.
+arXiv preprint arXiv:2509.09667
+.
+Cited by:
+§2
+.
+[72]
+W. Yuan, Y. He, W. Shen, Y. Dong, X. Gu, Z. Dong, L. Bo, and Q. Huang
+(2024)
+Mogents: motion generation based on spatial-temporal joint modeling
+.
+Advances in Neural Information Processing Systems
+37
+,
+pp. 130739–130763
+.
+Cited by:
+Table 1
+,
+Table 1
+,
+Table 1
+,
+Table 9
+,
+Table 9
+,
+Table 9
+.
+[73]
+J. Zhang, Y. Zhang, X. Cun, S. Huang, Y. Zhang, H. Zhao, H. Lu, and X. Shen
+(2023)
+T2M-gpt: generating human motion from textual descriptions with discrete representations
+.
+In
+Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)
+,
+Cited by:
+§1
+,
+§2
+,
+§2
+,
+§3
+.
+[74]
+J. Zhang, C. Chen, X. Chen, H. Yu, T. Xiang, A. S. Khan, S. K. Lakshmikanth, and E. Adeli
+(2025)
+ViBES: a conversational agent with behaviorally-intelligent 3d virtual body
+.
+In
+arXiv
+,
+Cited by:
+§2
+.
+[75]
+M. Zhang, Z. Cai, L. Pan, F. Hong, X. Guo, L. Yang, and Z. Liu
+(2022)
+MotionDiffuse: text-driven human motion generation with diffusion model
+.
+arXiv preprint arXiv:2208.15001
+.
+Cited by:
+§1
+,
+§2
+,
+§2
+.
+[76]
+M. Zhang, X. Guo, L. Pan, Z. Cai, F. Hong, H. Li, L. Yang, and Z. Liu
+(2023)
+ReMoDiffuse: retrieval-augmented motion diffusion model
+.
+arXiv preprint arXiv:2304.01116
+.
+Cited by:
+§1
+,
+§2
+.
+[77]
+M. Zhang, D. Jin, C. Gu, F. Hong, Z. Cai, J. Huang, C. Zhang, X. Guo, L. Yang, Y. He,
+et al.
+(2025)
+Large motion model for unified multi-modal motion generation
+.
+In
+European Conference on Computer Vision
+,
+pp. 397–421
+.
+Cited by:
+§2
+.
+[78]
+M. Zhang, H. Li, Z. Cai, J. Ren, L. Yang, and Z. Liu
+(2024)
+Finemogen: fine-grained spatio-temporal motion generation and editing
+.
+NeurIPS
+36
+.
+Cited by:
+§2
+.
+[79]
+P. Zhang, P. Liu, P. Garrido, H. Kim, and B. Chaudhuri
+(2025)
+Kinmo: kinematic-aware human motion understanding and generation
+.
+In
+Proceedings of the IEEE/CVF International Conference on Computer Vision
+,
+pp. 11187–11197
+.
+Cited by:
+§2
+.
+[80]
+W. Zhang, M. Huang, Y. Zhou, J. Zhang, J. Yu, J. Wang, and L. Xu
+(2024)
+BOTH2Hands: inferring 3d hands from both text prompts and body dynamics
+.
+In
+Conference on Computer Vision and Pattern Recognition (CVPR)
+,
+Cited by:
+§2
+.
+[81]
+X. Zhang, B. L. Bhatnagar, S. Starke, V. Guzov, and G. Pons-Moll
+(2022)
+COUCH: towards controllable human-chair interactions
+.
+In
+European Conference on Computer Vision (ECCV)
+,
+Cited by:
+§2
+.
+[82]
+X. Zhang, B. L. Bhatnagar, S. Starke, I. A. Petrov, V. Guzov, H. Dhamo, E. Pérez Pellitero, and G. Pons-Moll
+(2025)
+FORCE: dataset and method for intuitive physics guided human-object interaction
+.
+In
+International Conference on 3D Vision (3DV)
+,
+Cited by:
+§2
+.
+[83]
+X. Zhang, S. Starke, V. Guzov, H. Dhamo, E. Pérez Pellitero, and G. Pons-Moll
+(2024)
+SCENIC: scene-aware semantic navigation with instruction-guided control
+.
+Cited by:
+§2
+.
+[84]
+Z. Zhang, A. Liu, I. Reid, R. Hartley, B. Zhuang, and H. Tang
+(2024)
+Motion mamba: efficient and long sequence motion generation with hierarchical and bidirectional selective ssm
+.
+arXiv preprint arXiv:2403.07487
+.
+Cited by:
+§1
+,
+§2
+.
+[85]
+Z. Zhang, Y. Wang, D. Li, D. Gong, I. Reid, and R. Hartley
+FlashMo: geometric interpolants and frequency-aware sparsity for scalable efficient motion generation
+.
+In
+The Thirty-ninth Annual Conference on Neural Information Processing Systems
+,
+Cited by:
+§1
+,
+§2
+.
+[86]
+K. Zhao, G. Li, and S. Tang
+(2025)
+A diffusion-based autoregressive motion model for real-time text-driven motion control
+.
+In
+The Thirteenth International Conference on Learning Representations (ICLR 2025)
+,
+Cited by:
+§1
+.
+[87]
+W. Zhou, Z. Dou, Z. Cao, Z. Liao, J. Wang, W. Wang, Y. Liu, T. Komura, W. Wang, and L. Liu
+(2023)
+EMDM: efficient motion diffusion model for fast, high-quality motion generation
+.
+arXiv preprint arXiv:2312.02256
+.
+Cited by:
+§1
+,
+§2
+.
+[88]
+B. Zhu, B. Jiang, S. Wang, S. Tang, T. Chen, L. Luo, Y. Zheng, and X. Chen
+(2025)
+MotionGPT3: human motion as a second modality
+.
+arXiv preprint arXiv:2506.24086
+.
+Cited by:
+§1
+,
+§2
+,
+Table 9
+,
+Table 9
+,
+Table 9
+.
+Supplementary Material
+Table 4
+:
+Notation Table
+. The main notation used in our paper.
+Symbol
+Description
+Domain
+[MATH: N]
+Input motion sequence length
+[MATH: \mathbb{N}]
+[MATH: D]
+Pose configuration dimension
+[MATH: \mathbb{N}]
+[MATH: l]
+Motion latent length
+[MATH: \mathbb{N}]
+[MATH: d]
+Latent dimension
+[MATH: \mathbb{N}]
+[MATH: D_{h}]
+Hidden size of Transformer decoder
+[MATH: \mathbb{N}]
+[MATH: l_{\text{adapter}}]
+Text adapter depth
+[MATH: \mathbb{N}]
+[MATH: l_{\text{text}}]
+Text token length for cross attention
+[MATH: \mathbb{N}]
+[MATH: \tau]
+Threshold for filtering repetitive class tokens
+[MATH: \mathbb{N}]
+[MATH: \mathbf{m}]
+Input motion sequence
+[MATH: \mathbb{R}^{N\times D}]
+[MATH: m]
+Motion latent sequence
+[MATH: \mathbb{R}^{l\times d}]
+[MATH: \kappa]
+Class token sequence
+[MATH: \mathbb{R}^{l\times d}]
+[MATH: \mathcal{I}]
+Index set of chosen positions for
+[MATH: \mathcal{L}_{\text{sem}}]
+-
+[MATH: \mathbf{w}]
+Text representation for cross attention
+[MATH: \mathbb{R}^{l_{\text{text}}\times D_{h}}]
+[MATH: \mathcal{E}]
+Encoder
+-
+[MATH: \mathcal{D}]
+Decoder
+-
+[MATH: v_{\theta}]
+Rectified flow MLP
+-
+In this supplementary document, we first present additional implementation details, including autoencoder training, the auto-regressive denoising model, integration with the RL tracking controller, and the evaluation metrics. Next, we report further quantitative results, such as effect of text adapter, comparisons with MotionStreamer
+[
+69
+]
+and a broader set of benchmarks under the TMR-
+[MATH: 263]
+[
+46
+]
+evaluation protocol. Finally, we include an ablation study that highlights the impact of our repetitive class-token filtering design during SAE training. The main notation used in our paper is shown in Tab.
+4
+.
+Table 5
+:
+Effect of text adapter depth.
+We compare models without a text adapter and with text adapters of different depths (
+[MATH: 3]
+,
+[MATH: 6]
+, and
+[MATH: 9]
+layers). Using a
+[MATH: 6]
+-layer adapter (ours) gives the best overall trade-off, improving FID and R-Precision across all others. We conduct all experiments on MARDM-
+[MATH: 67]
+[
+44
+]
+evaluator using a VAE with a downsampling 4× and latent dimension
+[MATH: 16]
+.
+Configuration
+FID
+[MATH: \downarrow]
+R-Precision
+[MATH: \uparrow]
+Top 1
+Top 2
+Top 3
+w/o text adapter
+[MATH: 0.057^{\pm{.001}}]
+[MATH: 0.524^{\pm{.003}}]
+[MATH: 0.715^{\pm{.001}}]
+[MATH: 0.810^{\pm{.002}}]
+depth=
+[MATH: 3]
+[MATH: 0.060^{\pm{.002}}]
+[MATH: 0.521^{\pm{.002}}]
+[MATH: 0.713^{\pm{.002}}]
+[MATH: 0.807^{\pm{.002}}]
+depth=
+[MATH: 6]
+(Ours)
+[MATH: 0.049^{\pm{003}}]
+[MATH: 0.528^{\pm{.002}}]
+[MATH: 0.721^{\pm{.002}}]
+[MATH: 0.815^{\pm{.002}}]
+depth=
+[MATH: 9]
+[MATH: 0.053^{\pm{.002}}]
+[MATH: 0.527^{\pm{.002}}]
+[MATH: 0.719^{\pm{.002}}]
+[MATH: 0.813^{\pm{.001}}]
+Table 6
+:
+Effect of repetitive class token filtering.
+We ablate generative performance with and without repetitive class token filtering during SAE training. Filtering consistently improves FID and retrieval scores, indicating that it acts as a soft semantic regularizer, encouraging coherence without forcing adjacent motion latents to collapse to the same text label.
+Configuration
+FID
+[MATH: \downarrow]
+R-Precision
+[MATH: \uparrow]
+Top 1
+Top 2
+Top 3
+w/o filtering
+[MATH: 0.096^{\pm{.003}}]
+[MATH: 0.524^{\pm{.002}}]
+[MATH: 0.713^{\pm{.002}}]
+[MATH: 0.811^{\pm{.002}}]
+w/ filtering (Ours)
+[MATH: 0.066^{\pm{003}}]
+[MATH: 0.544^{\pm{.002}}]
+[MATH: 0.739^{\pm{.002}}]
+[MATH: 0.832^{\pm{.002}}]
+6
+More Implementation Details
+Autoencoder training
+We adopt the causal autoencoder architecture from
+[
+69
+]
+with a hidden size of
+[MATH: 1024]
+, and provide a detailed specification in Tab.
+10
+.
+Unlike
+[
+69
+]
+, we address an issue happening when the 1D convolutional kernel slides from the beginning to the end of the motion sequence: kernels at the start of the sequence encounter padded values (set to
+[MATH: 0]
+in previous works), which leads to jitter in the decoded motion during the first few frames. To mitigate this, for the first convolutional layer of the encoder, we replace zero padding with replicated padding, resulting in more stable training and smoother reconstructions.
+Tab.
+8
+shows our SAE achieves lower reconstruction FID (rFID) while maintaining comparable MPJPE compared with MotionStreamer
+[
+69
+]
+’s VAE.
+In practice, we set
+[MATH: \lambda_{\text{joint}}=1.0]
+and
+[MATH: \lambda_{\text{vel}}=10.0]
+. For both the VAE and SAE, we use
+[MATH: \lambda_{\text{KL}}=1\times 10^{-5}]
+. For the SAE, based on the ablation results in Tab.
+3
+, we set
+[MATH: \lambda_{\text{sem}}=0.001]
+.
+The threshold
+[MATH: \tau]
+for filtering repetitive class token is set to
+[MATH: 0.995]
+.
+Obtaining text labels for a specific motion latent
+During SAE training, to obtain text labels that are temporally aligned with a given motion latent
+[MATH: m_{i}]
+, we exploit the causal design: each latent depends only on past frames, not future ones. As shown in Tab.
+10
+, our encoder comprises four causal 1D convolutional layers in total (excluding the ResNet layers). The first and last layers use a kernel size of
+[MATH: 3]
+and stride of
+[MATH: 1]
+to preserve the sequence length, while the two middle layers use a kernel size of
+[MATH: 4]
+and stride of
+[MATH: 2]
+, each downsampling the temporal resolution by a factor of
+[MATH: 2]
+. This yields a latent sequence whose length is one quarter of the original.
+As a result, latent index
+[MATH: i]
+is influenced by the original frames from
+[MATH: 4i-16]
+to
+[MATH: 4i+4]
+, covering
+[MATH: 20]
+frames in total. We aggregate the frame-level text labels over the same temporal window from
+[MATH: 4i-16]
+to
+[MATH: 4i+4]
+, encode them with T5-Large to obtain embeddings, and then take the average of these embeddings before feeding them into an MLP projection.
+Auto-regressive motion latent denoising
+Our Transformer for predicting
+[MATH: z]
+is a standard Transformer decoder
+[
+62
+]
+with
+[MATH: 16]
+layers, each using
+[MATH: 16]
+attention heads and a hidden size of
+[MATH: D_{h}=1024]
+.
+For denoising, we use an MLP with
+[MATH: 8]
+residual blocks and a width of
+[MATH: 1280]
+channels. Each block applies LayerNorm, a linear layer, a SiLU
+[
+11
+]
+activation, and another linear layer, followed by a residual connection. The MLP is conditioned on the
+[MATH: z]
+predicted by the Transformer: we add
+[MATH: z]
+to the time embedding of the noise-schedule step
+[MATH: t]
+, and use this combined signal to modulate the LayerNorm layers via AdaLN. We set
+[MATH: l_{\text{text}}=128]
+.
+During inference, we use a stochastic sampler that, at each step, applies a small noise refresh, partially replacing the clean component with fresh prior noise. This maintains stochasticity and improves sample diversity compared to a purely deterministic ODE trajectory. To avoid confusion, we distinguish two terms.
+Denoising step
+is the number of denoising iterations for the reverse ODE process during denoising, whereas
+inference step
+is the number of auto-regressive iterations used to sample the motion latent sequence.
+Tab.
+7
+shows MoLingo can generate per motion
+under 1 sec.
+(e.g.,
+0.83s
+) while still maintaining strong generative quality, outperforming the majority of baselines. Meanwhile, higher steps consistently result in lower FID and higher R-Precision, so after tuning this trade-off we adopt
+16 inf. steps and 32 samp. steps
+as our default setting: it delivers SOTA performance while keeping generation faster compared to higher-step settings.
+Table 7
+:
+Averaged Inference Time
+(AIT, in seconds)
+and generative performance under different inference and sampling steps.
+Inf.
+Samp.
+AIT(s)
+[MATH: \downarrow]
+FID
+[MATH: \downarrow]
+R-Precision
+CLIP-Score
+[MATH: \uparrow]
+Step
+Step
+Top 1
+[MATH: \uparrow]
+Top 2
+[MATH: \uparrow]
+Top 3
+[MATH: \uparrow]
+[MATH: 49]
+[MATH: 32]
+[MATH: 9.02]
+[MATH: \pagecolor{lightgreen}0.056^{\pm{.005}}]
+[MATH: 0.543^{\pm{.003}}]
+[MATH: 0.737^{\pm{.002}}]
+[MATH: 0.830^{\pm{.002}}]
+[MATH: 0.685^{\pm{.001}}]
+[MATH: 24]
+[MATH: 32]
+[MATH: 4.43]
+[MATH: 0.057^{\pm{.004}}]
+[MATH: 0.541^{\pm{.002}}]
+[MATH: 0.737^{\pm{.002}}]
+[MATH: 0.833^{\pm{.002}}]
+[MATH: 0.685^{\pm{.001}}]
+[MATH: 16]
+[MATH: 32]
+[MATH: 2.83]
+[MATH: 0.066^{\pm{.003}}]
+[MATH: 0.544^{\pm{.002}}]
+[MATH: 0.739^{\pm{.002}}]
+[MATH: 0.832^{\pm{.002}}]
+[MATH: 0.686^{\pm{.001}}]
+[MATH: 5]
+[MATH: 32]
+[MATH: 0.83]
+[MATH: 0.105^{\pm.005}]
+[MATH: 0.537^{\pm.003}]
+[MATH: 0.734^{\pm.002}]
+[MATH: 0.829^{\pm.002}]
+[MATH: 0.685^{\pm.001}]
+[MATH: 16]
+[MATH: 8]
+[MATH: 1.58]
+[MATH: 0.066^{\pm{.003}}]
+[MATH: 0.541^{\pm{.002}}]
+[MATH: 0.737^{\pm{.002}}]
+[MATH: 0.830^{\pm{.002}}]
+[MATH: 0.683^{\pm{.001}}]
+[MATH: 16]
+[MATH: 100]
+[MATH: 7.00]
+[MATH: 0.067^{\pm{.002}}]
+[MATH: 0.543^{\pm{.002}}]
+[MATH: 0.739^{\pm{.002}}]
+[MATH: 0.833^{\pm{.002}}]
+[MATH: 0.685^{\pm{.001}}]
+User study interface
+The detailed instructions and interface layout of our user study are shown in Fig.
+7
+. In each trial, we randomly select
+[MATH: 15]
+samples and randomly assign them to the left or right side.
+We prepare three questionnaires with the same layout, each comparing our method against a different baseline.
+For comparison with MotionStreamer
+[
+69
+]
+, we use the model trained with the
+[MATH: 272]
+D representation, and for comparisons with MoMask
+[
+16
+]
+and DisCoRD
+[
+7
+]
+, we use the model trained with the
+[MATH: 263]
+D representation.
+Figure 7
+:
+User study interface.
+Integrate MoLingo with RL tracking controller
+To make the generated motions more physically plausible, we integrate each generator with a pre-trained RL tracking controller.
+Specifically, we first re-train a PHC
+[
+40
+]
+policy for the Unitree G1 humanoid to track the joint positions of human motions. After generating motions with each candidate generator, we retarget them to the humanoid’s body shape and then directly deploy the tracking policy to assess performance.
+Because the
+[MATH: 272]
+D representation contains valid rotational components, retargeting is more convenient; thus, we conduct this evaluation using the
+[MATH: 272]
+D model and compare against MotionStreamer.
+The policy is trained in IsaacGym
+[
+42
+]
+with
+[MATH: 2048]
+parallel environments.
+After obtaining the generated motions, we first retarget them to match G1’s morphology and extract the corresponding joint position sequences. These joint positions are then provided to the policy to roll out action trajectories. Finally, we replay the resulting actions in the MuJoCo
+[
+60
+]
+for visualization. Video comparisons are available on our local webpage.
+Table 8
+:
+Quantitative comparison with MotionStreamer.
+MotionStreamer proposed a TMR-style
+[
+46
+]
+feature extractor used as an evaluator in their own
+[MATH: 272]
+D representation. To ensure a fair comparison, we train our model on the HumanML3D-
+[MATH: 272]
+[
+69
+]
+dataset and evaluate using their evaluator.
+rFID denotes reconstruction FID, and MPJPE is measured in millimeters. Our replicated padding design improves reconstruction realism in terms of rFID and MPJPE.
+For generation, our method achieves significant improvements over MotionStreamer across all metrics.
+We run the experiment
+[MATH: 20]
+runs and
+[MATH: \pm]
+indicates
+[MATH: 95\%]
+confidence interval. We apply
+[MATH: 2\times]
+downsampling and latent dimension
+[MATH: 32]
+with a well-trained SAE.
+Methods
+rFID
+[MATH: \downarrow]
+MPJPE
+[MATH: \downarrow]
+FID
+[MATH: \downarrow]
+R-Precision
+Matching Score
+[MATH: \downarrow]
+Top 1
+[MATH: \uparrow]
+Top 2
+[MATH: \uparrow]
+Top 3
+[MATH: \uparrow]
+Real
+[MATH: 0.000]
+[MATH: 0.000]
+[MATH: 0.002^{\pm.000}]
+[MATH: 0.702^{\pm.000}]
+[MATH: 0.864^{\pm.000}]
+[MATH: 0.914^{\pm.000}]
+[MATH: 15.151^{\pm.000}]
+MotionStreamer
+[
+69
+]
+[MATH: 0.661]
+[MATH: 22.90]
+[MATH: 11.979^{\pm.078}]
+[MATH: 0.629^{\pm.004}]
+[MATH: 0.791^{\pm.003}]
+[MATH: 0.858^{\pm.003}]
+[MATH: 16.019^{\pm.017}]
+MoLingo (Ours)
+[MATH: 0.026]
+[MATH: 9.87]
+[MATH: 3.415^{\pm.034}]
+[MATH: 0.776^{\pm.003}]
+[MATH: 0.902^{\pm.002}]
+[MATH: 0.941^{\pm.001}]
+[MATH: 14.712^{\pm.017}]
+Table 9
+:
+Quantitative results on the TMR-263 evaluator.
+We compare our method with a broad set of motion generation approaches, from early models
+[
+59
+,
+6
+]
+to recent ones
+[
+7
+,
+88
+]
+, covering pose-frame diffusion
+[
+59
+]
+, single-vector latent diffusion
+[
+6
+,
+9
+]
+, VQ-based next-token prediction
+[
+16
+,
+50
+,
+49
+,
+72
+,
+7
+,
+15
+]
+, and continuous-valued auto-regressive models
+[
+88
+]
+. We report the mean results over 20 independent runs, and the
+[MATH: \pm]
+values indicate the
+[MATH: 95\%]
+confidence interval. We do not compare with MARDM
+[
+44
+]
+and ACMDM
+[
+43
+]
+here because of the motion representation inconsistency. Our method achieves state-of-the-art FID, R-Precision, and MultiModality. Green cells highlight the best scores, and yellow cells the second best.
+Methods
+FID
+[MATH: \downarrow]
+R-Precision
+MModality
+[MATH: \uparrow]
+Top 1
+[MATH: \uparrow]
+Top 2
+[MATH: \uparrow]
+Top 3
+[MATH: \uparrow]
+Real
+[MATH: 0.000^{\pm.000}]
+[MATH: 0.676^{\pm.002}]
+[MATH: 0.810^{\pm.002}]
+[MATH: 0.861^{\pm.002}]
+-
+MDM-50Step
+[
+59
+]
+[MATH: 0.093^{\pm.000}]
+[MATH: 0.563^{\pm.007}]
+[MATH: 0.723^{\pm.007}]
+[MATH: 0.794^{\pm.006}]
+[MATH: 34.207^{\pm.598}]
+MLD
+[
+6
+]
+[MATH: 0.052^{\pm.000}]
+[MATH: 0.579^{\pm.006}]
+[MATH: 0.729^{\pm.007}]
+[MATH: 0.797^{\pm.004}]
+[MATH: 32.481^{\pm.678}]
+MoMask
+[
+16
+]
+[MATH: 0.022^{\pm.000}]
+[MATH: 0.687^{\pm.002}]
+[MATH: 0.825^{\pm.002}]
+[MATH: 0.877^{\pm.002}]
+[MATH: 18.406^{\pm.583}]
+MMM
+[
+50
+]
+[MATH: 0.024^{\pm.000}]
+[MATH: 0.710^{\pm.002}]
+[MATH: 0.834^{\pm.002}]
+[MATH: 0.881^{\pm.001}]
+[MATH: 15.286^{\pm.577}]
+BAMM
+[
+49
+]
+[MATH: 0.044^{\pm.000}]
+[MATH: 0.652^{\pm.002}]
+[MATH: 0.790^{\pm.002}]
+[MATH: 0.845^{\pm.002}]
+[MATH: 28.703^{\pm.672}]
+MogenTS
+[
+72
+]
+[MATH: 0.017^{\pm.000}]
+[MATH: 0.687^{\pm.003}]
+[MATH: 0.819^{\pm.002}]
+[MATH: 0.870^{\pm.002}]
+[MATH: 12.102^{\pm.394}]
+MLD++
+[
+9
+]
+[MATH: 0.019^{\pm.000}]
+[MATH: 0.736^{\pm.003}]
+[MATH: 0.863^{\pm.002}]
+[MATH: 0.907^{\pm.002}]
+[MATH: 26.515^{\pm.621}]
+MotionLCM-V2
+[
+9
+]
+[MATH: 0.026^{\pm.000}]
+[MATH: 0.751^{\pm.003}]
+[MATH: 0.879^{\pm.001}]
+[MATH: 0.921^{\pm.001}]
+[MATH: 28.424^{\pm.753}]
+DisCoRD
+[
+7
+]
+[MATH: 0.020^{\pm.000}]
+[MATH: 0.692^{\pm.002}]
+[MATH: 0.828^{\pm.002}]
+[MATH: 0.878^{\pm.001}]
+[MATH: 18.804^{\pm.613}]
+MotionGPT3
+[
+88
+]
+[MATH: 0.021^{\pm.000}]
+[MATH: 0.758^{\pm.002}]
+[MATH: 0.873^{\pm.002}]
+[MATH: 0.915^{\pm.001}]
+[MATH: 20.821^{\pm.426}]
+MoMask++
+[
+15
+]
+[MATH: 0.020^{\pm.000}]
+[MATH: 0.692^{\pm.003}]
+[MATH: 0.824^{\pm.002}]
+[MATH: 0.874^{\pm.002}]
+[MATH: 16.589^{\pm.439}]
+MoLingo
+[MATH: 0.015^{\pm.000}]
+[MATH: 0.771^{\pm.002}]
+[MATH: 0.888^{\pm.001}]
+[MATH: 0.925^{\pm.001}]
+[MATH: 20.400^{\pm.519}]
+Details of evaluation metrics
+We use the evaluation metrics following
+[
+17
+,
+44
+,
+69
+]
+: (1)
+Fréchet Inception Distance (FID)
+quantifies how close the generated motions are to real ones by comparing the overall distributions of predicted and ground-truth motion sequences, by applying a pre-trained feature extractor for both motion and text. (2)
+R-Precision
+(Top-1/Top-2/Top-3) together with Matching-score evaluates text–motion consistency by checking whether generated motion embeddings retrieve their paired text prompts among the top candidates. (3)
+MultiModality
+(MModality) reflects variation under identical prompts, measuring how diverse the produced motion embeddings are when generating multiple motions for the same text. (4)
+CLIP-Score
+measures textual faithfulness via CLIP
+[
+53
+]
+, computed as the cosine similarity between CLIP embeddings of the generated motion and its text description.
+7
+More Quantitative Results
+Effect of the text adapter
+Tab.
+5
+reports an ablation over different numbers of text adapter layers. Using the adapter improves generative performance in both FID and R-Precision compared to not using it, as it strengthens text–motion communication during training. We select a depth of
+[MATH: 6]
+layers, which yields the best performance.
+Comparison with MotionStreamer
+To ensure a fair comparison, we use the evaluator from
+[
+69
+]
+, trained on the HumanML3D-
+[MATH: 272]
+[
+69
+]
+with the TMR contrastive strategy.
+We compare FID, R-Precision, and Matching Score as reported under MotionStreamer’s original evaluation setting.
+As shown in Tab.
+8
+, Molingo achieves significant improvements on all metrics. We apply CFG scale
+[MATH: 7.0]
+for
+[MATH: 272]
+D format generation.
+The experiment is conducted with HumanML3D-
+[MATH: 272]
+test set.
+Quantitative results on the TMR-263 evaluator
+[
+46
+]
+We further provide, for the first time, a benchmark evaluating a broad set of methods on the TMR-
+[MATH: 263]
+evaluator. TMR is trained with an improved contrastive loss, yielding a better cross-modal embedding space. We rerun a wide range of baseline methods on this evaluator, as shown in Tab.
+9
+, MoLingo still achieves state-of-the-art performance across all methods. The experiment is conducted with HumanML3D
+[
+17
+]
+test set.
+Effect of repetitive token filtering
+During SAE training, to ablate the effect of repetitive class-token filtering, Tab.
+6
+reports the generative performance with and without filtering. Removing adjacent repetitive class tokens acts as a softer regularizer and yields significantly better performance.
+Table 10
+:
+Detail architecture
+of our autoencoders. Different from
+[
+69
+]
+, we set the padding mode of the first 1D convolutional layer to replicate the initial frames, which stabilizes training and improves reconstruction.
+Components
+Architecture
+Encoder
+(0): CausalConv1D(
+[MATH: D]
+, 1024, kernel_size=(3,), stride=(1,), dilation=(1,), padding=((2,), mode=
+[MATH: \operatorname{replicate}]
+))
+(1): SiLU()
+(2): 2
+[MATH: \times]
+Sequential(
+(0): CausalConv1D(1024, 1024, kernel_size=(4,), stride=(2,), dilation=(1,), padding=((2,), mode=
+[MATH: \operatorname{zero}]
+))
+(1): CausalResnet1D(
+(0): CausalResConv1DBlock(
+(activation1): SiLU()
+(conv1): CausalConv1D(1024, 1024, kernel_size=(3,), stride=(1,), dilation=(9,), padding=((18,), mode=
+[MATH: \operatorname{zero}]
+))
+(activation2): SiLU()
+(conv2): CausalConv1D(1024, 1024, kernel_size=(1,), stride=(1,), dilation=(1,), padding=((0,), mode=
+[MATH: \operatorname{zero}]
+)))
+(1): CausalResConv1DBlock(
+(activation1): SiLU()
+(conv1): CausalConv1D(1024, 1024, kernel_size=(3,), stride=(1,), dilation=(3,), padding=((6,), mode=
+[MATH: \operatorname{zero}]
+))
+(activation2): SiLU()
+(conv2): CausalConv1D(1024, 1024, kernel_size=(1,), stride=(1,), dilation=(1,), padding=((0,), mode=
+[MATH: \operatorname{zero}]
+)))
+(2): CausalResConv1DBlock(
+(activation1): SiLU()
+(conv1): CausalConv1D(1024, 1024, kernel_size=(3,), stride=(1,), dilation=(1,), padding=((2,), mode=
+[MATH: \operatorname{zero}]
+))
+(activation2): SiLU()
+(conv2): CausalConv1D(1024, 1024, kernel_size=(1,), stride=(1,), dilation=(1,), padding=((0,), mode=
+[MATH: \operatorname{zero}]
+)))))
+(3): CausalConv1D(1024, 1024, kernel_size=(3,), stride=(1,), dilation=(1,), padding=((2,), mode=
+[MATH: \operatorname{zero}]
+))
+Decoder
+(0): CausalConv1D(
+[MATH: d]
+, 1024, kernel_size=(3,), stride=(1,), dilation=(1,), padding=((2,), mode=
+[MATH: \operatorname{zero}]
+))
+(1): SiLU()
+(2): 2
+[MATH: \times]
+Sequential(
+(0): CausalResnet1D(
+(0): CausalResConv1DBlock(
+(activation1): SiLU()
+(conv1): CausalConv1D(1024, 1024, kernel_size=(3,), stride=(1,), dilation=(9,), padding=((18,), mode=
+[MATH: \operatorname{zero}]
+))
+(activation2): SiLU()
+(conv2): CausalConv1D(1024, 1024, kernel_size=(1,), stride=(1,), dilation=(1,), padding=((0,), mode=
+[MATH: \operatorname{zero}]
+)))
+(1): CausalResConv1DBlock(
+(activation1): SiLU()
+(conv1): CausalConv1D(1024, 1024, kernel_size=(3,), stride=(1,), dilation=(3,), padding=((6,), mode=
+[MATH: \operatorname{zero}]
+))
+(activation2): SiLU()
+(conv2): CausalConv1D(1024, 1024, kernel_size=(1,), stride=(1,), dilation=(1,), padding=((0,), mode=
+[MATH: \operatorname{zero}]
+)))
+(2): CausalResConv1DBlock(
+(activation1): SiLU()
+(conv1): CausalConv1D(1024, 1024, kernel_size=(3,), stride=(1,), dilation=(1,), padding=((2,), mode=
+[MATH: \operatorname{zero}]
+))
+(activation2): SiLU()
+(conv2): CausalConv1D(1024, 1024, kernel_size=(1,), stride=(1,), dilation=(1,), padding=((0,), mode=
+[MATH: \operatorname{zero}]
+)))))
+(1): Upsample(scale_factor=2.0, mode=nearest)
+(2): CausalConv1D(1024, 1024, kernel_size=(3,), stride=(1,), dilation=(1,), padding=((2,),mode=
+[MATH: \operatorname{zero}]
+))
+(3): CausalConv1D(1024, 1024, kernel_size=(3,), stride=(1,), dilation=(1,), padding=((2,),mode=
+[MATH: \operatorname{zero}]
+))
+(4): SiLU()
+(5): CausalConv1D(1024,
+[MATH: D]
+, kernel_size=(3,), stride=(1,), dilation=(1,), padding=((2,),mode=
+[MATH: \operatorname{zero}]
+))
+Autoencoder
+(0): Encoder(
+[MATH: D]
+, 1024)
+(1): MLP(1024,
+[MATH: d]
+)
+(2): Decoder(
+[MATH: d]
+,
+[MATH: D]
+)

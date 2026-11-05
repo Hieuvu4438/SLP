@@ -1,0 +1,295 @@
+{
+  "verification_status": "ANALYZED: source and selected CPU numerical checks; no full benchmark rerun",
+  "commits": {
+    "MaDiS": "071828ea1b94530dc7ff0a6c009c0a7c6d1f0784",
+    "SOKE": "5cbc55d84b5a7cbf05a9cf020c468052e8d94d00"
+  },
+  "split_counts": {
+    "train": {
+      "csv": 30965,
+      "poses": 30965,
+      "official_annotation_filter": 30684,
+      "our_retrieval_loader": 30965,
+      "our_extra_vs_official_filter": 281
+    },
+    "val": {
+      "csv": 1724,
+      "poses": 1724,
+      "official_annotation_filter": 1717,
+      "our_retrieval_loader": 1724,
+      "our_extra_vs_official_filter": 7
+    },
+    "test": {
+      "csv": 2318,
+      "poses": 2318,
+      "official_annotation_filter": 2308,
+      "our_retrieval_loader": 2318,
+      "our_extra_vs_official_filter": 10
+    }
+  },
+  "bad_ids_equal": true,
+  "test_exclusions": {
+    "duration_at_least_30s": [
+      "FzmL8SL6Bow_0-8-rgb_front",
+      "G095RWKQ39g_10-1-rgb_front",
+      "G2T2WCuU39Y_5-5-rgb_front",
+      "G33aqW3DLpc_1-5-rgb_front",
+      "G3VM7etNABI_2_3-5-rgb_front",
+      "G3VM7etNABI_6-10-rgb_front",
+      "G3VM7etNABI_6-5-rgb_front",
+      "g3ZluRtRXVc_5-3-rgb_front"
+    ],
+    "bad_ids": [
+      "fzrJBu2qsM8_11-8-rgb_front",
+      "g3Cc_1-V31U_12-3-rgb_front"
+    ]
+  },
+  "test_manifest": {
+    "official_filter": 2308,
+    "madis_predictions": 2308,
+    "retrieval_candidates": 2308,
+    "keypoints": 2300,
+    "a50": 2300,
+    "madis_exactly_matches_official_filter": true,
+    "missing_after_projection": [
+      "FzWvE__PamM_1-2-rgb_front",
+      "FzWvE__PamM_2-2-rgb_front",
+      "FzWvE__PamM_3-2-rgb_front",
+      "FzWvE__PamM_4-2-rgb_front",
+      "FzWvE__PamM_5-2-rgb_front",
+      "FzWvE__PamM_6-2-rgb_front",
+      "FzWvE__PamM_7-2-rgb_front",
+      "FzWvE__PamM_8-2-rgb_front"
+    ],
+    "loss_fraction": 0.0034662045060658577,
+    "extra_prediction_ids": []
+  },
+  "train_test_name_overlap": [],
+  "annotation_hashes": {
+    "data/raw/soke/How2Sign/how2sign_realigned_test_preprocessed_fps.csv": "5715d2f12210ba8601c0d98ad89c5cdd8a7eac5023d9b4b3b25bc04779f93a6b",
+    "data/processed/madis/How2Sign/test/re_aligned/how2sign_realigned_test_preprocessed_fps.csv": "5715d2f12210ba8601c0d98ad89c5cdd8a7eac5023d9b4b3b25bc04779f93a6b"
+  },
+  "normalization_stats": {
+    "mean": {
+      "equal_tensors": true,
+      "max_abs": 0.0,
+      "sha256_equal": true
+    },
+    "std": {
+      "equal_tensors": true,
+      "max_abs": 0.0,
+      "sha256_equal": true
+    }
+  },
+  "synthetic_metric_check": {
+    "cases": [
+      {
+        "T": 1,
+        "U": 1,
+        "joints": 21,
+        "MaDiS": 2.4309420585632324,
+        "ours": 2.4309420585632324,
+        "SOKE": 2.4309420585632324
+      },
+      {
+        "T": 7,
+        "U": 11,
+        "joints": 21,
+        "MaDiS": 31.14781141281128,
+        "ours": 31.14781141281128,
+        "SOKE": 31.14781165122986
+      },
+      {
+        "T": 23,
+        "U": 17,
+        "joints": 144,
+        "MaDiS": 62.319406509399414,
+        "ours": 62.319406509399414,
+        "SOKE": 62.31940734386444
+      },
+      {
+        "T": 40,
+        "U": 56,
+        "joints": 21,
+        "MaDiS": 153.90499353408813,
+        "ours": 153.90499353408813,
+        "SOKE": 153.9049962759018
+      },
+      {
+        "T": 56,
+        "U": 40,
+        "joints": 144,
+        "MaDiS": 156.53405940532684,
+        "ours": 156.53405940532684,
+        "SOKE": 156.53405678272247
+      }
+    ],
+    "max_abs_ours_vs_madis": 0.0,
+    "max_abs_soke_vs_madis": 2.7418136596679688e-06
+  },
+  "real_a50_official_metric_checks": [
+    {
+      "name": "-fZc293MpJk_2-1-rgb_front",
+      "reference_frames": 196,
+      "generated_frames": 124,
+      "reference_preprocessing_max_abs": 0.0,
+      "joint_conversion_max_abs": 0.0,
+      "ours_body": 7.495386792346835,
+      "official_body": 7.495386792346835,
+      "ours_hands": 13.454628374427557,
+      "official_hands": 13.454628374427557,
+      "soke_vs_madis_sampling_different_indices": 106
+    },
+    {
+      "name": "G42xKICVj9U_6-10-rgb_front",
+      "reference_frames": 96,
+      "generated_frames": 44,
+      "reference_preprocessing_max_abs": 0.0,
+      "joint_conversion_max_abs": 0.0,
+      "ours_body": 4.226226462051272,
+      "official_body": 4.226226462051272,
+      "ours_hands": 6.312810907140374,
+      "official_hands": 6.312810907140374,
+      "soke_vs_madis_sampling_different_indices": 0
+    },
+    {
+      "name": "g3ushtMfLiY_9-3-rgb_front",
+      "reference_frames": 160,
+      "generated_frames": 96,
+      "reference_preprocessing_max_abs": 0.0,
+      "joint_conversion_max_abs": 0.0,
+      "ours_body": 6.638016052544117,
+      "official_body": 6.638016052544117,
+      "ours_hands": 10.609238213859499,
+      "official_hands": 10.609238213859499,
+      "soke_vs_madis_sampling_different_indices": 0
+    }
+  ],
+  "raw_pose_repack_spot_checks": [
+    {
+      "name": "-fZc293MpJk_2-1-rgb_front",
+      "frame": 0,
+      "all_7_parameters_exact": true
+    },
+    {
+      "name": "-fZc293MpJk_2-1-rgb_front",
+      "frame": 206,
+      "all_7_parameters_exact": true
+    },
+    {
+      "name": "-fZc293MpJk_2-1-rgb_front",
+      "frame": 411,
+      "all_7_parameters_exact": true
+    },
+    {
+      "name": "G42xKICVj9U_6-10-rgb_front",
+      "frame": 0,
+      "all_7_parameters_exact": true
+    },
+    {
+      "name": "G42xKICVj9U_6-10-rgb_front",
+      "frame": 49,
+      "all_7_parameters_exact": true
+    },
+    {
+      "name": "G42xKICVj9U_6-10-rgb_front",
+      "frame": 97,
+      "all_7_parameters_exact": true
+    },
+    {
+      "name": "g3ushtMfLiY_9-3-rgb_front",
+      "frame": 0,
+      "all_7_parameters_exact": true
+    },
+    {
+      "name": "g3ushtMfLiY_9-3-rgb_front",
+      "frame": 81,
+      "all_7_parameters_exact": true
+    },
+    {
+      "name": "g3ushtMfLiY_9-3-rgb_front",
+      "frame": 162,
+      "all_7_parameters_exact": true
+    }
+  ],
+  "official_remote_source_checks": [
+    {
+      "repo": "MaDiS",
+      "path": "mGPT/metrics/generation.py",
+      "url": "https://raw.githubusercontent.com/2000ZRL/MaDiS/071828ea1b94530dc7ff0a6c009c0a7c6d1f0784/mGPT/metrics/generation.py",
+      "identical": true,
+      "sha256": "ecb391f2edaeaa4f91729bb6ef105ea72399e54bc0d95011ffdbf28300f34c90"
+    },
+    {
+      "repo": "MaDiS",
+      "path": "mGPT/data/sign_loader.py",
+      "url": "https://raw.githubusercontent.com/2000ZRL/MaDiS/071828ea1b94530dc7ff0a6c009c0a7c6d1f0784/mGPT/data/sign_loader.py",
+      "identical": true,
+      "sha256": "570a26f14f5a21d1d662c0d92caa31cae1dab8dd624905b880dfe1296ca8efcc"
+    },
+    {
+      "repo": "SOKE",
+      "path": "mGPT/metrics/dtw.py",
+      "url": "https://raw.githubusercontent.com/2000ZRL/SOKE/5cbc55d84b5a7cbf05a9cf020c468052e8d94d00/mGPT/metrics/dtw.py",
+      "identical": true,
+      "sha256": "ed94cbbb6a44666877a40150758280746efb586175299c4e440f32d7dc6da3fb"
+    },
+    {
+      "repo": "SOKE",
+      "path": "mGPT/data/humanml/load_data.py",
+      "url": "https://raw.githubusercontent.com/2000ZRL/SOKE/5cbc55d84b5a7cbf05a9cf020c468052e8d94d00/mGPT/data/humanml/load_data.py",
+      "identical": true,
+      "sha256": "8b6255abf9854720fb4fd0293d967bb86059593600935e98ed0c4ce24df8a651"
+    }
+  ],
+  "original_dtw_result": {
+    "madis": {
+      "body": 6.581696507162617,
+      "body_perframe": 0.046939897659378685,
+      "lhand": 9.528413576329248,
+      "lhand_perframe": 0.06578813925867259,
+      "rhand": 9.319650399098172,
+      "rhand_perframe": 0.06430799620078492,
+      "hands": 9.424031987713711,
+      "hands_perframe": 0.06504806772972876,
+      "rhand_speed_ratio_vs_gt": 0.4475008772407011
+    },
+    "r1": {
+      "body": 7.156588839512804,
+      "body_perframe": 0.05108458098445259,
+      "lhand": 9.730875902965604,
+      "lhand_perframe": 0.06606436274840555,
+      "rhand": 9.446473894483795,
+      "rhand_perframe": 0.0639314858881426,
+      "hands": 9.5886748987247,
+      "hands_perframe": 0.06499792431827407,
+      "rhand_speed_ratio_vs_gt": 1.8046496889149966
+    },
+    "a25": {
+      "body": 6.511733303046583,
+      "body_perframe": 0.04643127981047805,
+      "lhand": 9.19127182429211,
+      "lhand_perframe": 0.062148024449366235,
+      "rhand": 8.956423091070889,
+      "rhand_perframe": 0.06063785831282439,
+      "hands": 9.073847457681499,
+      "hands_perframe": 0.0613929413810953,
+      "rhand_speed_ratio_vs_gt": 1.4211999365220405
+    },
+    "a50": {
+      "body": 6.200296864334859,
+      "body_perframe": 0.044196915256823205,
+      "lhand": 9.051877244498641,
+      "lhand_perframe": 0.061397828918523065,
+      "rhand": 8.865794887678375,
+      "rhand_perframe": 0.06014950412912815,
+      "hands": 8.958836066088507,
+      "hands_perframe": 0.0607736665238256,
+      "rhand_speed_ratio_vs_gt": 1.0278765757229746
+    },
+    "_meta": {
+      "n": 2300,
+      "split": "test"
+    }
+  }
+}

@@ -1,0 +1,6611 @@
+Text-Driven 3D Hand Motion Generation from Sign Language Data
+Léore Bensabath
+Affiliation:
+LIGM, École des Ponts, IP Paris, Univ Gustave Eiffel, CNRS
+Email:
+leore.bensabath@enpc.frhttps://imagine.enpc.fr/leore.bensabath/HandMDM
+Mathis Petrovich
+Affiliation:
+NVIDIA
+Gül Varol
+Affiliation:
+Affiliation:
+LIGM, École des Ponts, IP Paris, Univ Gustave Eiffel, CNRS
+Abstract
+Our goal is to train a generative model of 3D hand motions, conditioned on natural language descriptions specifying motion characteristics such as handshapes, locations, finger/hand/arm movements. To this end, we automatically build pairs of 3D hand motions and their associated textual labels with unprecedented scale. Specifically, we leverage a large-scale sign language video dataset, along with noisy pseudo-annotated sign categories, which we translate into hand motion descriptions via an LLM that utilizes a dictionary of sign attributes, as well as our complementary motion-script cues. This data enables training a text-conditioned hand motion diffusion model (HandMDM), that is robust across domains such as unseen sign categories from the same sign language, but also signs from another sign language and non-sign hand movements. We contribute extensive experimental investigation of these scenarios and will make our trained models and data publicly available to support future research in this relatively new field.
+Figure 1
+:
+3D hand motion from text:
+We collect BOBSL3DT, a dataset of hand motions with accompanying textual descriptions,
+which we use to train a hand motion diffusion model (HandMDM).
+We provide
+example motion-text pairs from our dataset depicting rich handshapes and movements.
+For dynamic visualizations, we refer to
+Fig.
+A.6
+of the appendix
+and the video on our project page.
+1
+Introduction
+Human hand motion modeling is at the center of multiple research areas, ranging from
+sign languages
+[
+88
+,
+11
+]
+or gestures accompanying speech
+[
+53
+]
+,
+to object interactions
+[
+20
+]
+. In this paper, we explore the limits of
+text control
+for generating
+3D hand motions, i.e., we ask the question whether open-vocabulary language descriptions
+(such as
+‘index and little fingers extended’
+in
+Fig.
+1
+)
+can be used to drive a generative model of hands.
+This is a relatively new task, with very recent interest in the context
+of hand-object interaction
+[
+14
+,
+13
+]
+, and body-motion conditioning
+[
+91
+]
+.
+Here, we consider text to be the only control signal for hands, and
+study complex hand motions mainly in the context of sign language data.
+Recent advances in text-conditioned
+human
+body motion
+generation
+have attracted a large interest
+[
+58
+,
+81
+]
+,
+but one of the main limitations has been identified as the lack
+of detailed
+hand
+movements to achieve expressiveness
+[
+38
+]
+.
+The reason primarily stems from lack of data.
+Commonly used motion capture datasets do not contain hand articulations
+[
+47
+]
+;
+in return, corresponding textual annotations do not describe hands
+[
+26
+,
+63
+,
+61
+]
+.
+There are a few exceptions with Motion-X
+[
+38
+]
+being one, where
+they resort to video-based whole-body capture and
+employ a rule-based script to
+encode handshapes according to spatial relations among fingers, similar to
+PoseScript
+[
+16
+]
+for static bodies. However, the overall database
+remains still very body-focused, as also judged by the very recent work of
+[
+91
+]
+.
+To collect hand-centric annotations,
+[
+91
+]
+manually annotated the BOTH57M dataset,
+capturing 3.2k
+full-body motions with detailed hands in a multi-camera studio setup.
+Due to the prohibitively expensive process, the resulting dataset is relatively small.
+The key challenge is how to scale up the number of
+motions
+and
+labels
+to train a robust model.
+Our solution leverages several enabling factors:
+(i) We turn to the BOBSL
+[
+2
+]
+dataset, comprising 1,400 hours of British Sign Language (BSL) videos, exhaustively pseudo-labeled with sign estimates
+[
+67
+]
+.
+(ii) We employ state-of-the-art monocular reconstruction methods such as HAMER
+[
+57
+]
+for hands,
+and SMPLer-X
+[
+9
+]
+for bodies to estimate accurate 3D upper body motions from these videos.
+(iii) We exploit SignBank
+[
+21
+]
+, a dictionary of BSL signs, with 4k
+glosses
+1
+1
+1
+Glosses are written words associated to individual signs (
+see
+Appendix
+A
+).
+, each marked with several attributes denoting handshapes, initial/final hand locations, and other phonological information. (iv) We complement SignBank by detecting certain pose features from motions via rule-based scripts. (v) We provide all these information per gloss category to a large language model (LLM)
+[
+23
+]
+to turn them into natural language descriptions.
+With the above ingredients, we transfer textual gloss descriptions from SignBank to BOBSL sign videos by matching
+the pseudo-labels to glosses, resulting in our BOBSL3DT dataset consisting of
+1.3M
+motion-text pairs.
+Note that there are several sources of noise, making it challenging to train a model on this data.
+In particular, a given pseudo-label word may map to multiple sign variants in SignBank. Therefore, the transfer
+of gloss descriptions to pseudo-labels is not straightforward, since we do not know a priori
+which variant BOBSL sign corresponds to.
+While we detail the exact process in
+Sec.
+3
+, in simple terms, we estimate the variant performed in each BOBSL sign
+by matching to its closest motion from SignBank videos.
+Besides this assignment noise, the pseudo-labels themselves are not always correct, the 3D reconstructions may be imprecise,
+and the LLM may not capture all the motion details.
+Considering the noise-scale trade-off and following the trend in modern computer vision
+[
+66
+,
+49
+]
+, we go towards high-scale & high-noise regime.
+Despite
+the sources of noise,
+we show that our dataset enables training a text-conditioned diffusion model for hand motions,
+which achieves promising results across a variety of domains.
+Specifically, we adapt MDM
+[
+81
+]
+to generate upper body movements,
+using the SMPL-X expressive body model
+[
+56
+]
+including hand articulations.
+We demonstrate encouraging performances on a manually glossed test set of BOBSL3DT, and partition
+it into
+seen
+and
+unseen
+signs to assess the generalization within the same sign language BSL.
+We further evaluate on a different sign language, ASL, and show superior performance of our model compared to
+using the relatively small training partitions of ASL-Text and MS-ZSSLR-W.
+Similar conclusion is made for the non-sign dataset of BOTH57M, depicting hand articulations as part of body motions.
+Our quantitative metrics primarily measure
+retrieval scores using our newly trained TMR
+[
+59
+]
+model
+specialized on hand motions.
+Our contributions are the following:
+(i) We present a methodology to scale up the collection of motion-text pairs for describing hand and upper body motions.
+(ii) Using the resulting dataset BOBSL3DT, we train HandMDM, a hand motion diffusion model conditioned on text, and obtain promising results for this relatively new task.
+(iii) We conduct experiments to showcase the generalization performance of our model across several domains with increasing gap. Our code, data, and trained models will be publicly available.
+2
+Related work
+Dataset
+#motions
+vocab.
+hand descr.
+type
+BEAT
+[
+41
+]
+2,508
+-
+✗
+speech
+SGNify
+[
+22
+]
+53
+-
+✗
+SL mocap
+ASL3DWord
+[
+17
+]
+1,547
+-
+✗
+SL videos
+NeuralSignActors
+[
+4
+]
+35,000
+-
+✗
+SL videos
+SignAvatars
+[
+88
+]
+70,000
+-
+✗
+SL videos
+ASL-Text
+[
+7
+]
+1,598
+154
+✓
+SL videos
+MS-ZSSLR-W
+[
+6
+]
+8,861
+274
+✓
+SL videos
+Motion-X
+[
+38
+]
+81,084
+10,224
+✓
+mocap, body-focused
+BOTH57M
+[
+91
+]
+[MATH: \dagger]
+1,815
+612
+✓
+mocap, hand-focused
+BOBSL3DT (Ours)
+1,312,339
+1,500
+✓
+SL videos
+Table 1
+:
+3D hand motion datasets:
+We summarize datasets that contain hand motions and various types of text annotations (e.g., speech, sign categories, hand descriptions).
+Sign language (SL) datasets capturing motions in studio
+[
+22
+]
+or estimating 3D motions from videos
+[
+17
+,
+4
+,
+88
+]
+do not come with hand descriptions.
+Those with hand descriptions are small
+[
+7
+,
+6
+]
+. Full-body motion capture (mocap) datasets
+[
+38
+,
+91
+]
+are less diverse on hand motions and smaller in size than our BOBSL3DT dataset.
+[MATH: \dagger]
+We report the statistics of
+hand
+descriptions from the BOTH57M dataset, which contains
+3,229 motions from a vocabulary of 3,539 words if
+body
+descriptions are also included. Note we calculate statistics upon downloading their data, which contain slight mismatch to the original paper.
+We briefly review relevant works on body and hand motion generation, as well as
+sign language production.
+Body motion generation from text.
+Thanks to a number of text-motion datasets for full bodies, such as
+KIT-ML
+[
+61
+]
+,
+HumanML3D
+[
+26
+]
+,
+BABEL
+[
+63
+]
+,
+and Motion-X
+[
+38
+]
+,
+there is a growing literature on human body motion generation conditioned
+on free-form language descriptions
+[
+58
+,
+26
+,
+27
+,
+80
+,
+90
+,
+81
+,
+28
+]
+.
+Variants of VAE
+[
+33
+]
+formulations were employed by initial works
+that obtain promising results in this direction
+[
+58
+,
+26
+]
+.
+The recently popularized diffusion models
+[
+29
+]
+have been adopted in later works such as MotionDiffuse
+[
+90
+]
+and MDM
+[
+81
+]
+.
+Much of these works generate body skeletons and perform an optimization post-processing to produce skinned
+outputs such as the SMPL body model parameters
+[
+43
+]
+.
+To circumvent this costly process,
+Petrovich et al.
+[
+60
+]
+incorporate SMPL representation directly in MDM training, referred to as MDM-SMPL.
+In this paper, we go further by adding support for the SMPL-X
+[
+56
+]
+model, which enables hand motions.
+Hand motion generation.
+Works for hand generation can be grouped according to their input condition and, e.g.,
+speech to gestures, object to grasps, body to hands, text to sign language translation etc.
+Here, we review each category briefly.
+In this paper, we particularly target conditioning
+only on text description
+of hands, which to the best of our knowledge is a new setting.
+We differentiate our work from gesture generation given speech audio and/or body
+[
+53
+,
+64
+,
+5
+,
+25
+,
+65
+,
+86
+,
+94
+]
+, since
+our goal is to generate given textual descriptions instructing how to move hands directly.
+The focus of gesture generation is often to incorporate
+emotions encoded in the audio
+[
+65
+,
+86
+,
+94
+]
+, or to directly infer gestures
+from body motion
+[
+53
+,
+64
+]
+.
+Another line of work considers object-centric hand motion.
+Tasks include refining an initial hand-object configuration for better grasping
+[
+93
+,
+79
+]
+,
+generating a whole-body movement to reach and grasp a given object
+[
+78
+,
+77
+]
+.
+More related to ours, IMoS
+[
+24
+]
+generates hands given an object, its position, initial body pose, and an action expressed with text
+(e.g., ‘take picture’ as text and a ‘camera’ as the object category).
+Recent work shows improvements over IMoS on this text-conditioned hand-object generation task
+[
+14
+,
+13
+,
+45
+]
+.
+Since these works focus on grasps, their vocabulary tends to include words such as ‘pick’, ‘grab’, ‘take’,
+rather than handshape or motion as in our data.
+Hand motion is often studied in isolation from bodies,
+and existing datasets do not annotate descriptions
+[
+50
+,
+37
+,
+40
+]
+.
+More recently, there are efforts to consider hands in conjunction with body motion.
+Thanks to expressive body models that involve hand articulations,
+such as SMPL-X
+[
+56
+]
+, SMPL-H
+[
+68
+]
+, Adam
+[
+31
+]
+, GHUM
+[
+84
+]
+,
+whole-body datasets have been collected
+[
+91
+,
+38
+]
+.
+However, the textual descriptions of Motion-X
+[
+38
+]
+primarily focus on bodies, and lack
+significant details on hands, which are automatically annotated.
+BOTH57M
+[
+91
+]
+attempts addressing this limitation by collecting
+a new motion capture dataset and annotating hands, as well as bodies, with text.
+But as can be seen in
+Tab.
+1
+, the total number of motion-text pairs are much smaller
+than our BOBSL3DT. Furthermore,
+[
+91
+]
+aims to generate hands
+conditioned on the body movement, and not only on text.
+On the other hand, the recent Nymeria
+[
+46
+]
+collection annotates hand/arm movements, but do not capture
+3D fingers beyond the wrist.
+Due to the inherent presence of hands in sign language (SL),
+a large category of works investigate hand motion generation given
+individual sign categories, or sentence translations
+[
+88
+,
+4
+,
+17
+,
+95
+]
+.
+In the following, we provide an overview of SL generation in more detail.
+Sign language generation.
+Given that until recently, available SL datasets included only 2D motion modalities,
+most approaches for sign language production (SLP) derive 2D body keypoints from videos using
+OpenPose
+[
+12
+]
+and lift to 3D using the method proposed by
+[
+89
+]
+.
+Examples include Progressive Transformers
+[
+71
+]
+,
+and its followups
+[
+70
+,
+72
+,
+30
+]
+.
+Several works use adversarial training to turn the keypoints into a realistic video of a signer
+[
+74
+,
+75
+,
+70
+,
+73
+,
+83
+]
+.
+The work of
+[
+76
+]
+introduces an additional 3D mesh regressor to obtain the SMPL-X
+[
+56
+]
+parameters from keypoints.
+A large portion of the above prior work on SLP uses the small-scale
+Phoenix datasets
+[
+35
+,
+10
+]
+.
+More recently, several efforts have been made to create larger SL datasets with 3D motion annotations.
+Three concurrent works in 2024
+[
+4
+,
+17
+,
+88
+]
+have estimated 3D from signing videos
+to obtain SMPL-X body model
+[
+56
+]
+reconstructions in different ways.
+SignAvatars
+[
+88
+]
+adopts a combination of OSX
+[
+39
+]
+, PARE
+[
+34
+]
+, ACR
+[
+87
+]
+,
+as well as a fitting step for estimating SMPL-X fits on a collection of multiple SL datasets.
+NeuralSignActors
+[
+4
+]
+similarly applies fitting initialized by OSX
+[
+39
+]
+and Mediapipe
+[
+44
+]
+estimates on How2Sign videos
+[
+18
+]
+.
+The very recent work SOKE
+[
+95
+]
+complements these data for CSL-Daily videos
+[
+92
+]
+, with a similar approach, also using WiLoR
+[
+62
+]
+for hand estimates.
+Finally,
+[
+17
+]
+creates the ASL3DWord isolated sign dataset based on WLASL videos
+[
+36
+]
+,
+leveraging the SMPL-X pose estimation model Hand4Whole
+[
+51
+]
+.
+As shown in
+Tab.
+1
+, the SL video sources for these works are much smaller than BOBSL
+[
+2
+]
+used in our work.
+More importantly, they do not contain textual descriptions for hands, but only translations, mainly in the form of sentences.
+Among SL datasets that contain motion descriptions, Bilge et al.
+[
+7
+]
+provide
+textual descriptions for a small number of ASL signs (i.e., 250)
+by manually assigning ASLLVD
+[
+52
+]
+isolated sign videos with textual descriptions from Webster American Sign Language Dictionary.
+In their followup work
+[
+6
+]
+, a larger MS-ZSSLR is introduced, building on 200 sign categories from the MSASL
+[
+32
+]
+videos.
+As compared in
+Tab.
+1
+, both the number of motions and the vocabulary of descriptions are smaller than our BOBSL3DT dataset introduced
+in this work.
+Moreover, their primary focus is zero-shot sign language recognition using video inputs. In this paper, we extract 3D motion estimates and
+use these datasets to show our model’s transfer performance.
+3
+Methodology
+We first present our methodology to automatically scale up the
+motion-text pairs using sign language data (
+Sec.
+3.1
+).
+We then describe the training of text-conditioned diffusion models
+to perform hand motion generation (
+Sec.
+3.2
+).
+The overall approach is illustrated in
+Fig.
+2
+.
+Figure 2
+:
+Our approach:
+We illustrate an overview for our data collection methodology, enabling to generate free-form textual descriptions via LLM prompting, given phonological attributes from a sign language dictionary (SignBank
+[
+21
+]
+),
+as well as those detected with our HandMotionScript. The generated
+hand motion descriptions are then assigned to video-based BOBSL
+[
+2
+]
+motions thanks to the automatic pseudo-glosses combined with
+our THMR-based assignment.
+We employ a combination of SMPLer-X
+[
+9
+]
+and HAMER
+[
+57
+]
+to extract 3D motions from SignBank and BOBSL videos.
+3.1
+Automatic data collection
+In the following, we detail the process of collecting 3D hand motions
+and generating textual descriptions for them.
+We name the resulting data BOBSL3DT (videos from
+BOBSL
+[
+2
+]
+, with
+3D
+estimates,
+T
+for text).
+Source of video-sign pairs.
+In order to collect
+motion-text
+pairs at scale, we resort to the
+largest available
+video-sign
+pairs by leveraging the BOBSL dataset
+[
+2
+]
+.
+The original BOBSL dataset contains 1,400 hours of continuous BSL-interpreted broadcast footage,
+along with
+1.2M
+subtitle sentences
+corresponding to the speech in the videos.
+A series of works exploiting these subtitles
+[
+1
+,
+48
+,
+82
+,
+49
+]
+led to a strong isolated sign classifier
+[
+67
+]
+, which
+employs a VideoSwin
+[
+42
+]
+architecture that
+takes in a short video clip (i.e., 16 frames)
+and outputs the predicted sign category within a vocabulary of 8k words.
+We take these
+frame-level
+pseudo-glosses
+(pseudo-labels) predicted
+densely
+in a sliding window manner
+from the entire data
+provided by
+[
+67
+]
+.
+To reduce noise, we follow
+[
+67
+]
+by filtering low-confidence frame labels and keep sign segments with at least
+[MATH: m=6]
+repeated frames.
+We additionally merge sign segments which are less than
+[MATH: m]
+frames apart.
+This forms our basis for
+1.9M
+video-sign
+pairs across the
+original BOBSL
+training set.
+3D estimates from monocular videos.
+For each signing video, we follow a series of steps to obtain 3D motion estimates with accurate hands.
+We adopt the state-of-the-art 3D hand reconstruction method of HAMER
+[
+57
+]
+,
+which estimates flying hands in terms of MANO
+[
+68
+]
+hand pose parameters for every video frame independently.
+We observe HAMER reconstructions to provide more accurate hands than other alternatives such as SMPLer-X
+[
+9
+]
+.
+Since, hand motions are characterized also by the rest of the upper body and especially arm movements,
+we further apply the SMPLer-X expressive body reconstruction method, and stitch the HAMER hand estimates
+onto these body estimates
+with a lightweight optimization
+.
+We observe that while the handshapes of
+HAMER are accurate, their global locations are more stable
+with SMPLer-X.
+We provide
+more details and visual
+examples in
+Sec.
+C.3
+.
+By performing monocular reconstruction on video-sign pairs from BOBSL, we obtain
+motion-sign
+pairs.
+From signs to attributes via a linguistic dictionary & HandMotionScript.
+To associate a textual label to each sign, we propose to use a linguistic dictionary.
+Specifically, we employ the phonological labeling of BSL SignBank
+[
+21
+]
+,
+which provides attributes about handshapes, initial/final location of each of the hands, interactions between hand and body parts,
+whether a sign is one-handed or symmetric etc.
+Note that these raw attributes alone do not correspond to daily vocabulary of hand motion descriptions,
+but rather remain linguistic terms.
+We carefully construct a pipeline to extract textual attributes from these tags
+(see
+Sec.
+C.4
+for further details).
+While the SignBank attributes are accurate, they might be insufficient to describe the full sign, especially
+lacking motion descriptions or remaining ambiguous for certain movements.
+For example, the sign ‘SKY’ involves hands moving apart from each other; however, none of the attributes refer to this dynamic motion (they denote flat handshapes etc., see
+Fig.
+A.4
+of the appendix).
+On the other hand, some of the movements can be inferred from initial/final locations, though not precisely.
+To alleviate this issue, we complement the attributes with our rule-based pose descriptions, referred to
+as HandMotionScript (HMS).
+In particular, we implement a method based on PoseScript
+[
+16
+]
+,
+to detect frame-level features,
+for the hand distances to the relevant body parts and for the palm orientations.
+We use SignBank attributes to determine which body parts are relevant to measure distances.
+These distances are then represented as ‘close’, ‘spread’, etc. according to thresholds,
+which we adapt to our fine-grained hand motion usecase.
+For example, given
+a sequence of hand-to-hand distances such as [‘close’, ‘spread’],
+we expect to encode the movement of ‘opening hands away from each other’.
+We rely on the next step to convert these
+sequence of
+attributes to be interpreted as a motion.
+Note that in practice, we extract
+distances and orientations
+along three axes separately,
+which is described in
+Sec.
+C.5
+.
+From attributes to textual descriptions via an LLM.
+To obtain a free-form textual description out of the above attributes, we prompt an LLM (in our case Gemini
+2.5 Pro
+[
+23
+]
+)
+with in-context learning. We provide few-shot examples by manually designing
+six
+attribute-text pairs to clearly define the task for the LLM
+(see
+Sec.
+C.6
+for the exact prompt).
+With this process, we collect
+sign-text
+pairs for 3,259 glosses on SignBank, corresponding to 6,221 words.
+As discussed in
+Sec.
+1
+, one word may correspond to multiple glosses, due to sign variants for the same concept,
+or English synonyms.
+For each gloss, we ask the LLM to generate three descriptions, which allows a certain level of text augmentations.
+We also generate descriptions with and without HandMotionScript, resulting in six descriptions per motion.
+Those without HMS are
+more hand-shape focused, while descriptions with HMS includes more dynamic information.
+We note that, in our preliminary analysis, we found that existing LLMs
+[
+23
+,
+54
+,
+19
+]
+do not contain knowledge of sign descriptions
+if only given the gloss information (without any attributes)
+, which led to our exploration of SignBank and HandMotionScript.
+Despite considerable effort, LLMs appear to only ‘know’ about a small set of ASL sign descriptions,
+and remain unreliable with a fair amount of hallucinations with high confidence when it comes to
+describing large-vocabulary signs or non-ASL signs. For example, prompting to describe how a certain
+sign performed in BSL
+may result
+in description of the ASL sign.
+This is why we resort to an external knowledge from a dictionary,
+and also refrain from giving the gloss information in the prompt.
+By going through gloss attributes instead of the gloss itself, we do not observe any concerning hallucination (see experiments in
+Tab.
+2
+for empirical validation).
+Assignment of dictionary descriptions to motions.
+Once we have a collection of motion-sign pairs (from BOBSL)
+and sign-text pairs (from SignBank), the next step is the assignment of textual descriptions
+into motions. This is not a simple lookup as even if the pseudo-gloss points to the correct word,
+we do not have the information of which gloss variant is performed, and whether that variant is present in the SignBank dictionary (see
+Sec.
+C.7
+for examples).
+To reduce the noise in this assignment process, we implement an automatic variant assignment in which
+we look at the motion-to-motion similarity
+between the 3D estimate on dictionary videos and each of the BOBSL motions.
+At a high level, we select the dictionary motion among the gloss variants for a given BOBSL motion,
+that maximizes the similarity. Note that in practice, we perform k-medoids clustering to remove motions that cannot be matched to any variant, and refer to
+Sec.
+C.7
+for the exact details.
+To measure such motion-to-motion similarity,
+we train a text-to-hand-motion retrieval model,
+THMR
+, similar to
+TMR
+[
+59
+]
+, which we describe in
+Sec.
+C.2
+,
+and use its motion encoder output as our motion embedding.
+To train this model, we use random variant assignments, but observe
+reliable motion-to-motion rankings since we discard the text encoder.
+Our initial 1.9M video-sign pairs reduce to 1.8M
+motion-text
+pairs after keeping the signs that have a correspondence in SignBank vocabulary. This number further drops to 1.3M after the k-medoids assignment filtering (2,351 SignBank glosses out of the initial 3,259 are assigned to BOBSL).
+Finally, we remove a portion of samples to be able to build a test set of
+unseen
+signs (see
+Sec.
+4.1
+) and train our model with 1.2M motion-text pairs.
+3.2
+Diffusion training with SMPL-X support
+Given motion-text pairs, we train a conditional diffusion model
+[
+29
+]
+to generate hand motions given text inputs.
+To focus our study on the impact of automated data construction, we make minimal modifications to standard diffusion models. In particular,
+we follow MDM-SMPL
+[
+60
+]
+that adapts
+MDM
+[
+81
+]
+to have SMPL support.
+We extend this approach to expressive upper body
+by using SMPL-X
+[
+56
+]
+that encodes hands and face in addition to the body pose.
+We refer to this new hand motion diffusion model as
+HandMDM
+.
+Note that, while we incorporate face parameters in our training, we
+did not find the SMPLer-X 3D reconstructions to be of sufficient quality
+to capture the complexity of signers’ facial expressions, depicting mouthing words,
+or other mouth gestures and facial movements. Given that our text inputs
+focus on hands,
+our qualitative evaluations discard faces.
+We represent the SMPL-X parameters in 6D rotation, similar to
+[
+60
+]
+,
+and use the parameters corresponding to the upper body.
+The resulting vector is of dimensionality
+[MATH: \mathbb{R}^{274}]
+(i.e.,
+15 6D joint rotations for each hand, 13 upper body 6D joint rotations, and 16 parameters for the face).
+In terms of the architecture, we follow MDM-SMPL, which slightly differs from the original MDM
+[
+81
+]
+, i.e.,
+the inputs to the Transformer encoder are (i) the CLIP text embedding token,
+(ii) diffusion timestep token,
+(iii) two register tokens (defined in
+[
+15
+]
+), and (iv) the noisy motion.
+The model is trained to produce the denoised motion with a mean squared error loss.
+During training, we sample a random text description among the multiple labels per motion.
+We drop the condition 5% of the time, to use classifier-free guidance at test time.
+The number of diffusion steps is 100.
+See
+Sec.
+C.1
+for further details on the guidance coefficients, number of epochs, and other optimization details.
+4
+Experiments
+In this section, we start by describing datasets and evaluation protocols used in our experiments (
+Sec.
+4.1
+).
+We then present a series of ablation studies, such as the effect of input control, data size, and variant assignment (
+Sec.
+4.2
+).
+Next, we report results on out-of-domain datasets to test the transfer capabilities of our model (
+Sec.
+4.3
+).
+Finally, we provide qualitative analyses along with a discussion on limitations (
+Sec.
+4.4
+).
+4.1
+Data and evaluation metrics
+BOBSL3DT-Test.
+We define a test partition of our new BOBSL3DT dataset, introduced in
+Sec.
+3.1
+.
+The work of
+[
+67
+]
+provides manual gloss annotations for a subset of
+35
+BOBSL test set episodes
+[
+2
+]
+spanning a vocabulary of 5.1K glosses.
+Among these, we extract the signs that are present in SignBank and split them into seen and
+unseen candidate signs (during training), especially to assess generalization with the latter.
+We further
+semi-automatically construct the corresponding text descriptions
+by manually verifying the SignBank gloss variant assignments.
+We refer to
+Sec.
+B.3
+for the exact process.
+Our final clean test set consists of 722 seen signs and 87 unseen signs, and includes a unique motion per sign.
+Seen
+Unseen
+Input
+R@1
+[MATH: \uparrow]
+R@3
+[MATH: \uparrow]
+FID
+[MATH: \downarrow]
+R@1
+[MATH: \uparrow]
+R@3
+[MATH: \uparrow]
+FID
+[MATH: \downarrow]
+\rowfont
+Gloss
+21.71
+±0.3
+37.53
+±0.5
+0.17
+n/a
+n/a
+n/a
+\rowfont
+Phonology
+17.14
+±0.8
+28.78
+±0.4
+0.17
+20.98
+±3.1
+34.48
+±2.2
+0.40
+LLM(Gloss)
+0
+1.00
+±0.1
+[MATH: \mid]
+0
+1.00
+±0.2
+0
+2.29
+±0.4
+[MATH: \mid]
+0
+2.70
+±0.2
+0.16
+[MATH: \mid]
+0.17
+0
+5.17
+±1.3
+[MATH: \mid]
+0
+4.60
+±0.8
+10.06
+±1.7
+[MATH: \mid]
+0
+8.91
+±0.5
+0.56
+[MATH: \mid]
+0.52
+LLM(
+Phonology
+)
+19.95
+±0.6
+[MATH: \mid]
+0
+6.30
+±0.2
+33.14
+±0.9
+[MATH: \mid]
+12.08
+±0.8
+0.15
+[MATH: \mid]
+0.23
+22.99
+±1.6
+[MATH: \mid]
+12.64
+±2.0
+37.07
+±1.3
+[MATH: \mid]
+21.55
+±1.0
+0.38
+[MATH: \mid]
+0.46
+LLM(
+Phonology
++HMS)
+21.57
+±0.6
+[MATH: \mid]
+21.68
+±0.3
+35.46
+±0.6
+[MATH: \mid]
+34.18
+±0.6
+0.16
+[MATH: \mid]
+0.16
+21.55
+±0.5
+[MATH: \mid]
+17.53
+±2.2
+34.19
+±1.7
+[MATH: \mid]
+36.20
+±2.6
+0.40
+[MATH: \mid]
+0.40
+Table 2
+:
+Effect of input control:
+We evaluate models trained with different input formats on the
+seen
+and
+unseen
+signs of the BOBSL3DT manually-glossed test set.
+There are
+722 / 87
+ground-truth motion instances in these seen/unseen sets
+(
+with one motion instance per gloss
+),
+and we report the motion-to-motion retrieval from our generation to the ground truth.
+Note that the first two rows use a different input at test time, strictly following the format used during training time (as opposed to the last
+three
+rows that are trained and tested with free-form text). For the
+three
+variants of LLM-generated descriptions, we test on text generated only from SignBank
+phonology
+attributes, as well as adding the HandMotionScript (HMS). We denote the two test set variants with a ‘
+[MATH: \mid]
+’ separator, i.e., ‘LLM(
+Phonology
+)
+[MATH: \mid]
+LLM(
+Phonology
++HMS)’.
+ASL-Text
+[
+7
+]
+and
+MS-ZSSLR
+[
+6
+]
+provide
+video-text pairs for ASL signs from a vocabulary of 250 and 200 words, respectively.
+ASL-Text contains 1,188 training, 151 validation, and 259 test samples, with 50 unique texts in the test set.
+MS-ZSSLR has 6,107 training, 1,249 validation, 1,987 test samples, with 49 unique texts in the test set.
+Similarly to BOBSL3DT, we obtain the 3D motion estimates from their videos to create motion-text pairs.
+We use the training sets to train
+baseline models and use the test sets for zero-shot transfer from our model.
+For the zero-shot case, since the test set texts include ASL-specific handshape names (28 in total), we replace these names by English text descriptions, obtained using an LLM (Gemini 2.5 Flash
+[
+23
+]
+) and manually shortening when possible.
+BOTH57M
+[
+91
+]
+consists of 2,583 training, 161 validation, and 485
+test motions, with their corresponding textual descriptions. However, we only use a subset of 1,483/ 101/231
+train/val/test samples that have
+hand
+descriptions. We similarly evaluate the transfer performance on the test set, and use the training set to build the baseline.
+Note that this is a motion capture dataset from 32 camera views. We only select from each pose the upper body joints used for BOBSL3DT.
+We use the validation set of each dataset to tune the number of epochs for baselines.
+Evaluation protocol.
+Following works reporting retrieval scores for motion generation models
+[
+60
+,
+3
+]
+,
+we primarily base our evaluations on retrieval metrics to account for the fact that there can be variance in motions corresponding to a given text.
+We train a TMR
+[
+59
+]
+text-to-motion retrieval model, denoted as THMR,
+with the BOBSL3DT motion-text training pairs. Unlike the initial THMR model used for variant assignment (which uses random assignments, see
+Sec.
+3.1
+),
+we retrain another THMR with the automatic assignments (
+Sec.
+C.2
+).
+For measuring performance on BOBSL3DT-Test, we report motion-to-motion retrieval scores
+using THMR trained using
+the same representation as our upper-body motion generations
+.
+Specifically, given a generated motion, we measure how often the ground-truth (GT) for the corresponding text
+ranks at top-k rank (R@k).
+We report both
+R@1
+and
+R@3
+.
+Note that, in case of multiple GT motions per text, we mark the retrieved motion correct if the corresponding text
+is
+exactly
+the same.
+For BOTH57M, we relax this constraint given the high intra-sample text similarity,
+and use text-to-text similarity as in TMR
+[
+59
+]
+to determine whether a retrieval can be considered correct (i.e., if above 0.95 in CLIP text space).
+We generate motions with different random noise vectors, and report the mean and the standard variance across 4 generations.
+For ASL-Text
+[
+7
+]
+, MS-ZSSLR
+[
+6
+]
+, and BOTH57M
+[
+91
+]
+,
+we observe unreliable motion-to-motion similarities, explained with the domain gap (e.g., BOTH57M motions
+are much longer and noisier than BOBSL3DT). In return, the generated motions can rank irrelevant GT as high, although they correspond better to the correct GT.
+We therefore resort to using motion-to-text retrieval which we find to perform relatively well.
+Given that THMR is trained on BOBSL3DT, we evaluate for these datasets only on a relevant subset of the features to avoid unfair comparison (see
+Sec.
+C.2
+), namely the arm and hand rotations for ASL-Text and MS-ZSSLR, and the hand rotations for BOTH57M.
+Besides the retrieval metrics, we report
+FID
+to measure the distance between generated and ground-truth distributions using the motion embedding space from THMR.
+4.2
+Ablation studies
+Input control.
+We experiment with a series of input formats to control the generation.
+In
+Tab.
+2
+, we report our results of training and testing on BOBSL3DT, reporting
+seen and unseen partitions of the test set.
+We first train a gloss-to-motion diffusion model, where we represent the gloss word
+in its text form. While the performance on the seen test set is promising, this model
+does not go beyond its pre-defined set of training glosses at test time; therefore, does not
+generalize to unseen glosses, nor accepts free-form descriptions beyond signs.
+Next, we
+investigate whether the information given
+to the LLM to translate attributes into free-form text can be given on its own to a motion generation model. We denote this experiment by the ‘Phonology’ row, where we train HandMDM with the text used for prompting the LLM, which contains phonological attributes detected from SignBank. While we also change the test descriptions at test time, making the rows not perfectly comparable,
+we observe a drop in retrieval of the ground-truth motions
+(e.g., 28.78 vs 37.53 R@3).
+Besides, this model can not be applied to free-form text input, and does not easily generalize to other sign language datasets as it requires phonology attributes in SignBank format.
+We now evaluate the models trained with free-form text in the bottom block of
+Tab.
+2
+.
+The ‘LLM(Gloss)’ row experiments with
+generating the training text descriptions by providing the LLM with only gloss names instead of attributes.
+The results confirm
+that the LLM does not know BSL signs, as discussed in
+Sec.
+3.1
+, and justifies our need for the use the SignBank attributes and HandMotionScript.
+Note that the definition of ‘seen’ does not apply to this row, because we use the clean descriptions of BOBSL3DT-Test for evaluation (those generated by giving LLM the attributes).
+The last two rows
+of
+Tab.
+2
+show our final models trained with attribute-based LLM descriptions.
+Here, we also investigate
+the gain of incorporating
+HandMotionScript (HMS) in the prompt, besides the SignBank
+phonology
+. To obtain comparable performances, we also report on two types of test sets
+that accept free-form inputs. More specifically, we analyze results
+on the test set generated with
+phonology
+-only, and with HMS included (separated by ‘
+[MATH: \mid]
+’
+in the table).
+Unsurprisingly, training without HMS does not work well when tested with HMS (e.g.,
+6.30 R@1 seen signs
+), since the model is not used to the input vocabulary also including palm orientations etc.
+However, the last row is more robust across test sets due to randomly sampling among text descriptions that are generated both with and without HMS,
+demonstrating an overall improvement.
+Training data size.
+In
+Fig.
+3
+, we analyze the impact of our large-scale training data.
+We train our final HandMDM model with portions of BOBSL3DT training,
+and report R@1 results on
+seen and
+unseen signs
+with text generated from SignBank attributes and HMS
+.
+We observe a steady increase with more training data,
+which suggests there is room for improvement with techniques for scaling up.
+Figure 3
+:
+Training data size:
+We plot R@1 performance on the
+seen/unseen
+test set
+s
+of BOBSL3DT against different proportions of the training data,
+and observe a monotonic increase with larger training.
+Seen
+Unseen
+Assignment
+R@1
+[MATH: \uparrow]
+R@3
+[MATH: \uparrow]
+FID
+[MATH: \downarrow]
+R@1
+[MATH: \uparrow]
+R@3
+[MATH: \uparrow]
+FID
+[MATH: \downarrow]
+Random
+18.77
+±0.6
+32.27
+±0.2
+0.17
+16.09
+±1.4
+25.00
+±0.5
+0.44
+THMR
+21.68
+±0.3
+34.18
+±0.6
+0.16
+17.53
+±2.2
+36.20
+±2.6
+0.40
+Table 3
+:
+Assignment:
+We observe gains with our automatic sign variant assignment
+using THMR, as opposed to randomly assigning a variant during training.
+Sign variant assignment.
+As explained in
+Sec.
+3.1
+, we use our THMR model for performing
+a text assignment in case of multiple sign variants in SignBank.
+In
+Tab.
+3
+, we measure the impact of this assignment,
+by comparing to randomly assigning during HandMDM training.
+We observe a considerable improvement by reducing the noise in training by this assignment step.
+4.3
+Transfer to other datasets
+We summarize our quantitative metrics for zero-shot transfer from our BOBSL3DT-trained model
+to other datasets in
+Tab.
+4
+and
+Tab.
+5
+.
+First, we look at a domain gap between different sign languages, BSL and ASL.
+The bottom block of
+Tab.
+4
+reports two variants of our model on ASL-Text and MS-ZSSLR,
+where we observe that adding HandMotionScript again leads to performance boosts
+by complementing the textual descriptions with motion information.
+The first block of the table shows the results of training only on ASL-Text or
+only on MS-ZSSLR training sets. These baselines appear to have acceptable metrics; however,
+as
+can be seen qualitatively
+we observe motions that have poorer fidelity
+to text, while also being unrealistic
+potentially due to small training size
+.
+We make similar conclusions on the BOTH57M dataset in
+Tab.
+5
+,
+which demonstrates a bigger domain gap from sign language motions.
+Nevertheless, our model shows promising generalization capability to these
+very different hand descriptions.
+We note that, here, the model trained without HandMotionScript performs better, which we explain by the lack of
+comprehensive motion
+descriptions in BOTH57M, which tend to be more handshape focused characterized by
+fingers
+, not as much by
+arm motion or global hand location (the purpose of HMS).
+We provide qualitative comparisons to baselines in
+Fig.
+4
+for all three datasets,
+and refer to
+the video on our project page
+for dynamic visuals.
+ASL-Text
+MS-ZSSLR-W
+Training data
+R@1
+[MATH: \uparrow]
+R@3
+[MATH: \uparrow]
+FID
+[MATH: \downarrow]
+R@1
+[MATH: \uparrow]
+R@3
+[MATH: \uparrow]
+FID
+[MATH: \downarrow]
+ASL-Text
+0
+5.98
+±0.4
+16.21
+±0.9
+0.36
+0
+6.43
+±0.1
+16.85
+±0.2
+0.43
+MS-ZSSLR-W
+0
+6.47
+±1.4
+16.31
+±1.0
+0.43
+0
+5.01
+±0.3
+13.08
+±0.3
+0.13
+BOBSL3DT (
+Phon.
+)
+14.29
+±0.8
+27.51
+±0.7
+0.46
+12.41
+±0.4
+24.52
+±0.1
+0.45
+BOBSL3DT (
+Phon.
++HMS)
+17.09
+±1.0
+35.43
+±1.2
+0.47
+15.39
+±0.3
+31.50
+±0.2
+0.46
+Table 4
+:
+Transfer to ASL datasets:
+In the top block, we show baseline performances of training HandMDM from scratch on the training set of the ASL-Text or MS-ZSSLR-W dataset. Below, we report zero-shot transfer performance of our models trained on BOBSL3DT, either with LLM-generated text from SignBank
+phonology (Phon.),
+or also by adding HandMotionScript (HMS). We report motion-to-text retrieval from generated motions to ground-truth descriptions. We see superior overall performance of our model over baselines.
+FID is lower when the same data source is used for training and testing due to the dataset-specific motion style.
+BOTH57M
+Training data
+R@1
+[MATH: \uparrow]
+R@3
+[MATH: \uparrow]
+FID
+[MATH: \downarrow]
+BOTH57M
+15.70
+±1.01
+35.47
+±4.47
+0.68
+BOBSL3DT (
+Phon.
+)
+16.28
+±1.64
+44.19
+±4.66
+1.01
+BOBSL3DT (
+Phon.
++HMS)
+18.61
+±2.85
+40.70
+±6.26
+1.03
+Table 5
+:
+Transfer to BOTH57M:
+Similar to
+Tab.
+4
+, we evaluate the zero-shot transfer capability of our BOBSL3DT-trained model
+by testing on BOTH57M test set of 231 motion-text pairs.
+Figure 4
+:
+Qualitative results for transfer:
+We provide comparative results on the test sets of
+ASL-Text, MS-ZSSLR-W, and BOTH57M datasets.
+For each example, we show the input textual description, the ground truth (GT), the generation from the model trained from scratch on the source dataset (Baseline), and the generation from our BOBSL3DT-trained model (Ours).
+We observe limited performance of the baselines compared to ours.
+See
+Fig.
+A.7
+of the appendix for the dynamic visualization.
+Figure 5
+:
+Qualitative results
+on BOBSL3DT-Test
+:
+We show examples on the unseen partition of the BOBSL3DT test set.
+For each example, we display the input text, the generation (Pred) from our
+model, as well as the ground-truth (GT). Note that we visualize one static frame
+from the motions to reduce clutter, and provide a
+video on our project page
+,
+as well as the dynamic visualization in
+Fig.
+A.8
+of the appendix
+for further analysis.
+4.4
+Qualitative analysis and limitations
+In
+Fig.
+5
+, we provide qualitative results for our model tested on unseen BOBSL3DT descriptions
+(see
+Fig.
+A.9
+of the appendix for results on the seen descriptions).
+Overall, we see fidelity of our generations
+whenever a handshape is mentioned in the text, e.g., fist, flat, index-middle fingers extended,
+all fingers spread.
+Motions such as
+‘moves down towards the left hand’ (bottom right),
+or ‘hands move symmetrically’ (bottom middle)
+are also
+visible in the video visualization of our predictions
+. However, not all descriptions are
+precisely
+followed
+(e.g.,
+‘fists’ in bottom middle do not bend the fingers sufficiently
+),
+especially when the
+handshape/
+movement is fine-grained, or when the text contains too many details.
+We also note a
+frequent
+limitation of our model, not performing contact and touch movements very precisely.
+For example, the fingers are not as close to the chin in the bottom left motion.
+This can be explained by the lack of precision in monocular reconstruction methods, especially
+struggling with the depth dimension, leading to imperfect GT for supervision. We expect
+this to be partially addressed as future reconstruction approaches improve.
+An interesting avenue for future research is to explicitly detect contact
+from the attributes and to enforce it in the reconstructions.
+5
+Conclusion
+We described a methodology to scale up motion-text pairs for supervising text-conditioned 3D hand motion generation models.
+The resulting BOBSL3DT dataset represents the first of its kind, providing over 1M text-motion pairs focusing on hands.
+Our results demonstrate that, while noisy, LLM-generated textual descriptions guided by sign language dictionary attributes
+constitute a viable alternative to manually annotating limited amount of data.
+This proof of concept can be extended to other sign language dictionaries to further scale up.
+We expect our model to open up a new avenue for future research in fine-grained hand movement modeling with language.
+Acknowledgements.
+This work was granted access to the HPC resources of IDRIS under the allocations 2025-AD011014891R1, 2024-AD011013395R2 and 2025-AD011012269R4
+made by GENCI.
+The authors acknowledge the ANR project CorVis ANR-21-CE23-0003-01,
+and the Google Cloud Platform Credit Award enabling Gemini use.
+We thank the BSL SignBank team for researcher access,
+Yusuf Can Bilge for the guidance on the ASL datasets,
+and Sonat Baltaci, Simon Lepage, Haran Raajesh for their feedback.
+References
+[1]
+Samuel Albanie, Gül Varol, Liliane Momeni, Triantafyllos Afouras, Joon Son Chung, Neil Fox, and Andrew Zisserman.
+BSL-1K: Scaling up co-articulated sign language recognition using mouthing cues.
+In
+ECCV
+, 2020.
+[2]
+Samuel Albanie, Gül Varol, Liliane Momeni, Hannah Bull, Triantafyllos Afouras, Himel Chowdhury, Neil Fox, Bencie Woll, Rob Cooper, Andrew McParland, and Andrew Zisserman.
+BOBSL: BBC-Oxford British Sign Language dataset.
+arXiv
+, 2021.
+[3]
+Nikos Athanasiou, Alpár Cseke, Markos Diomataris, Michael J. Black, and Gül Varol.
+MotionFix: Text-driven 3D human motion editing.
+In
+SIGGRAPH Asia
+, 2024.
+[4]
+Vasileios Baltatzis, Rolandos Alexandros Potamias, Evangelos Ververas, Guanxiong Sun, Jiankang Deng, and Stefanos Zafeiriou.
+Neural sign actors: A diffusion model for 3D sign language production from text.
+In
+CVPR
+, 2024.
+[5]
+Uttaran Bhattacharya, Elizabeth Childs, Nicholas Rewkowski, and Dinesh Manocha.
+Speech2AffectiveGestures: Synthesizing co-speech gestures with generative adversarial affective expression learning.
+In
+ACM International Conference on Multimedia
+, 2021.
+[6]
+Y. Bilge, R. Cinbis, and N. Ikizler-Cinbis.
+Towards zero-shot sign language recognition.
+TPAMI
+, 2023.
+[7]
+Yunus Can Bilge, Nazli Ikizler-Cinbis, and Ramazan Gokberk Cinbis.
+Zero-shot sign language recognition: Can textual data uncover sign languages?
+In
+BMVC
+, 2019.
+[8]
+David Brien.
+Dictionary of British Sign Language / English; compiled for the British Deaf Association by the Deaf Studies Research Unit, University of Durham
+.
+Faber, 1992.
+[9]
+Zhongang Cai, Wanqi Yin, Ailing Zeng, Chen Wei, Qingping Sun, Wang Yanjun, Hui En Pang, Haiyi Mei, Mingyuan Zhang, Lei Zhang, Chen Change Loy, Lei Yang, and Ziwei Liu.
+SMPLer-X: Scaling up expressive human pose and shape estimation.
+In
+NeurIPS
+, 2023.
+[10]
+Necati Cihan Camgoz, Simon Hadfield, Oscar Koller, Hermann Ney, and Richard Bowden.
+Neural sign language translation.
+In
+CVPR
+, 2018.
+[11]
+Necati Cihan Camgoz, Oscar Koller, Simon Hadfield, and Richard Bowden.
+Multi-channel transformers for multi-articulatory sign language translation.
+In
+ECCVW
+, 2020.
+[12]
+Z. Cao, G. Hidalgo Martinez, T. Simon, S. Wei, and Y. A. Sheikh.
+Openpose: Realtime multi-person 2D pose estimation using part affinity fields.
+TPAMI
+, 2019.
+[13]
+Junuk Cha, Jihyeon Kim, Jae Shin Yoon, and Seungryul Baek.
+Text2HOI: Text-guided 3D motion generation for hand-object interaction.
+In
+CVPR
+, 2024.
+[14]
+Sammy Christen, Shreyas Hampali, Fadime Sener, Edoardo Remelli, Tomas Hodan, Eric Sauser, Shugao Ma, and Bugra Tekin.
+DiffH2O: Diffusion-based synthesis of hand-object interactions from textual descriptions.
+In
+SIGGRAPH Asia
+, 2024.
+[15]
+Timothée Darcet, Maxime Oquab, Julien Mairal, and Piotr Bojanowski.
+Vision transformers need registers.
+In
+ICLR
+, 2024.
+[16]
+Ginger Delmas, Philippe Weinzaepfel, Thomas Lucas, Francesc Moreno-Noguer, and Grégory Rogez.
+PoseScript: 3D human poses from natural language.
+In
+ECCV
+, 2022.
+[17]
+Lu Dong, Lipisha Chaudhary, Fei Xu, Xiao Wang, Mason Lary, and Ifeoma Nwogu.
+SignAvatar: Sign language 3D motion reconstruction and generation.
+In
+FG
+, 2024.
+[18]
+Amanda Cardoso Duarte, Shruti Palaskar, Lucas Ventura, Deepti Ghadiyaram, Kenneth DeHaan, Florian Metze, Jordi Torres, and Xavier Giró-i Nieto.
+How2Sign: A large-scale multimodal dataset for continuous American Sign Language.
+In
+CVPR
+, 2021.
+[19]
+Abhimanyu Dubey, Abhinav Jauhri, Abhinav Pandey, Abhishek Kadian, Ahmad Al-Dahle, Aiesha Letman, Akhil Mathur, Alan Schelten, Amy Yang, Angela Fan, et al.
+The Llama 3 herd of models.
+arXiv
+, 2024.
+[20]
+Zicong Fan, Omid Taheri, Dimitrios Tzionas, Muhammed Kocabas, Manuel Kaufmann, Michael J. Black, and Otmar Hilliges.
+ARCTIC: A dataset for dexterous bimanual hand-object manipulation.
+In
+CVPR
+, 2023.
+[21]
+J. Fenlon, K. Cormier, R. Rentelis, A. Schembri, K. Rowley, Robert Adam, and B. Woll.
+BSL SignBank: A lexical database and dictionary of British Sign Language (first edition).
+London: Deafness, Cognition and Language Research Centre, University College London
+, 2014.
+[22]
+Maria-Paola Forte, Peter Kulits, Chun-Hao P. Huang, Vasileios Choutas, Dimitrios Tzionas, Katherine J. Kuchenbecker, and Michael J. Black.
+Reconstructing signing avatars from video using linguistic priors.
+In
+CVPR
+, 2023.
+[23]
+Gemini Team et al.
+Gemini: A family of highly capable multimodal models.
+arXiv:2312.11805
+, 2024.
+[24]
+Anindita Ghosh, Rishabh Dabral, Vladislav Golyanik, Christian Theobalt, and Philipp Slusallek.
+IMos: Intent-driven full-body motion synthesis for human-object interactions.
+In
+Eurographics
+, 2023.
+[25]
+S. Ginosar, A. Bar, G. Kohavi, C. Chan, A. Owens, and J. Malik.
+Learning individual styles of conversational gesture.
+In
+CVPR
+, 2019.
+[26]
+Chuan Guo, Shihao Zou, Xinxin Zuo, Sen Wang, and Ji.
+Generating diverse and natural 3D human motions from text.
+In
+CVPR
+, 2022a.
+[27]
+Chuan Guo, Xinxin Zuo, Sen Wang, and Li Cheng.
+TM2T: Stochastic and tokenized modeling for the reciprocal generation of 3D human motions and texts.
+In
+ECCV
+, 2022b.
+[28]
+Chuan Guo, Yuxuan Mu, Muhammad Gohar Javed, Sen Wang, and Li Cheng.
+MoMask: Generative masked modeling of 3D human motions.
+In
+CVPR
+, 2024.
+[29]
+Jonathan Ho, Ajay Jain, and Pieter Abbeel.
+Denoising diffusion probabilistic models.
+In
+NeurIPS
+, 2020.
+[30]
+Eui Jun Hwang, Jung-Ho Kim, and Jong C. Park.
+Non-autoregressive sign language production with Gaussian space.
+In
+BMVC
+, 2021.
+[31]
+Hanbyul Joo, Tomas Simon, and Yaser Sheikh.
+Total capture: A 3D deformation model for tracking faces, hands, and bodies.
+In
+CVPR
+, 2018.
+[32]
+Hamid Reza Vaezi Joze and Oscar Koller.
+MS-ASL: A large-scale data set and benchmark for understanding American Sign Language.
+In
+BMVC
+, 2019.
+[33]
+Diederik P Kingma and Max Welling.
+Auto-encoding variational bayes.
+In
+ICLR
+, 2014.
+[34]
+Muhammed Kocabas, Chun-Hao P. Huang, Otmar Hilliges, and Michael J. Black.
+PARE: Part attention regressor for 3D human body estimation.
+In
+ICCV
+, 2021.
+[35]
+Oscar Koller, Jens Forster, and Hermann Ney.
+Continuous sign language recognition: Towards large vocabulary statistical recognition systems handling multiple signers.
+CVIU
+, 2015.
+[36]
+Dongxu Li, Cristian Rodriguez Opazo, Xin Yu, and Hongdong Li.
+Word-level deep sign language recognition from video: A new large-scale dataset and methods comparison.
+In
+WACV
+, 2020.
+[37]
+Lijun Li, Linrui Tian, Xindi Zhang, Qi Wang, Bang Zhang, Liefeng Bo, Mengyuan Liu, and Chen Chen.
+RenderIH: A large-scale synthetic dataset for 3D interacting hand pose estimation.
+In
+ICCV
+, 2023.
+[38]
+Jing Lin, Ailing Zeng, Shunlin Lu, Yuanhao Cai, Ruimao Zhang, Haoqian Wang, and Lei Zhang.
+Motion-X: A large-scale 3D expressive whole-body human motion dataset.
+In
+NeurIPS
+, 2023a.
+[39]
+Jing Lin, Ailing Zeng, Haoqian Wang, Lei Zhang, and Yu Li.
+One-stage 3D whole-body mesh recovery with component aware transformer.
+In
+CVPR
+, 2023b.
+[40]
+Pei Lin, Sihang Xu, Hongdi Yang, Yiran Liu, Xin Chen, Jingya Wang, Jingyi Yu, and Lan Xu.
+HandDiffuse: Generative controllers for two-hand interactions via diffusion models.
+arXiv:2312.04867
+, 2023c.
+[41]
+Haiyang Liu, Zihao Zhu, Naoya Iwamoto, Yichen Peng, Zhengqing Li, You Zhou, Elif Bozkurt, and Bo Zheng.
+BEAT: A large-scale semantic and emotional multi-modal dataset for conversational gestures synthesis.
+In
+ECCV
+, 2022a.
+[42]
+Ze Liu, Jia Ning, Yue Cao, Yixuan Wei, Zheng Zhang, Stephen Lin, and Han Hu.
+Video swin transformer.
+In
+CVPR
+, 2022b.
+[43]
+Matthew Loper, Naureen Mahmood, Javier Romero, Gerard Pons-Moll, and Michael J. Black.
+SMPL: A skinned multi-person linear model.
+ACM Transactions on Graphics (TOG)
+, 2015.
+[44]
+Camillo Lugaresi, Jiuqiang Tang, Hadon Nash, Chris McClanahan, Esha Uboweja, Michael Hays, Fan Zhang, Chuo-Ling Chang, Ming Guang Yong, Juhyun Lee, et al.
+Mediapipe: A framework for building perception pipelines.
+arXiv:1906.08172
+, 2019.
+[45]
+Xintao Lv, Liang Xu, Yichao Yan, Xin Jin, Congsheng Xu, Shuwen Wu, Yifan Liu, Lincheng Li, Mengxiao Bi, Wenjun Zeng, and Xiaokang Yang.
+HIMO: A new benchmark for full-body human interacting with multiple objects.
+In
+ECCV
+, 2024.
+[46]
+Lingni Ma, Yuting Ye, Fangzhou Hong, Vladimir Guzov, Yifeng Jiang, Rowan Postyeni, Luis Pesqueira, Alexander Gamino, Vijay Baiyya, Hyo Jin Kim, Kevin Bailey, David Soriano Fosas, C. Karen Liu, Ziwei Liu, Jakob Engel, Renzo De Nardi, and Richard Newcombe.
+Nymeria: A massive collection of multimodal egocentric daily motion in the wild.
+In
+ECCV
+, 2024.
+[47]
+Naureen Mahmood, Nima Ghorbani, Nikolaus F Troje, Gerard Pons-Moll, and Michael J Black.
+AMASS: Archive of motion capture as surface shapes.
+In
+ICCV
+, 2019.
+[48]
+Liliane Momeni, Gül Varol, Samuel Albanie, Triantafyllos Afouras, and Andrew Zisserman.
+Watch, read and lookup: learning to spot signs from multiple supervisors.
+In
+ACCV
+, 2020.
+[49]
+Liliane Momeni, Hannah Bull, K R Prajwal, Samuel Albanie, Gül Varol, and Andrew Zisserman.
+Automatic dense annotation of large-vocabulary sign language videos.
+In
+ECCV
+, 2022.
+[50]
+Gyeongsik Moon, Shoou i Yu, He Wen, Takaaki Shiratori, and Kyoung Mu Lee.
+InterHand2.6M: A dataset and baseline for 3D interacting hand pose estimation from a single RGB image.
+In
+ECCV
+, 2020.
+[51]
+Gyeongsik Moon, Hongsuk Choi, and Kyoung Mu Lee.
+Accurate 3D hand pose estimation for whole-body 3D human mesh estimation.
+In
+CVPR
+, 2022.
+[52]
+Carol Neidle, Ashwin Thangali, and Stan Sclaroff.
+Challenges in development of the American Sign Language lexicon video dataset (ASLLVD) corpus.
+In
+Proc. 5th Workshop on the Representation and Processing of Sign Languages: Interactions between Corpus and Lexicon, LREC
+, 2012.
+[53]
+Evonne Ng, Shiry Ginosar, Trevor Darrell, and Hanbyul Joo.
+Body2Hands: Learning to infer 3D hands from conversational gesture body dynamics.
+In
+CVPR
+, 2021.
+[54]
+OpenAI.
+GPT-4 technical report.
+arXiv:2303.08774
+, 2024.
+[55]
+Georgios Pavlakos, Vasileios Choutas, Nima Ghorbani, Timo Bolkart, Ahmed A. A. Osman, Dimitrios Tzionas, and Michael J. Black.
+Expressive body capture: 3d hands, face, and body from a single image.
+In
+Proceedings IEEE Conf. on Computer Vision and Pattern Recognition (CVPR)
+, 2019a.
+[56]
+Georgios Pavlakos, Vasileios Choutas, Nima Ghorbani, Timo Bolkart, Ahmed A. A. Osman, Dimitrios Tzionas, and Michael J. Black.
+Expressive body capture: 3D hands, face, and body from a single image.
+In
+CVPR
+, 2019b.
+[57]
+Georgios Pavlakos, Dandan Shan, Ilija Radosavovic, Angjoo Kanazawa, David Fouhey, and Jitendra Malik.
+Reconstructing hands in 3D with transformers.
+In
+CVPR
+, 2024.
+[58]
+Mathis Petrovich, Michael J. Black, and Gül Varol.
+TEMOS: Generating diverse human motions from textual descriptions.
+In
+ECCV
+, 2022.
+[59]
+Mathis Petrovich, Michael J. Black, and Gül Varol.
+TMR: Text-to-motion retrieval using contrastive 3D human motion synthesis.
+In
+ICCV
+, 2023.
+[60]
+Mathis Petrovich, Or Litany, Umar Iqbal, Michael J. Black, Gül Varol, Xue Bin Peng, and Davis Rempe.
+Multi-track timeline control for text-driven 3D human motion generation.
+In
+CVPRW
+, 2024.
+[61]
+Matthias Plappert, Christian Mandery, and Tamim Asfour.
+The KIT motion-language dataset.
+Big Data
+, 2016.
+[62]
+Rolandos Alexandros Potamias, Jinglei Zhang, Jiankang Deng, and Stefanos Zafeiriou.
+WiLoR: End-to-end 3D hand localization and reconstruction in-the-wild.
+In
+CVPR
+, 2025.
+[63]
+Abhinanda R. Punnakkal, Arjun Chandrasekaran, Nikos Athanasiou, Alejandra Quiros-Ramirez, and Michael J. Black.
+BABEL: Bodies, action and behavior with english labels.
+In
+CVPR
+, 2021.
+[64]
+Xingqun Qi, Chen Liu, Muyi Sun, Lincheng Li, Changjie Fan, and Xin Yu.
+Diverse 3D hand gesture prediction from body dynamics by bilateral hand disentanglement.
+In
+CVPR
+, 2023.
+[65]
+Xingqun Qi, Chen Liu, Lincheng Li, Jie Hou, Haoran Xin, and Xin Yu.
+EmotionGesture: Audio-driven diverse emotional co-speech 3D gesture generation.
+IEEE Transactions on Multimedia
+, 2024.
+[66]
+Alec Radford, Jong Wook Kim, Chris Hallacy, Aditya Ramesh, Gabriel Goh, Sandhini Agarwal, Girish Sastry, Amanda Askell, Pamela Mishkin, Jack Clark, et al.
+Learning transferable visual models from natural language supervision.
+In
+ICML
+, 2021.
+[67]
+Charles Raude, K. R. Prajwal, Liliane Momeni, Hannah Bull, Samuel Albanie, Andrew Zisserman, and Gül Varol.
+A tale of two languages: Large-vocabulary continuous sign language recognition from spoken language supervision.
+arXiv
+, 2024.
+[68]
+Javier Romero, Dimitrios Tzionas, and Michael J. Black.
+Embodied hands: Modeling and capturing hands and bodies together.
+In
+SIGGRAPH Asia
+, 2017.
+[69]
+Victor Sanh, Lysandre Debut, Julien Chaumond, and Thomas Wolf.
+DistilBERT, a distilled version of BERT: smaller, faster, cheaper and lighter.
+In
+Energy Efficient Machine Learning and Cognitive Computing NeurIPS Workshop
+, 2019.
+[70]
+Ben Saunders, Richard Bowden, and Necati Cihan Camgöz.
+Adversarial training for multi-channel sign language production.
+In
+BMVC
+, 2020a.
+[71]
+Ben Saunders, Necati Cihan Camgöz, and Richard Bowden.
+Progressive transformers for end-to-end sign language production.
+In
+ECCV
+, 2020b.
+[72]
+Ben Saunders, Necati Cihan Camgöz, and Richard Bowden.
+Mixed SIGNals: Sign language production via a mixture of motion primitives.
+In
+ICCV
+, 2021.
+[73]
+Ben Saunders, Necati Cihan Camgöz, and Richard Bowden.
+Signing at scale: Learning to co-articulate signs for large-scale photo-realistic sign language production.
+In
+CVPR
+, 2022.
+[74]
+Stephanie Stoll, Necati Cihan Camgöz, Simon Hadfield, and Richard Bowden.
+Sign language production using neural machine translation and generative adversarial networks.
+In
+BMVC
+, 2018.
+[75]
+Stephanie Stoll, Necati Cihan Camgoz, Simon Hadfield, and Richard Bowden.
+Text2Sign: Towards sign language production using neural machine translation and generative adversarial networks.
+IJCV
+, 2020.
+[76]
+Stephanie Stoll, Armin Mustafa, and Jean-Yves Guillemaut.
+There and back again: 3D sign language generation from text using back-translation.
+In
+3DV
+, 2022.
+[77]
+Omid Taheri, Nima Ghorbani, Michael J. Black, and Dimitrios Tzionas.
+GRAB: A dataset of whole-body human grasping of objects.
+In
+ECCV
+, 2020.
+[78]
+Omid Taheri, Vasileios Choutas, Michael J. Black, and Dimitrios Tzionas.
+GOAL: Generating 4D whole-body motion for hand-object grasping.
+In
+CVPR
+, 2022.
+[79]
+Omid Taheri, Yi Zhou, Dimitrios Tzionas, Yang Zhou, Duygu Ceylan, Soren Pirk, and Michael J. Black.
+GRIP: Generating interaction poses using spatial cues and latent consistency.
+In
+3DV
+, 2024.
+[80]
+Guy Tevet, Brian Gordon, Amir Hertz, Amit H Bermano, and Daniel Cohen-Or.
+MotionCLIP: Exposing human motion generation to CLIP space.
+In
+ECCV
+, 2022.
+[81]
+Guy Tevet, Sigal Raab, Brian Gordon, Yonatan Shafir, Daniel Cohen-Or, and Amit Haim Bermano.
+Human motion diffusion model.
+In
+ICLR
+, 2023.
+[82]
+Gül Varol, Liliane Momeni, Samuel Albanie, Triantafyllos Afouras, and Andrew Zisserman.
+Read and attend: Temporal localisation in sign language videos.
+In
+CVPR
+, 2021.
+[83]
+Lucas Ventura, Amanda Cardoso Duarte, and Xavier Giró-i Nieto.
+Can everybody sign now? Exploring sign language video generation from 2D poses.
+In
+ECCVW
+, 2020.
+[84]
+Hongyi Xu, Eduard Gabriel Bazavan, Andrei Zanfir, Bill Freeman, Rahul Sukthankar, and Cristian Sminchisescu.
+GHUM & GHUML: Generative 3D human shape and articulated pose models.
+In
+CVPR
+, 2020.
+[85]
+Liang Xu, Xintao Lv, Yichao Yan, Xin Jin, Shuwen Wu, Congsheng Xu, Yifan Liu, Yizhou Zhou, Fengyun Rao, Xingdong Sheng, Yunhui Liu, Wenjun Zeng, and Xiaokang Yang.
+Inter-x: Towards versatile human-human interaction analysis.
+In
+CVPR
+, 2024.
+[86]
+Lianying Yin, Yijun Wang, Tianyu He, Jinming Liu, Wei Zhao, Bohan Li, Xin Jin, and Jianxin Lin.
+EMoG: Synthesizing emotive co-speech 3D gesture with diffusion model.
+arXiv
+, 2023.
+[87]
+Zhengdi Yu, Shaoli Huang, Chen Fang, Toby P. Breckon, and Jue Wang.
+ACR: Attention collaboration-based regressor for arbitrary two-hand reconstruction.
+In
+CVPR
+, 2023.
+[88]
+Zhengdi Yu, Shaoli Huang, Yongkang Cheng, and Tolga Birdal.
+SignAvatars: A large-scale 3D sign language holistic motion dataset and benchmark.
+In
+ECCV
+, 2024.
+[89]
+Jan Zelinka and Jakub Kanis.
+Neural sign language synthesis: Words are our glosses.
+In
+WACV
+, 2020.
+[90]
+Mingyuan Zhang, Zhongang Cai, Liang Pan, and Hong.
+MotionDiffuse: Text-driven human motion generation with diffusion model.
+TPAMI
+, 2023.
+[91]
+Wenqian Zhang, Molin Huang, Yuxuan Zhou, Juze Zhang, Jingyi Yu, Jingya Wang, and Lan Xu.
+BOTH2Hands: Inferring 3D hands from both text prompts and body dynamics.
+In
+CVPR
+, 2024.
+[92]
+Hao Zhou, Wengang Zhou, Weizhen Qi, Junfu Pu, and Houqiang Li.
+Improving sign language translation with monolingual data by sign back-translation.
+In
+CVPR
+, 2021.
+[93]
+Keyang Zhou, Bharat Lal Bhatnagar, Jan Eric Lenssen, and Gerard Pons-Moll.
+TOCH: Spatio-temporal object-to-hand correspondence for motion refinement.
+In
+ECCV
+, 2022.
+[94]
+Lingting Zhu, Xian Liu, Xuanyu Liu, Rui Qian, Ziwei Liu, and Lequan Yu.
+Taming diffusion models for audio-driven co-speech gesture generation.
+In
+CVPR
+, 2023.
+[95]
+Ronglai Zuo, Rolandos Alexandros Potamias, Evangelos Ververas, Jiankang Deng, and Stefanos Zafeiriou.
+Signs as tokens: An autoregressive multilingual sign language generator.
+arXiv:2411.17799
+, 2024.
+APPENDIX
+This appendix provides
+a brief glossary of terminology (
+Appendix
+A
+),
+an analysis of our BOBSL3DT dataset (
+Appendix
+B
+),
+implementation details (
+Appendix
+C
+),
+additional qualitative and quantitative results (
+Appendix
+D
+).
+We also provide a video on our project page to visualize dynamic motions
+.
+Appendix A
+Glossary
+We list a brief glossary to describe several sign language specific terminology used in the main paper:
+[MATH: \bullet]
+Gloss:
+The written representation of a sign, typically a single word. In linguistic glossing, the transcription follows certain rules (e.g., adding ‘PT:’ prefix for the pointing sign ‘YOU’, assigning a unique gloss ID to each sign variant); however, in this paper, we simplify as in
+[
+67
+]
+and abuse the
+gloss terminology: the sign-level annotations we use are not careful linguistic glosses, but rather free-form sign-level translations.
+[MATH: \bullet]
+Phonology tags:
+The set of handshapes, movements, locations used to construct the signs.
+See
+Sec.
+3.1
+of the main paper and
+Sec.
+C.4
+for the specific list of attributes included in our study.
+[MATH: \bullet]
+Sign variant:
+One of the different ways of signing the same word.
+There may be multiple ways to sign a word due to several reasons.
+We give explanations and examples in
+Sec.
+C.7
+.
+Appendix B
+BOBSL3DT Dataset Analysis
+We analyze our large-scale BOBSL3DT dataset
+by reporting several statistics (
+Sec.
+B.1
+),
+and estimating the noise level (
+Sec.
+B.2
+).
+We also provide more details about our manually cleaned test set verification
+(
+Sec.
+B.3
+).
+B.1
+Statistics
+In
+Fig.
+A.1
+, we plot the distribution of
+word count
+per unique text descriptions. We show two separate histograms for (i) the texts generated from SignBank phonology attributes and
+(ii) the ones generated from SignBank attributes combined with HMS.
+The difference between the mean values of the two distributions remains small (
+[MATH: \mu_{\text{[Phonology]}}=40.2]
+and
+[MATH: \mu_{\text{[Phonology+HMS]}}=41.0]
+), despite the latter containing more information.
+Phonology-only descriptions close the gap by containing generic movement words such as ‘the hand moves’.
+In
+Fig.
+A.2
+, we also plot the number of motion samples per unique text description in our LLM(Phonology+HMS) training set.
+Given that the glosses have a long-tailed distribution in BOBSL, the motions are not uniformly distributed across descriptions either.
+The dataset includes 17,552 unique descriptions (
+[MATH: x]
+-axis), among which 8,201 come from Phonology-only
+and 9,351 come from
+the combination with HMS.
+Figure A.1
+:
+Histograms of the number of words per text in BOBSL3DT training set:
+We report the distribution of words per unique text, for the descriptions generated from SignBank phonology, and the descriptions generated from SignBank phonology combined with HMS separately.
+Figure A.2
+:
+Number of motion samples per text description:
+We observe a long-tailed distribution on the BOBSL3DT training set. The median is 33 motion samples per text.
+We note two details to help interpreting these numbers.
+(a) Original LLM outputs from SignBank are generated with the dominant/non-dominant hand terminology,
+which are then replaced with the words right/left when assigning to BOBSL signs depending on the metadata on right-/left-handedness of signers (i.e., a left handed person’s dominant hand would be the left hand with mirrored signing).
+With the original dominant terminology, we have 6,090 (Phonology) and 7,032 (Phonology+HMS) unique text descriptions on SignBank,
+which then increase to the above numbers after replacing with left/right words during BOBSL assignment.
+(b) The source of these descriptions are 2,351 glosses. Each gloss is converted to 3 different LLM descriptions (2,351
+[MATH: \times]
+3 = 7,053). Due to some glosses sharing the exact same set of attributes, we have slightly lower number of unique descriptions than 7,053 (e.g., 6,090 for Phonology portion of the dataset).
+B.2
+Noise estimation
+We quantify the noise on a training subset of 2,525
+samples by
+manually checking whether the motion corresponds to the text.
+We find that
+61% of the motion samples correspond to their descriptions.
+The main sources of noise are pseudo-glosses
+(e.g., 60% of 2,624 manually-glossed test set match the pseudo-glosses),
+and potentially the SignBank variant assignment.
+We also note that the 3D pose estimates contribute to the level of noise,
+by not strictly following the video, but our analysis here focuses on the fidelity to the text
+rather than the motion realism.
+B.3
+Test set verification
+As mentioned in
+Sec.
+4.1
+of the main paper,
+we manually verify the entire test set (seen and unseen) as follows.
+We first automatically assign a SignBank variant to each BOBSL test motion, by selecting the variant with the highest cosine similarity in the THMR embedding space.
+Then, for each of these SignBank samples,
+we collect 4 most similar BOBSL motions,
+and manually select one of them
+that matches the SignBank motion, or discard the gloss if we find no match.
+We also manually modified the LLM(Phonolgy+HMS) output descriptions for a subset of the test samples,
+to make sure the text corresponds to the motion. Due to its smaller size, we have done this correction only on the unseen test set.
+Note that the entire test set was already manually
+glossed
+(as opposed to the training set);
+therefore, we did not need to verify the correctness of
+matching between the videos and the glosses.
+Appendix C
+Implementation Details
+We give additional information about
+HandMDM training (
+Sec.
+C.1
+),
+THMR training (
+Sec.
+C.2
+),
+stitching of HAMER hands to SMPLer-X body (
+Sec.
+C.3
+),
+SignBank dictionary attributes (
+Sec.
+C.4
+),
+HandMotionScript (
+Sec.
+C.5
+),
+the LLM prompt (
+Sec.
+C.6
+),
+and
+the assignment between SignBank and BOBSL (
+Sec.
+C.7
+).
+C.1
+HandMDM training and inference
+Similar to
+[
+60
+]
+,
+we train the HandMDM networks
+using a learning rate of
+[MATH: {10^{-4}}]
+with AdamW optimizer and a batch size of 32.
+With BOBSL3DT, we train HandMDM for 300 epochs and use a guidance coefficient of
+[MATH: \lambda=15]
+at test time. With ASL-Text and MS-ZSSLR, we train for 2000 epochs and test with
+[MATH: \lambda=5]
+. With BOTH57M, we train for 300 epochs and test with
+[MATH: \lambda=15]
+.
+C.2
+THMR training
+Similar to TMR for bodies
+[
+59
+]
+,
+we train the THMR networks for hands
+using a learning rate of
+[MATH: {10^{-4}}]
+with AdamW optimizer and a batch size of 32.
+DistilBERT
+[
+69
+]
+text embeddings are used as input to the text encoder.
+The latent dimensionality of the embedding space is 256, the temperature
+[MATH: \tau=0.1]
+, and the contrastive loss weight
+[MATH: \lambda_{NCE}=0.1]
+. The network is trained for 100 epochs.
+As THMR is used for evaluation purposes,
+to obtain the best possible performance, we use for supervision the 1.3M motion-text samples from our BOBSL3DT training data
+prior
+to filtering the unseen signs.
+The input format is the same as HandMDM (see
+Sec.
+3.2
+).
+Performance of THMR on real motions.
+We report THMR performances on ground truth motions in the first row of
+Tab.
+A.1
+. Note that the unseen set is not unseen with regards to THMR
+as mentioned above. We refer to
+Sec.
+D.1
+for comments on the results.
+THMR for transfer experiments.
+For ASL-Text and MS-ZSSLR retrieval score evaluation, we train THMR only on the arm and hand features,
+discarding the torso.
+We notice that a significant portion of these datasets include seated signers, where the torso position creates a domain gap with BOBSL3DT containing standing signers. Additionally the 3D reconstruction for seated signers tend to estimate unrealistic torso bending for the ground truth, which also motivated our exclusion of the torso features.
+Specifically we use the following 6D joint rotations: 2 shoulders, 2 elbows, 2 wrists and 30 for hands, resulting in a total of 216 input features.
+BOTH57M full body motions are a lot more dynamic than in sign language datasets, and the textual descriptions for hands only describe finger movements (not arms). Therefore, for the evaluation on BOTH57M, we further reduce the training features of THMR to the 30 hand 6D rotations, resulting in a total of 180 features.
+Figure A.3
+:
+Stitching HAMER hands to SMPLer-X body:
+We observe qualitatively better performance
+of capturing hands when using HAMER
+[
+57
+]
+, as opposed to the hand components of SMPLer-X
+[
+9
+]
+. However, HAMER only provides flying hands, which we stitch into
+SMPL-X bodies estimated by SMPLer-X.
+C.3
+Stitching HAMER hands to SMPLer-X body
+As explained in
+Sec.
+3.1
+of the main paper,
+we use a combination of HAMER
+[
+57
+]
+and SMPLer-X
+[
+9
+]
+for estimating 3D bodies
+with hands from videos.
+In
+Fig.
+A.3
+, we provide SMPLer-X results
+on BOBSL videos with and without using HAMER,
+and observe consistently more reliable estimates with
+the hand-specific and more recent approach of HAMER.
+However, in terms of the global location of wrists, we find
+SMPLer-X to be better since it explicitly estimates the rest of the body,
+and arm movements define the hand location.
+In more detail, HAMER gives us 30 hand joint rotations (local rotations
+with respect to the parent in the kinematic tree), which we use
+to replace those estimated by SMPLer-X.
+For the wrists, we use the global wrist orientation estimated from
+HAMER which are in world coordinate with the origin at the wrist.
+We convert these to be local wrist orientations and replace those
+estimated by SMPLer-X.
+We first stitch both estimates at the wrists by using
+SMPLer-X
+wrist positions and HAMER wrist global orientations. This provides realistic joint positions but can lead to unrealistic wrist rotations. For instance, if SMPLer-X estimates a hand facing down but HAMER estimates a hand facing up, this first stitching results in a local rotation at the wrist of about 180 degrees, which is unrealistic.
+Therefore, inspired by
+[
+55
+]
+and
+[
+85
+]
+, we then perform optimization to adjust the SMPL-X rotations of the arm joints.
+We optimize the shoulders, elbows and wrists (6 rotations)
+by minimizing the Euclidean distance between the 3D joints derived from the new rotations and the initial stitched pose.
+Specifically, the target coordinates are the 3D coordinates of the elbows (2 joints), wrists (2 joints) and hands (30 joints). We initialize the target joint rotations with the SMPL neutral pose for each frame, i.e., with the arms positioned in a T-pose. Similar to
+[
+85
+]
+, we add a temporal smoothing term that minimizes the Euclidean distance between the joint positions from consecutive frames. A regularization term also minimizes the magnitude of the rotations to avoid unrealistic bending.
+C.4
+SignBank dictionary attributes
+We refer to
+Fig.
+A.4
+and
+Fig.
+A.5
+to illustrate complete examples for the dictionary attributes.
+Beyond those mentioned in
+Sec.
+3.1
+of the main paper,
+phonological information also contains whether signs are performed with only one hand, or with both hands.
+In case of two-handed signs, the phonology also denotes
+whether the sign is ‘symmetric’ or ‘alternating’,
+and whether one of the hands is static.
+There may also be information on whether forearm rotations are involved,
+and whether a handshape change occurs during the motion
+(in addition to the initial/final handshapes).
+To transform these SignBank attributes into our LLM input, we replace linguistic terms in field names and categories with more descriptive English descriptions. Additionally, we provide several descriptions for an attribute
+where possible,
+as
+text augmentation. We randomly select from these attribute descriptions for each gloss when inputting the attributes to the LLM. For instance, for the handshape attributes, ‘flat’ will be converted into a description among [
+‘Flat’, ‘The hand is held flat with the fingers held together.’, ‘The fingers are extended and together.’
+], and ‘small’ will be converted into a description among [
+‘The index finger is extended and bent inward. The thumb is extended, parallel to the index finger. The other fingers are curled on the palm.’, ‘The extended index finger, bent at the palm knuckle, and extended thumb are held parallel to each other.’
+]; for the tags, ‘double handed’ will be converted into the description
+‘both hands are used, with the same handshape on both hands’
+and ‘two handed’ into
+‘both hands are used, and their motions aren’t symmetrical’
+. Specifically,
+we take part of the handshape descriptions
+from
+[
+8
+]
+.
+The full mapping can be found in our code release.
+C.5
+HandMotionScript
+We provide
+a pseudo-code in
+Algorithm
+1
+for our HandMotionScript (HMS) pipeline,
+and qualitative examples in
+Fig.
+A.4
+and
+Fig.
+A.5
+.
+We build on PoseScript
+[
+16
+]
+designed for full human bodies. From PoseScript features, we use the hand
+distances
+to the relevant body parts,
+determined by SignBank attributes.
+If the hand location attribute is not the ‘neutral space’, but a specific body part, we compute the distances
+from the hands to this body part, to detect the movement features.
+If the motion is two-handed, we compute distances between the two hands. If the motion is one-handed, we compute the distances for the signer’s dominant hand only.
+We further break down the distances into the
+3 axes (x-y-z)
+to provide more detailed information, such as left/right or above/below relationships.
+As in PoseScript, we convert numerical values into text codes by assigning a range of values for each feature.
+We adapt some of these ranges for our HMS pipeline.
+We use the following text codes for the 4 distance features:
+[MATH: \bullet]
+Distance:
+[
+touching, close, medium, spread, wide
+]
+[MATH: \bullet]
+x-coordinate:
+[
+wide/right, spread/right, medium/right, close/right, touching, close/left, medium/left, spread/left, wide/left
+].
+[MATH: \bullet]
+y-coordinate:
+[
+wide/below, spread/below, medium/below, close/below, touching, close/above, medium/above, spread/above, wide/above
+].
+[MATH: \bullet]
+z-coordinate:
+[
+wide/behind, spread/behind, medium/behind, close/behind, touching, close/in front, medium/in front, spread/in front, wide/in front
+].
+We also add a new feature to PoseScript to extract the
+palm orientations
+.
+Specifically,
+for each hand, we compute the vector normal to the wrist global orientation. If one of its global coordinate norms is greater than a chosen threshold (0.7), we assign the axis of this coordinate as the palm direction. The sign of the coordinate determines the final orientation. A palm can thus be assigned an orientation among the following possibilities, respectively to the 3 axes:
+sideways, down/up, in/out
+.
+Once the above frame-level features are extracted, we apply the following post-processing in order to shorten them and remove possible noise. We remove every text code with less than 4 consecutive repetitions, and
+we collapse consecutive repetitions into a single text code.
+Furthermore, when a distance feature has multiple text codes for multiple axes, we discard the axis-dependent distance features (x/y/z) entirely to prevent too lengthy and noisy descriptions from the LLM.
+Finally,
+PoseScript wording uses ‘right’ and ‘left’ hands, whereas our raw SignBank descriptions follow ‘dominant’ and ‘non-dominant’ terminology (see
+Sec.
+B.1
+).
+We replace the right/left words with dominant/non-dominant according to the SignBank tags which give information on whether a signer is left-handed or right-handed.
+The temporal sequence of words are then given to the LLM.
+Algorithm 1
+HandMotionScript pipeline
+1:
+Input:
+3D motion world coordinates (n frames)
+2:
+Input:
+Global hand orientation (n frames)
+3:
+Input:
+SignBank location attributes (SBlocs)
+4:
+for
+frame
+[MATH: \leftarrow 1]
+to
+[MATH: n]
+do
+5:
+for
+SBlocs
+[MATH: \leftarrow]
+loc
+do
+6:
+if
+loc is Neutral Space
+then
+loc
+[MATH: \leftarrow]
+other hand
+7:
+end
+if
+8:
+if
+left hand is used
+then
+9:
+Compute distance posecodes: left hand to loc
+10:
+end
+if
+11:
+if
+right hand is used
+then
+12:
+Compute distance posecodes: right hand to loc
+13:
+end
+if
+14:
+end
+for
+15:
+if
+left hand is used
+then
+16:
+Compute orientation posecodes: left hand
+17:
+end
+if
+18:
+if
+right hand is used
+then
+19:
+Compute orientation posecodes: right hand
+20:
+end
+if
+21:
+end
+for
+22:
+Return
+Distance posecode sequences (n frames)
+23:
+Return
+Orientation posecode sequences (n frames)
+C.6
+LLM prompting
+We use Gemini 2.5 Pro
+Thinking Experimental 01-21
+[
+23
+]
+as our LLM.
+We provide
+the exact prompt for generating the textual descriptions from the SignBank and HMS attributes in
+Algorithms
+2
+,
+3
+,
+4
+,
+5
+and
+6
+.
+The prompt
+contains the task instructions and few-shot (
+six
+) examples for in-context learning.
+We also include the prompt version when HMS is not used in
+our project page.
+We use both prompts to construct our BOBSL3DT dataset.
+LLM output post-processing.
+For single-handed signs, we remove any mention of the non-dominant hand ‘remaining still’ from the LLM output.
+This is because in BOBSL, the non-dominant hand is rarely still (due to the natural signing speed) as opposed to the slow SignBank videos.
+Furthermore, once the SignBank LLM-generated texts are assigned to BOBSL motions, we replace the words ‘dominant’ and ‘non-dominant’ with ‘left’ or ‘right’ depending on whether the signer is left-handed or right-handed using the metadata.
+C.7
+SignBank gloss assignment for BOBSL motions
+Each BOBSL video corresponds to one pseudo-gloss, represented as a word (or more rarely a phrase).
+On the other hand, SignBank is a linguistic dictionary, where each gloss corresponds to a unique
+sign variant, characterized by one motion.
+For example, the word ‘happy’ corresponds to three glosses HAPPY, HAPPYb, HAPPYc.
+The mapping between words and glosses is complex
+[
+67
+]
+.
+A word can map to multiple SignBank glosses,
+and a gloss can map to multiple words.
+These may be due to
+multiple ways of signing the same concept,
+due to homonyms (same sign motion with different meanings,
+such as BSL signs for ‘battery’ and ‘uncle’),
+or due to English synoyms (‘happy’ and ‘content’).
+SignBank also includes
+keywords
+for each gloss,
+related concepts which may share the same signing.
+For example, the keywords for the gloss ‘HAPPY’
+include ‘happiness’, ‘merry’, ‘enjoy’, ‘fun’, while
+they include ‘excited’, ‘jump for joy’ for the gloss ‘HAPPYc’.
+When constructing the list of
+variants
+for a given BOBSL pseudo-gloss word (e.g., ‘happy’),
+we consider all possible keywords (e.g., ‘fun’, therefore FUN, FUNb, FUNc…),
+as well as all glosses that map to this word (e.g., ‘HAPPYc’).
+Once we construct a list of candidate gloss motions,
+for each
+sign
+label in BOBSL, we perform k-medoids clustering on the set of its paired BOBSL motions combined with each candidate SignBank variant motion. We initialize the number of clusters as the number of available SignBank variants. For each cluster thus obtained, if the cluster includes: (i) a unique SignBank variant, it is assigned to each of its BOBSL samples; (ii) no SignBank variant, all of its BOBSL samples are filtered out; (iii) more than one SignBank variants, its BOBSL samples are assigned the SignBank variant that maximizes their cosine similarities.
+As mentioned in
+Sec.
+3.1
+of the main paper,
+the THMR used for this assignment is trained with random assignment (since initially there is no assignment).
+But since we only use its motion encoder, we do not observe a big difference
+in its assignment behavior if we use the second iteration of the THMR model,
+trained on these better assigned texts. This may be due to a relatively
+small search space within SignBank candidates.
+However, note that for our evaluations, we use the latter THMR.
+Appendix D
+Additional results
+Here, we complement the results in the main paper
+by
+reporting additional metrics using motion-to-text retrieval for BOBSL3DT-Test (
+Sec.
+D.1
+),
+evaluating on SignBank as a test set (
+Sec.
+D.2
+), and
+visualizing LLM inputs and outputs (
+Sec.
+D.3
+).
+We also provide additional qualitative visualizations (
+Sec.
+D.4
+).
+D.1
+Motion-to-text retrieval metrics on BOBSL3DT-Test
+Seen
+Unseen
+Input
+R@1
+[MATH: \uparrow]
+R@3
+[MATH: \uparrow]
+FID
+[MATH: \downarrow]
+Div.
+[MATH: \leftarrow]
+MultiMod.
+[MATH: \uparrow]
+R@1
+[MATH: \uparrow]
+R@3
+[MATH: \uparrow]
+FID
+[MATH: \downarrow]
+Div.
+[MATH: \leftarrow]
+MultiMod.
+[MATH: \uparrow]
+Ground truth
+22.58
+±0.0
+[MATH: \mid]
+24.93
+±0.0
+40.86
+±0.0
+[MATH: \mid]
+42.80
+±0.0
+-
+0.94
+[MATH: \mid]
+0.94
+-
+35.63
+±0.0
+[MATH: \mid]
+34.48
+±0.0
+59.77
+±0.0
+[MATH: \mid]
+56.32
+±0.0
+-
+0.93
+[MATH: \mid]
+0.93
+-
+LLM(Phonology)
+52.80
+±1.3
+[MATH: \mid]
+0
+8.21
+±0.2
+74.06
+±0.7
+[MATH: \mid]
+16.10
+±0.4
+0.15
+[MATH: \mid]
+0.23
+0.93
+[MATH: \mid]
+0.90
+0.09
+[MATH: \mid]
+0.15
+36.20
+±0.6
+[MATH: \mid]
+19.54
+±5.0
+56.32
+±2.9
+[MATH: \mid]
+39.66
+±0.6
+0.38
+[MATH: \mid]
+0.46
+0.89
+[MATH: \mid]
+0.89
+0.10
+[MATH: \mid]
+0.15
+LLM(Phonology+HMS)
+51.63
+±0.8
+[MATH: \mid]
+52.29
+±0.9
+72.51
+±0.4
+[MATH: \mid]
+70.81
+±0.9
+0.16
+[MATH: \mid]
+0.16
+0.91
+[MATH: \mid]
+0.91
+0.09
+[MATH: \mid]
+0.09
+32.47
+±0.5
+[MATH: \mid]
+30.74
+±2.9
+51.72
+±1.4
+[MATH: \mid]
+55.17
+±1.2
+0.40
+[MATH: \mid]
+0.40
+0.90
+[MATH: \mid]
+0.89
+0.13
+[MATH: \mid]
+0.15
+Table A.1
+:
+Motion-to-text metrics:
+We complete the results of
+Tab.
+2
+by providing the motion-to-
+text
+retrieval scores for our LLM(Phonology) and LLM(Phonology+HMS) models,
+as well as the BOBSL3DT-Test ground truth motions.
+See text for comments.
+For completeness, we repeat the last two rows of the
+Tab.
+2
+of the main paper,
+this time by reporting the motion-to-
+text
+metrics from THMR (as opposed to the
+motion-to-
+motion
+metrics used in the main paper for BOBSL3DT).
+The results in
+Tab.
+A.1
+support our previous conclusions drawn from the comparison of motion-to-motion scores. We also complement the metrics with diversity and multimodality scores for completeness, and include ground truth evaluation as a reference (first row).
+On the unseen test set, performance of the ground-truth motion to retrieve text is overall better than that of generated motions (also because the descriptions are seen by the THMR as mentioned in
+Sec.
+C.2
+).
+On the seen partition, generations outperform ground-truth motions in terms of text retrieval capability using THMR.
+A potential explanation is that the generations resemble the
+training
+set, on which the THMR was optimized on.
+This phenomenon is similar to the observations in
+[
+59
+]
+(see Table A.2 of their paper).
+D.2
+Testing on SignBank motions
+Tab.
+A.2
+evaluates the two model variants
+(corresponding to the last two rows of
+Tab.
+2
+of the main paper)
+by comparing the generated motions to ground truth SignBank motions. Motion-to-motion similarity suffers from a domain gap when comparing them with the shorter and quicker signs of BOBSL. Regardless, the conclusion that using HandMotionScript
+benefits still holds.
+Seen
+Unseen
+Input
+R@1
+[MATH: \uparrow]
+R@03
+[MATH: \uparrow]
+FID
+[MATH: \downarrow]
+R@1
+[MATH: \uparrow]
+R@03
+[MATH: \uparrow]
+FID
+[MATH: \downarrow]
+LLM(Phonology)
+17.56
+±0.3
+[MATH: \mid]
+0
+5.54
+±0.4
+30.78
+±0.6
+[MATH: \mid]
+11.74
+±0.4
+0.36
+[MATH: \mid]
+0.42
+22.70
+±1.7
+[MATH: \mid]
+12.37
+±1.6
+35.92
+±1.0
+[MATH: \mid]
+24.45
+±2.0
+0.57
+[MATH: \mid]
+0.60
+LLM(Phonology+HMS)
+16.59
+±0.4
+[MATH: \mid]
+17.73
+±0.1
+30.40
+±0.5
+[MATH: \mid]
+32.55
+±0.3
+0.36
+[MATH: \mid]
+0.36
+20.98
+±2.5
+[MATH: \mid]
+21.98
+±2.8
+41.67
+±1.0
+[MATH: \mid]
+34.06
+±2.5
+0.58
+[MATH: \mid]
+0.57
+Table A.2
+:
+Transfer results on SignBank motions:
+We report the two model variants from
+Tab.
+2
+of the main paper.
+The models are trained on BOBSL3DT and tested on motions from
+SignBank
+. We note a domain gap between co-articulated (fast) motions from BOBSL3DT compared to isolated (slow) motions from SignBank.
+The notation for the ‘
+[MATH: \mid]
+’ separator is the same as before, i.e., ‘LLM(Phonology)
+[MATH: \mid]
+LLM(Phonology+HMS)’.
+D.3
+Qualitative results for the LLM
+In
+Fig.
+A.4
+and
+Fig.
+A.5
+,
+we provide example inputs and outputs for the conversion from
+SignBank data to free-form textual descriptions.
+We first map the linguistic attributes to descriptions
+with our lookup table
+(as explained in
+Sec.
+C.4
+)
+, which are then input to the LLM
+along with our HandMotionScript features.
+D.4
+Additional qualitative visualizations
+We repeat the main paper figures in dynamic motion visualization in
+Figs.
+A.6
+,
+A.7
+and
+A.8
+,
+and show more results on BOBSL3DT-Test, this time on the
+seen
+partition (
+Fig.
+A.9
+).
+Figure A.4
+:
+Qualitative results for the LLM:
+We show an example input-output for the LLM when converting
+the attributes from the SignBank phonology and from our HandMotionScript
+into a free-form language description.
+Note that we show the gloss (‘SKY’) for reference, but this information
+is not included in the LLM input.
+More examples are continued in
+Fig.
+A.5
+.
+Figure A.5
+:
+Fig.
+A.4
+continued
+Figure A.6
+:
+Dynamic visualization for
+Fig.
+1
+of the main paper:
+We display the same examples as in
+Fig.
+1
+with a dynamic style including 5 frames evenly sampled. The color coding denotes the temporal evolution, i.e., the last frame with blue, and the first frame with decreased transparency in pink.
+Figure A.7
+:
+Dynamic visualization for
+Fig.
+4
+of the main paper.
+Figure A.8
+:
+Dynamic visualization for
+Fig.
+5
+of the main paper.
+Figure A.9
+:
+Qualitative results on the seen test set of BOBSL3DT-Test:
+We complement
+Fig.
+5
+of the main paper (which shows results on the unseen test set),
+with results on the seen signs. We display both single-frame and dynamic visualizations for each example.
+Algorithm 2
+Prompt for LLM(Phonology + HMS) text generation.
+⬇
+You
+are
+an
+assistant
+whose
+role
+is
+to
+describe
+the
+hand
+motion
+for
+a
+sign
+in
+British
+Sign
+Language
+,
+given
+a
+list
+of
+information
+.
+Use
+the
+information
+to
+describe
+the
+corresponding
+motion
+in
+3
+different
+ways
+.
+In
+the
+ATTRIBUTES
+section
+,
+the
+given
+hand
+shapes
+concern
+the
+initial
+and
+final
+position
+.
+Having
+the
+information
+:
+’
+Both
+hands
+are
+used
+,
+and
+their
+hand
+shapes
+are
+different
+’,
+is
+not
+contradictory
+with
+the
+fact
+that
+their
+initial
+and
+final
+hand
+shapes
+are
+similar
+because
+they
+can
+be
+different
+in
+the
+middle
+of
+the
+motion
+.
+In
+the
+DISTANCES
+sections
+:
+-
+You
+are
+given
+temporal
+sequences
+of
+the
+distance
+between
+two
+limbs
+.
+-
+The
+x
+-
+axis
+refers
+to
+the
+axis
+from
+left
+to
+right
+of
+the
+body
+,
+the
+y
+-
+axis
+refers
+to
+the
+axis
+from
+bottom
+to
+top
+,
+and
+the
+z
+-
+axis
+refers
+to
+the
+axis
+normal
+to
+the
+body
+and
+pointing
+away
+from
+it
+.
+In
+the
+HAND
+ORIENTATIONS
+section
+:
+-
+You
+are
+given
+temporal
+sequences
+of
+the
+palm
+orientations
+.
+Use
+all
+the
+information
+in
+the
+ATTRIBUTES
+section
+unless
+you
+find
+that
+some
+points
+are
+contradictory
+.
+Infer
+from
+the
+DISTANCES
+sections
+the
+directions
+and
+change
+of
+directions
+of
+the
+movements
+of
+the
+hands
+and
+include
+them
+in
+the
+description
+.
+Infer
+from
+the
+HAND
+ORIENTATIONS
+section
+the
+main
+hand
+orientations
+of
+the
+hands
+during
+the
+movement
+and
+include
+them
+in
+the
+description
+.
+Some
+points
+can
+be
+redundant
+,
+therefore
+summarize
+all
+the
+information
+into
+concise
+but
+exhaustive
+descriptions
+.
+It
+is
+never
+the
+case
+that
+the
+dominant
+hand
+remains
+stationary
+.
+If
+you
+can
+’
+t
+infer
+what
+it
+is
+doing
+from
+the
+information
+,
+just
+mention
+that
+it
+moves
+.
+The
+3
+descriptions
+should
+describe
+the
+same
+motion
+using
+different
+wording
+.
+Use
+a
+diversified
+vocabulary
+from
+one
+example
+to
+another
+.
+Here
+are
+some
+examples
+.
+The
+comment
+section
+of
+the
+model
+answers
+,
+when
+present
+,
+is
+here
+for
+your
+reference
+as
+indications
+of
+the
+correct
+practices
+of
+the
+task
+,
+it
+is
+not
+to
+be
+included
+in
+your
+own
+output
+.
+{
+{
+"
+role
+":
+"
+user
+",
+"
+content
+":
+"
+Use
+the
+information
+to
+describe
+the
+corresponding
+motion
+.
+The
+comment
+section
+of
+the
+model
+answers
+,
+when
+present
+,
+is
+here
+for
+your
+reference
+as
+indications
+of
+the
+correct
+practices
+of
+the
+task
+,
+it
+is
+not
+to
+be
+included
+in
+your
+own
+output
+.
+ATTRIBUTES
+:
+-
+Initial
+dominant
+hand
+shape
+:
+Pointing
+-
+Initial
+non
+-
+dominant
+hand
+shape
+:
+Pointing
+-
+Final
+dominant
+hand
+shape
+:
+Pointing
+-
+Final
+non
+-
+dominant
+hand
+shape
+:
+Pointing
+-
+Initial
+sign
+location
+:
+In
+front
+of
+the
+person
+-
+Final
+sign
+location
+:
+In
+front
+of
+the
+person
+-
+Location
+on
+the
+dominant
+hand
+that
+the
+non
+-
+dominant
+hand
+is
+facing
+:
+Broad
+side
+-
+Location
+on
+the
+non
+-
+dominant
+hand
+that
+the
+dominant
+hand
+is
+facing
+:
+Broad
+side
+-
+Both
+hands
+are
+used
+,
+with
+same
+hand
+shape
+on
+both
+hands
+-
+The
+movement
+is
+symmetrical
+,
+meaning
+both
+hands
+are
+doing
+the
+same
+motions
+at
+the
+same
+time
+DISTANCE
+BETWEEN
+HANDS
+:
+-
+Distance
+from
+dominant
+hand
+to
+non
+-
+dominant
+hand
+:
+[
+spread
+,
+close
+]
+-
+Distance
+along
+x
+axis
+from
+dominant
+hand
+to
+non
+-
+dominant
+hand
+:
+[
+spread
+,
+close
+]
+-
+Distance
+along
+y
+axis
+from
+dominant
+hand
+to
+non
+-
+dominant
+hand
+:
+[
+aligned
+]
+-
+Distance
+along
+z
+axis
+from
+dominant
+hand
+to
+non
+-
+dominant
+hand
+:
+[
+aligned
+]
+HAND
+ORIENTATIONS
+:
+-
+Palm
+orientation
+-
+dominant
+hand
+:
+[
+sideways
+]
+-
+Palm
+orientation
+-
+non
+-
+dominant
+hand
+:
+[
+sideways
+]"
+},
+{
+"
+role
+":
+"
+model
+",
+"
+content
+":
+{
+"
+Description
+1":
+"
+Both
+hands
+,
+pointing
+and
+facing
+sideways
+,
+palm
+facing
+each
+other
+,
+and
+are
+moving
+toward
+each
+other
+horizontally
+.",
+"
+Description
+2":
+"
+The
+person
+positions
+both
+hands
+so
+that
+the
+index
+fingers
+are
+extended
+and
+the
+hands
+are
+pointing
+sideways
+,
+with
+the
+palms
+turned
+inward
+to
+face
+each
+other
+.
+Then
+,
+they
+move
+their
+hands
+horizontally
+toward
+one
+another
+.",
+Algorithm 3
+Prompt for LLM(Phonology + HMS) text generation. (Algorithm 2 continued)
+⬇
+"
+Description
+3":
+"
+Extend
+both
+index
+fingers
+and
+place
+the
+hands
+with
+the
+palm
+facing
+each
+other
+.
+Then
+move
+your
+hands
+horizontally
+symmetrically
+toward
+one
+another
+.",
+"
+Comment
+":
+"
+When
+the
+hands
+are
+facing
+sideways
+,
+it
+is
+always
+towards
+one
+another
+,
+not
+towards
+the
+outside
+.
+Besides
+,
+the
+hands
+are
+never
+crossed
+when
+the
+location
+is
+in
+front
+of
+the
+person
+.
+They
+face
+each
+other
+on
+their
+broad
+side
+,
+meaning
+not
+on
+one
+of
+their
+edges
+.
+Frome
+these
+3
+points
+you
+can
+deduce
+that
+their
+palms
+are
+facing
+each
+other
+.
+When
+you
+can
+deduce
+this
+kind
+information
+,
+add
+it
+to
+at
+least
+one
+of
+the
+descriptions
+.
+The
+horizontal
+aspect
+of
+the
+motion
+is
+deduced
+from
+the
+fact
+that
+the
+only
+direction
+with
+a
+change
+in
+the
+distance
+between
+the
+hands
+is
+the
+x
+axis
+."
+}
+}
+},
+{
+{
+"
+role
+":
+"
+user
+",
+"
+content
+":
+"
+Use
+the
+information
+to
+describe
+the
+corresponding
+motion
+.
+The
+comment
+section
+of
+the
+model
+answers
+,
+when
+present
+,
+is
+here
+for
+your
+reference
+as
+indications
+of
+the
+correct
+practices
+of
+the
+task
+,
+it
+is
+not
+to
+be
+included
+in
+your
+own
+output
+.
+ATTRIBUTES
+:
+-
+Initial
+dominant
+hand
+shape
+:
+The
+index
+forms
+a
+hook
+.
+The
+thumb
+is
+extended
+and
+stuck
+against
+the
+index
+finger
+.
+The
+other
+fingers
+are
+curled
+on
+the
+palm
+.
+-
+Final
+dominant
+hand
+shape
+:
+The
+index
+forms
+a
+hook
+.
+The
+thumb
+is
+extended
+and
+stuck
+against
+the
+index
+finger
+.
+The
+other
+fingers
+are
+curled
+on
+the
+palm
+.
+-
+Dominant
+hand
+location
+:
+Chest
+level
+-
+Dominant
+hand
+part
+facing
+the
+chest
+:
+Hand
+edge
+on
+the
+thumb
+side
+-
+Uses
+the
+dominant
+hand
+only
+DOMINANT
+HAND
+DISTANCES
+:
+-
+Distance
+from
+dominant
+hand
+to
+torso
+:
+[
+close
+]
+-
+Distance
+along
+x
+axis
+from
+dominant
+hand
+to
+torso
+:
+[
+aligned
+]
+-
+Distance
+along
+y
+axis
+from
+dominant
+hand
+to
+torso
+:
+[
+aligned
+]
+-
+Distance
+along
+z
+axis
+from
+dominant
+hand
+to
+torso
+:
+[
+close
+/
+in
+front
+]
+HAND
+ORIENTATIONS
+:
+-
+Palm
+orientation
+-
+dominant
+hand
+:
+[
+sideways
+]"
+},
+{
+"
+role
+":
+"
+model
+",
+"
+content
+":
+{
+"
+Description
+1":
+"
+The
+dominant
+hand
+is
+held
+shaped
+as
+a
+hook
+,
+with
+the
+index
+fingertip
+touching
+the
+thumb
+.
+It
+moves
+close
+to
+the
+chest
+,
+with
+its
+radial
+side
+facing
+the
+chest
+.",
+"
+Description
+2":
+"
+The
+person
+holds
+his
+dominant
+hand
+in
+a
+hook
+shape
+,
+bringing
+the
+index
+fingertip
+to
+meet
+the
+thumb
+.
+The
+hand
+is
+positioned
+near
+the
+chest
+,
+with
+the
+thumb
+-
+side
+turned
+toward
+the
+chest
+.",
+"
+Description
+3":
+"
+Form
+your
+dominant
+hand
+into
+a
+hook
+.
+Extend
+the
+thumb
+against
+the
+index
+finger
+,
+and
+make
+their
+fingertips
+touch
+.
+Bring
+the
+hand
+close
+to
+your
+chest
+,
+keeping
+the
+thumb
+-
+side
+facing
+toward
+your
+chest
+."
+}
+}
+},
+{
+{
+"
+role
+":
+"
+user
+",
+"
+content
+":
+"
+Use
+the
+information
+to
+describe
+the
+corresponding
+motion
+.
+The
+comment
+section
+of
+the
+model
+answers
+,
+when
+present
+,
+is
+here
+for
+your
+reference
+as
+indications
+of
+the
+correct
+practices
+of
+the
+task
+,
+it
+is
+not
+to
+be
+included
+in
+your
+own
+output
+.
+ATTRIBUTES
+:
+-
+Initial
+dominant
+hand
+shape
+:
+The
+fingers
+are
+extended
+and
+together
+.
+-
+Initial
+non
+-
+dominant
+hand
+shape
+:
+The
+fingers
+are
+extended
+and
+together
+.
+-
+Final
+dominant
+hand
+shape
+:
+Round
+-
+Final
+non
+-
+dominant
+hand
+shape
+:
+Round
+-
+Sign
+location
+:
+Chest
+level
+-
+Dominant
+hand
+part
+facing
+the
+chest
+:
+Fingertip
+(
+s
+)
+-
+Subordinate
+hand
+part
+facing
+the
+chest
+:
+Fingertip
+(
+s
+)
+-
+Both
+hands
+are
+used
+,
+with
+same
+hand
+shape
+on
+both
+hands
+-
+Hand
+shapes
+change
+during
+the
+sign
+-
+The
+movement
+is
+symmetrical
+,
+meaning
+both
+hands
+are
+doing
+the
+same
+motions
+at
+the
+same
+time
+Algorithm 4
+Prompt for LLM(Phonology + HMS) text generation. (Algorithm 3 continued)
+⬇
+DOMINANT
+HAND
+DISTANCES
+:
+-
+Distance
+from
+dominant
+hand
+to
+torso
+:
+[
+medium
+,
+close
+]
+NON
+-
+DOMINANT
+HAND
+DISTANCES
+:
+-
+Distance
+from
+non
+-
+dominant
+hand
+to
+torso
+:
+[
+medium
+,
+close
+]
+HAND
+ORIENTATIONS
+:
+-
+Palm
+orientation
+-
+dominant
+hand
+:
+[
+down
+]
+-
+Palm
+orientation
+-
+non
+-
+dominant
+hand
+:
+[
+down
+]"
+},
+{
+"
+role
+":
+"
+model
+",
+"
+content
+":
+{
+"
+Description
+1":
+"
+The
+hands
+start
+flat
+with
+fingers
+together
+.
+They
+move
+with
+the
+palm
+facing
+down
+toward
+the
+chest
+,
+while
+closing
+into
+a
+round
+shape
+.",
+"
+Description
+2":
+"
+The
+person
+begins
+with
+both
+hands
+flat
+and
+fingers
+held
+together
+.
+As
+the
+hands
+move
+inward
+toward
+the
+chest
+with
+palms
+facing
+downward
+,
+they
+gradually
+form
+a
+rounded
+shape
+.",
+"
+Description
+3":
+"
+Start
+with
+your
+hands
+flat
+and
+fingers
+together
+.
+Move
+them
+toward
+your
+chest
+with
+palms
+facing
+down
+,
+and
+as
+you
+do
+,
+curve
+the
+hands
+into
+a
+round
+shape
+.",
+"
+Comment
+":
+""
+The
+fact
+that
+the
+sign
+location
+is
+the
+chest
+doesn
+’
+t
+mean
+that
+the
+hands
+are
+at
+the
+chest
+during
+the
+whole
+sign
+.
+It
+means
+that
+the
+hands
+are
+interacting
+with
+the
+chest
+,
+or
+positioned
+near
+the
+chest
+,
+at
+least
+at
+some
+point
+of
+the
+motion
+.
+Here
+,
+from
+the
+distance
+information
+,
+you
+can
+deduce
+that
+the
+motion
+consists
+in
+the
+hands
+coming
+to
+the
+chest
+."
+},
+}
+},
+{
+{
+"
+role
+":
+"
+user
+",
+"
+content
+":
+"
+Use
+the
+information
+to
+describe
+the
+corresponding
+motion
+.
+The
+comment
+section
+of
+the
+model
+answers
+,
+when
+present
+,
+is
+here
+for
+your
+reference
+as
+indications
+of
+the
+correct
+practices
+of
+the
+task
+,
+it
+is
+not
+to
+be
+included
+in
+your
+own
+output
+.
+ATTRIBUTES
+:
+-
+Initial
+dominant
+hand
+shape
+:
+Pointing
+-
+Initial
+non
+-
+dominant
+hand
+shape
+:
+The
+fingers
+are
+extended
+and
+together
+.
+-
+Final
+dominant
+hand
+shape
+:
+The
+hand
+is
+held
+flat
+with
+the
+fingers
+held
+together
+.
+-
+Final
+non
+-
+dominant
+hand
+shape
+:
+The
+fingers
+are
+extended
+and
+together
+.
+-
+Initial
+dominant
+hand
+location
+:
+Upper
+face
+-
+Final
+dominant
+hand
+location
+:
+In
+front
+of
+the
+person
+-
+Dominant
+hand
+part
+facing
+the
+upper
+face
+during
+the
+initial
+part
+of
+the
+motion
+:
+Index
+fingertip
+-
+Location
+on
+the
+dominant
+hand
+that
+the
+non
+-
+dominant
+hand
+is
+facing
+during
+the
+final
+part
+of
+the
+motion
+:
+Back
+side
+-
+Initial
+subordinate
+hand
+part
+facing
+the
+upper
+face
+:
+Fingertip
+(
+s
+)
+-
+Final
+subordinate
+hand
+part
+facing
+the
+upper
+face
+:
+Palm
+side
+-
+Forearm
+rotation
+-
+Both
+hands
+are
+used
+,
+and
+their
+motions
+aren
+’
+t
+symmetrical
+-
+Hand
+shapes
+change
+during
+the
+sign
+DOMINANT
+HAND
+DISTANCES
+:
+-
+Distance
+from
+dominant
+hand
+to
+head
+:
+[
+close
+,
+touching
+,
+close
+,
+medium
+]
+DISTANCE
+BETWEEN
+HANDS
+:
+-
+Distance
+from
+dominant
+hand
+to
+non
+-
+dominant
+hand
+:
+[
+spread
+,
+medium
+,
+close
+]
+HAND
+ORIENTATIONS
+:
+-
+Palm
+orientation
+-
+dominant
+hand
+:
+[
+sideways
+,
+in
+]
+-
+Palm
+orientation
+-
+non
+-
+dominant
+hand
+:
+[
+up
+]
+},
+{
+"
+role
+":
+"
+model
+",
+"
+content
+":
+{
+"
+Description
+1":
+"
+The
+dominant
+touches
+the
+head
+with
+its
+extended
+index
+finger
+and
+the
+palm
+facing
+sideways
+.
+Then
+the
+hands
+move
+toward
+each
+other
+,
+both
+held
+flat
+,
+with
+the
+non
+-
+dominant
+hand
+turned
+upward
+.
+The
+motion
+ends
+with
+the
+back
+of
+the
+dominant
+hand
+turned
+towards
+the
+palm
+of
+the
+non
+-
+dominant
+hand
+.",
+"
+Description
+2":
+"
+The
+individual
+touches
+her
+head
+with
+the
+pointed
+index
+finger
+of
+her
+dominant
+hand
+,
+with
+the
+palm
+facing
+sideways
+.
+Then
+,
+she
+moves
+both
+hands
+toward
+each
+other
+,
+holding
+them
+flat
+,
+with
+the
+dominant
+hand
+turning
+inward
+and
+the
+non
+-
+dominant
+hand
+turned
+upward
+,
+to
+end
+the
+motion
+with
+the
+back
+of
+the
+dominant
+hand
+facing
+the
+palm
+of
+the
+non
+-
+dominant
+hand
+.",
+Algorithm 5
+Prompt for LLM(Phonology + HMS) text generation. (Algorithm 4 continued)
+⬇
+"
+Description
+3":
+"
+Move
+your
+dominant
+index
+finger
+to
+your
+head
+.
+Then
+,
+bring
+both
+hands
+toward
+each
+other
+,
+keeping
+them
+flat
+,
+with
+the
+non
+-
+dominant
+hand
+palm
+facing
+up
+.
+Ensure
+to
+end
+the
+movement
+with
+the
+back
+of
+your
+dominant
+hand
+facing
+the
+palm
+of
+your
+non
+-
+dominant
+hand
+.",
+"
+Comment
+":
+"
+The
+distance
+sequence
+from
+the
+dominant
+hand
+to
+the
+head
+indicates
+that
+the
+motion
+starts
+near
+the
+head
+and
+then
+farther
+away
+from
+it
+.
+On
+the
+contrary
+,
+the
+distance
+sequence
+between
+the
+dominant
+hand
+and
+the
+non
+-
+dominant
+hand
+indicates
+that
+the
+dominant
+hand
+starts
+far
+away
+from
+the
+non
+-
+dominant
+hand
+and
+gets
+closer
+to
+it
+during
+the
+motion
+.
+From
+these
+2
+points
+you
+deduce
+that
+the
+dominant
+hand
+starts
+by
+touching
+the
+head
+,
+then
+that
+both
+hands
+move
+toward
+each
+other
+.
+All
+the
+points
+don
+’
+t
+need
+to
+be
+included
+in
+each
+of
+the
+descriptions
+,
+especially
+when
+they
+seem
+redundant
+or
+necessary
+.
+For
+instance
+,
+if
+the
+dominant
+hand
+goes
+from
+the
+head
+to
+the
+non
+-
+dominant
+,
+that
+the
+non
+-
+dominant
+hand
+palm
+is
+facing
+up
+,
+and
+that
+the
+dominant
+hand
+meets
+the
+non
+-
+dominant
+hand
+palm
+with
+its
+back
+,
+then
+the
+dominant
+hand
+will
+necessarily
+face
+in
+during
+this
+motion
+."
+}
+}
+},
+{
+{
+"
+role
+":
+"
+user
+",
+"
+content
+":
+"
+Use
+the
+information
+to
+describe
+the
+corresponding
+motion
+.
+The
+comment
+section
+of
+the
+model
+answers
+,
+when
+present
+,
+is
+here
+for
+your
+reference
+as
+indications
+of
+the
+correct
+practices
+of
+the
+task
+,
+it
+is
+not
+to
+be
+included
+in
+your
+own
+output
+.
+ATTRIBUTES
+:
+-
+Initial
+dominant
+hand
+shape
+:
+The
+fingers
+are
+held
+together
+and
+tightly
+bent
+into
+a
+fist
+.
+-
+Initial
+non
+-
+dominant
+hand
+shape
+:
+The
+fingers
+are
+held
+together
+and
+tightly
+bent
+into
+a
+fist
+.
+-
+Final
+dominant
+hand
+shape
+:
+The
+fingers
+are
+held
+together
+and
+tightly
+bent
+into
+a
+fist
+.
+-
+Final
+non
+-
+dominant
+hand
+shape
+:
+The
+fingers
+are
+held
+together
+and
+tightly
+bent
+into
+a
+fist
+.
+-
+Initial
+sign
+location
+:
+Shoulder
+-
+Final
+sign
+location
+:
+Chest
+level
+-
+Dominant
+hand
+part
+facing
+the
+shoulder
+during
+the
+initial
+part
+of
+the
+motion
+:
+Dorsal
+side
+-
+Dominant
+hand
+part
+facing
+the
+chest
+during
+the
+final
+part
+of
+the
+motion
+:
+Dorsal
+side
+-
+Initial
+subordinate
+hand
+part
+facing
+the
+shoulder
+:
+Dorsal
+side
+-
+Final
+subordinate
+hand
+part
+facing
+the
+shoulder
+:
+Dorsal
+side
+-
+Both
+hands
+are
+used
+,
+with
+same
+hand
+shape
+on
+both
+hands
+-
+The
+movement
+is
+symmetrical
+,
+meaning
+both
+hands
+are
+doing
+the
+same
+motions
+at
+the
+same
+time
+DOMINANT
+HAND
+DISTANCES
+:
+-
+Distance
+from
+dominant
+hand
+to
+non
+-
+dominant
+shoulder
+:
+[
+medium
+]
+-
+Distance
+from
+dominant
+hand
+to
+dominant
+shoulder
+:
+[
+close
+]
+-
+Distance
+from
+dominant
+hand
+to
+torso
+:
+[
+close
+]
+NON
+-
+DOMINANT
+HAND
+DISTANCES
+:
+-
+Distance
+from
+non
+-
+dominant
+hand
+to
+dominant
+shoulder
+:
+[
+medium
+]
+-
+Distance
+from
+non
+-
+dominant
+hand
+to
+non
+-
+dominant
+shoulder
+:
+[
+close
+]
+-
+Distance
+from
+non
+-
+dominant
+hand
+to
+torso
+:
+[
+close
+]
+HAND
+ORIENTATIONS
+:
+-
+Palm
+orientation
+-
+dominant
+hand
+:
+[
+in
+]
+-
+Palm
+orientation
+-
+non
+-
+dominant
+hand
+:
+[
+in
+]"
+},
+{
+"
+role
+":
+"
+model
+",
+"
+content
+":
+{
+"
+Description
+1":
+"
+Both
+hands
+form
+a
+fist
+,
+and
+are
+turned
+inward
+.
+They
+move
+near
+their
+respective
+shoulders
+.",
+"
+Description
+2":
+"
+The
+person
+bends
+all
+his
+fingers
+into
+a
+fist
+,
+turning
+them
+inward
+with
+the
+dorsal
+side
+of
+the
+hand
+facing
+the
+shoulders
+.
+He
+then
+moves
+his
+fists
+close
+to
+their
+respective
+shoulders
+.",
+"
+Description
+3":
+"
+Form
+a
+fist
+with
+both
+hands
+,
+turning
+them
+inward
+.
+Move
+your
+fists
+close
+to
+your
+shoulders
+.",
+"
+Comment
+":
+"
+When
+the
+shoulders
+are
+mentioned
+in
+the
+location
+,
+you
+need
+to
+deduce
+which
+shoulder
+each
+hand
+is
+located
+at
+,
+usually
+by
+checking
+which
+shoulder
+each
+hand
+is
+the
+closest
+to
+-
+here
+their
+respective
+shoulders
+.
+The
+hand
+part
+facing
+the
+shoulder
+sections
+and
+the
+palm
+orientation
+sections
+are
+redundant
+.
+In
+this
+case
+,
+alternate
+the
+vocabulary
+between
+descriptions
+."
+}
+}
+},
+Algorithm 6
+Prompt for LLM(Phonology + HMS) text generation. (Algorithm 5 continued)
+⬇
+{
+{
+"
+role
+":
+"
+user
+",
+"
+content
+":
+"
+Use
+the
+information
+to
+describe
+the
+corresponding
+motion
+.
+The
+comment
+section
+of
+the
+model
+answers
+,
+when
+present
+,
+is
+here
+for
+your
+reference
+as
+indications
+of
+the
+correct
+practices
+of
+the
+task
+,
+it
+is
+not
+to
+be
+included
+in
+your
+own
+output
+.
+ATTRIBUTES
+:
+-
+Initial
+dominant
+hand
+shape
+:
+The
+little
+finger
+is
+extended
+,
+all
+the
+other
+fingers
+are
+curled
+on
+the
+palm
+-
+Initial
+non
+-
+dominant
+hand
+shape
+:
+The
+hand
+is
+held
+flat
+with
+the
+fingers
+held
+together
+.
+-
+Final
+dominant
+hand
+shape
+:
+The
+little
+finger
+is
+extended
+,
+all
+the
+other
+fingers
+are
+curled
+on
+the
+palm
+-
+Final
+non
+-
+dominant
+hand
+shape
+:
+The
+hand
+is
+held
+flat
+with
+the
+fingers
+held
+together
+.
+-
+Initial
+dominant
+hand
+location
+:
+In
+front
+of
+the
+person
+-
+Final
+dominant
+hand
+location
+:
+In
+front
+of
+the
+person
+-
+Location
+on
+the
+dominant
+hand
+that
+the
+non
+-
+dominant
+hand
+is
+facing
+:
+Ulnar
+side
+-
+Location
+on
+the
+non
+-
+dominant
+hand
+that
+the
+dominant
+hand
+is
+facing
+:
+Palm
+side
+-
+Forearm
+rotation
+-
+Both
+hands
+are
+used
+,
+and
+their
+motions
+aren
+’
+t
+symmetrical
+-
+Both
+hands
+are
+used
+,
+the
+dominant
+hand
+moves
+,
+the
+non
+-
+dominant
+hand
+is
+still
+DISTANCE
+BETWEEN
+HANDS
+:
+-
+Distance
+from
+dominant
+hand
+to
+non
+-
+dominant
+hand
+:
+[
+close
+,
+medium
+]
+HAND
+ORIENTATIONS
+:
+-
+Palm
+orientation
+-
+dominant
+hand
+:
+[
+up
+,
+out
+]
+-
+Palm
+orientation
+-
+non
+-
+dominant
+hand
+:
+[
+up
+]"
+},
+{
+"
+role
+":
+"
+model
+",
+"
+content
+":
+{
+"
+Description
+1":
+"
+The
+non
+-
+dominant
+hand
+is
+held
+flat
+with
+the
+palm
+facing
+up
+.
+The
+dominant
+hand
+,
+starting
+with
+the
+little
+finger
+extended
+from
+the
+fist
+,
+palm
+facing
+up
+and
+its
+ulnar
+side
+on
+the
+non
+-
+dominant
+hand
+,
+moves
+away
+from
+the
+non
+-
+dominant
+hand
+.",
+"
+Description
+2":
+"
+The
+person
+holds
+their
+non
+-
+dominant
+hand
+flat
+with
+the
+palm
+facing
+upward
+.
+Their
+dominant
+hand
+begins
+in
+a
+fist
+with
+only
+the
+little
+finger
+extended
+,
+palm
+also
+facing
+up
+,
+and
+the
+little
+finger
+edge
+of
+the
+hand
+resting
+on
+the
+non
+-
+dominant
+palm
+.
+They
+then
+move
+the
+dominant
+hand
+away
+from
+the
+non
+-
+dominant
+hand
+.",
+"
+Description
+3":
+"
+Hold
+the
+non
+-
+dominant
+hand
+flat
+with
+the
+palm
+facing
+upward
+.
+Form
+a
+fist
+with
+the
+dominant
+hand
+,
+extending
+only
+the
+little
+finger
+,
+and
+position
+it
+palm
+up
+with
+the
+ulnar
+edge
+resting
+on
+the
+non
+-
+dominant
+palm
+.
+Then
+move
+the
+dominant
+hand
+away
+from
+the
+non
+-
+dominant
+hand
+."
+}
+}
+}
