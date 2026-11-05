@@ -1,0 +1,27 @@
+CONFIG_FOLDER: configs
+FOLDER: /home/haipd/SLP/third_party/SOKE/experiments
+TEST:
+  FOLDER: /home/haipd/SLP/third_party/SOKE/results
+DATASET:
+  TASK_ROOT: deps/mGPT_instructions
+  SMPL_PATH: deps/smpl
+  TRANSFORM_PATH: deps/transforms/
+  WORD_VERTILIZER_PATH: deps/t2m/glove/
+  KIT:
+    ROOT: datasets/kit-ml
+    SPLIT_ROOT: datasets/kit-ml
+    MEAN_STD_PATH: deps/t2m/
+  HUMANML3D:
+    ROOT: datasets/humanml3d
+    SPLIT_ROOT: datasets/humanml3d
+    MEAN_STD_PATH: deps/t2m/
+METRIC:
+  TM2T:
+    t2m_path: deps/t2m/
+model:
+  whisper_path: deps/whisper-large-v2
+RENDER:
+  BLENDER_PATH: libs/blender-2.93.2-linux-x64/blender
+  SMPL_MODEL_PATH: deps/smpl/smpl_models/smpl
+  MODEL_PATH: deps/smpl/smpl_models/
+  FACES_PATH: deps/smplh/smplh.faces

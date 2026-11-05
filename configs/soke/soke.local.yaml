@@ -1,0 +1,82 @@
+# Local single-GPU configuration. Dataset paths require prepared SOKE data.
+NAME: SOKE
+ACCELERATOR: gpu
+NUM_NODES: 1
+DEVICE:
+- 0
+TRAIN:
+  STAGE: lm_pretrain
+  NUM_WORKERS: 4
+  BATCH_SIZE: 8
+  END_EPOCH: 150
+  RESUME: ''
+  PRETRAINED: ''
+  PRETRAINED_VAE: /home/haipd/SLP/third_party/SOKE/checkpoints/tokenizer.ckpt
+  OPTIM:
+    target: AdamW
+    params:
+      lr: 2e-4
+      betas:
+      - 0.9
+      - 0.99
+      weight_decay: 0.0
+  LR_SCHEDULER:
+    target: CosineAnnealingLR
+    params:
+      T_max: ${TRAIN.END_EPOCH}
+      eta_min: 1e-6
+EVAL:
+  BATCH_SIZE: 2
+  SPLIT: val
+  NUM_WORKERS: 4
+TEST:
+  CHECKPOINTS: /home/haipd/SLP/third_party/SOKE/experiments/mgpt/SOKE/checkpoints/last.ckpt
+  SPLIT: test
+  BATCH_SIZE: 2
+  REPLICATION_TIMES: 1
+  SAVE_PREDICTIONS: false
+  NUM_WORKERS: 4
+DATASET:
+  target: mGPT.data.H2S.H2SDataModule
+  H2S:
+    DATASET_NAME: how2sign_csl_phoenix
+    ROOT: /home/haipd/SLP/data/raw/soke/How2Sign
+    CSL_ROOT: /home/haipd/SLP/data/raw/soke/CSL-Daily
+    PHOENIX_ROOT: /home/haipd/SLP/data/raw/soke/Phoenix_2014T
+    MEAN_PATH: /home/haipd/SLP/third_party/SOKE/deps/stats/mean.pt
+    STD_PATH: /home/haipd/SLP/third_party/SOKE/deps/stats/std.pt
+    MAX_MOTION_LEN: 400
+    MIN_MOTION_LEN: 40
+    MAX_TEXT_LEN: 40
+    PICK_ONE_TEXT: true
+    FRAME_RATE: 20.0
+    UNIT_LEN: 4
+    STD_TEXT: false
+  CODE_PATH: TOKENS_h2s_csl_phoenix
+METRIC:
+  TYPE:
+  - TM2TMetrics
+LOSS:
+  LAMBDA_FEATURE: 1.0
+  LAMBDA_VELOCITY: 0.0
+  LAMBDA_COMMIT: 0.02
+  LAMBDA_CLS: 1.0
+  ABLATION:
+    RECONS_LOSS: l1_smooth
+model:
+  target: mGPT.models.mgpt.MotionGPT
+  params:
+    condition: text
+    task: t2m
+    lm: ${lm.mbart_h2s_csl_phoenix}
+    motion_vae: ${vq.re96}
+    hand_vae_cfg: ${vq.hand192}
+    rhand_vae_cfg: ${vq.hand192}
+LOGGER:
+  TYPE:
+  - wandb
+  VAL_EVERY_STEPS: 5
+  WANDB:
+    params:
+      project: SLG
+      offline: true

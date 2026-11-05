@@ -1,0 +1,37 @@
+# Local single-GPU MaDiS evaluation of the released Phoenix SFT checkpoint on the DEV split.
+# Run from third_party/MaDiS:  .venv/bin/python test.py --cfg /home/haipd/SLP/configs/madis/madis_phoenix.dev.yaml --nodebug
+NAME: madis_phoenix_dev
+ACCELERATOR: gpu
+NUM_NODES: 1
+DEVICE: [0]
+TRAIN:
+  STAGE: lm_instruct
+  PRETRAINED_VAE: /home/haipd/SLP/third_party/MaDiS/hf_assets/tokenizer.ckpt
+TEST:
+  CHECKPOINTS: /home/haipd/SLP/third_party/MaDiS/hf_assets/sft_phoenix.ckpt
+  SPLIT: val
+  BATCH_SIZE: 8
+  NUM_WORKERS: 4
+  SAVE_PREDICTIONS: true
+  FOLDER: /home/haipd/SLP/outputs/madis
+EVAL:
+  BATCH_SIZE: 8
+  NUM_WORKERS: 4
+DATASET:
+  CODE_PATH: /home/haipd/SLP/third_party/MaDiS/hf_extract/tokens/TOKENS_h2s_csl_phoenix
+  H2S:
+    DATASET_NAME: phoenix
+    ROOT: /home/haipd/SLP/data/processed/madis/How2Sign
+    CSL_ROOT: /home/haipd/SLP/data/processed/madis/CSL-Daily
+    PHOENIX_ROOT: /home/haipd/SLP/data/processed/madis/Phoenix_2014T
+    MEAN_PATH: /home/haipd/SLP/third_party/MaDiS/hf_assets/mean.pt
+    STD_PATH: /home/haipd/SLP/third_party/MaDiS/hf_assets/std.pt
+    MAX_MOTION_LEN: 400
+    MIN_MOTION_LEN: 40
+    UNIT_LEN: 4
+lm:
+  madis:
+    params:
+      model_path: /home/haipd/SLP/third_party/MaDiS/hf_extract/qwen/Qwen3-0.6B-Base-en-zh-de
+LOGGER:
+  TYPE: []
