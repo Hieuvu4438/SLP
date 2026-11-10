@@ -1,0 +1,14 @@
+{
+  "url": "https://cogvis-cvssp.github.io/papers/signspark/",
+  "artifact": "third_party/proposal3_sources/input_screen/e5d6fe2076aa0605.json",
+  "read_status": "not_read",
+  "input_labels": [
+    "[SignSparK](https://cogvis-cvssp.github.io/papers/signspark/?utm_source=chatgpt.com)"
+  ],
+  "http_status": 200,
+  "sha256": "7d844b06672eb4d92bf4b6973ca156c9bd59e2b28ed9fd918b4db169255465fe",
+  "title": "SignSparK — Multilingual Sign Language Production",
+  "abstract": "Abstract Sign Language Production (SLP) faces a fundamental trade-off: direct text-to-pose models suffer\n      from regression-to-the-mean effects, while dictionary-retrieval methods produce disjointed\n      transitions. To resolve this, we propose a novel training paradigm that leverages sparse keyframes to capture the underlying kinematic distribution of human\n      signing. By generating dense motion from discrete anchors, our approach mitigates\n      regression-to-the-mean while ensuring fluid articulation. To achieve this at scale, we introduce FAST , an ultra-efficient sign segmentation model that automatically mines\n      precise temporal boundaries. We then present SignSparK , a Conditional Flow Matching (CFM) framework that utilizes these temporal anchors to\n      synthesize 3D signing sequences. This keyframe-driven formulation also unlocks Keyframe-to-Pose (KF2P) generation, making precise spatiotemporal editing of\n      signing sequences possible. Furthermore, SignSparK scales across four distinct sign\n      languages , constituting the largest multilingual SLP framework to date, and integrates 3D Gaussian Splatting for photorealistic rendering. Extensive evaluations\n      demonstrate that SignSparK achieves state-of-the-art across diverse SLP tasks and multilingual\n      benchmarks.",
+  "preview": "",
+  "status": "acquired_not_read"
+}

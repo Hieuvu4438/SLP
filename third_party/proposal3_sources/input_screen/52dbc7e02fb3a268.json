@@ -1,0 +1,14 @@
+{
+  "url": "https://proceedings.iclr.cc/paper_files/paper/2024/hash/24161b531db5b1483e1b3842a204860f-Abstract-Conference.html",
+  "artifact": "third_party/proposal3_sources/input_screen/52dbc7e02fb3a268.json",
+  "read_status": "not_read",
+  "input_labels": [
+    "**PriorMDM**"
+  ],
+  "http_status": 200,
+  "sha256": "c15bf58ecffd7e2355cc25a7e2fc86333e28b0165d7aaa15b43bf2c53d820950",
+  "title": "Human Motion Diffusion as a Generative Prior",
+  "abstract": "",
+  "preview": "Human Motion Diffusion as a Generative Prior Bibtex Paper Supplementary Abstract Recent work has demonstrated the significant potential of denoising diffusion modelsfor generating human motion, including text-to-motion capabilities.However, these methods are restricted by the paucity of annotated motion data,a focus on single-person motions, and a lack of detailed control.In this paper, we introduce three forms of composition based on diffusion priors:sequential, parallel, and model composition.Using sequential composition, we tackle the challenge of long sequencegeneration. We introduce DoubleTake, an inference-time method with whichwe generate long animations consisting of sequences of prompted intervalsand their transitions, using a prior trained only for short clips.Using parallel composition, we show promising steps toward two-person generation.Beginning with two fixed priors as well as a few two-person training examples, we learn a slimcommunication block, ComMDM, to coordinate interaction between the two resulting motions.Lastly, using model composition, we first train individual priorsto complete motions that realize a prescribed motion for a given joint.We then introduce DiffusionBlending, an interpolation mechanism to effectively blend severalsuch models to enable flexible and efficient fine-grained joint and trajectory-level control and editing.We evaluate the composition methods using an off-the-shelf motion diffusion model,and further compare the results to dedicated models trained for these specific tasks. Name Change Policy × Requests for name changes in the electronic proceedings will be accepted with no questions asked. However name changes may cause bibliographic tracking issues. Authors are asked to consider this carefully and discuss it with their co-authors prior to requesting a name change in the electronic proceedings. Use the \"Report an Issue\" link to request a name change. Do not remove: This comment is monitored to verify that the site is working properly",
+  "status": "acquired_not_read"
+}

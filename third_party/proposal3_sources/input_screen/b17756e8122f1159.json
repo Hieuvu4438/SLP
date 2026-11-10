@@ -1,0 +1,14 @@
+{
+  "url": "https://proceedings.iclr.cc/paper_files/paper/2026/hash/7a4cf58610e1c911e06970c8d75b86dc-Abstract-Conference.html",
+  "artifact": "third_party/proposal3_sources/input_screen/b17756e8122f1159.json",
+  "read_status": "not_read",
+  "input_labels": [
+    "**Motion-R1**"
+  ],
+  "http_status": 200,
+  "sha256": "922cd98a523ec94ab9910ec19ad477c2eb50c5ac54e4ee7bd6ee148fdecc0587",
+  "title": "Motion-R1: Enhancing Motion Generation with Decomposed Chain-of-Thought and RL Binding",
+  "abstract": "",
+  "preview": "Motion-R1: Enhancing Motion Generation with Decomposed Chain-of-Thought and RL Binding Bibtex Paper Supplemental Abstract Text-to-Motion generation has become a fundamental task in human-machine interaction, enabling the synthesis of realistic human motions from natural language descriptions. Although recent advances in large language models and reinforcement learning have contributed to high-quality motion generation, two major challenges remain. Existing approaches often fail to capture the temporal and causal complexities inherent in natural language, leading to oversimplified or incoherent motions. Additionally, RL-based methods are frequently overly complex, hindering their scalability and adaptability across various motion generation tasks. To address these challenges, we propose Motion-R1 , a novel framework that combines decomposed Chain-of-Thought reasoning with reinforcement learning to enhance both the quality and interpretability of generated motions. Specifically, we introduce the Decomposed CoT Data Engine , which leverages an automated pipeline to synthesize high-quality reasoning data, allowing the model to better capture the temporal dependencies and causal relationships of human motion. We also propose RL Binding , a reinforcement learning strategy that incorporates multi-modal text-motion alignment into the RL reward function, guiding the model to produce motions that are both semantically accurate and motionally realistic. Extensive experiments across benchmark datasets demonstrate that Motion-R1 achieves state-of-the-art performance, with a 3.5\\% improvement in MM-Dist on HumanML3D and improvements in R-Precision and FID on KIT-ML and BABEL, surpassing existing methods across key metrics and highlighting its superior capability in handling complex motion generation tasks. Name Change Policy × Requests for name changes in the electronic proceedings will be accepted with no questions asked. However name changes may cause bibliographic tracking issues. Authors are asked to consider this carefully and discuss it with their co-authors prior to requesting a name change in the electronic proceedings. Use the \"Report an Issue\" link to request a name",
+  "status": "acquired_not_read"
+}

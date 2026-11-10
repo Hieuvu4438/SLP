@@ -1,0 +1,14 @@
+{
+  "url": "https://openaccess.thecvf.com/content/WACV2026/html/Kundu_DexAvatar_3D_Sign_Language_Reconstruction_with_Hand_and_Body_Pose_WACV_2026_paper.html",
+  "artifact": "third_party/proposal3_sources/input_screen/53b4093350d872d3.json",
+  "read_status": "not_read",
+  "input_labels": [
+    "[DexAvatar](https://openaccess.thecvf.com/content/WACV2026/html/Kundu_DexAvatar_3D_Sign_Language_Reconstruction_with_Hand_and_Body_Pose_WACV_2026_paper.html?utm_source=chatgpt.com)"
+  ],
+  "http_status": 200,
+  "sha256": "c2bd815506ad68e6b08ffdafdc2db737e652da309276b4f73a70ffff90992c3e",
+  "title": "WACV 2026 Open Access Repository",
+  "abstract": "The trend in sign language generation is centered around data-driven generative methods that require vast amounts of precise 2D and 3D human pose data to achieve an acceptable generation quality. However, currently, most sign language datasets are video-based and limited to automatically reconstructed 2D human poses (i.e., keypoints) and lack accurate 3D information. Furthermore, existing state-of-the-art for automatic 3D human pose estimation from sign language videos is prone to self-occlusion, noise, and motion blur effects, resulting in poor reconstruction quality. In response to this, we introduce DexAvatar, a novel framework to reconstruct bio-mechanically accurate fine-grained hand articulations and body movements from in-the-wild monocular sign language videos, guided by learned 3D hand and body priors. DexAvatar achieves strong performance in the SGNify motion capture dataset, the only benchmark available for this task, reaching an improvement of 35.11% in the estimation of body and hand poses compared to the state-of-the-art. The official website of this work is: https://github.com/kaustesseract/DexAvatar.",
+  "preview": "",
+  "status": "acquired_not_read"
+}

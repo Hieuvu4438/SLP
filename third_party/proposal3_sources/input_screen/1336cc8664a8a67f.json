@@ -1,0 +1,14 @@
+{
+  "url": "https://www.ecva.net/papers/eccv_2024/papers_ECCV/html/653_ECCV_2024_paper.php",
+  "artifact": "third_party/proposal3_sources/input_screen/1336cc8664a8a67f.json",
+  "read_status": "not_read",
+  "input_labels": [
+    "[SignAvatars](https://www.ecva.net/papers/eccv_2024/papers_ECCV/html/653_ECCV_2024_paper.php?utm_source=chatgpt.com)"
+  ],
+  "http_status": 200,
+  "sha256": "cd37cd762b46ef5f396dc6ca0f786fef4326d6690213d060816dab24864f995b",
+  "title": "ECVA | European Computer Vision Association",
+  "abstract": "\"We present SignAvatars1 , the first large-scale, multi-prompt 3D sign language (SL) motion dataset designed to bridge the communication gap for Deaf and hard-of-hearing individuals. While there has been an exponentially growing number of research regarding digital communication, the majority of existing communication technologies primarily cater to spoken or written languages, instead of SL, the essential communication method for Deaf and hard-of-hearing communities. Existing SL datasets, dictionaries, and sign language production (SLP) methods are typically limited to 2D as annotating 3D models and avatars for SL is usually an entirely manual and labor-intensive process conducted by SL experts, often resulting in unnatural avatars. In response to these challenges, we compile and curate the SignAvatars dataset, which comprises 70,000 videos from 153 signers, totaling 8.34 million frames, covering both isolated signs and continuous, co-articulated signs, with multiple prompts including HamNoSys, spoken language, and words. To yield 3D holistic annotations, including meshes and biomechanically-valid poses of body, hands, and face, as well as 2D and 3D keypoints, we introduce an automated annotation pipeline operating on our large corpus of SL videos. SignAvatars facilitates various tasks such as 3D sign language recognition (SLR) and the novel 3D SL production (SLP) from diverse inputs like text scripts, individual words, and HamNoSys notation. Hence, to evaluate the potential of SignAvatars, we further propose a unified benchmark of 3D SL holistic motion production. We believe that this work is a significant step forward towards bringing the digital world to the Deaf and hard-of-hearing communities as well as people interacting with them. 1 https://signavatars.github.io/\"",
+  "preview": "",
+  "status": "acquired_not_read"
+}

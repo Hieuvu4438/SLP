@@ -1,0 +1,14 @@
+{
+  "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Huang_Unified_Number-Free_Text-to-Motion_Generation_Via_Flow_Matching_CVPR_2026_paper.html",
+  "artifact": "third_party/proposal3_sources/input_screen/34f61071b33817c4.json",
+  "read_status": "not_read",
+  "input_labels": [
+    "**UMF**"
+  ],
+  "http_status": 200,
+  "sha256": "759f48ee79b401afc5daf275bf83c9ad1433baafcf020fe5d59473b6d683e1a5",
+  "title": "CVPR 2026 Open Access Repository",
+  "abstract": "Generative models excel at motion synthesis for a fixed number of agents but struggle to generalize with variable agents. Based on limited, domain-specific data, existing methods employ autoregressive models to generate motion recursively, which suffer from inefficiency and error accumulation. We propose Unified Motion Flow (UMF), which consists of Pyramid Motion Flow (P-Flow) and Semi-Noise Motion Flow (S-Flow). UMF decomposes the number-free motion generation into a single-pass motion prior generation stage and multi-pass reaction generation stages. Specifically, UMF utilizes a unified latent space to bridge the distribution gap between heterogeneous motion datasets, enabling effective unified training. For motion prior generation, P-Flow operates on hierarchical resolutions conditioned on different noise levels, thereby mitigating computational overheads. For reaction generation, S-Flow learns a joint probabilistic path that adaptively performs reaction transformation and context reconstruction, alleviating error accumulation. Extensive results and user studies demonstrate UMF's effectiveness as a generalist model for multi-person motion generation from text. Project page: https://githubhgh.github.io/umf/.",
+  "preview": "",
+  "status": "acquired_not_read"
+}

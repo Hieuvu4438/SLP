@@ -1,0 +1,14 @@
+{
+  "url": "https://proceedings.iclr.cc/paper_files/paper/2026/hash/2fbfefa47aadd5d583439590693b2dcc-Abstract-Conference.html",
+  "artifact": "third_party/proposal3_sources/input_screen/5ca344046c408a73.json",
+  "read_status": "not_read",
+  "input_labels": [
+    "**MATE**"
+  ],
+  "http_status": 200,
+  "sha256": "d3f95d4a3fbc1cdfecfb4c30cd7b519a21f0852abefc1cb6156436e87053af79",
+  "title": "Motion-Aligned Word Embeddings for Text-to-Motion Generation",
+  "abstract": "",
+  "preview": "Motion-Aligned Word Embeddings for Text-to-Motion Generation Bibtex Paper Supplemental Abstract Existing text-to-motion (T2M) generation models typically rely on pretrained large language models to encode textual inputs. However, these models, trained on generic text corpora, lack explicit alignment between motion-related words (e.g., \"clockwise'', \"quickly'') and human skeletal movements. This misalignment, fundamentally rooted in the word embedding layers, severely limits the ability of T2M models to understand and generalize fine-grained motion semantics. To tackle this issue, we propose Motion-Aligned Text Encoding (MATE), a novel framework that explicitly incorporates motion semantics into the word embedding layers of large language models to enhance text-motion alignment for motion generation. To address the challenge of inherent semantic entanglement in motion sequences, MATE introduces two key components: 1) a motion localization strategy that establishes localized correspondences between sub-texts and motion segments, enabling soft attention guidance for semantic localization; and 2) a motion disentanglement module that isolates word-specific motion semantics via contrastive kinematic prototypes, ensuring word-level alignment between linguistic and kinematic representations. Remarkably, language models enhanced with MATE can be seamlessly integrated into existing T2M methods, significantly surpassing state-of-the-art performance on two standard benchmarks with minimal modifications. Name Change Policy × Requests for name changes in the electronic proceedings will be accepted with no questions asked. However name changes may cause bibliographic tracking issues. Authors are asked to consider this carefully and discuss it with their co-authors prior to requesting a name change in the electronic proceedings. Use the \"Report an Issue\" link to request a name change. Do not remove: This comment is monitored to verify that the site is working properly",
+  "status": "acquired_not_read"
+}

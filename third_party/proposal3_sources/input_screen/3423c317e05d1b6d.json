@@ -1,0 +1,14 @@
+{
+  "url": "https://openaccess.thecvf.com/content/ICCV2021/html/Saunders_Mixed_SIGNals_Sign_Language_Production_via_a_Mixture_of_Motion_ICCV_2021_paper.html",
+  "artifact": "third_party/proposal3_sources/input_screen/3423c317e05d1b6d.json",
+  "read_status": "not_read",
+  "input_labels": [
+    "[Mixed SIGNals](https://openaccess.thecvf.com/content/ICCV2021/html/Saunders_Mixed_SIGNals_Sign_Language_Production_via_a_Mixture_of_Motion_ICCV_2021_paper.html?utm_source=chatgpt.com)"
+  ],
+  "http_status": 200,
+  "sha256": "a229d8204356e3f9cc225d6d253f8e9be67a1dc7d9f2e29a60cbb47f79b48d8c",
+  "title": "ICCV 2021 Open Access Repository",
+  "abstract": "It is common practice to represent spoken languages at their phonetic level. However, for sign languages, this implies breaking motion into its constituent motion primitives. Avatar based Sign Language Production (SLP) has traditionally done just this, building up animation from sequences of hand motions, shapes and facial expressions. However, more recent deep learning based solutions to SLP have tackled the problem using a single network that estimates the full skeletal structure.  We propose splitting the SLP task into two distinct jointly-trained sub-tasks. The first translation sub-task translates from spoken language to a latent sign language representation, with gloss supervision. Subsequently, the animation sub-task aims to produce expressive sign language sequences that closely resemble the learnt spatio-temporal representation. Using a progressive transformer for the translation sub-task, we propose a novel Mixture of Motion Primitives (MoMP) architecture for sign language animation. A set of distinct motion primitives are learnt during training, that can be temporally combined at inference to animate continuous sign language sequences. We evaluate on the challenging RWTH-PHOENIX-Weather-2014T(PHOENIX14T) dataset, presenting extensive ablation studies and showing that MoMP outperforms baselines in user evaluations. We achieve state-of-the-art back translation performance with an 11% improvement over competing results. Importantly, and for the first time, we showcase stronger performance for a full translation pipeline going from spoken language to sign, than from gloss to sign.",
+  "preview": "",
+  "status": "acquired_not_read"
+}

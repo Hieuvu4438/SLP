@@ -1,0 +1,11 @@
+{
+  "key": "blanc",
+  "url": "https://arxiv.org/html/2610.24109v1",
+  "retrieved_at": "2026-11-06T09:18:51.165375+00:00",
+  "kind": "html",
+  "http_status": 200,
+  "sha256": "72bdbe176fdc998e3a58570256e8fd1c6d950cfe175232bd3f8efe9fad333e9b",
+  "title": "BLANC: Adaptive Temporal Scheduling for Sign Language Production",
+  "chars": 60248,
+  "status": "acquired_not_read"
+}

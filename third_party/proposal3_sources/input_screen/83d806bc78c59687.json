@@ -1,0 +1,11 @@
+{
+  "url": "https://asia.siggraph.org/2024/presentation/?id=papers_114&sess=sess117",
+  "artifact": "third_party/proposal3_sources/input_screen/83d806bc78c59687.json",
+  "read_status": "not_read",
+  "input_labels": [
+    "**MotionFix / TMED**"
+  ],
+  "http_status": 403,
+  "status": "failed",
+  "error": "403 Client Error: Forbidden for url: https://asia.siggraph.org/2024/presentation/?id=papers_114&sess=sess117"
+}

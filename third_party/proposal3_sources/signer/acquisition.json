@@ -1,0 +1,11 @@
+{
+  "key": "signer",
+  "url": "https://arxiv.org/html/2506.07460",
+  "retrieved_at": "2026-11-06T09:18:51.164642+00:00",
+  "kind": "html",
+  "http_status": 200,
+  "sha256": "733e4e80288dc8b47ea2837faadb6ff44122023a3f6cf7f54934e5f2df9782a3",
+  "title": "SIGNER: Temporally Grounded Sign Language Generation via Time-Resolved Conditioning",
+  "chars": 32396,
+  "status": "acquired_not_read"
+}

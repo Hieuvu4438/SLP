@@ -1,0 +1,14 @@
+{
+  "url": "https://aclanthology.org/2026.acl-long.659/",
+  "artifact": "third_party/proposal3_sources/input_screen/44e7fe284a0c09b9.json",
+  "read_status": "not_read",
+  "input_labels": [
+    "[Stable Signer](https://aclanthology.org/2026.acl-long.659/?utm_source=chatgpt.com)"
+  ],
+  "http_status": 200,
+  "sha256": "211675d73f8f17758a89545026ecf24d1684631bf15a08190fb0be5ba5b987f8",
+  "title": "Stable Signer: Hierarchical Sign Language Generative Model - ACL Anthology",
+  "abstract": "Sen Fang, Yalin Feng, Hongbin Zhong, Yanxin Zhang, Dimitris N. Metaxas. Proceedings of the 64th Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers). 2026.",
+  "preview": "",
+  "status": "acquired_not_read"
+}

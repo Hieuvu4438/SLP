@@ -1,0 +1,54 @@
+{
+  "soke_tokenizer": {
+    "source": "https://drive.google.com/file/d/18HdPeXwz4O6LY4FZMC5BZ9rja4pcUTFk/view",
+    "source_listing": "https://github.com/2000ZRL/SOKE",
+    "path": "data/pretrained/race_sign/soke_tokenizer.ckpt",
+    "sha256": "1b225a317af368a84a37788be07c88af76582223c821d3c55734f73d6a18316c",
+    "purpose": "strict author VQ integration; no local experiment weights"
+  },
+  "madis": [
+    {
+      "file": "tokenizer.ckpt",
+      "sha256": "fcc63962aa3c6451fde09c4c8c8236b2b2bde2d37cc1e17b1131eb8d70aae8a9",
+      "source": "verified_author_download_cache",
+      "repository": "2000zrl/MaDiS"
+    },
+    {
+      "file": "sft_csl.ckpt",
+      "sha256": "0e25d94f478b83c8ec6d5d55a59cdadbd5e56afad22d34a38cbaf980457c70e3",
+      "source": "verified_author_download_cache",
+      "repository": "2000zrl/MaDiS"
+    },
+    {
+      "file": "mean.pt",
+      "sha256": "38041ea364a5b1e187f7d633edd3ae564e1f8771506b7390fee48e80e3de0c23",
+      "source": "verified_author_download_cache",
+      "repository": "2000zrl/MaDiS"
+    },
+    {
+      "file": "std.pt",
+      "sha256": "88ed5e7e9f484d35908088a22295fb6a8c05e1ad50f6dcf2018a253aa6bffee4",
+      "source": "verified_author_download_cache",
+      "repository": "2000zrl/MaDiS"
+    },
+    {
+      "file": "Qwen3-0.6B-Base-en-zh-de.zip",
+      "sha256": "e19ba40a28eff22033873dab369053b767dcbc6fd889ceeb7dd2f1c686046ee6",
+      "source": "verified_author_download_cache",
+      "repository": "2000zrl/MaDiS"
+    }
+  ],
+  "note": "MaDiS binaries were reused only after SHA256 matched fresh author Hub LFS metadata. They are author checkpoints, not locally trained SLP runs.",
+  "soke_stats": [
+    {
+      "path": "data/pretrained/race_sign/soke_mean.pt",
+      "sha256": "38041ea364a5b1e187f7d633edd3ae564e1f8771506b7390fee48e80e3de0c23",
+      "source_listing": "https://github.com/2000ZRL/SOKE"
+    },
+    {
+      "path": "data/pretrained/race_sign/soke_std.pt",
+      "sha256": "88ed5e7e9f484d35908088a22295fb6a8c05e1ad50f6dcf2018a253aa6bffee4",
+      "source_listing": "https://github.com/2000ZRL/SOKE"
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "url": "https://researchonline.jcu.edu.au/93557/",
+  "artifact": "third_party/proposal3_sources/input_screen/e4a901dfdd72103f.json",
+  "read_status": "not_read",
+  "input_labels": [
+    "**Multimodal Generative AI for Human Motion Understanding and Generation: A Survey and Way Forward**"
+  ],
+  "http_status": 200,
+  "sha256": "9f2b01febd312689ea9f9c61e0cf3a239ccc70529714715bc246aa50a881e5e3",
+  "title": "Multimodal generative AI for human motion understanding and generation: A survey and way forward",
+  "abstract": "",
+  "preview": "Multimodal generative AI for human motion understanding and generation: A survey and way forward Multimodal generative AI for human motion understanding and generation: A survey and way forward - ResearchOnline@JCU Staff JCU App Library LearnJCU Contact Give ResearchOnline About Search Browse JCU Authors All Authors College or Centre Year Other Contact Us Login Login Multimodal generative AI for human motion understanding and generation: A survey and way forward Islam, Muhammad , Huang, Tao , Ahn, Euijoon , and Naseem, Usman (2026) Multimodal generative AI for human motion understanding and generation: A survey and way forward. Information Fusion, 135. 104435. Preview PDF (Published Version) - Published Version Available under License Creative Commons Attribution . Download (9MB) | Preview DOI: 10.1016/j.inffus.2026.104435 View at Publisher Website: https://doi.org/10.1016/j.inffus.2026.10... 1 Abstract This paper presents an in-depth survey of the use of multimodal Generative Artificial Intelligence (GenAI) with autoregressive Large Language Models (LLMs) for human motion understanding and generation, offering insights into emerging methods and architectures and their potential to advance realistic and versatile motion synthesis. Focusing exclusively on text and motion modalities, this research investigates how textual descriptions can guide the generation of complex, human-like motion sequences. The paper explores various generative approaches, in-cluding multimodal autoregressive LLMs, multimodal diffusion, and multimodal transformers and their variants, and analyzes their strengths and limitations with respect to motion quality, computational efficiency, and adapt-ability. It highlights recent advances in text-conditioned motion generation, where textual inputs are used to control and refine motion outputs with greater precision. The use of LLMs further enhances these models by enabling semantic alignment between instructions and motion, improving coherence and contextual relevance. This systematic survey underscores the transformative potential of text-to-motion GenAI and LLM architectures in applications such as healthcare, humanoids, gaming, animation, an",
+  "status": "acquired_not_read"
+}

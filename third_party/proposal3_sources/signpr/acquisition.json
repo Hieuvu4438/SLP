@@ -1,0 +1,11 @@
+{
+  "key": "signpr",
+  "url": "https://openaccess.thecvf.com/content/CVPR2026/papers/Liu_SignPR_A_Progressive_Vector-Quantized_Diffusion_Framework_for_Sign_Language_Production_CVPR_2026_paper.pdf",
+  "retrieved_at": "2026-11-06T09:18:52.007764+00:00",
+  "kind": "pdf",
+  "http_status": 200,
+  "sha256": "a586dac7e0e82e04dc25c0e7bbaa09eba5776676e4de4285b85214e59c872ac7",
+  "parser": "PyMuPDF",
+  "chars": 74504,
+  "status": "acquired_not_read"
+}

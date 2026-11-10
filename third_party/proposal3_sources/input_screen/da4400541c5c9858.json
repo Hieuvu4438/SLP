@@ -1,0 +1,14 @@
+{
+  "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Shi_GReg_Geometry-Aware_Region_Refinement_for_Sign_Language_Video_Generation_ICCV_2025_paper.html",
+  "artifact": "third_party/proposal3_sources/input_screen/da4400541c5c9858.json",
+  "read_status": "not_read",
+  "input_labels": [
+    "[GReg](https://openaccess.thecvf.com/content/ICCV2025/html/Shi_GReg_Geometry-Aware_Region_Refinement_for_Sign_Language_Video_Generation_ICCV_2025_paper.html?utm_source=chatgpt.com)"
+  ],
+  "http_status": 200,
+  "sha256": "be8e8b431de5394fdb36334949c539344e0bd08fbf5d01dcbf3f0de55138d953",
+  "title": "ICCV 2025 Open Access Repository",
+  "abstract": "Sign Language Video Generation (SLVG) aims to transform sign language sequences into natural and fluent sign language videos. Existing SLVG methods lack geometric modeling of human anatomical structures, leading to anatomically implausible and temporally inconsistent generation. To address these challenges, we propose a novel SLVG framework: Geometry-Aware Region Refinement (GReg). GReg uses 3D geometric information (such as normal maps and gradient maps) from the SMPL-X model to ensure anatomical and temporal consistency.To fully leverage the 3D geometric priors, we propose two novel methods: 1) Regional Prior Generation, which uses regional expert networks to generate target-structured regions as generation priors; 2) Gradient-Enhanced Refinement, which guides the refinement of detailed structures in key regions using gradient features.Furthermore, we enhance visual realism in key regions through adversarial training on both these regions and their gradient maps.Experimental results demonstrate that GReg achieves state-of-the-art performance with superior structural accuracy and temporal consistency.",
+  "preview": "",
+  "status": "acquired_not_read"
+}

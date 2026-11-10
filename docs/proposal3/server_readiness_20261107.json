@@ -1,0 +1,127 @@
+{
+  "date": "2026-11-07",
+  "dataset_status": {
+    "CSL-Daily": {
+      "train": {
+        "annotation_samples": 18399,
+        "available_pose_files": 18399,
+        "valid_pose_files": 18399,
+        "missing_or_empty_text": 0
+      },
+      "dev": {
+        "annotation_samples": 1077,
+        "available_pose_files": 1077,
+        "valid_pose_files": 1077,
+        "missing_or_empty_text": 0
+      },
+      "test": {
+        "annotation_samples": 1176,
+        "available_pose_files": 1176,
+        "valid_pose_files": 1176,
+        "missing_or_empty_text": 0
+      }
+    },
+    "Phoenix_2014T": {
+      "train": {
+        "annotation_samples": 7092,
+        "available_pose_files": 7092,
+        "valid_pose_files": 7092,
+        "missing_or_empty_text": 0
+      },
+      "dev": {
+        "annotation_samples": 519,
+        "available_pose_files": 519,
+        "valid_pose_files": 519,
+        "missing_or_empty_text": 0
+      },
+      "test": {
+        "annotation_samples": 642,
+        "available_pose_files": 642,
+        "valid_pose_files": 642,
+        "missing_or_empty_text": 0
+      }
+    },
+    "How2Sign": {
+      "train": {
+        "annotation_samples": 30965,
+        "available_pose_files": 30965,
+        "valid_pose_files": 30965,
+        "missing_or_empty_text": 0
+      },
+      "dev": {
+        "annotation_samples": 1724,
+        "available_pose_files": 1724,
+        "valid_pose_files": 1724,
+        "missing_or_empty_text": 0
+      },
+      "test": {
+        "annotation_samples": 2318,
+        "available_pose_files": 2318,
+        "valid_pose_files": 2318,
+        "missing_or_empty_text": 0
+      }
+    }
+  },
+  "raw_pose_files_checked": 63912,
+  "race_manifests_found": 0,
+  "required_csl_assets_present": true,
+  "free_disk_GiB": 203.01148986816406,
+  "gpu_snapshot": "NVIDIA RTX 5880 Ada Generation, 45939 MiB, 2581 MiB, 99 %",
+  "readiness": "CSL raw data and author assets are sufficient; RACE manifests/role allocation/caches must be created before training.",
+  "current_condition_estimate": {
+    "dataset": "CSL-Daily only",
+    "recipe_assumed": {
+      "decoder_train": 14719,
+      "decoder_dev": 1077,
+      "selector_train": 1840,
+      "selector_dev": 920,
+      "selector_calibration": 920,
+      "test_reserved": 1176
+    },
+    "decoder_epochs": 100,
+    "selector_epochs": 30,
+    "decoder_batch_measured": 4,
+    "selector_batch_measured": 8,
+    "precision": "FP32",
+    "gpu": "RTX 5880 Ada 48GB",
+    "contention": "Other live jobs occupy roughly 45-46 GiB / 48 GiB and 94-99% GPU utilization; not isolated. Default decoder batch 8 was not profiled successfully within our safety memory cap.",
+    "timing_inputs": {
+      "train_step_interpolated_seconds": 1.7056607236809984,
+      "validation_step_interpolated_seconds": 5.161366727358543,
+      "selector_step_interpolated_seconds": 11.694566772694829
+    },
+    "stages_hours": {
+      "decoder_training_100_epochs": 174.3564295318354,
+      "decoder_validation_100_epochs": 19.355125227594538,
+      "selector_training_30_epochs": 22.414586314331753,
+      "selector_validation_30_epochs": 11.207293157165877,
+      "selector_calibration_once": 0.37357643857219597,
+      "cpu_generated_preparation_3680_clips_single_observation": 5.687206509937015,
+      "candidate_cache_8_step_3680_clips_at_128_frames": 0.2736653999528951,
+      "teacher_preparation_budget_assumption": 1.0,
+      "alignment_io_startup_budget_assumption": 1.0
+    },
+    "total_profile_based_hours": 235.66788257938967,
+    "total_profile_based_days": 9.81949510747457,
+    "conservative_range_days": [
+      7.364621330605927,
+      12.274368884343211
+    ],
+    "optional_synthetic_stage_B_20_epochs_extra_hours": 38.74231095188599,
+    "assumptions": [
+      "80/10/5/5 allocation of the original official train set is planning only; no split manifests have been created.",
+      "Selector generated native length distribution is proxied by CSL real training lengths, capped at 400; actual rejection rate and length distribution are not known until preparation.",
+      "Training runtime includes the current repeated real SMPL-X geometry computations; no simplified geometry or skipped losses.",
+      "Frozen code/text features in GPU probes were synthetic, real pose values controlled tensor shapes; these are runtime probes, not model-quality training results.",
+      "No baseline LM pretraining/retraining or cross-fit generator training is included; use verified author pretrained checkpoints.",
+      "Only one real CPU generated-preparation observation and three teacher-preparation observations; preparation range remains rough.",
+      "No reliable exclusive-GPU or default-batch-8 ETA can be inferred from these contended probes."
+    ],
+    "ready": {
+      "raw_csl_dataset_complete": true,
+      "base_assets_available": true,
+      "race_manifests_available": false,
+      "production_training_started": false
+    }
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Han_AToM_Aligning_Text-to-Motion_Model_at_Event-Level_with_GPT-4Vision_Reward_CVPR_2025_paper.html",
+  "artifact": "third_party/proposal3_sources/input_screen/566123da6b14cf5b.json",
+  "read_status": "not_read",
+  "input_labels": [
+    "**AToM**"
+  ],
+  "http_status": 200,
+  "sha256": "679dfe61bbcbb8827cd474dbf0ff1d2c7fbebc1e3b1aba610d0686c60f642ef7",
+  "title": "CVPR 2025 Open Access Repository",
+  "abstract": "Recently, text-to-motion models open new possibilities for creating realistic human motion with greater efficiency and flexibility. However, aligning motion generation with event-level textual descriptions presents unique challenges due to the complex, nuanced relationship between textual prompts and desired motion outcomes. To address this issue, we introduce AToM, a framework that enhances the alignment between generated motion and text prompts by leveraging reward from GPT-4Vision. AToM comprises three main stages: Firstly, we construct a dataset MotionPrefer that pairs three types of event-level textual prompts with generated motions, which cover the integrity, temporal relationship and the frequency of motion. Secondly, we design a paradigm that utilizes GPT-4Vision for detailed motion annotation, including visual data formatting, task-specific instructions and scoring rules for each sub-task. Finally, we fine-tune an existing text-to-motion model using reinforcement learning guided by this paradigm. Experimental results demonstrate that AToM significantly improves the event-level alignment quality of text-to-motion generation.",
+  "preview": "",
+  "status": "acquired_not_read"
+}

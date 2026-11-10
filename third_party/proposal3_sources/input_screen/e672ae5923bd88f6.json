@@ -1,0 +1,12 @@
+{
+  "url": "https://ojs.aaai.org/index.php/AAAI/article/view/28441",
+  "artifact": "third_party/proposal3_sources/input_screen/e672ae5923bd88f6.json",
+  "read_status": "not_read",
+  "input_labels": [
+    "S6 ★",
+    "[G2P-DDM](https://ojs.aaai.org/index.php/AAAI/article/view/28441?utm_source=chatgpt.com)"
+  ],
+  "http_status": 520,
+  "status": "failed",
+  "error": "520 Server Error: <none> for url: https://ojs.aaai.org/index.php/AAAI/article/view/28441"
+}

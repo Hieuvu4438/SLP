@@ -1,0 +1,14 @@
+{
+  "url": "https://arxiv.org/abs/2504.06610",
+  "artifact": "third_party/proposal3_sources/input_screen/f39f6d599e1d52f5.json",
+  "read_status": "not_read",
+  "input_labels": [
+    "S13 ★"
+  ],
+  "http_status": 200,
+  "sha256": "0e21b22c41b6f0b340a2378048bcee8eccdfe64c039356b7d443eafff3e2483b",
+  "title": "[2504.06610] Disentangle and Regularize: Sign Language Production with Articulator-Based Disentanglement and Channel-Aware Regularization",
+  "abstract": "Abstract: In this work, we propose DARSLP, a simple gloss-free, transformer-based sign language production (SLP) framework that directly maps spoken-language text to sign pose sequences. We first train a pose autoencoder that encodes sign poses into a compact latent space using an articulator-based disentanglement strategy, where features corresponding to the face, right hand, left hand, and body are modeled separately to promote structured and interpretable representation learning. Next, a non-autoregressive transformer decoder is trained to predict these latent representations from word-level text embeddings of the input sentence. To guide this process, we apply channel-aware regularization by aligning predicted latent distributions with priors extracted from the ground-truth encodings using a KL divergence loss. The contribution of each channel to the loss is weighted according to its associated articulator region, enabling the model to account for the relative importance of different articulators during training. Our approach does not rely on gloss supervision or pretrained models, and achieves state-of-the-art results on the PHOENIX14T and CSL-Daily datasets.",
+  "preview": "",
+  "status": "acquired_not_read"
+}

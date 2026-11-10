@@ -1,0 +1,14 @@
+{
+  "url": "https://proceedings.neurips.cc/paper_files/paper/2025/hash/577cd5863ec73be4e6871340be0936ae-Abstract-Conference.html",
+  "artifact": "third_party/proposal3_sources/input_screen/8fe38cf1acb119f7.json",
+  "read_status": "not_read",
+  "input_labels": [
+    "**SoPo**"
+  ],
+  "http_status": 200,
+  "sha256": "a0feb207514119bfa29478e58d7f5b5b1dcc103a8536b021b8ec96ee70848bb3",
+  "title": "SoPo: Text-to-Motion Generation Using Semi-Online Preference Optimization",
+  "abstract": "",
+  "preview": "SoPo: Text-to-Motion Generation Using Semi-Online Preference Optimization Bibtex Paper Abstract Text-to-motion generation is essential for advancing the creative industry but often presents challenges in producing consistent, realistic motions. To address this, we focus on fine-tuning text-to-motion models to consistently favor high-quality, human-preferred motions—a critical yet largely unexplored problem. In this work, we theoretically investigate the DPO under both online and offline settings, and reveal their respective limitation: overfitting in offline DPO, and biased sampling in online DPO. Building on our theoretical insights, we introduce Semi-online Preference Optimization (SoPo), a DPO-based method for training text-to-motion models using ``semi-online” data pair, consisting of unpreferred motion from online distribution and preferred motion in offline datasets. This method leverages both online and offline DPO, allowing each to compensate for the other’s limitations. Extensive experiments demonstrate that SoPo outperforms other preference alignment methods, with an MM-Dist of 3.25\\% (vs e.g. 0.76\\% of MoDiPO) on the MLD model, 2.91\\% (vs e.g. 0.66\\% of MoDiPO) on MDM model, respectively. Additionally, the MLD model fine-tuned by our SoPo surpasses the SoTA model in terms of R-precision and MM Dist. Visualization results also show the efficacy of our SoPo in preference alignment. Project page: https://xiaofeng-tan.github.io/projects/SoPo/. Name Change Policy × Requests for name changes in the electronic proceedings will be accepted with no questions asked. However name changes may cause bibliographic tracking issues. Authors are asked to consider this carefully and discuss it with their co-authors prior to requesting a name change in the electronic proceedings. Use the \"Report an Issue\" link to request a name change. Do not remove: This comment is monitored to verify that the site is working properly",
+  "status": "acquired_not_read"
+}

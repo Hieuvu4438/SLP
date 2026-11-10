@@ -1,0 +1,18 @@
+{
+  "SOKE": {
+    "same_files": 4,
+    "mismatches": []
+  },
+  "SignSparK": {
+    "same_files": 4,
+    "mismatches": []
+  },
+  "MaDiS": {
+    "same_files": 3,
+    "mismatches": []
+  },
+  "MoMask": {
+    "same_files": 2,
+    "mismatches": []
+  }
+}

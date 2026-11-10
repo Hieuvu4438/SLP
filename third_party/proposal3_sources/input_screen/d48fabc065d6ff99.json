@@ -1,0 +1,14 @@
+{
+  "url": "https://arxiv.org/abs/2507.05419",
+  "artifact": "third_party/proposal3_sources/input_screen/d48fabc065d6ff99.json",
+  "read_status": "not_read",
+  "input_labels": [
+    "**Motion Generation: A Survey of Generative Approaches and Benchmarks**"
+  ],
+  "http_status": 200,
+  "sha256": "444d6777ee1dbe35c446562ed731c74b051d72a1c6fda327bbe27529b53a19dd",
+  "title": "[2507.05419] Motion Generation: A Survey of Generative Approaches and Benchmarks",
+  "abstract": "Abstract: Motion generation, the task of synthesizing realistic motion sequences from various conditioning inputs, has become a central problem in computer vision, computer graphics, and robotics, with applications ranging from animation and virtual agents to human-robot interaction. As the field has rapidly progressed with the introduction of diverse modeling paradigms including GANs, autoencoders, autoregressive models, and diffusion-based techniques, each approach brings its own advantages and limitations. This growing diversity has created a need for a comprehensive and structured review that specifically examines recent developments from the perspective of the generative approach employed. In this survey, we provide an in-depth categorization of motion generation methods based on their underlying generative strategies. Our main focus is on papers published in top-tier venues since 2023, reflecting the most recent advancements in the field. In addition, we analyze architectural principles, conditioning mechanisms, and generation settings, and compile a detailed overview of the evaluation metrics and datasets used across the literature. Our objective is to enable clearer comparisons and identify open challenges, thereby offering a timely and foundational reference for researchers and practitioners navigating the rapidly evolving landscape of motion generation.",
+  "preview": "",
+  "status": "acquired_not_read"
+}

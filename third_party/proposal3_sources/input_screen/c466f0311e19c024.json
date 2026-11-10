@@ -1,0 +1,14 @@
+{
+  "url": "https://how2sign.github.io/",
+  "artifact": "third_party/proposal3_sources/input_screen/c466f0311e19c024.json",
+  "read_status": "not_read",
+  "input_labels": [
+    "[How2Sign](https://how2sign.github.io/?utm_source=chatgpt.com)"
+  ],
+  "http_status": 200,
+  "sha256": "625c9af6ad997cf7eb6b20dc9b43d16f3cfd0efcf4d04dc469afe04033fa2d19",
+  "title": "How2Sign Dataset",
+  "abstract": "How2Sign Dataset",
+  "preview": "",
+  "status": "acquired_not_read"
+}

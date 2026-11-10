@@ -1,0 +1,11 @@
+{
+  "upstream_repo": "/absolute/path/to/official/SOKE",
+  "tokenizer_checkpoint": "/absolute/path/to/author/tokenizer.ckpt",
+  "generator_checkpoint": "/absolute/path/to/author/generator.ckpt",
+  "model_path": "/absolute/path/to/mbart-h2s-csl-phoenix",
+  "soke_mean": "/absolute/path/to/author/mean.pt",
+  "soke_std": "/absolute/path/to/author/std.pt",
+  "model_type": "mbart_multi",
+  "max_text_tokens": 256,
+  "device": "cuda"
+}

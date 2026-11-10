@@ -1,0 +1,14 @@
+{
+  "url": "https://zkf1997.github.io/DART/index.html",
+  "artifact": "third_party/proposal3_sources/input_screen/0152ce07e59b487d.json",
+  "read_status": "not_read",
+  "input_labels": [
+    "H15 ★"
+  ],
+  "http_status": 200,
+  "sha256": "365866d3bc040d87ff588cbea030436d5f326ee2c58b96bf3b657cb6fbfd171d",
+  "title": "DartControl: A Diffusion-Based Autoregressive Motion Model for Real-Time Text-Driven Motion Control",
+  "abstract": "DART",
+  "preview": "",
+  "status": "acquired_not_read"
+}

@@ -1,0 +1,15 @@
+{
+  "url": "https://motion-annotation.humanoids.kit.edu/dataset/",
+  "artifact": "third_party/proposal3_sources/input_screen/d6c18f90ba843cde.json",
+  "read_status": "not_read",
+  "input_labels": [
+    "**KIT-ML**",
+    "[KIT Motion-Language](https://motion-annotation.humanoids.kit.edu/dataset/?utm_source=chatgpt.com)"
+  ],
+  "http_status": 200,
+  "sha256": "20023a9b6781b05fd4bbe7dd9a6388ef7e18889658b298dfd6a72c2a57e99fab",
+  "title": "KIT Motion-Language Dataset",
+  "abstract": "",
+  "preview": "KIT Motion-Language Dataset The KIT Motion-Language Dataset Linking human motion and natural language is of great interest for the generation of semantic representations of human activities as well as for the generation of robot activities based on natural language input. However, while there have been years of research in this area, no standardized and openly available dataset exists to support the development and evaluation of such systems. We therefore propose the The KIT Motion-Language Dataset , which is large, open, and extensible. Downloads Date Number of Motions Number of Annotations Size Download June 22, 2017 Latest 3911 6353 3.9 GB 2017-06-22.zip Oct. 10, 2016 3911 6278 3.9 GB 2016-10-10.zip Sept. 20, 2016 3913 6030 3.9 GB 2016-09-20.zip June 14, 2016 3917 5486 3.9 GB 2016-06-14.zip Citing If you use the KIT Motion-Language dataset, please cite the following paper: @article{Plappert2016, author = {Matthias Plappert and Christian Mandery and Tamim Asfour}, title = {The {KIT} Motion-Language Dataset}, journal = {Big Data} publisher = {Mary Ann Liebert Inc}, year = 2016, month = {dec}, volume = {4}, number = {4}, pages = {236--252}, url = {http://dx.doi.org/10.1089/big.2016.0028}, doi = {10.1089/big.2016.0028}, } Dataset Content The content of the extracted dataset looks like this: 00001_annotations.json 00001_meta.json 00001_mmm.xml 00001_raw.c3d 00002_annotations.json 00002_meta.json 00002_mmm.xml 00002_raw.c3d 00003_annotations.json 00003_meta.json 00003_mmm.xml 00003_raw.c3d ... 03966_annotations.json 03966_meta.json 03966_mmm.xml 03966_raw.c3d Each file is prefixed with an ID followed by its type: <id>_<type>.<ext> . Please notice that the IDs are not necessarily consecutive. However, each ID is unique and for each ID, there are always exactly four types of files. The format and contents of the available files are explained below. Raw Motion Data ( <id>_raw.<ext> ) The format of the raw motion data depends on the data source. Currently, the dataset only contains C3D files . However, since this might change in the future, we recommend that you use the unified MMM representation instead. Currently, our dataset contains motion data from the following d",
+  "status": "acquired_not_read"
+}

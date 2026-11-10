@@ -1,0 +1,10 @@
+{
+  "url": "https://ir.pku.edu.cn/handle/20.500.11897/707972?mode=full",
+  "artifact": "third_party/proposal3_sources/input_screen/5a8b2abbaef5ea5d.json",
+  "read_status": "not_read",
+  "input_labels": [
+    "**Human Motion Generation: A Survey**"
+  ],
+  "status": "failed",
+  "error": "HTTPSConnectionPool(host='ir.pku.edu.cn', port=443): Max retries exceeded with url: /handle/20.500.11897/707972?mode=full (Caused by ConnectTimeoutError(<urllib3.connection.HTTPSConnection object at 0x7f69ad6e3750>, 'Connection to ir.pku.edu.cn timed out. (connect timeout=18)'))"
+}

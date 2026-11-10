@@ -1,0 +1,434 @@
+SALAD: Skeleton-aware Latent Diffusion for Text-driven Motion Generation and Editing
+
+Text-driven motion generation has advanced significantly with the rise of denoising diffusion models.
+However, previous methods often oversimplify representations for the skeletal joints, temporal frames, and textual words, limiting their ability to fully capture the information within each modality and their interactions.
+Moreover, when using pre-trained models for downstream tasks, such as editing, they typically require additional efforts, including manual interventions, optimization, or fine-tuning.
+In this paper, we introduce a skeleton-aware latent diffusion (SALAD), a model that explicitly captures the intricate inter-relationships between joints, frames, and words.
+Furthermore, by leveraging cross-attention maps produced during the generation process, we enable attention-based zero-shot text-driven motion editing using a pre-trained SALAD model, requiring no additional user input beyond text prompts.
+Our approach significantly outperforms previous methods in terms of text-motion alignment without compromising generation quality, and demonstrates practical versatility by providing diverse editing capabilities beyond generation.
+Code is available at project page .
+
+
+
+1 Introduction
+
+Character animation is a crucial component in various computer graphics and vision applications, including games, films, and interactive media.
+Traditional methods, such as keyframing and motion capture, typically require extensive manual effort, which are time-consuming and expensive.
+Recently, deep generative models have been introduced to mitigate these challenges.
+In particular, diffusion models have shown promising results in text-to-motion generation, enabling intuitive and efficient animation workflows.
+
+Despite these advancements, fully capturing the intricate relationships among frames, body parts, and textual descriptions remains a complex challenge in text-driven motion generation.
+Previous approaches typically represent a pose as a single vector and primarily focus on temporal relationships between poses across frames, while neglecting spatial interactions between skeletal joints.
+Furthermore, these models often compress a sentence into a single vector for conditioning, which can overlook the important nuances of word-level variations.
+This over-simplification of interactions among skeletal, temporal, and textual components may lead to missing details in the generated results, underscoring the need for models that faithfully capture these complex dependencies.
+
+On the other hand, learning meaningful representations is a key factor to enable zero-shot downstream tasks with pre-trained models.
+For example, zero-shot text-driven image and video editing methods [ 16 , 3 , 7 , 46 , 36 , 26 , 13 ] leverage attention modulation from pre-trained models for intuitive manipulation.
+Unfortunately, motion generation models typically lack such interpretable and manipulatable intermediate representations.
+This limitation stems from the over-simplification of motion and text features mentioned above, which restricts rich interactions between them.
+Although some methods exploit pre-trained models with manual masks, optimization, or fine-tuning [ 44 , 24 , 23 , 22 , 49 , 51 ] , these methods require additional effort, time, and cost to achieve desired results.
+Therefore, developing interpretable representations during motion synthesis could improve versatility and flexibility for downstream tasks beyond generation, such as zero-shot motion editing.
+
+In this paper, we propose a s keleton- a ware la tent d iffusion, which we call SALAD, for text-driven motion generation within a skeleto-temporally structured latent space.
+We first train a variational autoencoder (VAE) [ 25 ] to construct a motion latent space that decouples spatial and temporal dimensions.
+To this end, we employ skeleto-temporal convolution layers to facilitate information exchange between adjacent joints and frames.
+We also employ skeleto-temporal pooling layers to produce a compact representation by reducing the dimensionality, which can reduce the computational complexity during the sampling process of the diffusion model.
+Subsequently, we train a diffusion model within this latent space to generate motion features conditioned on text.
+To train the denoiser, we leverage both skeletal and temporal attention blocks, which can effectively enable skeleto-temporal coherence.
+Additionally, we employ cross-attention to capture fine-grained interactions between individual words and the skeleto-temporal units of the motion latents.
+
+Beyond motion generation, we introduce an attention-based zero-shot, text-driven motion editing method that leverages the pre-trained SALAD model, requiring no additional optimization or fine-tuning.
+We demonstrate that the intermediate cross-attention maps of SALAD capture the relationship between text and motion features.
+By modulating these cross-attention maps, we enable text-driven motion editing that allows users to edit generated motion through text input alone in a training-free manner.
+We also propose a novel attention modulation method for motion-specific tasks, demonstrating the practical potential of our approach.
+
+In summary, our contributions are as follows:
+
+We propose SALAD, a novel skeleton-aware latent diffusion model for text-driven motion generation within a skeleto-temporally structured latent space.
+
+We interpret the intermediate representations in the generation process, allowing for a clear understanding of the relationship between text inputs and generated motions.
+
+We present an attention-based zero-shot text-driven motion editing method using cross-attention modulation in generative models.
+
+2 Related Work
+
+2.1 Text-driven Motion Generation
+
+With the rise of deep neural networks, generative models for human motion synthesis based on natural language descriptions have been extensively explored.
+Early studies focused on generating motions from action labels, such as throw and kick [ 33 , 9 ] .
+More advanced methods projected both text and motion features into a shared latent space, enabling the generation of fixed motion sequences from identical input text [ 2 ] .
+To increase the diversity of generated results, T2M [ 10 ] employed a temporal VAE that can generate varied motion sequences that align with the given text input.
+Subsequent studies leveraged large pre-trained text encoders, such as CLIP [ 37 ] , to improve textual understanding for motion generation [ 34 , 4 , 43 ] .
+Auto-regressive models that behave like language models have also been proposed, which first encode motion features into discrete tokens through vector quantization [ 47 ] and then auto-regressively predict the next motion token given the text prompt [ 11 , 21 , 53 , 56 , 57 , 12 , 58 ] .
+Recently, denoising diffusion models [ 18 , 41 ] have become the dominant framework for generative models, prompting text-driven motion generation methods to adopt diffusion models as their backbone [ 44 , 8 , 54 , 55 , 50 , 28 , 24 ] .
+In this study, we build our framework on the diffusion model formulation and enhance the performance of text-driven motion generation through explicit modeling of the relationships among joints, frames, and words.
+Moreover, we introduce an attention-based zero-shot text-driven editing method, leveraging our pre-trained SALAD model as a generator, demonstrating a novel exploration beyond mere generation.
+
+2.2 Skeleton-aware Processing of Motion Data
+
+Because motion data consists of two separate skeletal and temporal dimensions, some methods have been developed to respect each dimension when processing the motion data.
+Yan et al. [ 52 ] presented spatial-temporal graph convolution networks that can learn both the spatial and temporal patterns of dynamic skeletons.
+Skeleton-aware networks [ 1 ] employed skeleto-temporal convolution networks and topology-preserving skeletal pooling layers to construct a shared motion latent space, enabling deep motion retargeting across homeomorphic skeletons.
+Motion style transfer has also been enabled in a part-wise manner by employing skeleto-temporal convolution modules [ 31 , 20 ] .
+In the realm of text-to-motion generation, ParCo [ 58 ] and AttT2M [ 57 ] utilized the skeleto-temporal network architecture during the motion quantization process.
+In this work, we adopt a similar approach by encoding motion features using skeleto-temporal convolution networks and pooling layers to derive an effective skeleton-aware motion latent space with compact dimensionality.
+Additionally, we facilitate the interaction between this skeleton-aware motion latent space and textual features during the text-conditional generation process.
+
+2.3 Zero-shot Editing with Diffusion Models
+
+By leveraging the generative capabilities of diffusion models, zero-shot editing methods have been proposed.
+SDEdit [ 29 ] first adds noise to the input data for a few diffusion timesteps, then denoises the noisy data with an editing condition to achieve high-fidelity zero-shot editing by leveraging a pre-trained diffusion model.
+Prompt-to-Prompt [ 16 ] verified that cross-attention maps establish connections between word tokens and the spatial layout of the generated image.
+In addition, it introduced attention modulation methods that can be utilized during the generation process, enabling the generation of high-fidelity editing results in a zero-shot manner.
+Null-text inversion [ 30 ] extended this method to real-images by improving the diffusion inversion method.
+Similarly, image and video editing methods via attention modulation have been extensively studied [ 3 , 7 , 46 , 36 , 26 , 13 ] .
+Motion diffusion models often employ joint masks [ 44 , 24 ] or optimization [ 51 , 23 , 22 ] to enable motion editing using pre-trained diffusion models, although they require user intervention or additional computation for the desired goal.
+On the other hand, CoMo [ 19 ] achieved zero-shot text-driven motion editing using large language models to manipulate semantic pose tokens.
+We demonstrate that the intermediate cross-attention maps of our SALAD model can capture the relationship between motion and text, similarly to image diffusion models. Furthermore, by modulating these cross-attention maps, we introduce an attention-based zero-shot text-driven motion editing method that eliminates the need for manual masks, fine-tuning, or optimization.
+
+3 Method
+
+Our goal is to generate a motion sequence 𝐦 1 : N \mathbf{m}_{1:N} conditioned on a text prompt c c , where N N denotes the number of frames. We first construct a skeleton-aware motion latent representation that captures both skeletal and temporal dynamics of a motion sequence ( Sec. 3.1 ).
+Using this motion representation, we train a diffusion model by modeling the complex interactions between skeletal joints, temporal frames, and textual descriptions ( Sec. 3.2 ).
+Finally, we extend our model for zero-shot text-driven motion editing by modulating cross-attention maps between text and motion ( Sec. 3.3 ).
+Additional details on the network architectures will be featured in the supplementary material.
+
+3.1 Skeleton-aware VAE
+
+To derive skeleton-aware motion features, we train a VAE composed of skeleto-temporal convolution networks and pooling layers [ 52 , 1 ] , as illustrated in Fig. 1 .
+The core module is the skeleto-temporal convolution (STConv), which decouples joint and frame dimensions while facilitating information exchange between adjacent components within each dimension.
+While the skeleto-temporal separation of motion sequences allows for sophisticated modeling of motion data, it introduces an additional dimension for skeletal joints, unlike previous text-to-motion generation methods that treat a pose as a single vector.
+This expanded data space increases the risk of curse of dimensionality and leads to longer computation times for diffusion models, which rely on solving stochastic differential equations within this higher-dimensional data space.
+To address this issue, we apply skeleto-temporal pooling (STPool) layers in the encoder to reduce the latent space dimensionality, effectively compressing the representation.
+In the decoder, skeleto-temporal unpooling (STUnpool) layers are used to reconstruct the compressed latent features back to raw motion.
+
+Encoder. We separate each pose vector of 𝐦 1 : N \mathbf{m}_{1:N} into joint-wise features and propagate them through joint-wise multi-layer perceptron (MLP) layers, resulting in 𝐡 ∈ ℝ N × J × D \mathbf{h}\in\mathbb{R}^{N\times J\times D} , where J J denotes the number of joints and D D denotes the latent dimension.
+Subsequently, we apply STConv to 𝐡 \mathbf{h} to facilitate information exchange between adjacent frames and joints:
+
+where SkelConv is a graph convolution network over the joint dimension, while TempConv is a 1D convolution network over the frame dimension.
+
+We apply the STPool operator to the output of the STConv layers to reduce its dimensionality by pooling over joints and frames:
+
+where SkelPool represents the pooling layer over the joint dimension while TempPool represents the pooling layer over the temporal dimension.
+Specifically, SkelPool aggregates adjacent joints while preserving its skeletal topology, resulting in fewer joints with a homeomorphic structure.
+In contrast, TempPool performs 1D pooling over frames.
+These pooling operations are commutative because they operate within independent dimensions.
+
+Consequently, we obtain the skeleto-temporally compressed latent vector 𝐳 ∈ ℝ N ′ × J ′ × D \mathbf{z}\in\mathbb{R}^{N^{\prime}\times J^{\prime}\times D} , where N ′ < N N^{\prime}<N and J ′ < J J^{\prime}<J .
+This representation effectively encodes the skeleton-aware dynamics of the motion sequence within a lower dimension.
+Notably, we maintain 7 atomic joints for this motion latent: root, spine, head, both arms, and both legs ( J ′ = 7 J^{\prime}=7 ).
+
+Decoder. To reconstruct 𝐳 \mathbf{z} into raw motion features, we employ STConv and STUnpool layers in the decoder.
+The decoder mirrors the encoder, facilitating information exchange between adjacent joints and frames using STConv layers and increasing the skeleto-temporal resolution using STUnpool layers.
+Finally, the joint-wise features are processed by their respective joint-wise MLP layers, resulting in the reconstructed motion feature 𝐦 ^ 1 : N \hat{\mathbf{m}}_{1:N} .
+
+Training. The VAE is trained with the following objectives:
+
+where ℒ 𝐦 , ℒ pos , ℒ vel \mathcal{L}_{\mathrm{\mathbf{m}}},\mathcal{L}_{\mathrm{pos}},\mathcal{L}_{\mathrm{vel}} are L1 reconstruction loss terms of the motion features, joint positions, and joint velocities, while ℒ kl \mathcal{L}_{\mathrm{kl}} is the Kullback–Leibler (KL) divergence regularization that encourages a structured latent space.
+
+3.2 Skeleton-aware Denoiser
+
+Network Architecture. Given the skeleton-aware motion latent vector 𝐳 ∈ ℝ N ′ × J ′ × D \mathbf{z}\in\mathbb{R}^{N^{\prime}\times J^{\prime}\times D} , we train a diffusion model that denoises the noised latent vector conditioned on text prompt c c .
+As shown in Fig. 2 , our denoiser consists of a positional embedding, MLP-based encoder and decoder, and L L transformer-based layers.
+Each transformer layer is composed of a temporal attention (TempAttn), skeletal attention (SkelAttn), cross-attention (CrossAttn), and feed-forward network (FFN).
+Each component involves a residual connection [ 14 ] , layer normalization (LN) [ 6 ] , and a feature-wise linear modulation (FiLM) [ 32 ] that modulates intermediate features based on a diffusion timestep.
+We also incorporate skip connection [ 39 ] within the stack of transformer layers.
+
+The input motion latent at diffusion timestep t t given to the l l -th transformer layer, denoted as 𝐳 t l \mathbf{z}^{\mathit{l}}_{\mathit{t}} , is processed by three consecutive attention blocks: temporal, skeletal, and cross-attention layers.
+The purpose of this architecture design is to model frame-wise interactions through TempAttn, joint-wise interactions through SkelAttn, and motion-text interactions through CrossAttn.
+As a result, 𝐳 t l \mathbf{z}^{\mathit{l}}_{\mathit{t}} is consecutively updated at each layer as follows:
+
+For the CLIP text encoder [ 37 ] used in cross-attention, we use a pre-trained model and freeze its weights during training.
+
+Diffusion Parametrization. For diffusion parametrization, our model predicts the diffusion velocity [ 40 ] , denoted as 𝐯 \mathbf{v} , as follows:
+
+where ϵ \boldsymbol{\epsilon} and 𝐱 \mathbf{x} represent the noise and sample, respectively, while α t \alpha_{t} and σ t \sigma_{t} are noise scheduling parameters at diffusion timestep t t .
+While ϵ \boldsymbol{\epsilon} - and 𝐱 \mathbf{x} -prediction are widely used in diffusion models, 𝐯 \mathbf{v} -prediction combines both parametrizations, implicitly balancing the information contributed by each component.
+This improves the stability of generation, especially at high noise levels in which the relationship between ϵ \boldsymbol{\epsilon} and 𝐱 \mathbf{x} becomes disrupted.
+
+Training and Inference. The denoiser is trained to predict the diffusion velocity 𝐯 t \mathbf{v}_{t} at each diffusion timestep t t .
+The training objective for the denoiser is defined as follows:
+
+where 𝐯 ^ t \hat{\mathbf{v}}_{t} represents the predicted diffusion velocity by the denoiser.
+During training, we randomly drop the text condition with a probability of p uncond p_{\mathrm{uncond}} , enabling unconditional generation when c c is a null text, which is represented as ∅ \varnothing .
+
+To the trained denoiser, we apply classifier-free guidance (CFG) [ 17 ] for text-conditioned generation:
+
+Here, 𝐯 θ \mathbf{v}_{\theta} denotes the pre-trained denoiser, w w is the CFG weight, and 𝐯 ^ θ \hat{\mathbf{v}}_{\theta} is the modified velocity used during the denoising process.
+Additionally, we employ the DDIM sampling formulation [ 42 ] during inference, which effectively reduces the number of sampling steps without compromising generation quality.
+
+3.3 Zero-shot Text-driven Motion Editing
+
+In this section, we describe the attention modulation methods that enable zero-shot text-driven motion editing with a pre-trained SALAD model.
+We introduce four distinct modulation strategies applied to the text-motion cross attention maps as shown in Fig. 3 : word swap, prompt refinement, attention re-weighting, and attention mirroring.
+The first three are adapted from the Prompt-to-Prompt framework [ 16 ] , while the attention mirroring serves as a validation method to assess whether the cross-attention map contributes to the activation of spatio-temporal dynamics in the motion generation process.
+Word swap exchanges attention maps between a source and target prompt, enabling the model to leverage the attention context of the source text when generating output for the target text.
+Prompt refinement enhances the original attention map by integrating additional attention maps for appended word tokens, providing richer semantic information compared to the base prompt.
+Attention re-weighting adjusts the attention values assigned to specific user-selected words, either amplifying or diminishing their influence on the generated motion.
+Lastly, attention mirroring swaps attention values between symmetrical body parts, such as the left and right arms, to produce mirrored motions.
+These methods collectively empower the generative capacity of our model to produce dynamic and contextually relevant motion edits based solely on text prompts. For more details on these modulation functions, please refer to the supplementary material.
+
+Methods R-Precision ↑ FID ↓ MM-Dist ↓ Diversity → MultiModality ↑ Top-1 Top-2 Top-3 Real motion 0.511 ± .003 {0.511}^{\pm.003} 0.703 ± .003 {0.703}^{\pm.003} 0.797 ± .002 {0.797}^{\pm.002} 0.002 ± .000 {0.002}^{\pm.000} 2.974 ± .008 {2.974}^{\pm.008} 9.503 ± .065 {9.503}^{\pm.065} - T2M [ 10 ] 0.457 ± .002 {0.457}^{\pm.002} 0.639 ± .003 {0.639}^{\pm.003} 0.740 ± .003 {0.740}^{\pm.003} 1.067 ± .002 {1.067}^{\pm.002} 3.340 ± .008 {3.340}^{\pm.008} 9.188 ± .002 {9.188}^{\pm.002} 2.090 ± .083 {2.090}^{\pm.083} AttT2M [ 57 ] 0.499 ± .003 {0.499}^{\pm.003} 0.690 ± .002 {0.690}^{\pm.002} 0.786 ± .002 {0.786}^{\pm.002} 0.112 ± .006 {0.112}^{\pm.006} 3.038 ± .007 {3.038}^{\pm.007} 9.700 ± .090 {9.700}^{\pm.090} 2.452 ± .051 {2.452}^{\pm.051} ParCo [ 58 ] 0.515 ± .003 {0.515}^{\pm.003} 0.706 ± .003 {0.706}^{\pm.003} 0.801 ± .002 {0.801}^{\pm.002} 0.109 ± .005 {0.109}^{\pm.005} 2.927 ± .008 {2.927}^{\pm.008} 9.576 ± .088 {9.576}^{\pm.088} 1.382 ± .060 {1.382}^{\pm.060} MoMask [ 12 ] 0.521 ± .002 {0.521}^{\pm.002} 0.713 ± .002 {0.713}^{\pm.002} 0.807 ± .002 {0.807}^{\pm.002} 0.045 ± .002 {0.045}^{\pm.002} 2.958 ± .008 {2.958}^{\pm.008} - 1.241 ± .040 {1.241}^{\pm.040} MDM [ 44 ] 0.320 ± .005 {0.320}^{\pm.005} 0.498 ± .004 {0.498}^{\pm.004} 0.611 ± .007 {0.611}^{\pm.007} 0.544 ± .044 {0.544}^{\pm.044} 5.566 ± .027 {5.566}^{\pm.027} 9.559 ± .086 {9.559}^{\pm.086} 2.799 ± .072 {2.799}^{\pm.072} MLD [ 8 ] 0.481 ± .003 {0.481}^{\pm.003} 0.673 ± .003 {0.673}^{\pm.003} 0.772 ± .002 {0.772}^{\pm.002} 0.473 ± .013 {0.473}^{\pm.013} 3.196 ± .010 {3.196}^{\pm.010} 9.724 ± .082 {9.724}^{\pm.082} 2.413 ± .079 {2.413}^{\pm.079} MotionDiffuse [ 55 ] 0.491 ± .001 {0.491}^{\pm.001} 0.681 ± .001 {0.681}^{\pm.001} 0.782 ± .001 {0.782}^{\pm.001} 0.630 ± .001 {0.630}^{\pm.001} 3.113 ± .001 {3.113}^{\pm.001} 9.410 ± .049 {9.410}^{\pm.049} 1.553 ± .042 {1.553}^{\pm.042} ReMoDiffuse [ 54 ] 0.510 ± .005 {0.510}^{\pm.005} 0.698 ± .006 {0.698}^{\pm.006} 0.795 ± .004 {0.795}^{\pm.004} 0.103 ± .004 {0.103}^{\pm.004} 2.974 ± .016 {2.974}^{\pm.016} 9.018 ± .075 {9.018}^{\pm.075} 1.795 ± .043 {1.795}^{\pm.043} SALAD (Ours) 0.581 ± .003 {0.581}^{\pm.003} 0.769 ± .003 {0.769}^{\pm.003} 0.857 ± .002 {0.857}^{\pm.002} 0.076 ± .002 {0.076}^{\pm.002} 2.649 ± .009 {2.649}^{\pm.009} 9.696 ± .096 {9.696}^{\pm.096} 1.751 ± .062 {1.751}^{\pm.062}
+
+Methods R-Precision ↑ FID ↓ MM-Dist ↓ Diversity → MultiModality ↑ Top-1 Top-2 Top-3 Real motion 0.424 ± .005 {0.424}^{\pm.005} 0.649 ± .006 {0.649}^{\pm.006} 0.779 ± .006 {0.779}^{\pm.006} 0.031 ± .004 {0.031}^{\pm.004} 2.788 ± .012 {2.788}^{\pm.012} 11.08 ± .097 {11.08}^{\pm.097} - T2M [ 10 ] 0.370 ± .005 {0.370}^{\pm.005} 0.569 ± .007 {0.569}^{\pm.007} 0.693 ± .007 {0.693}^{\pm.007} 2.770 ± .109 {2.770}^{\pm.109} 3.401 ± .008 {3.401}^{\pm.008} 10.91 ± .119 {10.91}^{\pm.119} 1.482 ± .065 {1.482}^{\pm.065} AttT2M [ 57 ] 0.413 ± .006 {0.413}^{\pm.006} 0.632 ± .006 {0.632}^{\pm.006} 0.751 ± .006 {0.751}^{\pm.006} 0.870 ± .039 {0.870}^{\pm.039} 3.039 ± .021 {3.039}^{\pm.021} 10.96 ± .123 {10.96}^{\pm.123} 2.281 ± .047 {2.281}^{\pm.047} ParCo [ 58 ] 0.430 ± .004 {0.430}^{\pm.004} 0.649 ± .007 {0.649}^{\pm.007} 0.772 ± .006 {0.772}^{\pm.006} 0.453 ± .027 {0.453}^{\pm.027} 2.820 ± .028 {2.820}^{\pm.028} 10.95 ± .094 {10.95}^{\pm.094} 1.245 ± .022 {1.245}^{\pm.022} MoMask [ 12 ] 0.433 ± .007 {0.433}^{\pm.007} 0.656 ± .005 {0.656}^{\pm.005} 0.781 ± .005 {0.781}^{\pm.005} 0.204 ± .011 {0.204}^{\pm.011} 2.779 ± .022 {2.779}^{\pm.022} - 1.131 ± .043 {1.131}^{\pm.043} MDM [ 44 ] 0.164 ± .004 {0.164}^{\pm.004} 0.291 ± .004 {0.291}^{\pm.004} 0.396 ± .004 {0.396}^{\pm.004} 0.497 ± .021 {0.497}^{\pm.021} 9.191 ± .022 {9.191}^{\pm.022} 10.847 ± .109 {10.847}^{\pm.109} 1.907 ± .214 {1.907}^{\pm.214} MLD [ 8 ] 0.390 ± .008 {0.390}^{\pm.008} 0.609 ± .008 {0.609}^{\pm.008} 0.734 ± .007 {0.734}^{\pm.007} 0.404 ± .027 {0.404}^{\pm.027} 3.204 ± .027 {3.204}^{\pm.027} 10.80 ± .117 {10.80}^{\pm.117} 2.192 ± .071 {2.192}^{\pm.071} MotionDiffuse [ 55 ] 0.417 ± .004 {0.417}^{\pm.004} 0.621 ± .004 {0.621}^{\pm.004} 0.739 ± .004 {0.739}^{\pm.004} 1.954 ± .062 {1.954}^{\pm.062} 2.958 ± .005 {2.958}^{\pm.005} 11.10 ± .143 {11.10}^{\pm.143} 0.730 ± .013 {0.730}^{\pm.013} ReMoDiffuse [ 54 ] 0.427 ± .014 {0.427}^{\pm.014} 0.641 ± .004 {0.641}^{\pm.004} 0.765 ± .055 {0.765}^{\pm.055} 0.155 ± .006 {0.155}^{\pm.006} 2.814 ± .012 {2.814}^{\pm.012} 10.80 ± .105 {10.80}^{\pm.105} 1.239 ± .028 {1.239}^{\pm.028} SALAD (Ours) 0.477 ± .006 {0.477}^{\pm.006} 0.711 ± .005 {0.711}^{\pm.005} 0.828 ± .005 {0.828}^{\pm.005} 0.296 ± .012 {0.296}^{\pm.012} 2.585 ± .016 {2.585}^{\pm.016} 11.097 ± .095 {11.097}^{\pm.095} 1.004 ± .040 {1.004}^{\pm.040}
+
+4 Experiments
+
+We conducted evaluations of our method on two widely used motion-language benchmarks: HumanML3D [ 10 ] and KIT-ML [ 35 ] .
+HumanML3D dataset consists of 14,616 motion sequences with a variety of human actions, such as locomotions, sports, and acrobatics, along with 44,970 text descriptions in total.
+KIT-ML dataset consists of 3,911 motion sequences along with 6,278 text descriptions.
+Both datasets are augmented by mirroring, and divided into training, testing, and validation sets with the ratio of 0.8, 0.15, and 0.05.
+Evaluation results are reported in the following sections.
+Please refer to the supplementary material for additional quantitative experiment results with details, and the supplementary video for the animated results.
+
+4.1 Implementation Details
+
+Our method was executed on a single NVIDIA V100 GPU.
+We used the AdamW optimizer [ 27 ] , and the VAE and denoiser were trained for 50 and 500 epochs, respectively.
+The VAE and denoiser were trained with a batch size of 64 for HumanML3D, which required 35 and 17 hours, respectively.
+For the KIT-ML dataset, we used a batch size of 16, with training times of 20 hours for the VAE and 7 hours for the denoiser.
+We trained the denoiser with 1000 diffusion steps, employing 50 steps for DDIM sampling during inference.
+For the CFG weight, we set w = 7.5 w=7.5 unless mentioned otherwise.
+
+4.2 Quantitative Evaluation
+
+For quantitative evaluations, we adopted metrics from T2M [ 10 ] .
+First, FID is used to evaluate the quality of generated motions by measuring the difference between the feature distributions of generated motions and those of real motions.
+Additionally, R-precision and MM-Dist are used to evaluate the semantic alignment between the input text and the generated motions. Diversity , which indicates the variance in generated motions, and MultiModality , which assesses the diversity of motions generated from the same text description, are also adopted as secondary metrics. They are considered less important than the generation quality and alignment with the input text.
+
+Following the practice of T2M [ 10 ] , each experiment was repeated 20 times on the test sets of HumanML3D and KIT-ML datasets, and the mean with a 95% confidence interval is reported in Tab. 1 .
+Notably, SALAD consistently achieved superior text-motion alignment across both datasets, regardless of the diffusion parametrization applied during denoiser training.
+Moreover, SALAD maintained high generation quality, as indicated by the best or second-best FID scores among diffusion-based methods.
+These results confirm that explicitly modeling interactions between skeletal joints, temporal frames, and textual words is effective in improving text-to-motion generation quality and fidelity to the input text.
+
+4.3 Qualitative Evaluation
+
+We compared the qualitative results of SALAD with those generated by MDM [ 44 ] and MoMask [ 12 ] , and the comparison results are shown in Fig. 4 .
+Both MDM and MoMask reflected parts of the input text prompts, but they failed to handle all the descriptions in the text.
+For example, as shown in the top of Fig. 4 -(a), MDM generated a character walking forward, turning, and walking back, but the locomotion style was not marching, despite the input prompt specifying ”marches” .
+Similarly, in Fig. 4 -(b), MoMask accurately reflected the arm movements of raising above the head and throwing them down, but it missed the instruction to turn to the right.
+In case of Fig. 4 -(c), both methods failed to perfectly reflect the input text despite its short length.
+In contrast, SALAD consistently incorporated all the textual descriptions into the generated motions, regardless of the length and complexity of the text prompts.
+This demonstrates its effectiveness in generating motions that are highly aligned with the input text.
+
+4.4 Ablation Study
+
+Effectiveness of Skeleton-aware Latent Space. To prove the effectiveness of using skeleton-aware latent space, we compared the performance of different VAE structures employed in MoMask [ 12 ] and ParCo [ 58 ] with ours.
+Specifically, MoMask employs a VQ-VAE that compresses each pose into a single vector, while ParCo employs a part-aware VQ-VAE that processes different body parts independently.
+Because the role of VAE is to compress the motion features into latent variables, we compared FID and mean per joint position error (MPJPE) that assess the quality and accuracy of the reconstructed motion features, respectively.
+
+As shown in Tab. 2 , our skeleton-aware VAE outperformed baselines with a significant margin for both metrics.
+Notably, our method required much fewer number of trainable parameters than the others.
+This indicates that skeleton-aware latent space that decouples both dimensions and facilitates information exchange between adjacent components is effective in constructing meaningful motion latent space, which is a crucial prior to train the generator.
+
+Furthermore, we conducted an ablation study that validates the effectiveness of the skeleto-temporal latent (ST-Latent) and cross-attention, which are two core components of SALAD, on the text-to-motion generation performance.
+For this experiment, we evaluated three variations: (i) replacing ST-Latent by training a conventional VAE that treats each pose as a single vector, (ii) replacing cross-attention with self-attention by concatenating the sentence-level CLIP feature to the motion features, and (iii) combining (i) and (ii).
+As shown in Tab. 3 , alteration of ST-Latent and cross-attention substantially degraded generation quality and text-motion alignment, as reflected in the higher FID and lower R-precision, respectively.
+This demonstrates the importance of rich information exchange between text and motion by cross-attention within the skeleto-temporally structured latent space.
+This indicates that the skeleto-temporally disentangled motion latent facilitates accurate text-motion interaction.
+
+Methods Num of Params FID ↓ MPJPE ↓ MoMask [ 12 ] 19.44M 0.020 ± .000 {0.020}^{\pm.000} 0.030 ± .000 {0.030}^{\pm.000} ParCo [ 58 ] 6.35M 0.021 ± .000 {0.021}^{\pm.000} 0.108 ± .000 {0.108}^{\pm.000} SALAD (Ours) 0.16M 0.003 ± .000 {0.003}^{\pm.000} 0.016 ± .000 {0.016}^{\pm.000}
+
+Method R-Precision (Top-3) ↑ FID ↓ Ours (Full model) 0.857 ± .002 {0.857}^{\pm.002} 0.076 ± .002 {0.076}^{\pm.002} w/o ST-Latent 0.816 ± .002 {0.816}^{\pm.002} 0.433 ± .006 {0.433}^{\pm.006} w/o CrossAttn 0.778 ± .002 {0.778}^{\pm.002} 0.274 ± .007 {0.274}^{\pm.007} w/o both 0.752 ± .002 {0.752}^{\pm.002} 0.345 ± .007 {0.345}^{\pm.007}
+
+CFG Weights. To analyze the influence of CFG weights on generation results, we plotted FID and R-precision metric values in Fig. 5 .
+The figure shows that low CFG weights led to suboptimal generation quality and text-motion alignment.
+The performance of SALAD improved across both metrics as the weight values increased, but excessively high weight values resulted in a decreased performance for both metrics again.
+Based on these findings, we determined that a value of w = 7.5 w=7.5 produces the best balance between generation quality and alignment with the text prompts.
+
+4.5 Zero-shot Text-driven Motion Editing
+
+To demonstrate the capability of SALAD in capturing relationships between skeleto-temporal latents and text prompts, we visualized the cross-attention maps for each word in Fig. 6 .
+The figure reveals that high attention values were assigned to proper frames and body parts that semantically correspond to each word.
+For example, ”jumps forward” was activated for the entire body at early frames, ”walks forward” focused on the root and legs at later frames, and ”waving arms” was activated for the arms throughout the entire frames.
+These results indicate that cross-attention maps produced during motion generation effectively capture the rich semantic relationships between text and motion.
+
+Based on these observations, we demonstrate zero-shot text-driven motion editing results using a pre-trained SALAD model by modulating cross-attention maps, and the results are shown in Fig. 7 .
+The edited motions align well with the given instructions while preserving the original movements, such as walking phases.
+Notably, the changes for editing were localized to specific frames and body parts relevant to the editing prompt, while unaffected regions remain intact, without using explicit masking.
+Furthermore, our SALAD model understands not only the high-level correspondence between text and motion but also its intensity and direction, which is demonstrated by different hand heights when modulating the word ”high” in the re-weighting case.
+These results suggest that the explicit modeling of skeletal-temporal-textual relationships in SALAD enhances its understanding of text-driven motion generation, leading to effective learning representations and fine-grained control in both generation and editing.
+
+Methods Preservation Semantic Alignment Overall Quality MDM [ 44 ] 3.729 ± .153 {3.729}^{\pm.153} 2.758 ± .192 {2.758}^{\pm.192} 3.196 ± .147 {3.196}^{\pm.147} MotionFix [ 5 ] 3.358 ± .173 {3.358}^{\pm.173} 3.388 ± .189 {3.388}^{\pm.189} 3.421 ± .166 {3.421}^{\pm.166} SALAD (Ours) 4.596 ± .084 {4.596}^{\pm.084} 4.654 ± .087 {4.654}^{\pm.087} 4.596 ± .083 {4.596}^{\pm.083}
+
+To evalaute the perceptual quality of text-driven motion editing, we conducted a user study with 16 participants.
+We compared SALAD against MDM [ 44 ] , which edits motion by masking and regenerating specified body parts, and MotionFix [ 5 ] , a method specifically designed for motion editing.
+Participants were shown with 15 videos per method and asked to rate them based on three criteria: (i) preservation of the original motion, (ii) semantic alignment with the target text, and (iii) overall quality.
+Ratings were given on a 5-point Likert scale, with 5 indicating the best.
+
+As shown in Tab. 4 , SALAD outperformed both baselines across all three aspects by a large margin.
+Notably, despite not using explicit masking, SALAD achieved higher preservation scores.
+Furthermore, while SALAD is not specifically designed for editing, it achieved higher preferences for semantic alignment and overall quality, highlighting the effectiveness of attention-based editing.
+These results demonstrate that leveraging cross-attention maps enables high-quality and perceptually appealing text-driven motion editing without requiring additional training.
+
+5 Discussion
+
+While SALAD produced outperforming results in text-driven motion generation compared to the existing generative models, along with the capability of zero-shot text-driven motion editing, it has several limitations.
+First, the numerical results for Diversity and MultiModality are limited, despite the strong capability of diffusion models to generate diverse outputs.
+This can be due to the trade-off between high-quality with faithfulness to the text and diversity.
+While we put the diversity as a second priority, finding a way to handle both could be an interesting approach.
+Additionally, SALAD is restricted to generating a single person action with limited text and motion length.
+Therefore, enabling multi-character interactions, crowd animations, generation from longer texts, and creating extended motion sequences could be an interesting direction for future work.
+Furthermore, although our method does not directly address editing real motions, integrating diffusion inversion methods could enable text-driven editing of real motion sequences.
+
+6 Conclusion
+
+In this paper, we presented SALAD, a novel diffusion model framework for text-driven motion generation that models the complex interactions between skeletal joints, temporal frames, and textual words.
+We first train a skeleto-temporal VAE that effectively summarizes motion features by decoupling skeletal and temporal dimensions, and we subsequently train a skeleto-temporal denoiser that enables efficient and expressive generation of motions conditioned on text input within this compact skeleto-temporal latent space.
+Furthermore, we demonstrated the first text-driven zero-shot motion editing using a pre-trained SALAD model by modulating cross-attention maps during generation.
+By leveraging the outperforming generative capacity compared to previous methods, along with the interpretable learning representations during generation, we anticipate that our work can benefit future research and applications in the context of text-driven motion generation and editing.
+
+Acknowledgements
+
+We appreciate the anonymous reviewers for their invaluable discussion.
+This work was supported by the National Research Foundation of Korea (NRF) grant funded by the Korea government (MSIT) (RS-2024-00333478).
+
+References
+
+Supplementary Material
+
+A Network Architectures
+
+In this section, we provide a detailed explanation of the network architecture.
+The code is available at github .
+
+A.1 Skeleto-temporal VAE
+
+We visualize the detailed architecture of the VAE network in Figure 1 .
+Given a motion sequence 𝐦 \mathbf{m} , we first decompose it into joint-wise features:
+
+where 𝐦 j ∈ ℝ N × D j \mathbf{m}^{j}\in\mathbb{R}^{N\times D_{j}} . Here, N N denotes the number of frames and D j D_{j} represents the number of features of joint j j , which varies depending on the joint.
+Specifically, D j = 7 D_{j}=7 for the root joint, as it includes 1-dimensional height, 2-dimensional translational velocity on the horizontal plane, 1-dimensional angular velocity around the up-axis, and 3-dimensional velocity.
+For the foot and toe joints, D j = 13 D_{j}=13 , comprising 3-dimensional local positions and velocities, 6-dimensional local rotations, and a contact label.
+For all the other joints, D j = 12 D_{j}=12 , excluding the contact label.
+To match the dimension of each joint within the skeleton-aware latent space, we apply a joint-wise multi-layer perceptron (MLP) to each 𝐦 j \mathbf{m}^{j} , consisting of 2 linear layers and the Gaussian error linear unit (GELU) activation function [ 15 ] in the middle, yielding the joint-wise hidden latent variables 𝐡 j \mathbf{h}^{j} .
+
+As mentioned in the main paper, the skeleto-temporal convolution (STConv) layers use a combination of a skeletal convolution (SkelConv) and a temporal convolution (TempConv).
+The SkelConv layer is a graph convolution over the joint dimension, which is defined as follows:
+
+where 𝚯 { 1 , 2 } \boldsymbol{\Theta}_{\{1,2\}} represents a linear feed-forward layer, and 𝒩 ⁡ ( j ) \mathcal{N}(j) denotes the indices of joints neighboring to joint j j .
+The TempConv is a 1D convolution layer with a kernel of size 3 and a stride of 1, and it is shared across all joints.
+Additionally, we use residual connections within a stack of STConv layers.
+For the activation function, we use the GELU function at the end of each STConv layer.
+
+For the skeleto-temporal pooling (STPool) layers, we apply the average pooling across both skeletal and temporal dimensions.
+Specifically, temporal features are pooled with a kernel of size 2 and a stride of 2, while skeletal pooling reduces the number of joints by summarizing adjacent joints.
+In contrast, the skeleto-temporal unpooling (STUnpool) layers perform the inverse operation of STPool.
+To increase the skeletal resolution, we recreate unpooled joints by summing the features from the corresponding pooled joints.
+The temporal resolution is increased by upsampling the features along the temporal dimension using linear interpolation.
+The downsampling and upsampling for each dataset is visualized in Figure 2 .
+
+A.2 Skeleto-temporal Denoiser
+
+In this section, we provide the implementation details for each component of the skeleto-temporal denoiser. Positional Embedding. We incorporate order information of 𝐳 t l \mathbf{z}^{\mathit{l}}_{\mathit{t}} for both temporal and skeletal dimensions by applying positional embedding.
+Specifically, we first compute the positional embedding 𝐞 ∈ ℝ T ​ J × D \mathbf{e}\in\mathbb{R}^{TJ\times D} using the sinusoidal positional embedding method [ 48 ] .
+We then reshape this tensor to ℝ T × J × D \mathbb{R}^{T\times J\times D} , and add it to the motion latent 𝐳 t l \mathbf{z}^{\mathit{l}}_{\mathit{t}} .
+
+FiLM. To feed the diffusion timestep information to the denoiser, we employ the FiLM operator combined with an MLP layer, which has shown impressive performance in motion diffusion models [ 45 , 55 ] .
+Specifically, the diffusion timestep t t is passed through a sinusoidal positional embedding, followed by an MLP layer, resulting in a scale factor 𝜸 t \boldsymbol{\gamma}_{t} and shift factor 𝜷 t \boldsymbol{\beta}_{t} , both D D -dimensional vectors used to modulate the output of network modules:
+
+where γ t \gamma_{t} and β t \beta_{t} are produced for each of attention block and feed-forward network in each layer.
+For brevity, we omit t t for the FiLM \mathrm{FiLM} in the following sections.
+
+Feed-forward Network. To enhance the non-linearity capacity of the model, we employ an FFN module combined with FiLM:
+
+where GELU represents the Gaussian error linear unit activation function [ 15 ] .
+Notably, FFN module produces the output of the l l -th transformer layer, which we denote as 𝐳 t l + 1 \mathbf{z}^{l+1}_{t} , and it is used as an input of the ( l + 1 ) (l+1) -th layer.
+
+A.3 Hyperparameters
+
+For training the VAE, we set λ pos = 0.5 \lambda_{\mathrm{pos}}=0.5 , λ vel = 0.5 \lambda_{\mathrm{vel}}=0.5 , and λ kl = 0.02 \lambda_{\mathrm{kl}}=0.02 .
+We also used a learning rate scheduler for training both the VAE and denoiser, which linearly increased the learning rate from 0 to 0.0002 over the first 2000 steps, then decayed it by a factor of 0.1 at 150,000 and 250,000 iterations for the VAE, and at 50,000 iterations for the denoiser.
+The latent dimensions for modules of the skeleto-temporal VAE was set to 32, while the denoiser used a latent dimension of 256.
+
+We used a scaled linear scheduler for the noise schedule during denoiser training, similar to the approach used in Stable Diffusion [ 38 ] .
+Specifically, β t \beta_{t} at diffusion timestep t t is defined as follows:
+
+where we set β 1 = 0.00085 \beta_{1}=0.00085 , β T = 0.012 \beta_{T}=0.012 , and T = 1000 T=1000 following the default setting of Stable Diffusion.
+This scheduler allows for a smooth transition between noise levels, ensuring effective denoising throughout the entire process.
+
+B Zero-shot Editing via Attention Modulation
+
+To enable zero-shot editing by modulating cross-attention maps between motion and text, we adopt the editing procedure introduced by Prompt-to-Prompt [ 16 ] , which is depicted in Algorithm 1 .
+Let Denoise ⁡ ( 𝐳 t , t , c ) \mathrm{Denoise}(\mathbf{z}_{t},t,c) represent a single denoising step at diffusion timestep t t using a pre-trained SALAD model conditioned on text prompt c c , producing the denoised latent 𝐳 t − 1 \mathbf{z}_{t-1} and cross-attention map 𝐌 t \mathbf{M}_{t} .
+Additionally, Denoise ( 𝐳 t , t , c ) { 𝐌 ← 𝐌 ^ } \mathrm{Denoise}(\mathbf{z}_{t},t,c)\{\mathbf{M}\leftarrow\hat{\mathbf{M}}\} denotes a denoising step where the original attention map 𝐌 \mathbf{M} is replaced by a modified attention map 𝐌 ^ \hat{\mathbf{M}} , while the value 𝐕 \mathbf{V} is computed using the target prompt c ∗ c^{*} .
+The function Edit ⁡ ( 𝐌 t , 𝐌 t ∗ , t ) \mathrm{Edit}(\mathbf{M}_{t},\mathbf{M}_{t}^{*},t) is a general editing function that modulates two attention maps based on the diffusion timestep t t , which will be elaborated in the following sections.
+
+Word Swap. The objective of word swap is to incorporate descriptions from the target prompt while maintaining movements from the source prompt.
+To this end, the source prompt is used during early denoising steps, and the target prompt is used in the later steps:
+
+where τ \tau is a hyperparameter that determines when to switch from the source prompt to the target prompt during the denoising process.
+Because the overall composition is established in the early steps, we guide the overall structure by injecting the attention maps from the source prompt during the early steps, and we use the attention maps of the target prompt to refine details later.
+Although the optimal value of τ \tau can vary depending on the specific motion and text inputs, we found that τ = 0.8 ​ T \tau=0.8T generally yields good results.
+
+Prompt Refinement. In this case, the target prompt is created by appending new tokens to the source text to add additional details.
+We first obtain the cross-attention map of the target text prompt 𝐌 ∗ \mathbf{M}^{*} , and then overwrite the attention values for existing tokens with those from the original cross-attention map 𝐌 \mathbf{M} to preserve the common information between the two prompts:
+
+where i i , j j , and k k denote the indices of the skeletal, temporal, and text tokens, respectively. The function 𝒜 ⁡ ( ⋅ ) \mathcal{A}(\cdot) is an alignment function that maps a token index from the target prompt c ∗ c^{*} to its corresponding index in c c if one exists, or returns − 1 -1 otherwise.
+
+Attention Re-weighting. This editing case involves amplifying or reducing the attention weights associated with specific word tokens to influence the resulting motions.
+Given a word token k ∗ k^{*} and a scaling parameter s s , we adjust the attention values as follows:
+
+We empirically found that setting s s within the range of [ − 3 , 3 ] [-3,3] yields reasonable editing results.
+Notably, using negative weights can generate semantically opposite outcomes, indicating that the cross-attention maps in SALAD capture a sophisticated understanding of the high-level relationships between text and motion.
+
+Attention Mirroring. In this case, cross-attention values between counterpart body parts, such as the left and right arms, are swapped:
+
+where 𝒞 ⁡ ( j ) \mathcal{C}(j) outputs the joint index of the counterpart if it exists, or j j otherwise.
+This approach effectively mirrors the motion without needing to compute a new cross-attention map 𝐌 ^ \hat{\mathbf{M}} corresponding to an editing text prompt.
+
+C Additional Experiment Results
+
+C.1 Cross-attention Maps
+
+We present additional visualizations of cross-attention maps between the input text and generated motions in Figure 3 .
+Overall, the attention maps consistently captured the relationships between the text and motion as reflected in the generated results.
+In Figure 3 -(a), attention peaks for jumping and high occurred twice along the temporal dimension, corresponding to the character jumping twice, indicating that the attention map effectively captures the relationship between frames and words.
+Additionally, as shown in Figure 3 -(b), the words walking and treadmill were associated with the lower body parts, showing consistently high weights along the frames, demonstrating that the attention map captures the relationship between body parts and words.
+Figure 3 -(c), (d), and (e) further show that the cross-attention maps capture the relationship between skeleto-temporal features and each word, conveying which body part should to be activated, at which timing, and where to act, such as sits … ground , stretches arms … forward , and puts both hands … air .
+Overall, these results demonstrate that cross-attention maps effectively capture the relationship between skeleto-temporal features and each word in the textual descriptions.
+
+C.2 Classifier-free Guidance Weights
+
+w w R-Precision ↑ FID ↓ MM-Dist ↓ Diversity → Top-1 Top-2 Top-3 Real motion 0.511 ± .003 {0.511}^{\pm.003} 0.703 ± .003 {0.703}^{\pm.003} 0.797 ± .002 {0.797}^{\pm.002} 0.002 ± .000 {0.002}^{\pm.000} 2.974 ± .008 {2.974}^{\pm.008} 9.503 ± .065 {9.503}^{\pm.065} 1.5 0.438 ± .003 {0.438}^{\pm.003} 0.622 ± .002 {0.622}^{\pm.002} 0.727 ± .002 {0.727}^{\pm.002} 1.291 ± .020 {1.291}^{\pm.020} 3.411 ± .011 {3.411}^{\pm.011} 9.298 ± .085 {9.298}^{\pm.085} 2.5 0.517 ± .003 {0.517}^{\pm.003} 0.705 ± .002 {0.705}^{\pm.002} 0.801 ± .002 {0.801}^{\pm.002} 0.457 ± .011 {0.457}^{\pm.011} 2.945 ± .011 {2.945}^{\pm.011} 9.616 ± .089 {9.616}^{\pm.089} 3.5 0.548 ± .003 {0.548}^{\pm.003} 0.738 ± .002 {0.738}^{\pm.002} 0.829 ± .002 {0.829}^{\pm.002} 0.223 ± .006 {0.223}^{\pm.006} 2.782 ± .009 {2.782}^{\pm.009} 9.711 ± .092 {9.711}^{\pm.092} 4.5 0.563 ± .003 {0.563}^{\pm.003} 0.755 ± .002 {0.755}^{\pm.002} 0.842 ± .002 {0.842}^{\pm.002} 0.132 ± .004 {0.132}^{\pm.004} 2.711 ± .008 {2.711}^{\pm.008} 9.737 ± .090 {9.737}^{\pm.090} 5.5 0.573 ± .003 {0.573}^{\pm.003} 0.763 ± .002 {0.763}^{\pm.002} 0.850 ± .002 {0.850}^{\pm.002} 0.093 ± .003 {0.093}^{\pm.003} 2.674 ± .008 {2.674}^{\pm.008} 9.741 ± .094 {9.741}^{\pm.094} 6.5 0.578 ± .003 {0.578}^{\pm.003} 0.767 ± .002 {0.767}^{\pm.002} 0.854 ± .002 {0.854}^{\pm.002} 0.078 ± .003 {0.078}^{\pm.003} 2.656 ± .009 {2.656}^{\pm.009} 9.722 ± .095 {9.722}^{\pm.095} 7.5 (default) 0.581 ± .003 {0.581}^{\pm.003} 0.769 ± .003 {0.769}^{\pm.003} 0.857 ± .002 {0.857}^{\pm.002} 0.076 ± .002 {0.076}^{\pm.002} 2.649 ± .009 {2.649}^{\pm.009} 9.696 ± .096 {9.696}^{\pm.096} 8.5 0.581 ± .003 {0.581}^{\pm.003} 0.770 ± .002 {0.770}^{\pm.002} 0.857 ± .002 {0.857}^{\pm.002} 0.083 ± .002 {0.083}^{\pm.002} 2.650 ± .009 {2.650}^{\pm.009} 9.669 ± .094 {9.669}^{\pm.094} 9.5 0.581 ± .003 {0.581}^{\pm.003} 0.771 ± .002 {0.771}^{\pm.002} 0.858 ± .002 {0.858}^{\pm.002} 0.097 ± .003 {0.097}^{\pm.003} 2.655 ± .009 {2.655}^{\pm.009} 9.638 ± .093 {9.638}^{\pm.093} 10.5 0.581 ± .003 {0.581}^{\pm.003} 0.770 ± .002 {0.770}^{\pm.002} 0.857 ± .001 {0.857}^{\pm.001} 0.116 ± .003 {0.116}^{\pm.003} 2.663 ± .008 {2.663}^{\pm.008} 9.608 ± .094 {9.608}^{\pm.094} 11.5 0.581 ± .002 {0.581}^{\pm.002} 0.769 ± .002 {0.769}^{\pm.002} 0.857 ± .002 {0.857}^{\pm.002} 0.138 ± .003 {0.138}^{\pm.003} 2.673 ± .008 {2.673}^{\pm.008} 9.577 ± .093 {9.577}^{\pm.093} 12.5 0.578 ± .002 {0.578}^{\pm.002} 0.768 ± .002 {0.768}^{\pm.002} 0.856 ± .002 {0.856}^{\pm.002} 0.164 ± .003 {0.164}^{\pm.003} 2.686 ± .008 {2.686}^{\pm.008} 9.657 ± .091 {9.657}^{\pm.091}
+
+CFG Weights R-Precision ↑ FID ↓ MM-Dist ↓ Diversity → Top-1 Top-2 Top-3 Real motion 0.424 ± .005 {0.424}^{\pm.005} 0.649 ± .006 {0.649}^{\pm.006} 0.779 ± .006 {0.779}^{\pm.006} 0.031 ± .004 {0.031}^{\pm.004} 2.788 ± .012 {2.788}^{\pm.012} 11.08 ± .097 {11.08}^{\pm.097} 1.5 0.439 ± .005 {0.439}^{\pm.005} 0.656 ± .006 {0.656}^{\pm.006} 0.774 ± .007 {0.774}^{\pm.007} 0.837 ± .033 {0.837}^{\pm.033} 2.755 ± .018 {2.755}^{\pm.018} 11.033 ± .115 {11.033}^{\pm.115} 2.5 0.471 ± .006 {0.471}^{\pm.006} 0.691 ± .005 {0.691}^{\pm.005} 0.809 ± .005 {0.809}^{\pm.005} 0.489 ± .017 {0.489}^{\pm.017} 2.593 ± .013 {2.593}^{\pm.013} 11.085 ± .118 {11.085}^{\pm.118} 3.5 0.480 ± .006 {0.480}^{\pm.006} 0.706 ± .005 {0.706}^{\pm.005} 0.818 ± .006 {0.818}^{\pm.006} 0.396 ± .013 {0.396}^{\pm.013} 2.562 ± .013 {2.562}^{\pm.013} 11.086 ± .120 {11.086}^{\pm.120} 4.5 0.484 ± .006 {0.484}^{\pm.006} 0.709 ± .005 {0.709}^{\pm.005} 0.823 ± .006 {0.823}^{\pm.006} 0.352 ± .011 {0.352}^{\pm.011} 2.559 ± .015 {2.559}^{\pm.015} 11.083 ± .122 {11.083}^{\pm.122} 5.5 0.484 ± .006 {0.484}^{\pm.006} 0.710 ± .005 {0.710}^{\pm.005} 0.824 ± .006 {0.824}^{\pm.006} 0.324 ± .009 {0.324}^{\pm.009} 2.571 ± .016 {2.571}^{\pm.016} 11.078 ± .122 {11.078}^{\pm.122} 6.5 0.481 ± .007 {0.481}^{\pm.007} 0.708 ± .006 {0.708}^{\pm.006} 0.824 ± .006 {0.824}^{\pm.006} 0.308 ± .009 {0.308}^{\pm.009} 2.588 ± .016 {2.588}^{\pm.016} 11.077 ± .119 {11.077}^{\pm.119} 7.5 (default) 0.480 ± .007 {0.480}^{\pm.007} 0.707 ± .006 {0.707}^{\pm.006} 0.826 ± .006 {0.826}^{\pm.006} 0.298 ± .009 {0.298}^{\pm.009} 2.608 ± .015 {2.608}^{\pm.015} 11.079 ± .119 {11.079}^{\pm.119} 8.5 0.476 ± .008 {0.476}^{\pm.008} 0.705 ± .005 {0.705}^{\pm.005} 0.823 ± .006 {0.823}^{\pm.006} 0.294 ± .008 {0.294}^{\pm.008} 2.630 ± .015 {2.630}^{\pm.015} 11.083 ± .120 {11.083}^{\pm.120} 9.5 0.477 ± .007 {0.477}^{\pm.007} 0.704 ± .005 {0.704}^{\pm.005} 0.822 ± .005 {0.822}^{\pm.005} 0.294 ± .008 {0.294}^{\pm.008} 2.651 ± .015 {2.651}^{\pm.015} 11.089 ± .120 {11.089}^{\pm.120} 10.5 0.474 ± .006 {0.474}^{\pm.006} 0.703 ± .005 {0.703}^{\pm.005} 0.820 ± .006 {0.820}^{\pm.006} 0.297 ± .009 {0.297}^{\pm.009} 2.674 ± .015 {2.674}^{\pm.015} 11.096 ± .121 {11.096}^{\pm.121} 11.5 0.472 ± .006 {0.472}^{\pm.006} 0.702 ± .006 {0.702}^{\pm.006} 0.818 ± .006 {0.818}^{\pm.006} 0.303 ± .009 {0.303}^{\pm.009} 2.697 ± .015 {2.697}^{\pm.015} 11.102 ± .121 {11.102}^{\pm.121} 12.5 0.471 ± .006 {0.471}^{\pm.006} 0.697 ± .006 {0.697}^{\pm.006} 0.815 ± .006 {0.815}^{\pm.006} 0.311 ± .010 {0.311}^{\pm.010} 2.719 ± .015 {2.719}^{\pm.015} 11.108 ± .122 {11.108}^{\pm.122}
+
+We present the quantitative results for different classifier-free guidance (CFG) weight values in Table 1 .
+As mentioned in the main paper, the performance of SALAD improved across both metrics as the weight values increased, but excessively high weight values resulted in a decline in performance for both metrics.
+Notably, R-precision exhibited marginal differences for CFG weight values greater than or equal to 7.5, remaining within statistically equivalent ranges.
+In contrast, for FID and MM-Dist on the HumanML3D dataset, the default setting w = 7.5 w=7.5 yielded the best results.
+Similarly, in the KIT-ML dataset, w = 7.5 w=7.5 provided a balance between the quality and text-motion alignment.
+For Diversity, w = 1.5 w=1.5 produced results significantly inferior to the ground truth in both datasets, but the performance progressively improved as the CFG weight values increased.
+However, the optimal point at which the best Diversity is achieved was different between datasets: w = 11.5 w=11.5 for HumanML3D and w = 7.5 w=7.5 for KIT-ML.
+
+C.3 Diffusion Parametrization
+
+To demonstrate the effectiveness of 𝐯 \mathbf{v} -prediction parametrization, we compared the results of SALAD models trained with different parametrizations, as shown in the last 3 rows of Table 1 .
+While any variation of SALAD produced comparable or outperforming results compared to previous methods, 𝐯 \mathbf{v} -prediction consistently produced more stable results than the other alternatives across different datasets.
+Specifically, on the HumanML3D dataset, 𝐱 \mathbf{x} - and 𝐯 \mathbf{v} -prediction yielded statistically equivalent results for R-precision within the confidence range, but 𝐯 \mathbf{v} -prediction achieved superior results on FID and MM-Dist compared to 𝐱 \mathbf{x} -prediction, while ϵ \boldsymbol{\epsilon} -prediction consistently produced inferior results.
+On the KIT-ML dataset, ϵ \boldsymbol{\epsilon} -prediction scored better on FID compared to 𝐱 \mathbf{x} -prediction, while both achieved similar results in terms of the text-motion alignment.
+Also on this dataset, 𝐯 \mathbf{v} -prediction significantly outperformed both alternatives.
+These results demonstrate the effectiveness of 𝐯 \mathbf{v} -prediction in enhancing stability and robustness in text-to-motion generation using SALAD.
+
+Parametrization R-Precision (Top-3) ↑ FID ↓ 𝐱 \mathbf{x} -prediction 0.860 ± .002 {0.860}^{\pm.002} 0.111 ± .003 {0.111}^{\pm.003} ϵ \boldsymbol{\epsilon} -prediction 0.803 ± .002 {0.803}^{\pm.002} 0.257 ± .008 {0.257}^{\pm.008} 𝐯 \mathbf{v} -prediction 0.857 ± .002 {0.857}^{\pm.002} 0.076 ± .002 {0.076}^{\pm.002}
+
+C.4 FiLM Layers
+
+While FiLM has been adopted in several motion diffusion models [ 45 , 55 ] , its effectiveness in motion generation has yet to be fully evaluated.
+Therefore, we compared the performance of SALAD with and without FiLM, as shown in Table 3 .
+For the model without FiLM layers, we injected diffusion timestep information to 𝐳 t l \mathbf{z}^{\mathit{l}}_{\mathit{t}} by directly adding the positional embedding of diffusion timestep t t to it.
+Across both datasets, FiLM layers improved both text-motion alignment and generation quality, indicating that explicit modulation of intermediate representations effectively produces high-quality and text-faithful results.
+
+Method R-Precision (Top-3) ↑ FID ↓ with FiLM 0.857 ± .002 {0.857}^{\pm.002} 0.076 ± .002 {0.076}^{\pm.002} without FiLM 0.843 ± .002 {0.843}^{\pm.002} 0.087 ± .003 {0.087}^{\pm.003}
+
+Method R-Precision (Top-3) ↑ FID ↓ with FiLM 0.828 ± .005 {0.828}^{\pm.005} 0.296 ± .012 {0.296}^{\pm.012} without FiLM 0.803 ± .006 {0.803}^{\pm.006} 0.311 ± .013 {0.311}^{\pm.013}
+
+C.5 Loss Terms of VAE
+
+To validate the effectiveness of the auxiliary loss terms in the VAE, including ℒ pos \mathcal{L}_{\mathrm{pos}} and ℒ vel \mathcal{L}_{\mathrm{vel}} , we evaluated FID and MPJPE while ablating these loss terms, as shown in Tab. 4 .
+Removing ℒ pos \mathcal{L}_{\mathrm{pos}} had a negative effect in both metrics, while ℒ vel \mathcal{L}_{\mathrm{vel}} had no effect on MPJPE but led to a more significant degradation in FID compared to ablating ℒ pos \mathcal{L}_{\mathrm{pos}} .
+Furthermore, removing both loss terms resulted in the worst performance across all metrics.
+These results demonstrate the importance of auxiliary losses on joint positions and velocities in refining the latent space, contributing to improving motion quality and reliability.
+
+Method FID ↓ MPJPE ↓ Full model 0.003 ± .000 {0.003}^{\pm.000} 0.016 ± .000 {0.016}^{\pm.000} without ℒ pos \mathcal{L}_{\mathrm{pos}} 0.005 ± .000 {0.005}^{\pm.000} 0.023 ± .000 {0.023}^{\pm.000} without ℒ vel \mathcal{L}_{\mathrm{vel}} 0.009 ± .000 {0.009}^{\pm.000} 0.016 ± .000 {0.016}^{\pm.000} without both 0.012 ± .000 {0.012}^{\pm.000} 0.024 ± .000 {0.024}^{\pm.000}

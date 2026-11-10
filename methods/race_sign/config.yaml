@@ -1,0 +1,27 @@
+method_name: race_sign
+method:
+  device: cuda
+  policy: coupled
+  smplx_path: /path/to/licensed/smplx
+  epochs: 100
+  batch_size: 8
+  selector_epochs: 30
+  model:
+    code_dim: 512
+    text_dim: 1024
+    width: 256
+    heads: 8
+    layers: 6
+    factor: 4
+    languages: 3
+    dropout: 0.1
+    text_dropout: 0.1
+    block_size: 16
+    blend_frames: 4
+    selector_width: 128
+    flow_steps: 8
+    joint_weight: 1.0
+    relation_weight: 1.0
+    rotation_weight: 0.1
+    velocity_weight: 0.1
+    boundary_weight: 0.1

@@ -1,0 +1,14 @@
+{
+  "url": "https://arxiv.org/abs/2609.35407",
+  "artifact": "third_party/proposal3_sources/input_screen/66dd36f5b46b4080.json",
+  "read_status": "not_read",
+  "input_labels": [
+    "H21 ○"
+  ],
+  "http_status": 200,
+  "sha256": "19d4cb63ba354ba2d78493a0add46ec4c7d6a9a32aeea018b6da3b4b180ca429",
+  "title": "[2609.35407] BiMoGen: Bidirectional Motion-Text Generation via Unified Masked Discrete Diffusion",
+  "abstract": "Abstract: Text-to-motion generation and motion-to-text captioning are two fundamental tasks in human motion modeling, both grounded in the same underlying motion-text correspondence. Existing unified approaches mostly rely on autoregressive modeling, which imposes a fixed generation order and is therefore poorly suited to the bidirectional dependencies between language and motion, allowing early prediction errors to persist as fixed context and degrade both temporal coherence and cross-modal consistency. Masked discrete diffusion, which models sequences through iterative bidirectional prediction, allows prediction from bidirectional context without a fixed generation order. We therefore propose BiMoGen (Bidirectional Motion-text Generation), a unified masked discrete diffusion framework for bidirectional motion-text modeling. To stabilize training, we design Decoupled Uni- and Cross-Modal Training, in which masked pretraining first establishes cross-modal correspondence on paired motion-text sequences, after which supervised fine-tuning specializes the model for bidirectional generation. Masked diffusion nonetheless faces a train-test mismatch, as the model is trained on clean ground-truth context yet encounters self-generated and potentially erroneous context at inference, with errors committed under heavily masked states propagating through subsequent steps. We further introduce Generation-Aware Self-Correction that exposes the model to its own predictions during training and uses correction passes at early sampling steps for further refinement of previously unmasked tokens. Extensive experiments on HumanML3D and KIT-ML demonstrate competitive performance on both tasks, validating the effectiveness of the proposed two-stage training and self-correction designs. The project page is available at this https URL .",
+  "preview": "",
+  "status": "acquired_not_read"
+}

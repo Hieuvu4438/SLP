@@ -1,0 +1,15 @@
+{
+  "url": "https://mathis.petrovich.fr/temos/",
+  "artifact": "third_party/proposal3_sources/input_screen/c6cb14508a974209.json",
+  "read_status": "not_read",
+  "input_labels": [
+    "**TEMOS**",
+    "H3 ★"
+  ],
+  "http_status": 200,
+  "sha256": "ee7be4828f04a2391136d478a3eaccedd2eaa418faed50ede69a38e4f23151c9",
+  "title": "TEMOS",
+  "abstract": "TEMOS: Text to motions",
+  "preview": "",
+  "status": "acquired_not_read"
+}

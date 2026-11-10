@@ -1,0 +1,14 @@
+{
+  "url": "https://mlanthology.org/iclr/2023/tevet2023iclr-human/",
+  "artifact": "third_party/proposal3_sources/input_screen/7fc40637b34648a2.json",
+  "read_status": "not_read",
+  "input_labels": [
+    "[Human Motion Diffusion Model — MDM](https://mlanthology.org/iclr/2023/tevet2023iclr-human/?utm_source=chatgpt.com)"
+  ],
+  "http_status": 200,
+  "sha256": "9d51146d1c545f7eea6b096a66dc7908e15c215239ae00d7c7bae129f038d87d",
+  "title": "Human Motion Diffusion Model | ML Anthology",
+  "abstract": "Natural and expressive human motion generation is the holy grail of computer animation. It is a challenging task, due to the diversity of possible motion, human …",
+  "preview": "",
+  "status": "acquired_not_read"
+}

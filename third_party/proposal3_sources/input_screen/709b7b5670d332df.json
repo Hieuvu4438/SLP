@@ -1,0 +1,16 @@
+{
+  "url": "https://openaccess.thecvf.com/content/CVPR2023/html/Zhang_Generating_Human_Motion_From_Textual_Descriptions_With_Discrete_Representations_CVPR_2023_paper.html",
+  "artifact": "third_party/proposal3_sources/input_screen/709b7b5670d332df.json",
+  "read_status": "not_read",
+  "input_labels": [
+    "**T2M-GPT**",
+    "H8 ★",
+    "[T2M-GPT](https://openaccess.thecvf.com/content/CVPR2023/html/Zhang_Generating_Human_Motion_From_Textual_Descriptions_With_Discrete_Representations_CVPR_2023_paper.html?utm_source=chatgpt.com)"
+  ],
+  "http_status": 200,
+  "sha256": "5f81db7dca08ac44d0926ef5b59d36803ad56b8e7eaadcc8b62346efe7ade42d",
+  "title": "CVPR 2023 Open Access Repository",
+  "abstract": "In this work, we investigate a simple and must-known conditional generative framework based on Vector Quantised-Variational AutoEncoder (VQ-VAE) and Generative Pre-trained Transformer (GPT) for human motion generation from textural descriptions. We show that a simple CNN-based VQ-VAE with commonly used training recipes (EMA and Code Reset) allows us to obtain high-quality discrete representations. For GPT, we incorporate a simple corruption strategy during the training to alleviate training-testing discrepancy. Despite its simplicity, our T2M-GPT shows better performance than competitive approaches, including recent diffusion-based approaches. For example, on HumanML3D, which is currently the largest dataset, we achieve comparable performance on the consistency between text and generated motion (R-Precision), but with FID 0.116 largely outperforming MotionDiffuse of 0.630. Additionally, we conduct analyses on HumanML3D and observe that the dataset size is a limitation of our approach. Our work suggests that VQ-VAE still remains a competitive approach for human motion generation. Our implementation is available on the project page: https://mael-zys.github.io/T2M-GPT/",
+  "preview": "",
+  "status": "acquired_not_read"
+}

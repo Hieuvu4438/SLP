@@ -1,0 +1,14 @@
+{
+  "url": "https://openaccess.thecvf.com/content/CVPR2026W/GenSign/html/Hong_Toward_Phonology-Guided_Sign_Language_Motion_Generation_A_Diffusion_Baseline_and_CVPRW_2026_paper.html",
+  "artifact": "third_party/proposal3_sources/input_screen/90351dbfcf5c1289.json",
+  "read_status": "not_read",
+  "input_labels": [
+    "[Toward Phonology-Guided Sign Language Motion Generation](https://openaccess.thecvf.com/content/CVPR2026W/GenSign/html/Hong_Toward_Phonology-Guided_Sign_Language_Motion_Generation_A_Diffusion_Baseline_and_CVPRW_2026_paper.html?utm_source=chatgpt.com)"
+  ],
+  "http_status": 200,
+  "sha256": "3615e7ddcd671c15d6c323f1309cb149d72ef1eb70bf9f04db0f2b3d15fa446e",
+  "title": "CVPR 2026 Open Access Repository",
+  "abstract": "Generating natural, correct, and visually smooth 3D avatar sign language motion conditioned on the text inputs continues to be very challenging. In this work, we train a generative model of 3D body motion and explore the roleof phonological attribute conditioning for sign language motion generation, using ASL-LEX 2.0 annotations such as hand shape, hand location and movement. We first establish a strong diffusion baseline using an MDM-style [??] diffusion model using SMPL-X representation, which outperforms SignAvatar [??], a state-of-the-art CVAE method, on gloss discriminability metrics. We then systematically study the role of text conditioningusing different text encoders (CLIP vs. T5), conditioning modes (gloss-only vs. gloss+phonological attributes), and attribute notation format (symbolic vs. natural language). Our analysis reveals that translating symbolic ASL-LEX notations to natural language is a necessary condition for effective CLIP-based attribute conditioning, while T5 is largely unaffected by this translation. Furthermore, our best-performing variant (CLIP with mapped attributes) outperforms SignAvatar across all metrics.These findings highlight input representation as a critical factor for text-encoder-based attribute conditioning, and motivate structured conditioning approaches where gloss and phonological attributes are encoded through independent pathways.",
+  "preview": "",
+  "status": "acquired_not_read"
+}

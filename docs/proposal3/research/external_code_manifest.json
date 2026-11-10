@@ -1,0 +1,80 @@
+{
+  "SOKE": {
+    "origin": "https://github.com/2000ZRL/SOKE",
+    "commit": "5cbc55d84b5a7cbf05a9cf020c468052e8d94d00",
+    "read_scope": "listed files, selected functions/sections; static review, not full-repo/runtime validation",
+    "files": {
+      "mGPT/metrics/t2m.py": "7fd60edf625255edd4f24a7611b02f6415b0cc7bc5cf85012e288bbc58771530",
+      "mGPT/metrics/dtw.py": "ed94cbbb6a44666877a40150758280746efb586175299c4e440f32d7dc6da3fb",
+      "mGPT/models/mgpt.py": "cfe0c84c4394f37efa72148ac44cb372bee9cf80c34bf444fcc3d422de362648",
+      "mGPT/archs/mgpt_lm.py": "1f71389d405525978b93d0fe9cf4afc87fd668606c63d13ec7226c6f19a70cb0"
+    }
+  },
+  "MaDiS": {
+    "origin": "https://github.com/2000ZRL/MaDiS",
+    "commit": "071828ea1b94530dc7ff0a6c009c0a7c6d1f0784",
+    "read_scope": "listed files, selected functions/sections; static review, not full-repo/runtime validation",
+    "files": {
+      "mGPT/archs/masked_diffusion.py": "4c7dbc76bfc8213e29d74022fb1b5b6a6cf9d3d12bc156d5bb216ef1101f2e9c",
+      "mGPT/archs/madis.py": "23ed31edd0626107deadc4bd09434185f421fca79462b441946c648338250cdd",
+      "mGPT/archs/connectors.py": "a43e6b0e6435dc42a08ab33b6d307c31cdf8ecd2b861356ec8b1d4f1c0496dc1"
+    }
+  },
+  "SignSparK": {
+    "origin": "https://github.com/JianHe0628/SignSparK",
+    "commit": "916402d0ecd6322fb4a9e5f513229a94a57bf4b6",
+    "read_scope": "listed files, selected functions/sections; static review, not full-repo/runtime validation",
+    "files": {
+      "README.md": "54f73cfd3b1a8bc6d3333899863998c42e812957f6aed7e214068051313f8899",
+      "sample.py": "a919f5853c4335a5e0dfa0a62095b59efb6cbdb1c52b2244cf3d2c98420c4514",
+      "signspark/keyframes.py": "7868ebf42fed4a7f7b0bad31160033d6b40430c85bee2f7c045e7293bfe797f6",
+      "signspark/rflow.py": "3b124f9b90f316599843788c18a97ccc128634dc7de4eb5abefc4f9146a96ae5"
+    }
+  },
+  "MoMask": {
+    "origin": "https://github.com/EricGuo5513/momask-codes",
+    "commit": "94a6636c9c463b7a9414c3401a6f1b67e6c51824",
+    "read_scope": "listed files, selected functions/sections; static review, not full-repo/runtime validation",
+    "files": {
+      "models/mask_transformer/transformer.py": "5c9c44b4699fe3660f8a024d70da25e48d661a01e72a3a0e0107a2c00fcb46b0",
+      "models/vq/residual_vq.py": "89c40279b6af3e08f95afbad00721394bf68da60d7d85090b931813fa47f7d15"
+    }
+  },
+  "DisCoRD": {
+    "origin": "https://github.com/whwjdqls/DisCoRD",
+    "commit": "782deffca1a263a2241b6321cfe6532a022f284e",
+    "read_scope": "listed files, selected functions/sections; static review, not full-repo/runtime validation",
+    "files": {
+      "MotionPriors/models/rf_decoder/rectified_flow.py": "4e70ba3cac2596cebe8d914645d4b99332eeacdd58be786674499640dbad33dc",
+      "MotionPriors/models/rf_decoder/Unet1Dflow_decoder.py": "f7f1b3b6e5ea8b4777d93b437d3827db4ff2b350d445efa039c7d125ad15e519"
+    }
+  },
+  "SALAD": {
+    "origin": "https://github.com/seokhyeonhong/salad",
+    "commit": "6487e98957d1643ac70d77cecdab21f3cda62e2b",
+    "read_scope": "listed files, selected functions/sections; static review, not full-repo/runtime validation",
+    "files": {
+      "models/vae/encdec.py": "062f97b7a0dfb855001628280754c620d09f5d03eb85b2a9ff3fee12733439dc",
+      "models/skeleton/pool.py": "54766959419b8ea1dbb4363a2695a4340f16658312c4c2dba498a7b49688ee41",
+      "models/denoiser/transformer.py": "e4c267eaa770583e40bcf573da6edb17b5e05942dd823f5baadff61ec3b98038"
+    }
+  },
+  "RAM": {
+    "origin": "https://github.com/feifeifeiliu/RAM",
+    "commit": "351f0444388739348cf474a291acc30f0449ee97",
+    "read_scope": "listed files, selected functions/sections; static review, not full-repo/runtime validation",
+    "files": {
+      "README.md": "400ccbf3155a77694527d72a0dc3f2e0d9ff12e08e01ab17e0b28fcb59eebf65",
+      "diffusion/diffuser_api.py": "8ab8e9424ac493e73b38bfefc994575e55e85fcc6664ca947cf2cd9416f12284",
+      "utils/sampler_util.py": "b74bcc4a57508e4829ddb9f257d1cd5ae298848642eca708df6093f517be334c"
+    }
+  },
+  "HumanTOMATO": {
+    "origin": "https://github.com/IDEA-Research/HumanTOMATO",
+    "commit": "b5ccf060465e986585618fac7461ed1674dedd92",
+    "read_scope": "listed files, selected functions/sections; static review, not full-repo/runtime validation",
+    "files": {
+      "README.md": "2c6bf83231d87ac481db836ed9ce1bec558f27c9cf82c0743351dd6c401e1225"
+    }
+  }
+}

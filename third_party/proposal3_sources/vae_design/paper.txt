@@ -1,0 +1,221 @@
+The Impact of VAE Design on Latent Pose Representations for Diffusion-based Sign Language Production
+
+Latent diffusion approaches to sign language production (SLP) rely on an initial stage that learns an encoding of sign pose sequences, enabling generative modeling in the resulting latent space. The autoencoder used in this stage is typically evaluated in terms of reconstruction quality using geometric metrics common in SLP. While informative, these metrics do not fully capture latent space properties that may influence the training and performance of the downstream generative model. In this work, we investigate how architectural and training objective design choices in a variational autoencoder (VAE) for sign pose encoding affect latent space structure, and how these differences translate into the performance of a latent diffusion model for text-to-sign generation. Our experiments on Phoenix14T dataset show that variations in generative performance, measured through back-translation BLEU scores, can sometimes be better explained by differences in latent space properties than by VAE reconstruction accuracy alone.
+
+
+
+1 Introduction
+
+In the last years, deep learning methods have driven progress in different sign language processing tasks, notably sign language recognition and translation [ 7 , 5 ] . More recently, sign language production (SLP), referring to the generation of sign language sequences from spoken or written language, has received increasing attention [ 18 ] .
+
+Early deep neural SLP work primarily relied on autoregressive architectures, notably with the Transformer encoder-decoder baseline from Saunders et al. [20] . In parallel, diffusion models have emerged as a promising alternative [ 27 , 2 , 10 ] , offering improved robustness to classical issues of autoregressive models such as error accumulation or regression-to-the-mean. Among these approaches, latent diffusion models have proven particularly effective for conditional image generation [ 19 ] and have since been successfully extended to other modalities, e.g., audio [ 14 ] or video [ 31 ] . For SLP in particular, a recent study from Feng et al. [9] explored (continuous) latent diffusion and reported state-of-the-art performance over previous approaches on German Sign Language (DGS) and American Sign Language (ASL) benchmark datasets in terms of standard SLP geometric and back-translation metrics.
+
+A key component of latent diffusion models is the latent representation on which the diffusion process operates. In practice, this representation is typically obtained using a a variational autoencoder (VAE) [ 13 ] encoding input sequences into a compact latent space and reconstructing them from it. The design of such autoencoders is commonly guided by reconstruction accuracy. However, prior works in image generation [ 28 , 29 ] suggest that optimizing solely for reconstruction error does not necessarily yield the most suitable latent representations for generative modeling.
+
+Motivated by this observation, we investigate the impact of VAE design on the latent sign pose representations for diffusion-based SLP. More precisely, we study how different architectural and training choices for the sign pose VAE affect the properties of the learned latent space, and how the latter relates to the performance of a latent diffusion SLP model. To the best of our knowledge, such an analysis has not yet been explored in the context of diffusion-based SLP.
+
+Our main contributions can be summarized as follows:
+
+We design and evaluate four VAE variants for encoding sign language pose sequences. Implementations of these VAEs are made available online 1 1 1 https://github.com/GFaure9/SignPoseVAE .
+
+We analyze how these design choices impact latent space properties and reconstruction performance.
+
+We analyze how the VAE reconstruction and latent space metrics relate to latent diffusion SLP performance, highlighting emerging trends and providing intuitive interpretations to build insights for the design of VAEs in diffusion-based SLP.
+
+2 Related Work
+
+2.1 Sign Language Production
+
+Various deep neural SLP approaches are based on autoregressive models, in which sign poses are generated sequentially [ 20 , 30 , 26 , 24 ] . While effective and appropriate for variable length sequential data, this paradigm is prone to challenges such as error propagation during generation and the tendency to produce averaged motions with limited diversity.
+
+To address these limitations, recent works in SLP have explored non-autoregressive formulations, including diffusion approaches [ 10 , 21 , 2 , 22 , 27 , 9 ] , and non-autoregressive architectures based on transformers or spatial-temporal graph convolutional networks [ 23 , 12 ] . They aim to generate pose sequences in a single pass or via iterative refinement, rather than sequentially.
+
+Moreover, independently of whether the generation model is autoregressive or not, many recent SLP systems adopt a two-stage pipeline: first encoding sign pose sequences into compact latent representations through an autoencoder, and then training a generation model in this latent space [ 26 , 9 , 24 , 30 ] . In several works, this encoding is achieved via vector quantization techniques such as VQ-VAE or VQ-GAN, leading to a learned discrete codebook of sign tokens. While convenient for sequential token prediction, discretization can introduce limitations such as unnatural transitions or the loss of fine-grained motion details.
+
+To mitigate these issues, Tasyurek et al. [23] proposed learning continuous sign pose representations through an autoencoder and generating the latent vectors using a non-autoregressive transformer conditioned on textual embeddings. However, deterministic decoders trained with regression losses may still produce over-smoothed motions when multiple plausible trajectories exist [ 3 ] . In this context, the latent diffusion approach employed by Feng et al. [9] appears as a promising alternative. In fact, since diffusion explicitly tries to approximate the probability distribution of sign pose latent representations, it might be better suited to the stylistic and temporal variations inherent to sign language motion. The authors report improved performance compared to previous approaches, which underscores the potential of latent diffusion in continuous space for SLP.
+
+2.2 Latent Diffusion and Latent Representations
+
+Latent diffusion models, introduced by Rombach et al. [19] for text-to-image generation, consists of two stages. First, an autoencoder ( ℰ \mathcal{E} , 𝒟 \mathcal{D} ), typically a VAE, is trained to encode the data x x into latent variables z = ℰ ⁡ ( x ) z=\mathcal{E}(x) . Secondly, a denoising diffusion probabilistic model (DDPM) is trained in this latent space, gradually corrupting z z in a forward noising process q ( z ( 1 : N diff ) ∣ z ( 0 ) ) = ∏ n = 1 N diff q ( z ( n ) ∣ z ( n − 1 ) ) q(z^{(1:N_{\text{diff}})}\mid z^{(0)})=\prod_{n=1}^{N_{\text{diff}}}q(z^{(n)}\mid z^{(n-1)}) , and optimizing a neural network p θ p_{\theta} to approximate the reverse denoising process under the condition c c :
+
+where z ( N diff ) z^{(N_{\text{diff}})} is sampled from a standard normal distribution. Once an estimation of z ( 0 ) z^{(0)} is recovered at the end of the reverse process, it is then decoded into the data space as x ^ = 𝒟 ⁡ ( z ^ ( 0 ) ) \hat{x}=\mathcal{D}(\hat{z}^{(0)}) .
+
+SLP models that learn continuous latent pose representations in a two-stage pipeline typically employ autoencoders that encode body regions separately (e.g., torso and arms, hands, and face) [ 23 , 9 ] . Beyond this common architectural choice, however, there is currently no standardized design for sign pose autoencoders intended for SLP. For instance, Feng et al. [9] employ a variational encoder with mean squared reconstruction losses, whereas Tasyurek et al. [23] use deterministic linear encoders with region-weighted ℓ 1 \ell_{1} reconstruction objectives, and a regularization term promoting sparser latent representations.
+
+However, recent work in image generation has shown the strong impact of latent representations on downstream generative performance. In particular, Yao and Wang [28] report that improving image tokenizer reconstruction accuracy by increasing feature dimensionality can significantly degrade generation quality. Similarly, Yao et al. [29] demonstrate that incorporating text-image contrastive and self-supervised objectives during tokenizer training leads to substantial improvements in generative performance.
+
+Therefore, sign pose latent representations might play an important role in two-stage SLP pipelines, which remains insufficiently understood. Notably, the relationship between VAE design choices, characteristics of the resulting latent space, and the performance of downstream diffusion-based sign language generation has not yet been systematically investigated.
+
+3 Methodology
+
+3.1 SLP Latent Diffusion Framework
+
+For sign language generation, we adopt a conditional latent diffusion model following the framework of Rombach et al. [19] . More precisely, the diffusion process is performed on learned latent representations of sign pose sequences rather than on the original 3D skeletal pose coordinates, which live in a higher-dimensional space. The latent space originates from a variational encoder (see Figure 2 ) mapping each sequence of F F sign poses x 1 : F ∈ ℝ F × N × 3 x_{1:F}\in\mathbb{R}^{F\times N\times 3} to a sequence of latent representations z 1 : F ∈ ℝ F × d lat z_{1:F}\in\mathbb{R}^{F\times d_{\text{lat}}} .
+
+During training, Gaussian noise is progressively added to the latent representation z 1 : F ( 0 ) z_{1:F}^{(0)} according to the following forward diffusion process:
+
+where n n is the diffusion process timestep, ϵ ∼ 𝒩 ⁡ ( 0 , I ) \epsilon\sim\mathcal{N}(0,\textbf{I}) and α ¯ n = Π s = 0 n ​ ( 1 − γ s ) \bar{\alpha}_{n}=\Pi_{s=0}^{n}(1-\gamma_{s}) , with γ s \gamma_{s} a predefined noise schedule.
+A multi-resolution U-Net model, denoted ϵ θ \epsilon_{\theta} , is trained to predict the injected noise from the noisy latent z 1 : F ( n ) z_{1:F}^{(n)} at each timestep (cf. Figure 1 ).
+
+To allow for text-conditioned generation of sign pose sequences, the noise prediction at each timestep is conditioned by an embedding c ∈ ℝ L × d c c\in\mathbb{R}^{L\times d_{c}} of the sentence associated to the input noisy latent sign pose sequence. This text embedding consists in token-level features extracted from a pretrained BERT-like language encoder, and is provided as context to the U-Net through cross-attention blocks at several layers.
+
+The training process then amounts to minimizing the following loss:
+
+After denoising (Equation 1 ), the predicted latent sequence z ^ 1 : F ( 0 ) \hat{z}_{1:F}^{(0)} is mapped back to the pose space using the VAE decoder to obtain the generated sign pose sequence.
+
+3.2 Sign Pose VAE Variants
+
+To study the impact of VAE design choices on sign pose latent representations, and consequently on SLP, we consider four VAE variants differing in architecture, reconstruction objectives, and latent distribution.
+
+For all variants, the body is decomposed into four regions: torso and arms (T-A), right hand (RH), left hand (LH), and face (F) (cf. Figure 2 ). Each region is processed by a dedicated encoder and decoder module. By default, the encoded embeddings of the regions are then combined to predict the latent distribution. The latent dimensionality d lat = d T-A + d RH + d LH + d F d_{\text{lat}}=d_{\text{T-A}}+d_{\text{RH}}+d_{\text{LH}}+d_{\text{F}} , as well as per-region latent dimensions, are kept fixed across all variants to better isolate the effect of variant-specific changes.
+
+Classically, from an input pose sequence x 1 : F x_{1:F} , the encoder first predicts a latent distribution
+
+from which a latent sequence z 1 : F z_{1:F} is sampled using the re-parameterization trick, and given to the decoder to reconstruct the pose sequence x ^ 1 : F \hat{x}_{1:F} .
+
+To train the VAEs, we employ the training objective from the standard β \beta -VAE formulation of Higgins et al. [11] :
+
+where ℒ recon \mathcal{L}_{\text{recon}} denotes a reconstruction error between the reference and predicted poses, and D KL D_{\mathrm{KL}} is the Kullback–Leibler divergence, acting as a regularization term to encourage the latent distribution to have a Gaussian shape. β \beta is progressively increased during training to stabilize reconstruction before stronger KL regularization. In the following, we present the specifics of each variant in more detail.
+
+The first variant serves as the reference baseline. Each region encoder and decoder is implemented as a multilayer perceptron (MLP), while the reconstruction loss consists of an ℓ 1 \ell_{1} error on joint positions averaged over frames for each region:
+
+where ℛ = { I T-A , I RH , I LH , I F } \mathcal{R}=\{I_{\text{T-A}},I_{\text{RH}},I_{\text{LH}},I_{\text{F}}\} denotes the set of index subsets corresponding to body regions in the skeletal representation, and w r pos w^{\text{pos}}_{r} are per-region weights set to equal values in this variant.
+
+The second variant replaces the MLP modules with architectures that explicitly exploit the skeletal structure and temporal dynamics of pose sequences. Specifically, for the torso/arms and hands regions, we employ graph convolutional (GCN) layers to model the connectivity between joints, followed by residual temporal convolutional (ResTempConv) blocks to capture motion dependencies over time. In principle, we expect this inductive bias to facilitate learning, notably by encouraging latent representations to focus on motion patterns and not having to ”re-discover/re-encode” joint connectivity. The reconstruction objective is kept as in BaseVAE .
+
+The third variant builds upon StructVAE ’s architecture but introduces a richer reconstruction objective. More precisely, we incorporate additional losses that isolate the mouth keypoints position error and penalize the velocity of keypoints for specific regions, namely torso/arms, face, and mouth. Besides, different weighting factors are applied for each region. The reconstruction objective becomes
+
+where I M I_{\text{M}} denotes the subset of mouth joint indices in the skeleton, and d ​ x f ​ [ r ] = x f + 1 ​ [ r ] − x f ​ [ r ] \mathrm{d}x_{f}[r]=x_{f+1}[r]-x_{f}[r] represents the discrete joint velocity of region r r between frames f f and f + 1 f+1 . We make sure to keep ∑ r w r β \frac{\sum_{r}w_{r}}{\beta} equal across variants to preserve the relative balance between KL divergence and reconstruction loss.
+The values of the scaling factors are detailed in Appendix A.1.
+This objective allows to emphasize the reconstruction of certain regions such as fingers or mouth that need fine articulation for sign language, and explicitly encourages temporally more coherent motion through velocity terms.
+
+The final variant is based on MultiObjVAE but instead of predicting a single latent distribution for the entire body, we predict a separate latent distribution for each region:
+
+Latent poses z 1 : F z_{1:F} are thus obtained by separately sampling z 1 : F [ r ] ∼ 𝒩 ( μ r ( x 1 : F [ r ] ) , σ r ( x 1 : F [ r ] ) 2 I ) z_{1:F}[r]\sim\mathcal{N}(\mu_{r}(x_{1:F}[r]),\sigma_{r}(x_{1:F}[r])^{2}\textbf{I}) and concatenating them. This design aims to increase per-region reconstruction accuracy and to have more disentangled latent representations.
+
+Table 1 summarizes the main differences between the four variants in terms of architecture, reconstruction objectives, and latent distribution design. Further implementation details are given in Section 4 .
+
+Enc-Dec Recon. Loss Distrib. BaseVAE MLP Position ℓ 1 \ell_{1} Shared StructVAE GCN + ResTempConv Position ℓ 1 \ell_{1} Shared MultiObjVAE GCN + ResTempConv Multi-objective Shared FactorVAE GCN + ResTempConv Multi-objective Per-region
+
+3.3 Metrics
+
+3.3.1 SLP Metrics
+
+To evaluate both reconstructed poses from the VAE and generated sequences from the latent diffusion model, we rely on metrics commonly used in SLP, focusing on two complementary perspectives: semantic consistency and geometric accuracy of generated sign pose sequences.
+
+Semantic consistency is evaluated through a back-translation protocol. A pretrained sign-to-text model translates the predicted pose sequences back into text, which is then compared with the ground-truth sentence.
+
+To ensure standardized evaluation, we use the back-translation pipeline of the SLRTP CVPR 2025 Challenge [ 25 ] . For clarity, we report only BLEU-1 and BLEU-4 scores [ 16 ] for SLP evaluation, which measure respectively unigram and 4-gram overlaps between the predicted and reference sentences.
+
+As in the SLRTP challenge [ 25 ] , motion accuracy is evaluated using the Mean Joint Error (MJE), defined as the average Euclidean distance between predicted and ground-truth joint positions:
+
+In addition to joint-level errors, we introduce region-level metrics measuring the accuracy of bone orientations for the torso/arms and hands. Orientations errors enable better comparison across regions since they are independent of bone length. For a bone defined by joints ( i , j ) (i,j) , the bone vector at frame f f is b f ( i , j ) = x f ​ [ i ] − x f ​ [ j ] b_{f}^{(i,j)}=x_{f}[i]-x_{f}[j] . The mean bone orientation error for region r r (denoted BOE r \text{BOE}_{r} ) is defined as
+
+where B r B_{r} is the set of parent-child joint pairs defining the bones in region r r .
+
+Before computing geometric metrics, the predicted sequence is truncated to the reference sequence length, and both sequences are temporally aligned using Dynamic Time Warping (DTW), so that small timing shifts do not penalize otherwise correct signing motion. DTW alignment paths are computed using either joint position distances (for MJE) or bone orientation distances (for BOE).
+
+3.3.2 Latent Space Analysis
+
+To better understand the properties of the latent space learned by our different VAE variants, we introduce the following metrics.
+
+Smooth latent trajectories may promote temporal coherence, but higher overall temporal variation may also reflect richer motion encoded in the latent space and preserve motion patterns relevant for sign language. Therefore, we choose to measure first- and second-order temporal variations of latent poses, denoted S v S_{v} and S a S_{a} :
+
+Smaller values of S v S_{v} and S a S_{a} correspond to temporally smoother latent sequences.
+
+To analyze dependencies between latent dimensions, we compute statistics over a sufficiently large set of K K latent pose sequences E lat = { z 1 : F ( k ) } k E_{\text{lat}}=\{z_{1:F}^{(k)}\}_{k} . The empirical covariance between latent dimensions is defined as
+
+where μ i = 1 K ​ F ​ ∑ k , f z f ( k ) ​ [ i ] \mu_{i}=\frac{1}{KF}\sum_{k,f}z_{f}^{(k)}[i] denotes the empirical mean of dimension i i .
+
+From this covariance matrix, we measure the average dependency between latent dimensions through the mean absolute correlation
+
+We also compute the effective dimensionality of the latent space [ 8 ] , which can be defined as
+
+where λ k \lambda_{k} s denote the eigenvalues of the covariance matrix ( cov i ​ j ) i ​ j (\text{cov}_{ij})_{ij} . This quantity represents the equivalent number of orthogonal directions explaining the same covariance structure as the full latent space, i.e. how variance is distributed across latent dimensions.
+
+Intuitively, a higher d eff d_{\text{eff}} suggests less collapsed (”richer”) representations, allowing the generative model to exploit a greater fraction of latent dimensions information content [ 15 ] . On the other hand, larger ρ \rho reflects more redundancies in the representations. Such redundancies could reduce representational efficiency but potentially facilitate optimization, as learning to denoise one dimension may implicitly provide information about other correlated dimensions. Thus, we expect these two properties to have different and possibly competing effects on diffusion training and generation performance.
+
+4 Experiments
+
+4.1 Experimental Setup
+
+4.1.1 Dataset
+
+All experiments are conducted on the RWTH-PHOENIX-Weather 2014T ( Phoenix14T ) dataset [ 4 ] , which contains 8,257 sequences of German Sign Language performed by 9 signers. We adopt the skeleton format used in the SLRTP challenge [ 25 ] , consisting of N = 178 N=178 keypoints: 8 for the torso and arms, 21 per hand, and 128 for the face.
+
+4.1.2 Implementation Details
+
+For the structured VAE variants ( StructVAE , MultiObjVAE and FactorVAE ), each region-specific encoder and decoder consists of two GCN layers followed by a ResTempConv block. We fix d lat = 64 d_{\text{lat}}=64 for all variants, with: d T-A = 10 d_{\text{T-A}}=10 , d RH = 24 d_{\text{RH}}=24 , d LH = 24 d_{\text{LH}}=24 , and d face = 6 d_{\text{face}}=6 . To ensure a fair comparison, all variants have a comparable number of parameters, around 700 700 k ( ± 30 \pm 30 k).
+
+The latent diffusion model is mainly based on Stable Diffusion [ 19 ] components, with three symmetric downsampling and upsampling stages using ResNet blocks, and a central bottleneck. Diffusion timestep embeddings are injected through FiLM [ 17 ] . Text conditioning is applied at all resolutions using a 1D adaptation of Stable Diffusion’s SpatialTransformer 2 2 2 https://nn.labml.ai/diffusion/stable_diffusion/model/unet_attention.html .
+
+In the VAE training loss, β \beta is increased linearly from 0 to 0.1 (to reduce the risk of posterior collapse) over the first 100 epochs.
+
+The latent diffusion model is trained on the VAE latent means, with a fixed sequence length of 256 frames. Text conditioning is performed using the last hidden states from the pretrained transformer model FacebookAI/xlm-roberta-base [ 6 ] available in the Hugging Face library 3 3 3 https://huggingface.co/FacebookAI/xlm-roberta-base .
+
+Both the VAE and the latent diffusion model are optimized using Adam. The learning rate is set to 10 − 3 10^{-3} for VAE training and 10 − 4 10^{-4} for the diffusion model, and all models are trained for 1,000 epochs. Evaluation uses the best validation checkpoint for the VAE and the final checkpoint for the diffusion model.
+
+All experiments are run with a fixed random seed. Reported results thus correspond to a single training run and may vary across different seeds.
+
+Experiments were performed on Nvidia L40S and A40 GPUs (45G).
+
+4.2 Results and Discussion
+
+4.2.1 Impact of VAE Design on Reconstructed Poses and Latent Space
+
+BOE RH ↓ \downarrow BOE T-A ↓ \downarrow MJE ↓ \downarrow BaseVAE 0.28 0.25 0.012 StructVAE 0.22 0.20 0.003 MultiObjVAE 0.23 0.20 0.004 FactorVAE 0.22 0.19 0.006
+
+S v S_{v} S a S_{a} ρ \rho d eff d_{\text{eff}} BaseVAE 0.89 0.99 0.12 13 StructVAE 0.92 0.88 0.18 20 MultiObjVAE 1.07 1.07 0.13 22 FactorVAE 0.87 0.82 0.05 18
+
+Comparing the MLP baseline ( BaseVAE ) with the structured GCN+ResTempConv variant ( StructVAE ), we observe consistent improvements in all geometric reconstruction metrics (Table 2 ). In the latent space, BaseVAE exhibits lower inter-dimension correlations ( ρ = 0.12 \rho=0.12 vs 0.18 0.18 ) but a significantly lower effective dimensionality (13 vs 20). This suggests that structured encoders allow the latent space to encode more diverse and orthogonal features, possibly as skeletal connections are already modeled by the architecture, which reduces the need to encode them in the latent dimensions.
+Regarding temporal smoothness, while BaseVAE shows slightly lower velocity S v S_{v} , StructVAE achieves notably lower acceleration S a S_{a} (0.88 vs 0.99), likely due to temporal convolutions accounting for longer-range motion dependencies.
+
+Introducing a multi-objective reconstruction loss in MultiObjVAE does not significantly change geometric reconstruction metrics but impacts latent space. More precisely, S v S_{v} and S a S_{a} increase, mean correlation ρ \rho decreases (0.13 vs 0.18), and effective dimensionality rises (22 vs 20). This indicates that the additional loss terms and different weights encourage the model to distribute information across latent dimensions, possibly to encode finer motion patterns to minimize the error terms with higher weights on mouth, fingers and velocities.
+
+Shifting from a shared latent distribution ( MultiObjVAE ) to per-region latent distributions ( FactorVAE ) slightly improves per-region bone orientation errors (BOE RH 0.22 vs 0.23, BOE T-A 0.19 vs 0.20), but overall MJE is higher. We also observe as expected that FactorVAE ’s latent space exhibits the lowest inter-dimension correlation ( ρ = 0.05 \rho=0.05 ), highlighting the decoupling of regions. While this aligns with improved local reconstruction, it may come at the expense of temporal coordination across regions, as reflected in the higher MJE.
+
+Figure 3 is coherent with the above observations. We also note that across all variants, intra-region correlations dominate, especially in hands. Other notable patterns include:
+
+in StructVAE and MultiObjVAE , left- and right-hand correlations show distinct structures, which reflects the predominance of right-handed signers in the dataset and the the asymmetric roles of the hands in DGS.
+
+in FactorVAE , we observe significantly lower correlations overall, confirming reduced inter-region coordination. We also detect a posterior collapse for face embeddings, with near-zero diagonal values, which implies that the face decoder ignores these latents. One possible remedy could be to reduce the KL regularization weight for the face term in the loss [ 1 ] .
+
+4.2.2 Trends between VAE Latent/Reconstruction Metrics and Latent Diffusion SLP
+
+Figure 4 compares latent diffusion training curves on different VAE latent spaces.
+
+Interestingly, convergence speed roughly follows the inter-dimension correlation ranking ρ \rho : higher correlations matches faster convergence, and variants with similar ρ \rho ( BaseVAE and MultiObjVAE ) exhibit close curves. This trend aligns with the intuition that denoising one correlated latent dimension can help improve the others, thereby accelerating training.
+
+For reference regarding metric scales, Table 4 reports BLEU scores obtained by training publicly available implementations of two SLP models and evaluating them using our pipeline: Progressive Transformers 4 4 4 https://github.com/BenSaunders27/ProgressiveTransformersSLP [ 20 ] (2020, autoregressive) and Sign-IDD 5 5 5 https://github.com/NaVi-start/Sign-IDD [ 21 ] (2025, non-latent diffusion). We emphasize that our goal is not to achieve state-of-the-art performance, but rather to analyze how the design of the VAE affects relative variations in latent diffusion-based SLP when using a standard latent diffusion model.
+
+Model BLEU-1 BLEU-4 Progressive Transformers † [ 20 ] 33.2 12.1 Sign-IDD [ 21 ] 32.7 11.7
+
+To this extent, figures 5 and 6 show the BLEU-1 and BLEU-4 metrics on our latent diffusion model results (text-to-sign task) against VAE reconstruction and latent space metrics. Although the four observations are insufficient to establish statistically significant correlations, the emerging trends remain informative to assess monotonic relationships and their consistency with theoretical expectations.
+
+In this perspective, monotonic trends are most evident when comparing BLEU to latent velocity S v S_{v} or effective dimensionality ( d eff d_{\text{eff}} ), whereas less readable when comparing with geometric reconstruction errors (as also suggested by | PCC | < 0.5 |\text{PCC}|<0.5 for BOE and | PCC | < 0.75 |\text{PCC}|<0.75 for MJE). For instance, large relative differences in reconstruction errors between FactorVAE and BaseVAE (+100% MJE, +32% BOE) do not translate into noticeable differences in generative performance, with BLEU-1 remaining nearly identical (30.37 vs 30.43, -0.2%).
+
+Besides, the observed tendency for higher latent velocity to coincide with better BLEU scores suggests that too smooth latent trajectories are less beneficial for the training of the latent diffusion SLP model, as temporal variations important for linguistic expressiveness may be absent in the latent space.
+
+These observations highlight that some VAE latent space properties such as temporal variations or effective dimensionality might be more predictive of latent diffusion training behaviour and generation quality than raw VAE reconstruction accuracy. Consequently, when designing VAE for SLP, this metrics could be prioritize over marginal gains in per-joint reconstruction.
+
+5 Conclusion
+
+We presented four VAE designs for encoding sign language poses, and studied their latent space properties and reconstruction performance, as well as downstream latent diffusion-based SLP performance on a standard DGS dataset. Although VAE reconstruction errors were low and generally comparable, the learned latent spaces exhibited visible differences in temporal variation, inter-dimensional correlations, and variance allocation across dimensions. These variations were reflected in the generation quality of the diffusion model, underscoring the role of latent space design in SLP beyond the classical minimization of VAE reconstruction error.
+
+Future work includes extending this study to larger datasets and exploring additional VAE variants to further strengthen and explore the relationship between latent sign pose space properties and SLP performance.
+
+6 Acknowledgements
+
+This work is part of Défi Inria COLaF , financed by Plan National de Recherche en Intelligence Artificielle . Experiments were carried out using the Grid’5000 testbed (see details at https://www.grid5000.fr ).
+
+References
+
+Appendix A Supplementary Material
+
+A.1 Weighting Factors in the Reconstruction Loss of VAE Variants
+
+Name Value BaseVAE / StructVAE MultiObjVAE / FactorVAE w T-A pos w^{\text{pos}}_{\text{T-A}} 14.5 5 w RH pos w^{\text{pos}}_{\text{RH}} 14.5 10 w LH pos w^{\text{pos}}_{\text{LH}} 14.5 12 w F pos w^{\text{pos}}_{\text{F}} 14.5 4 w M pos w^{\text{pos}}_{\text{M}} 0 8 w T-A vel w^{\text{vel}}_{\text{T-A}} 0 3 w F vel w^{\text{vel}}_{\text{F}} 0 6 w M vel w^{\text{vel}}_{\text{M}} 0 10
+
+A.2 Qualitative Comparison of Reconstructed and Generated Sign Pose Sequences
+
+Figure 7 presents: 1) reconstructed poses from a ground-truth sign pose sequence of the Phoenix14T dataset using MultiObjVAE and FactorVAE , and 2) the generated sequences from the corresponding input sentence 6 6 6 ”Und nun die Wettervorhersage für morgen, Donnerstag, den sechsundzwanzigsten November.” meaning ”And now the weather forecast for tomorrow, Thursday, the twenty-sixth of November.” using the latent diffusion model trained on each VAE latent space. Despite visually similar VAE reconstructions for both variants (notably with correct hands and arms motions), we observe meaningful differences between generated sequences.

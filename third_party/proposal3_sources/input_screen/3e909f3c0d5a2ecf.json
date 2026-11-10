@@ -1,0 +1,14 @@
+{
+  "url": "https://mano.is.tuebingen.mpg.de/",
+  "artifact": "third_party/proposal3_sources/input_screen/3e909f3c0d5a2ecf.json",
+  "read_status": "not_read",
+  "input_labels": [
+    "R3 ★"
+  ],
+  "http_status": 200,
+  "sha256": "5bf9f842750152c3a0ae32846dc77effb706a5cb4b5b7704ca93671f87cb3347",
+  "title": "MANO",
+  "abstract": "",
+  "preview": "MANO Embodied Hands: Modeling and Capturing Hands and Bodies Together Javier Romero*, Dimitrios Tzionas* and Michael J Black SIGGRAPH ASIA 2017, BANGKOK, THAILAND Abstract Humans move their hands and bodies together to communicate and solve tasks. Capturing and replicating such coordinated activity is critical for virtual characters that behave realistically. Surprisingly, most methods treat the 3D modeling and tracking of bodies and hands separately. Here we formulate a model of hands and bodies interacting together and fit it to full-body 4D sequences. When scanning or capturing the full body in 3D, hands are small and often partially occluded, making their shape and pose hard to recover. To cope with low-resolution, occlusion, and noise, we develop a new model called MANO (hand Model with Articulated and Non-rigid defOrmations). MANO is learned from around 1000 high-resolution 3D scans of hands of 31 subjects in a wide variety of hand poses. The model is realistic, low-dimensional, captures non-rigid shape changes with pose, is compatible with standard graphics packages, and can fit any human hand. MANO provides a compact mapping from hand poses to pose blend shape corrections and a linear manifold of pose synergies. We attach MANO to a standard parameterized 3D body shape model (SMPL), resulting in a fully articulated body and hand model (SMPL+H). We illustrate SMPL+H by fitting complex, natural, activities of subjects captured with a 4D scanner. The fitting is fully automatic and results in full body models that move naturally with detailed hand motions and a realism not seen before in full body performance capture. The models and data are freely available for research purposes in our website ( http://mano.is.tue.mpg.de ). Video More Information pdf preprint MANO Project page at MPI:IS Data, models and sample code can be downloaded by signing up and agreeing with the license . In case you have already signed up, you can simply login . News Model/Code Versions: v1.0 - 22 Nov 2017 - Initial model release. The shape space was not scaled. v1.1 - 14 May 2018 - MANO PKL files changed after scaling the shape space (shapedirs) for unit variance. v1.2 - 16 Jan 2019 ",
+  "status": "acquired_not_read"
+}

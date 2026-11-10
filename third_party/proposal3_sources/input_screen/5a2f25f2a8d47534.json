@@ -1,0 +1,15 @@
+{
+  "url": "https://www.ecva.net/papers/eccv_2024/papers_ECCV/html/100_ECCV_2024_paper.php",
+  "artifact": "third_party/proposal3_sources/input_screen/5a2f25f2a8d47534.json",
+  "read_status": "not_read",
+  "input_labels": [
+    "**Motion Mamba**",
+    "[Motion Mamba](https://www.ecva.net/papers/eccv_2024/papers_ECCV/html/100_ECCV_2024_paper.php?utm_source=chatgpt.com)"
+  ],
+  "http_status": 200,
+  "sha256": "5ae1676004d0106db83622f1175d88fa16d3efaeb1bb0308572c9856086618ae",
+  "title": "ECVA | European Computer Vision Association",
+  "abstract": "\"Human motion generation stands as a significant pursuit in generative computer vision, while achieving long-sequence and efficient motion generation remains challenging. Recent advancements in state space models (SSMs), notably Mamba, have showcased considerable promise in long sequence modeling with an efficient hardware-aware design, which appears to be a significant direction upon building motion generation model. Nevertheless, adapting SSMs to motion generation faces hurdles since the lack of a specialized design architecture to model motion sequence. To address these challenges, we propose Motion Mamba, a simple yet efficient approach that presents the pioneering motion generation model utilized SSMs. Specifically, we design a Hierarchical Temporal Mamba (HTM) block to process temporal data by ensemble varying numbers of isolated SSM modules across a symmetric U-Net architecture aimed at preserving motion consistency between frames. We also design a Bidirectional Spatial Mamba (BSM) block to bidirectionally process latent poses, to enhance accurate motion generation within a temporal frame. Our proposed method achieves up to 50% FID improvement and up to 4 times faster on the HumanML3D and KIT-ML datasets compared to the previous best diffusion-based method, which demonstrates strong capabilities of high-quality long sequence motion modeling and real-time human motion generation.\"",
+  "preview": "",
+  "status": "acquired_not_read"
+}

@@ -1,0 +1,151 @@
+{
+  "verified_at": "2026-11-05T23:57:03.462706+07:00",
+  "cuda_visible_devices_for_checks": "",
+  "huggingface_offline_for_checks": true,
+  "full_suite": {
+    "command": "python -m pytest -q",
+    "passed": 83,
+    "seconds": 15.52
+  },
+  "after_final_scheduler_cleanup_change": {
+    "command": "python -m pytest tests/temporal_plan/test_pilot.py -q",
+    "passed": 10,
+    "seconds": 3.38
+  },
+  "warnings": "two SentencePiece/SWIG deprecations; no test failures",
+  "pilot_jobs_executed": 0,
+  "weights_downloaded_for_pilot": false,
+  "gpu_allocated_for_pilot": false,
+  "real_asset_fk_preflight": "scheduled after allowed date, not yet run",
+  "scheduled_plan": "configs/pilots/phoenix72_20261106.json",
+  "max_processes": 2,
+  "dataloader_workers": 0,
+  "cpu_threads": 2,
+  "timer_armed": true,
+  "scheduled_local": "2026-11-06T00:01:00+07:00",
+  "service_inactive_at_verification": true,
+  "queue_state_absent_before_start": true,
+  "source_files_hashed": 32,
+  "verified_final_at": "2026-11-05T23:58:21.933241+07:00",
+  "completion_driven_update": {
+    "verified_at": "2026-11-06T08:01:26.539455+07:00",
+    "command": "python -m pytest -q",
+    "passed": 86,
+    "seconds": 15.11,
+    "overall_wall_limit_hours": null,
+    "service_runtime_max": "infinity",
+    "gpu_policy": {
+      "min_free_gib": 40,
+      "max_utilization_percent": 10,
+      "stable_polls": 2,
+      "poll_seconds": 30
+    },
+    "checks": "unlimited queue completion, preserved per-job watchdogs, memory/utilization admission, consecutive readiness",
+    "archive": "/home/haipd/SLP/outputs/phoenix_pilot72_20261106/control_changes/20261106T080000+0700"
+  },
+  "measured_memory_admission_update": {
+    "changed_at": "2026-11-06T08:45:43.849950+07:00",
+    "authorization": "User explicitly requested waiting based on actual memory sufficiency, without a >=40 GiB threshold",
+    "gpu_policy": {
+      "mode": "measured_memory",
+      "reserve_fraction": 0.1,
+      "retry_growth_fraction": 0.2,
+      "poll_seconds": 30,
+      "probe_timeout_hours": 1
+    },
+    "global_deadline": null,
+    "max_processes": 2,
+    "preserved": "completed prepare; neural architecture/seed/data/experimental update rules",
+    "retry_policy": "only disposable diagnostics may retry on CUDA OOM; no automatic retry of real failed training",
+    "verification": {
+      "passed": 90,
+      "seconds": 15.18,
+      "command": "python -m pytest -q",
+      "CUDA_VISIBLE_DEVICES": ""
+    },
+    "prior_artifacts": "/home/haipd/SLP/outputs/phoenix_pilot72_20261106/control_changes/20261106T084543+0700",
+    "source_files_hashed": 33,
+    "runtime_verification": {
+      "at": "2026-11-06T08:47:48.627610+07:00",
+      "preflight_completed": true,
+      "common_status": "running",
+      "memory_profiles": {
+        "preflight": {
+          "peak_allocated_bytes": 1640025088,
+          "peak_reserved_bytes": 1654652928
+        },
+        "common": {
+          "peak_allocated_bytes": 1640025088,
+          "peak_reserved_bytes": 1696595968
+        }
+      }
+    }
+  },
+  "unlimited_recovery_20261107": {
+    "changed_at": "2026-11-07T12:34:01.888989+07:00",
+    "authorization": "User explicitly requested removal of all time limits and recovery to finish the experiment queue",
+    "clock_limits": {
+      "global": null,
+      "all_jobs": null,
+      "all_training_stages": null,
+      "memory_probes": null,
+      "systemd_runtime": "infinity"
+    },
+    "preserved_completed_jobs": [
+      "prepare",
+      "preflight",
+      "common",
+      "profile"
+    ],
+    "recovery": {
+      "map_generator_checkpoint": "/home/haipd/SLP/outputs/phoenix_pilot72_20261106/control_changes/20261107T123401+0700/map/incomplete_generator.pt",
+      "map_generator_sha256": "baab71562dc5b01fd25bf17f59fe9d8088f79fe2d51e43da00e88fac43cc2187",
+      "map_planner_checkpoint": "/home/haipd/SLP/outputs/phoenix_pilot72_20261106/control_changes/20261107T123401+0700/map/stage_planner.pt",
+      "generator_reset_update": 2050,
+      "legacy_sample_planner_discarded_updates": 680,
+      "reason": "No legacy optimizer/RNG snapshots. Preserve MAP weights and use one matched reset at generator update 2050 for both variants. Restart q planner from shared initialization."
+    },
+    "stage_updates": {
+      "planner": 1284,
+      "generator": 2645,
+      "exposure": 161
+    },
+    "evaluator_training": {
+      "target_updates": 35460,
+      "lr": 3e-05,
+      "checkpoint_every_updates": 250
+    },
+    "checkpoint_recovery": "two-slot atomic model+optimizer+RNG+data cursor every 50 method updates / 250 evaluator updates",
+    "numerical_fix": "float64 gradient-norm accumulation; reject truly nonfinite batches before optimizer step; best-validation evaluator checkpoint",
+    "verification": {
+      "passed": 129,
+      "skipped": 2,
+      "seconds": 17.89,
+      "command": "python -m pytest -q",
+      "ruff": "pass",
+      "mid_epoch_recovery_test": "bit-exact CPU comparison passed after interrupt at epoch 0, window 4/5"
+    },
+    "max_processes": 2,
+    "prior_artifacts": "/home/haipd/SLP/outputs/phoenix_pilot72_20261106/control_changes/20261107T123401+0700",
+    "source_files_hashed": 34,
+    "gpu_recovery_test": {
+      "committed_updates_before_restart": 2500,
+      "epoch": 0,
+      "cursor": 2500,
+      "status": "passed",
+      "resumed_updates": 2500,
+      "latest_logged_updates": 3500,
+      "checked_at": "2026-11-07T12:42:52.583616+07:00",
+      "active_job_deadline": null,
+      "pilot_process_count": 2
+    },
+    "source_manifest_sha256": "e9e78b4ca73fd12b0c06f17b64a0e817a8c9cc2b64436d17aca21f9a3a7df020",
+    "revisions": [
+      {
+        "at": "2026-11-07T12:41:23.010702+07:00",
+        "change": "explicit service restart recovers committed training; evaluator emits resume marker",
+        "manifest_sha256": "e9e78b4ca73fd12b0c06f17b64a0e817a8c9cc2b64436d17aca21f9a3a7df020"
+      }
+    ]
+  }
+}

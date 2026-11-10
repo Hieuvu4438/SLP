@@ -1,0 +1,14 @@
+{
+  "url": "https://link.springer.com/article/10.1007/s11263-019-01281-2",
+  "artifact": "third_party/proposal3_sources/input_screen/0ed442a5b7d46b6d.json",
+  "read_status": "not_read",
+  "input_labels": [
+    "S1 ★"
+  ],
+  "http_status": 200,
+  "sha256": "951938fd063cdb5cb578488ef460d4181b2488b831676b932ad4f4d1ac4dffe9",
+  "title": "Text2Sign: Towards Sign Language Production Using Neural Machine Translation and Generative Adversarial Networks | International Journal of Computer Vision | Springer Nature Link",
+  "abstract": "We present a novel approach to automatic Sign Language Production using recent developments in Neural Machine Translation (NMT), Generative Adversarial Net",
+  "preview": "",
+  "status": "acquired_not_read"
+}

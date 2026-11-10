@@ -1,0 +1,14 @@
+{
+  "url": "https://openaccess.thecvf.com/content/ICCV2021/html/Petrovich_Action-Conditioned_3D_Human_Motion_Synthesis_With_Transformer_VAE_ICCV_2021_paper.html",
+  "artifact": "third_party/proposal3_sources/input_screen/7bda1108f352c7d6.json",
+  "read_status": "not_read",
+  "input_labels": [
+    "H1 ○"
+  ],
+  "http_status": 200,
+  "sha256": "749e45761ca1833292838516aa61805bb78ad83fe9349b2df5d3817e0fa11438",
+  "title": "ICCV 2021 Open Access Repository",
+  "abstract": "We tackle the problem of action-conditioned generation of realistic and diverse human motion sequences. In contrast to methods that complete, or extend, motion sequences, this task does not require an initial pose or sequence. Here we learn an action-aware latent representation for human motions by training a generative variational autoencoder (VAE). By sampling from this latent space and querying a certain duration through a series of positional encodings, we synthesize variable-length motion sequences conditioned on a categorical action. Specifically, we design a Transformer-based architecture, ACTOR, for encoding and decoding a sequence of parametric SMPL human body models estimated from action recognition datasets. We evaluate our approach on the NTU RGB+D, HumanAct12 and UESTC datasets and show improvements over the state of the art. Furthermore, we present two use cases: improving action recognition through adding our synthesized data to training, and motion denoising. Code and models are available on our project page.",
+  "preview": "",
+  "status": "acquired_not_read"
+}

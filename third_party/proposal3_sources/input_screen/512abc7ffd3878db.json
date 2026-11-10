@@ -1,0 +1,15 @@
+{
+  "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Cao_OpenT2M_No-frill_Motion_Generation_with_Open-source_Large-scale_High-quality_Data_CVPR_2026_paper.html",
+  "artifact": "third_party/proposal3_sources/input_screen/512abc7ffd3878db.json",
+  "read_status": "not_read",
+  "input_labels": [
+    "**OpenT2M**",
+    "[OpenT2M](https://openaccess.thecvf.com/content/CVPR2026/html/Cao_OpenT2M_No-frill_Motion_Generation_with_Open-source_Large-scale_High-quality_Data_CVPR_2026_paper.html?utm_source=chatgpt.com)"
+  ],
+  "http_status": 200,
+  "sha256": "9c11e2329e459c32ebd07cb61f17f02c8c076b9406764395bbea0269061e7c99",
+  "title": "CVPR 2026 Open Access Repository",
+  "abstract": "Text-to-motion (T2M) generation aims to create realistic human movements from text descriptions, with promising applications in animation and robotics. Despite recent progress, current T2M models perform poorly on unseen text descriptions due to the small scale and limited diversity of existing motion datasets. To address this problem, we introduce OpenT2M, a million-level, high-quality, and open-source motion dataset containing over 2800 hours of human motion. Each sequence undergoes rigorous quality control through physical feasibility validation and multi-granularity filtering, with detailed second-wise text annotations. We also develop an automated pipeline for creating long-horizon sequences, enabling complex motion generation. Building upon OpenT2M, we introduce MonoFirll, a pretrained motion model that achieves compelling T2M results without complicated designs or technique tricks as \"frills'\". Its core component is 2D-PRQ, a novel motion tokenizer that captures spatiotemporal dependencies by dividing the human body into biology parts. Experiments show that OpenT2M significantly improves generalization of existing T2M models, while 2D-PRQ achieves superior reconstruction and strong zero-shot performance. We expect OpenT2M and MonoFirll will advance the T2M field by addressing longstanding data quality and benchmarking challenges. The project page is  https://research.beingbeyond.com/opent2m",
+  "preview": "",
+  "status": "acquired_not_read"
+}

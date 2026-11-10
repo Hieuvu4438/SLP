@@ -1,0 +1,16 @@
+{
+  "url": "https://openaccess.thecvf.com/content/ICCV2023/html/Zhang_ReMoDiffuse_Retrieval-Augmented_Motion_Diffusion_Model_ICCV_2023_paper.html",
+  "artifact": "third_party/proposal3_sources/input_screen/767908d20846a47e.json",
+  "read_status": "not_read",
+  "input_labels": [
+    "**ReMoDiffuse**",
+    "H12 ○",
+    "[ReMoDiffuse](https://openaccess.thecvf.com/content/ICCV2023/html/Zhang_ReMoDiffuse_Retrieval-Augmented_Motion_Diffusion_Model_ICCV_2023_paper.html?utm_source=chatgpt.com)"
+  ],
+  "http_status": 200,
+  "sha256": "cab7f8bf8e7fee1ef8bb78fbd3ab5b7b6c83aab6ccd4834779de15286a1915a5",
+  "title": "ICCV 2023 Open Access Repository",
+  "abstract": "3D human motion generation is crucial for creative industry. Recent advances rely on generative models with domain knowledge for text-driven motion generation, leading to substantial progress in capturing common motions. However, the performance on more diverse motions remains unsatisfactory. In this work, we propose ReMoDiffuse, a diffusion-model-based motion generation framework that integrates a retrieval mechanism to refine the denoising process. ReMoDiffuse enhances the generalizability and diversity of text-driven motion generation with three key designs:1) Hybrid Retrieval finds appropriate references from the database in terms of both semantic and kinematic similarities. 2) Semantic-Modulated Transformer selectively absorbs retrieval knowledge, adapting to the difference between retrieved samples and the target motion sequence. 3) Condition Mixture better utilizes the retrieval database during inference, overcoming the scale sensitivity in classifier-free guidance. Extensive experiments demonstrate that \\name outperforms state-of-the-art methods by balancing both text-motion consistency and motion quality, especially for more diverse motion generation.",
+  "preview": "",
+  "status": "acquired_not_read"
+}

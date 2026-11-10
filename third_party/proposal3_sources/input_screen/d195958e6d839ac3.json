@@ -1,0 +1,14 @@
+{
+  "url": "https://openaccess.thecvf.com/content/CVPR2025/html/Lu_ScaMo_Exploring_the_Scaling_Law_in_Autoregressive_Motion_Generation_Model_CVPR_2025_paper.html",
+  "artifact": "third_party/proposal3_sources/input_screen/d195958e6d839ac3.json",
+  "read_status": "not_read",
+  "input_labels": [
+    "**ScaMo**"
+  ],
+  "http_status": 200,
+  "sha256": "2b918addb2d9e2ea56c1691ce89802f3aac9f81a1e623f6427534305e905805f",
+  "title": "CVPR 2025 Open Access Repository",
+  "abstract": "The scaling law has been validated in various domains, such as natural language processing (NLP) and massive computer vision tasks; however, its application to motion generation remains largely unexplored. In this paper, we introduce a scalable motion generation framework that includes the motion tokenizer Motion FSQ-VAE and a text-prefix autoregressive transformer. Through comprehensive experiments, we observe the scaling behavior of this system. For the first time, we confirm the existence of scaling laws within the context of motion generation. Specifically, our results demonstrate that the normalized test loss of our prefix autoregressive models adheres to a logarithmic law in relation to compute budgets. Furthermore, we also confirm the power law between Non-Vocabulary Parameters, Vocabulary Parameters, and Data Tokens with respect to compute budgets respectively. Leveraging the scaling law, we predict the optimal transformer size, vocabulary size, and data requirements for a compute budget of 1e18. The test loss of the system, when trained with the optimal model size, vocabulary size, and required data, aligns precisely with the predicted test loss.",
+  "preview": "",
+  "status": "acquired_not_read"
+}

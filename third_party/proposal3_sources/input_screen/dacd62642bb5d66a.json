@@ -1,0 +1,14 @@
+{
+  "url": "https://proceedings.neurips.cc/paper/2017/hash/7a98af17e63a0ac09ce2e96d03992fbc-Abstract.html",
+  "artifact": "third_party/proposal3_sources/input_screen/dacd62642bb5d66a.json",
+  "read_status": "not_read",
+  "input_labels": [
+    "F3 ★"
+  ],
+  "http_status": 200,
+  "sha256": "74c67877b7dc81c0a3c2ad0284c549b7cc920853fc39be7dfb32e8ae72aa6e21",
+  "title": "Neural Discrete Representation Learning",
+  "abstract": "",
+  "preview": "Neural Discrete Representation Learning Bibtex Metadata Paper Reviews Abstract Learning useful representations without supervision remains a key challenge in machine learning. In this paper, we propose a simple yet powerful generative model that learns such discrete representations. Our model, the Vector Quantised-Variational AutoEncoder (VQ-VAE), differs from VAEs in two key ways: the encoder network outputs discrete, rather than continuous, codes; and the prior is learnt rather than static. In order to learn a discrete latent representation, we incorporate ideas from vector quantisation (VQ). Using the VQ method allows the model to circumvent issues of ``posterior collapse'' -— where the latents are ignored when they are paired with a powerful autoregressive decoder -— typically observed in the VAE framework. Pairing these representations with an autoregressive prior, the model can generate high quality images, videos, and speech as well as doing high quality speaker conversion and unsupervised learning of phonemes, providing further evidence of the utility of the learnt representations. Name Change Policy × Requests for name changes in the electronic proceedings will be accepted with no questions asked. However name changes may cause bibliographic tracking issues. Authors are asked to consider this carefully and discuss it with their co-authors prior to requesting a name change in the electronic proceedings. Use the \"Report an Issue\" link to request a name change. Do not remove: This comment is monitored to verify that the site is working properly",
+  "status": "acquired_not_read"
+}

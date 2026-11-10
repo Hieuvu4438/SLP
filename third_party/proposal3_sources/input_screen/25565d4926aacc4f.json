@@ -1,0 +1,16 @@
+{
+  "url": "https://aclanthology.org/2024.acl-long.183/",
+  "artifact": "third_party/proposal3_sources/input_screen/25565d4926aacc4f.json",
+  "read_status": "not_read",
+  "input_labels": [
+    "S7 ★",
+    "[PHOENIX-News](https://aclanthology.org/2024.acl-long.183/?utm_source=chatgpt.com)",
+    "[T2S-GPT](https://aclanthology.org/2024.acl-long.183/?utm_source=chatgpt.com)"
+  ],
+  "http_status": 200,
+  "sha256": "e949921c778862bb6a8ace7f969c87dc78b549187cc690c6f08383223c9d355f",
+  "title": "T2S-GPT: Dynamic Vector Quantization for Autoregressive Sign Language Production from Text - ACL Anthology",
+  "abstract": "Aoxiong Yin, Haoyuan Li, Kai Shen, Siliang Tang, Yueting Zhuang. Proceedings of the 62nd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers). 2024.",
+  "preview": "",
+  "status": "acquired_not_read"
+}

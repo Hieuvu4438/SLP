@@ -119,9 +119,9 @@ class PartitionDistribution:
         self.length, self.max_duration = scores.shape
         forward = [scores.new_zeros(())]
         for end in range(1, self.length + 1):
-            terms = [forward[end-d] + self.weights[end-1, d-1]
-                     for d in range(1, min(self.max_duration, end) + 1)]
-            forward.append(torch.logsumexp(torch.stack(terms), 0))
+            width = min(self.max_duration, end)
+            terms = torch.stack(forward[end-width:end]).flip(0) + self.weights[end-1, :width]
+            forward.append(torch.logsumexp(terms, 0))
         self.forward = torch.stack(forward)
         if not bool(torch.isfinite(self.forward[-1])):
             raise ValueError("score support has no complete partition")
@@ -147,9 +147,8 @@ class PartitionDistribution:
     def sample(self, generator: torch.Generator | None = None) -> list[int]:
         end, reverse = self.length, []
         while end:
-            ds = range(1, min(self.max_duration, end) + 1)
-            logits = torch.stack([self.forward[end-d] + self.weights[end-1, d-1]
-                                  for d in ds])
+            width = min(self.max_duration, end)
+            logits = self.forward[end-width:end].flip(0) + self.weights[end-1, :width]
             d = int(torch.multinomial(logits.softmax(0), 1, generator=generator)) + 1
             reverse.append(d)
             end -= d
@@ -158,12 +157,13 @@ class PartitionDistribution:
     @torch.no_grad()
     def mode(self) -> list[int]:
         values = [self.scores.new_zeros(())]
-        predecessors = [0]
+        predecessors = []
         for end in range(1, self.length + 1):
-            terms = torch.stack([values[end-d] + self.weights[end-1, d-1]
-                                 for d in range(1, min(self.max_duration, end) + 1)])
+            width = min(self.max_duration, end)
+            terms = torch.stack(values[end-width:end]).flip(0) + self.weights[end-1, :width]
             values.append(terms.max())
-            predecessors.append(int(terms.argmax()) + 1)
+            predecessors.append(terms.argmax()+1)
+        predecessors = [0] + torch.stack(predecessors).cpu().tolist()
         end, reverse = self.length, []
         while end:
             d = predecessors[end]

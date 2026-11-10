@@ -1,0 +1,11 @@
+{
+  "url": "https://durham-repository.worktribe.com/output/1735623/fg-t2m-fine-grained-text-driven-human-motion-generation-via-diffusion-model",
+  "artifact": "third_party/proposal3_sources/input_screen/a40428eeaf6a3a7c.json",
+  "read_status": "not_read",
+  "input_labels": [
+    "**Fg-T2M**"
+  ],
+  "http_status": 403,
+  "status": "failed",
+  "error": "403 Client Error: Forbidden for url: https://durham-repository.worktribe.com/output/1735623/fg-t2m-fine-grained-text-driven-human-motion-generation-via-diffusion-model"
+}

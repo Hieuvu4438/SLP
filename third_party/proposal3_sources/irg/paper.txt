@@ -1,0 +1,534 @@
+IRG-MotionLLM: Interleaving Motion Generation, Assessment and Refinement for Text-to-Motion Generation
+
+Recent advances in motion-aware large language models have shown remarkable promise for jointly learning motion understanding and generation knowledge. However, these models typically treat understanding and generation separately, limiting the mutual benefits that could arise from interactive feedback between tasks. In this work, we reveal that motion assessment and refinement tasks can act as crucial bridges to enable knowledge flow from motion understanding to generation. Specifically, we propose Interleaved Reasoning for Motion Generation (IRMoGen), a novel paradigm that tightly couples motion generation with assessment and refinement through iterative text-motion dialogue. To realize this, we introduce IRG-MotionLLM, the first model that seamlessly interleaves motion generation, assessment, and refinement to improve the alignment between generated motion and goal text. IRG-MotionLLM is developed progressively with a novel three-stage training scheme, initializing and subsequently enhancing native IRMoGen capabilities. To facilitate this development, we construct an automated data engine to synthesize interleaved reasoning annotations from existing text-motion datasets. Extensive experiments demonstrate the properties brought by IRMoGen training, and the advanced cross-benchmark and cross-evaluator performance of IRG-MotionLLM.
+Code and models are available at https://github.com/HumanMLLM/IRG-MotionLLM .
+
+1 Introduction
+
+Text-to-motion generation has emerged as a cornerstone problem in computer vision, with transformative applications in multiple human–robot interaction [ 36 , 29 , 98 , 44 ] , and building immersive virtual 3D world [ 5 , 27 , 91 ] .
+To promote the development of this area, numerous methods [ 34 , 42 ] have been proposed to generate motions with a higher naturalness and alignment level with the goal.
+
+Inspired by recent advances in multimodal large language models [ 87 , 28 , 49 , 48 , 57 , 80 ] , efforts in Motion-aware LLM (MoLLM) [ 37 , 89 , 39 , 90 ] propose to jointly train motion understanding and generation tasks with a single foundation model. While joint training provides a versatile basis for various motion-related tasks ( e.g . , text-to-motion generation, motion-to-text caption), a critical limitation remains: motion understanding and generation are predominantly modeled in isolation without any explicit interactions, which probably leads to the marginal improvement from complementary learning on various tasks.
+
+Most recently, emerging works [ 74 , 30 , 7 ] propose to enhance the generation performance of the multimodal model by tightly coupling generation and understanding via interleaved reasoning across text and images.
+This observation naturally motivates us to ponder a question: Can we further improve MoLLM’s text-to-motion generation capability by explicitly linking motion-related tasks through text-motion interleaved reasoning?
+
+In this work, we provide the first affirmative answer to this question by introducing Interleaved Reasoning for Motion Generation (IRMoGen), a novel paradigm that bridges motion understanding and generation via iterative text-motion dialogue. We argue that achieving this vision is non-trivial and entails three progressive challenges:
+
+(1) Task Gap : Despite sharing latent representations, basic motion generation ( e.g . , text-to-motion) and understanding ( e.g . , motion caption) tasks remain disconnected in training and inference. There is no intermediate task that enables the model to leverage motion understanding to improve generation.
+(2) Training Scheme : Beyond the task gap, an advanced training strategy is required to initialize and further enhance the IRMoGen capability.
+(3) Data Absence : There is a lack of an effective data engine to generate text-motion interleaved reasoning annotations, which are necessary for training the model.
+
+For the first challenge, we propose to employ text-motion assessment and refinement tasks to bridge the gap between motion understanding and generation. The former requires evaluation of the alignment between the given motion and the goal text and refinement instructions. The latter asks the model to refine the initial motion based on the goal text and refinement instructions. These two tasks enable us to establish an IRMoGen process by interleaving Motion Generation, Assessment, and Refinement .
+
+Based on this framework, we introduce IRG-MotionLLM, the first model designed to support native IRMoGen.
+As shown in Fig. 1 , given a goal text and reasoning instruction as input, IRG-MotionLLM performs step-by-step reasoning, which contains initial goal analysis, generation, and multiple rounds of assessment and refinement until a satisfactory motion is generated.
+Beginning with a pre-trained Motion-aware LLM [ 93 ] as the base model, we propose a three-stage training scheme to imbue and enhance the ability required for IRMoGen.
+
+In the first IRMoGen Initialization stage, we fine-tune the model on eight atomic sub-tasks, including 4 basic tasks (related to basic understanding and generation) and 4 improving tasks (assessment- and refinement-related tasks to implicitly bridge motion understanding and generation).
+In the second IRMoGen-CoT Learning stage, we design a reasoning CoT template to explicitly connect various motion-related knowledge, and train the model to automatically make a plan to interweave initial goal analysis, motion generation, together with multi-round motion assessment and refinement.
+In the final IRMoGen Reinforcing stage, we employ GRPO [ 78 ] to further unlock the reasoning potential of the model. With the carefully designed reward functions, the model is able to freely explore multi-round IRMoGen and improve the final generated motion.
+
+To facilitate our exploration, we further design an automated data engine to obtain IRMoGen annotations for the existing text-motion datasets ( e.g . , HumanML3D [ 17 ] , KIT-ML [ 73 ] ). With the help of a pre-trained motion encoder and LLM, we are able to assign prompt analysis, multiple negative motions with various alignment levels, together with the text-motion evaluation and refinement instructions for each text-motion pair in the dataset.
+
+Combining all of these, we conduct extensive experiments to showcase the properties and verify the effectiveness of our method. Our key findings include:
+
+- Introducing motion assessment and refinement tasks largely benefits text-motion alignment. After Stage-1 training, IRG-MotionLLM not only achieves stable improvement on the text-to-motion generation task, but also outperforms existing methods on the motion-to-text caption task.
+
+- Interweaving Generation, Assessment, and Refinement significantly improves alignment between generated motions and goal texts. This finding is consistent across all training stages. Surprisingly, our Stage-1 model emerges IRMoGen abilities even if it is not explicitly trained to perform IRMoGen. The Stage-2 and Stage-3 training bring further improvement. In addition, we observe the same trends as in [ 20 ] that the model responds with a longer reasoning process after RL tuning, and the alignment between generated motion and goal text benefits from more rounds of assessment and refinement.
+
+- IRG-MotionLLM clearly outperforms the base model and achieves advanced performance . The results are consistent across different benchmarks [ 17 , 73 ] and different evaluators [ 17 , 65 ] .
+
+- IRG-MotionLLM enables cross-model and cross-task synergies . Beyond performing the T2M task independently, our model can serve as a transferable proxy to enhance existing motion generator via an RLAIF manner [ 22 ] . Such emergent property has never been explored in previous works on MoLLM. We also show that our method benefits the adaptation to motion editing task [ 2 ] .
+
+We will make the code and models available. We expect our exploration and findings will benefit the field of motion generation and MoLLM.
+
+2 Related Works
+
+Text-Driven Human Motion Generation aims at generating 3D human motions based on text description. Most modeling paradigms in this field can be separated into three families, i.e . , diffusion modeling [ 83 , 108 , 6 , 65 , 46 , 45 , 104 ] , mask token modeling [ 72 , 16 , 71 , 51 , 15 , 47 ] , and autoregressive modeling [ 105 , 10 , 60 , 88 ] . Based on their success, some other works explore better motion representations [ 65 , 38 , 64 ] , detailed text prompts [ 110 , 23 , 97 ] , RAG techniques [ 109 , 100 , 54 , 52 ] , lightweight motion models [ 103 , 112 ] , etc.
+Notably, with the belief that motion generation and understanding knowledge are complementary, works on Motion-aware LLM [ 37 , 89 , 90 , 81 , 114 , 26 , 24 , 61 , 4 , 50 ] propose to jointly learn multiple tasks with a single model.
+Despite providing versatile basis for various motion-centric tasks, existing works in this line suffer from a fundamental limitation: generation and understanding tasks are trained and executed in isolation without explicit cross-task interaction , weakening the complementary role of understanding and generating knowledge.
+MotionChain [ 39 ] and MotionAgent [ 93 ] perform motion understanding and generation sequentially, but focus on multi-turn conversation rather than enhancing generation performance via motion understanding. Besides, they either require heavy human intervention or an extra LLM to connect motion generation and caption.
+Most recently, Motion-R1 [ 67 ] explores the interaction between understanding and generation. However, it only performs motion-free text understanding before generation.
+In contrast, our work is the first to explore the native interaction loop across motion generation, assessment, and refinement.
+
+Multi-modal Interleaved Reasoning :
+Inspired by the success of text-based reasoning models [ 35 , 20 , 31 , 12 ] , multi-modal interleaved reasoning [ 66 , 32 , 14 ] is proposed to solve complex problems, i.e . , incorporating non-text modalities into multi-turn reasoning processes. In the vision generation domain, recent works [ 40 , 11 , 9 ] explore improving generation performance with text-based reasoning. Emerging research [ 74 , 30 , 7 , 115 , 92 ] further shows that the generated image can better align with the text prompt via text-image interleaved reasoning, including self-assessment and refinement.
+However, this property has never been observed in human motion generation. In this work, we take the first step to bring MoLLM to this frontier.
+
+3 IRG-MotionLLM
+
+In this work, we propose IRG-MotionLLM, the first motion-aware LLM that supports native interleaved reasoning across text and motion to enhance final generation performance. Our key idea is to interweave motion generation, assessment, and refinement into the IRMoGen reasoning process.
+To this end, we build our IRG-MotionLLM based on a pre-trained base model and propose a three-stage training scheme to initialize and further enhance the IRMoGen ability of the model. In the following sections, we first introduce the model pipeline and the base model in Sec. 3.1 , then the Interleaving Reasoning Initialization (Stage-1) in Sec. 3.2 , and finally the Interleaving Reasoning Enhancement (Stage-2 & 3) in Sec. 3.3 .
+
+3.1 Pipeline & Base Model
+
+IRG-MotionLLM shares the same architecture with previous works on MoLLM [ 37 , 93 , 90 ] , which consists of
+a Motion VQVAE, and an LLM.
+Specifically, Motion VQVAE discretizes the motion sequence into K distinct motion tokens. These motion tokens are mapped to a motion token vocabulary based on their indices.
+We then extend the base LLM vocabulary with these motion-specific codes along with boundary tokens <Motion>and </Motion>to delineate motion sequence spans within the text( i.e . , K+2 new tokens). This setup allows the model to be trained with a standard next-token prediction objective.
+During inference, the model can freely generate sequences that mix both text and motion tokens.
+The generated motion can be directly extracted by identifying the boundary tokens.
+With this general architecture, it will be convenient to build our IRG-MotionLLM upon a base model, which can be initialized with the pretrained weights or preliminary training strategies proposed in previous works. We provide more details in the Appendix.
+
+3.2 IRMoGen Initialization (Stage-1)
+
+As discussed in Sec. 1 , although existing MoLLMs show versatility on various motion-related tasks (e.g., motion generation, caption, and prediction), these tasks can only be performed independently without interactions, limiting their ability to perform the IRMoGen as shown in Fig. 1 .
+To solve this, we propose to initialize the interleaved reasoning ability with eight related tasks, which are divided into two categories, shown in the upper part of Fig. 2 :
+
+- Basic Text-Motion Tasks require the model to perform basic translation between motion and text, including:
+(1) Motion Caption : Describe what is happening in the motion;
+(2) Direct Motion Generation : Generate motion based on the caption;
+(3) Prompt Analysis : Analyze the key factors that need to be focused on to generate the target motion;
+(4) Analysis-guided Motion Generation : Generate motion based on the results of prompt analysis.
+The former two tasks are widely used for training MoLLM. Additionally, we add the latter two tasks to preserve the language reasoning ability and enhance text-motion alignment.
+
+- Improving Tasks ask the model to perform deeper reasoning across text and motion, including:
+(1) Text-Motion Alignment Evaluation : Analyze how well the given motion is aligned with the goal text;
+(2) Motion Refinement Instructing : Provide a refinement instruction based on the given motion and the goal text to improve alignment.
+(3) Direct Motion Refinement : Refine the initial motion simply based on the goal text.
+(4) Instruction-guided Motion Refinement : Refine the given motion based on both the goal text and the refinement instructions.
+These tasks explicitly require the model to mine the differences between motions and texts, helping the model to construct a deeper alignment between these two modalities.
+
+Training :
+By constructing task-specific instruction templates and annotations, we conduct supervised fine-tuning on the base model and obtain our Stage-1 model ℱ s ​ 1 \mathcal{F}_{s1} . The annotation construction process and instruction templates are detailed in Sec. 4 and the Appendix.
+
+Inference :
+Similar to previous MoLLMs, ℱ s ​ 1 \mathcal{F}_{s1} can be instructed to perform all learned tasks.
+More importantly, ℱ s ​ 1 \mathcal{F}_{s1} emerges IRMoGen ability as we are able to manually perform multi-step text-motion interleaved reasoning by sequentially using prompts for generation , assessment , and refinement tasks together with the outputs from the previous step. See more details in the Appendix.
+
+3.3 IRMoGen Enhancement
+
+While the first training stage preliminarily endows motion with IRMoGen ability, it still requires human intervention.
+Ideally, as shown in Fig. 1 , given a text description for a goal motion, the model should be able to natively think step-by-step to interweave generation, assessment, and refinement until a satisfactory motion is obtained. During this process, the model needs to plan to decide which action to take.
+We also believe that explicitly training the model to link the automated knowledge learned in Stage-1 can further enhance the interleaved reasoning ability and further benefit generation performance.
+
+To this end, we first define an IRMoGen-CoT template to explicitly link knowledge learned in Stage-1. Subsequently, we propose IRMoGen-CoT learning and IRMoGen Reinforcing to enable and further unleash the structured IRMoGen ability of IRG-MotionLLM.
+
+IRMoGen-CoT Template : To enable structured IRMoGen, we design a multi-step CoT template to accommodate Motion Generation, Assessment, and Refinement.
+As shown in Fig. 3 , the template begins with goal-directed planning and analysis, followed by an iterative loop that tightly interleaves motion token generation with alignment assessment and targeted refinement until a satisfactory motion is obtained ( i.e . , the assessment results indicate “no refinement is needed” ). In addition, each step is connected with a pre-defined plan making template ( e.g . , “I need to generate a motion based on previous analysis.” for <Plan-for-Generation>).
+Note that this CoT definition results in a multi-time generation reasoning trajectory. Suppose a trajectory contains n n -time generations ( i.e . , { m 1 , m 2 , … , m n } \{m_{1},m_{2},...,m_{n}\} ), we note { m 1 , . . , m n − 1 } \{m_{1},..,m_{n-1}\} as intermediate motions and m n m_{n} as final motion .
+More details about the CoT template and data example are shown in the Appendix.
+
+IRMoGen-CoT Learning (Stage-2) :
+Enabled by the data engine introduced in Sec. 4 , we organize dynamic reasoning trajectories to train ℱ s ​ 1 \mathcal{F}_{s1} to perform native interleaved reasoning, and obtain our Stage-2 model ℱ s ​ 2 \mathcal{F}_{s2} (shown in the lower-left part of Fig. 2 ).
+Each training data set is designed to match the IRMoGen-CoT. Additionally, the intermediate motions { m 1 , … , m n − 1 } \{m_{1},...,m_{n-1}\} are misaligned with the goal text but show progressive improvement ( i.e . , m 2 m_{2} is more aligned with the goal than m 1 m_{1} ), while the final motion m n m_{n} is the ground-truth motion paired with the goal text.
+
+While adopting vanilla next-token prediction objective can optimize the model to learn reasoning format, training the model to generate incorrect intermediate motions will significantly break the already learned alignment between motion and text.
+To address this, during training in this stage, we adopt an Ignore Incorrect strategy to mask the losses and gradients calculated on those incorrect intermediate motion tokens.
+
+After training the model on the IRMoGen-CoT dataset, ℱ s ​ 2 \mathcal{F}_{s2} is able to natively conduct interleaved reasoning across text and motion. However, the model tends to stop thinking at an early step ( i.e . , more than 70% reasoning processes on test samples contain only one-round generation without any refinement), suggesting the multi-round assessment and refinement ability may be limited. This observation motivates us to seek further improvement in Stage-3 training.
+
+IRMoGen Reinforcing (Stage-3) :
+To further unleash the multi-round interleaved reasoning potential, inspired by the success of reinforcement finetuning on (vision-)language tasks [ 20 , 31 ] , we conduct a GRPO [ 78 ] -based IRMoGen Reinforcing stage on ℱ s ​ 2 \mathcal{F}_{s2} and obtain our stage-3 model ℱ s ​ 3 \mathcal{F}_{s3} .
+
+Specifically, as shown in the lower right part of Fig. 2 , taking the reasoning instruction and motion text as input q q , a group of G G IRMoGen trajectories { o 1 , o 2 , … , o G } \{o_{1},o_{2},...,o_{G}\} are sampled from the model. After that, we assign each trajectory a scalar reward r ⁡ ( o i ) r(o_{i}) .
+Specifically, we employ reward functions comprising the following components:
+
+1) Format Reward to encourage structured reasoning and easy answer extraction, responses must follow the IRMoGen-CoT template. Formally:
+
+2) Text-Motion Alignment Reward to improve alignment between the final generated motions in the reasoning trajectory and the goal text prompts:
+
+where t t indicates goal text prompt, 𝐦 𝐟𝐢𝐧𝐚𝐥 , 𝐢 \mathbf{m_{final,i}} denotes the final generated motion in the reasoning trajectory o i o_{i} . E t E_{t} and E m E_{m} indicate the paired text and motion encoders. Following previous works [ 67 , 59 , 63 ] , E t E_{t} and E m E_{m} are chosen from paired text and motion encoders in [ 17 ] .
+
+3) Motion-Motion Alignment Reward to improve alignment between the final generated motions in the reasoning trajectory and the ground-truth motion. Formally:
+
+where 𝐦 𝐠𝐭 \mathbf{m_{gt}} indicates ground-truth motion sequence. Note that r m ​ m r_{mm} will only be calculated for those data with a motion-text pair; otherwise set to 0.
+
+Each of these rewards is pre-normed across the group into the same scale, and summed to calculate r ⁡ ( o i ) r(o_{i}) . After that, we employ the standard GRPO objective [ 78 ] to optimize our IRG-MotionLLM. See more details in the Appendix.
+
+4 Data Engine
+
+To enable our exploration, we design a highly automated annotation pipeline to augment existing motion-text datasets D based on a pre-trained motion encoder [ 70 ] and frontier LLMs. With this annotation pipeline, for each text-motion pair in the dataset, we are able to assign it with: (1) Detailed analysis on the generation goal; (2) Negative text-motion pairs with various alignment levels, together with the text-motion alignment evaluations and refinement instructions.
+
+Detailed Goal Analysis : For each text prompt t i t_{i} in dataset D , we adopt GPT-4o [ 33 ] to identify the key factors to generate the motion aligned with t i t_{i} .
+
+Negative Text-Motion Pairs :
+During practical inference, the generated motion can be aligned with the goal text at various levels ( e.g . , highly different, moderate, highly similar). Hence, it is necessary to train a model to evaluate and refine the initial motions with various alignment levels, and our idea is to sample negative text-motion pairs with various alignment levels to the anchor pair.
+However, for a diverse text-motion dataset, simply random sampling negative pairs is not feasible, as there is an extremely high probability of selecting a text-motion that significantly differs from the anchor one.
+To address this, we design a ranking-based sampling strategy based on a pre-trained motion encoder [ 70 ] , which is shown in the upper part of Fig. 4 .
+
+Suppose we attempt to sample N n ​ e ​ g N_{neg} text-motion pairs { ( t i , m i ) } i = 1 N n ​ e ​ g \{(t_{i},m_{i})\}_{i=1}^{N_{neg}} for an anchor pair ( t a ​ n ​ c , m a ​ n ​ c ) (t_{anc},m_{anc}) . We first extract the motion embeddings for all motions in the dataset, compute the embedding distances across anchor motion m a ​ n ​ c m_{anc} and all other motions in the dataset, and rank the distance from high to low ( i.e . , highly different to highly similar). By doing so, we obtain a ranked instance pool for the anchor motion. After that, for each time, we randomly sample a negative motion together with its text from the top p p fraction of highest-distance instances in the instance pool, and remove all this fraction of instances from the pool.
+
+Text-Motion Alignment & Refinement Instructions :
+After assigning negative samples for each text-motion pair in the dataset, as shown in the lower part of Fig. 4 , we further instruct LLMs to perform alignment assessment (including the text-motion alignment evaluations and refinement instructions for improvement) based on the text descriptions of anchor and negative samples.
+
+Annotation Quality Checking : After obtaining the annotations from LLM, we manually check the annotations and filter out the failure cases (e.g., empty responses, refinements to already correct motions) prior to model training. We discuss how the filtering strategy influences the performance in the Appendix.
+
+Data Organization for Training : For Stage 1, based on the augmented annotations mentioned above, we can construct training data for all tasks introduced in Sec. 3.2 with task-specific instructions. For Stage 2, we organize the CoT trajectories by concatenating the goal analysis, motions, assessment results, and pre-defined plans to match the CoT template. For the intermediate motions , we sort the selected negative text-motion pairs in an alignment-improving rank, and insert them into the reasoning trajectory. For Stage 3, the data can be directly selected from existing motion-text-paired or text-only datasets without further organization.
+Please refer to the Appendix for more details.
+
+5 Experiments
+
+5.1 Setups
+
+Dataset . Following previous works on MoLLM [ 37 , 39 , 90 , 93 ] , we mainly conduct experiments on HumanML3D dataset [ 17 ] , a large-scale benchmark for motion generation and understanding.
+We also compare our approach with existing methods on KIT-ML [ 73 ] , another popular Text-to-Motion dataset.
+For Stage-1 and Stage-2 training, we build the instruction tuning dataset by using the data engine introduced in Sec. 4 . For Stage-3 training, we sample approximately 9k data for each dataset. Specifically, for experiments on the HumanML3D, we source data from the original [ 17 ] and InstructMotion [ 79 ] dataset.
+Note that prompts in the InstructMotion dataset are also sourced from HumanML3D but augmented by LLM.
+For experiments on the KIT-ML dataset, we source data from the original KIT-ML dataset and use GPT-4o to augment the original prompts. We strictly ensure there are no identical prompts in Stage-3 data with those in the testing set for fair evaluation. See Appendix for more details.
+
+Evaluation Metrics .
+For the text-to-Motion task, we follow previous works to report metrics including R-Precision, FID, MM-Dist, and Diversity. For most of the evaluation, we adopt the official evaluators from [ 17 ] . We also employ a new evaluator from MARDM [ 65 ] for further evaluation. We conduct each evaluation 20 times, presenting the average metrics.
+Besides, as our stage-1 model can also perform motion understanding tasks, we also conduct experiments on the Motion-to-Text caption task and adopt NLP metrics including Bleu [ 68 ] , Rouge-L [ 55 ] , CIDEr [ 84 ] , and BertScore [ 111 ] following previous works [ 37 , 93 , 39 ] . See Appendix for more details about the metrics.
+
+Implementation Details .
+In experiments on the HumanML3D dataset, we initialize our base model with the official weights of MotionLLM [ 93 ] , which is pre-trained on text-to-motion generation task.
+For experiments on the KIT-ML dataset, we train a base model based on the official implementation of [ 93 ] with text-to-motion generation task.
+Please refer to the Appendix for more details.
+
+5.2 Diving Deeper into IRG-MotionLLM
+
+Impacts of training tasks in IRMoGen-Initialization (Stage-1) . We ablate the training tasks and evaluate the stage-1 model on the text-to-motion generation task. As shown in Tab. 2 Row1-4, further fine-tuning the base model with dense motion token supervision consistently brings improvement on FID. However, with only the T2M task (Row 1 v.s. Row 2), the model suffers from deterioration on all other metrics. We hypothesize it is because the base model is already converged on the T2M task and tends to overfit the training data when further trained on the same task instead of learning new text-motion alignment knowledge.
+Introducing other basic tasks (Row 1 v.s. Row 3) slightly benefits Top-1, but the limited improvement suggests that there exists a task gap limiting the complementary effects between learning basic motion understanding and generation tasks. By combining all tasks (Row 1 v.s. Row 4), consistent improvement on all metrics is observed. Not coincidentally, we also observe the same performance trend on the motion-to-text task (see Tab. 2 ).
+These phenomena suggest that Text-Motion Assessment and Refinement tasks are the key to connect basic motion generation and understanding tasks .
+
+Impacts of IRMoGen-CoT Learning (Stage2) . As shown in Tab. 2 , training the model on IRMoGen-CoT explicitly connected motion understanding and generation knowledge, resulting in higher alignment between generated and goal text with only one-round input (Row 4 v.s. Row 7). We also compare two other variants: (1) w/o Asse.+Ref.: Building Stage-2 training data with initial goal analysis and one-round generation without multi-round assessment and refinement.
+(2) w/o I.I.: Ablating the “Ignore Incorrect” strategy discussed in Sec. 3.3 .
+Comparisons between Row 5 and Row 7 further showcase the effectiveness of IRMoGen-CoT Learning. Comparison between Row 6 and Row 7 suggests that training the model to generate incorrect intermediate motions will significantly break the already learned alignment between motion and text.
+
+Methods R-Precision ↑ \uparrow FID ↓ \downarrow MM-Dist ↓ \downarrow Diversity ↑ \uparrow Top-1 Top-3 Baseline Model 1 MotionLLM* [ 93 ] ICLR’25 0.496 0.782 0.198 3.029 9.864 IRMoGen-Initialization (Stage-1) 2 w/ T2M Task Only 0.495 0.778 0.185 3.072 9.734 3 w/ Basic Tasks Only 0.500 0.774 0.123 3.086 9.720 4 Ours (S1) 0.504 0.785 0.141 3.018 9.814 IRMoGen-CoT Learning (Stage-2) 5 w/o Asse.+Ref. 0.503 0.782 0.125 3.023 9.680 6 w/o I.I. 0.448 0.720 0.592 3.519 9.675 7 Ours (S2) 0.526 0.810 0.111 2.885 9.819 IRMoGen Reinforcing (Stage-3) 8 Ours (S3) 0.535 0.820 0.242 2.785 9.900
+
+Methods Bleu-1 ↑ \uparrow Bleu-4 ↑ \uparrow Rouge ↑ \uparrow CIDEr ↑ \uparrow BERT ↑ \uparrow w/ M2T Task Only 58.73 20.53 46.12 47.27 40.99 w/ Basic Tasks Only 59.77 21.07 46.50 48.94 41.46 Ours (S1) 62.05 22.53 47.51 52.4 42.68
+
+Impacts of IRMoGen Reinforcing (Stage3) .
+As shown in the last two rows in Tab. 2 , with GRPO-based IRMoGen reinforcement learning, our model achieves further improvement on text-motion alignment. In alignment with the conclusion of previous work [ 101 ] , vanilla GRPO can bring fluctuation to FID due to the lack of dense supervision on generated motion tokens.
+However, it is still competitive with those motion-aware LLMs [ 37 , 39 , 90 ] that support both text and motion outputs.
+User study in the Appendix and the supplementary videos further confirm the semantic alignment and naturalness of the generated motions.
+Additionally, we visualize how IRMoGen Reinforcing influences the reasoning traces and text-motion alignment. As shown in Fig. 5 , while our Stage-2 model learn to match the pattern of IRMoGen CoT, we observe that for most of the cases (more than 75%), the model tends to end the reasoning process after initial goal analysis and once generation without further refinement. After RL tuning, the model learns to extend the length of reasoning traces and perform multi-round motion assessment and refinement.
+
+Methods R-Precision ↑ \uparrow FID ↓ \downarrow MM-Dist ↓ \downarrow Diversity ↑ \uparrow Top-1 Top-2 Top-3 Ours (S1) init-gen 0.504 0.693 0.785 0.141 3.018 9.814 Ours (S1) final-gen 0.522 0.711 0.805 0.135 2.906 9.740 Ours (S2) init-gen 0.497 0.686 0.782 0.136 3.052 9.825 Ours (S2) final-gen 0.526 0.717 0.810 0.111 2.885 9.819 Ours (S3) init-gen 0.503 0.687 0.782 0.221 3.006 9.853 Ours (S3) final-gen 0.535 0.725 0.820 0.242 2.785 9.900
+
+Initial Generation v.s. Final Generation . To evaluate the effectiveness of IRMoGen, we compare the initially and finally generated motions in parallel across all stages. Note that for the stage-1 model, we adopt the strategy discussed in Sec. 3.2 to perform IRMoGen.
+From Fig. 5 , we have consistent observations: Interweaving motion generation, assessment, and refinement significantly benefits the alignment between generated motions and goal texts .
+More surprisingly, manually connecting relevant tasks on our Stage1 model can already bring clear improvement ( e.g . , 0.504 to 0.522 on Top-1), even if it is not explicitly trained to perform IRMoGen.
+We also discuss the impact of rounds of refinement in the Appendix.
+
+Methods Framework w/ GRPO R-Precision ↑ \uparrow FID ↓ \downarrow MM-Dist ↓ \downarrow Diversity ↑ \uparrow Top-1 Top-2 Top-3 HumanML3D Dataset T2M-GPT [ 105 ] CVPR’23 VQ+GPT2 × \times 0.492 ± .003 0.492^{\pm.003} 0.679 ± .002 0.679^{\pm.002} 0.775 ± .002 0.775^{\pm.002} 0.141 ± .005 0.141^{\pm.005} 3.121 ± .009 3.121^{\pm.009} 9.722 ± .082 9.722^{\pm.082} MotionGPT ♣ \clubsuit [ 37 ] NeurIPS’23 VQ+T5 × \times 0.492 ± .003 0.492^{\pm.003} 0.681 ± .003 0.681^{\pm.003} 0.733 ± .006 0.733^{\pm.006} 0.232 ± .008 0.232^{\pm.008} 3.096 ± .008 3.096^{\pm.008} 9.528 ± .071 9.528^{\pm.071} MotionChain ♣ \clubsuit [ 39 ] ECCV’24 VQ+T5 × \times 0.504 ± .003 0.504^{\pm.003} 0.617 ± .002 0.617^{\pm.002} 0.790 ± .003 0.790^{\pm.003} 0.248 ± .009 0.248^{\pm.009} 3.033 ± .010 3.033^{\pm.010} 9.470 ± .075 9.470^{\pm.075} MG-MotionLLM ♣ \clubsuit [ 90 ] CVPR’25 VQ+T5 × \times 0.516 ± .002 0.516^{\pm.002} 0.706 ± .002 0.706^{\pm.002} 0.802 ± .003 0.802^{\pm.003} 0.303 ± .010 0.303^{\pm.010} 2.952 ± .009 2.952^{\pm.009} 9.960 ± .073 9.960^{\pm.073} ViMoRAG [ 95 ] NeurIPS’25 VQ+Phi3-3.8B × \times 0.452 ± .014 0.452^{\pm.014} 0.655 ± .014 0.655^{\pm.014} 0.764 ± .013 0.764^{\pm.013} 0.131 ± .073 0.131^{\pm.073} 3.146 ± .015 3.146^{\pm.015} 9.424 ± .001 9.424^{\pm.001} MotionGPT-2 ♣ \clubsuit [ 89 ] ArXiv’24 VQ+LLaMA3.1-8B × \times 0.496 ± .002 0.496^{\pm.002} 0.691 ± .003 0.691^{\pm.003} 0.782 ± .004 0.782^{\pm.004} 0.191 ± .004 0.191^{\pm.004} 3.080 ± .013 3.080^{\pm.013} 9.860 ± .026 9.860^{\pm.026} MotionGPT-2 ♣ \clubsuit [ 89 ] ArXiv’24 VQ+Gemma-2B × \times 0.436 0.600 0.697 0.228 3.589 10.081 MotionLLM [ 93 ] ICLR’25 VQ+Gemma2-2B × \times 0.515 ± .004 0.515^{\pm.004} 0.691 ± .003 0.691^{\pm.003} 0.801 ± .004 0.801^{\pm.004} 0.230 ± .009 0.230^{\pm.009} 2.967 ± .020 2.967^{\pm.020} 9.908 ± .102 9.908^{\pm.102} MotionLLM* [ 93 ] ICLR’25 VQ+Gemma2-2B × \times 0.496 ± .002 {0.496}^{\pm.002} 0.684 ± .002 {0.684}^{\pm.002} 0.782 ± .002 {0.782}^{\pm.002} 0.198 ± .006 {0.198}^{\pm.006} 3.029 ± .007 {3.029}^{\pm.007} 9.864 ± .007 {9.864}^{\pm.007} Ours (S1, w/ IRMoGen) ♣ \clubsuit VQ+Gemma2-2B × \times 0.522 ± .003 0.522^{\pm.003} 0.711 ± .002 0.711^{\pm.002} 0.805 ± .002 0.805^{\pm.002} 0.135 ± .005 0.135^{\pm.005} 2.906 ± .009 2.906^{\pm.009} 9.740 ± .080 9.740^{\pm.080} Ours (S2, w/ IRMoGen) ♣ \clubsuit VQ+Gemma2-2B × \times 0.526 ± .002 \textbf{0.526}^{\pm.002} 0.717 ± .002 \textbf{0.717}^{\pm.002} 0.810 ± .002 \textbf{0.810}^{\pm.002} 0.111 ± .005 \textbf{0.111}^{\pm.005} 2.885 ± .008 \textbf{2.885}^{\pm.008} 9.819 ± .088 9.819^{\pm.088} Motion-R1 ♣ \clubsuit [ 67 ] ICLR’26 VQ+Qwen2.5-3B ✓ \checkmark 0.515 ± .003 0.515^{\pm.003} 0.719 ± .002 0.719^{\pm.002} 0.818 ± .002 0.818^{\pm.002} 0.201 ± .004 \textbf{0.201}^{\pm.004} 2.854 ± .010 2.854^{\pm.010} 10.026 ± .075 \textbf{10.026}^{\pm.075} Ours (S3, w/ IRMoGen) ♣ \clubsuit VQ+Gemma2-2B ✓ \checkmark 0.535 ± .002 \textbf{0.535}^{\pm.002} 0.725 ± .002 \textbf{0.725}^{\pm.002} 0.820 ± .002 \textbf{0.820}^{\pm.002} 0.242 ± .006 {0.242}^{\pm.006} 2.785 ± .006 \textbf{2.785}^{\pm.006} 9.900 ± .094 {9.900}^{\pm.094} KIT-ML Dataset T2M-GPT [ 105 ] CVPR’23 VQ+GPT2 × \times 0.416 ± .006 0.416^{\pm.006} 0.627 ± .006 0.627^{\pm.006} 0.745 ± .006 0.745^{\pm.006} 0.514 ± .029 0.514^{\pm.029} 3.007 ± .023 3.007^{\pm.023} 10.921 ± .108 10.921^{\pm.108} MotionGPT ♣ \clubsuit [ 37 ] NeurIPS’23 VQ+T5 × \times 0.366 ± .005 0.366^{\pm.005} 0.558 ± .004 0.558^{\pm.004} 0.680 ± .005 0.680^{\pm.005} 0.510 ± .016 0.510^{\pm.016} 3.527 ± .021 3.527^{\pm.021} 10.350 ± .084 10.350^{\pm.084} MotionGPT-2 ♣ \clubsuit [ 89 ] ArXiv’24 VQ+Gemma-2B × \times 0.364 0.364 0.581 0.581 0.699 0.699 1.063 1.063 3.424 3.424 10.603 10.603 MotionLLM § \lx@sectionsign [ 93 ] ICLR’25 VQ+Gemma2-2B × \times 0.416 ± .004 0.416^{\pm.004} 0.637 ± .004 0.637^{\pm.004} 0.746 ± .003 0.746^{\pm.003} 0.560 ± .025 0.560^{\pm.025} 3.001 ± .011 3.001^{\pm.011} 11.209 ± .135 \textbf{11.209}^{\pm.135} Ours (S1, w/ IRMoGen) ♣ \clubsuit VQ+Gemma2-2B × \times 0.425 ± .005 {\textbf{0.425}^{\pm.005}} 0.640 ± .004 0.640^{\pm.004} 0.754 ± .002 0.754^{\pm.002} 0.497 ± .021 0.497^{\pm.021} 2.877 ± .010 \textbf{2.877}^{\pm.010} 11.114 ± .095 11.114^{\pm.095} Ours (S2, w/ IRMoGen) ♣ \clubsuit VQ+Gemma2-2B × \times 0.419 ± .006 0.419^{\pm.006} 0.642 ± .006 \textbf{0.642}^{\pm.006} 0.763 ± .005 \textbf{0.763}^{\pm.005} 0.389 ± .014 \textbf{0.389}^{\pm.014} 2.908 ± .026 2.908^{\pm.026} 11.096 ± .121 11.096^{\pm.121} Motion-R1 ♣ \clubsuit [ 67 ] ICLR’26 VQ+Qwen2.5-3B ✓ \checkmark 0.431 ± .003 0.431^{\pm.003} 0.638 ± .002 0.638^{\pm.002} 0.761 ± .003 0.761^{\pm.003} 0.287 ± .004 \textbf{0.287}^{\pm.004} 3.196 ± .040 3.196^{\pm.040} 10.875 ± .052 10.875^{\pm.052} Ours (S3, w/ IRMoGen) ♣ \clubsuit VQ+Gemma2-2B ✓ \checkmark 0.445 ± .005 \textbf{0.445}^{\pm.005} 0.681 ± .003 \textbf{0.681}^{\pm.003} 0.781 ± .004 \textbf{0.781}^{\pm.004} 0.432 ± .013 {0.432}^{\pm.013} 2.740 ± .017 \textbf{2.740}^{\pm{.017}} 11.115 ± .086 \textbf{11.115}^{\pm.086}
+
+Methods GRPO R-Precision ↑ \uparrow FID ↓ \downarrow MM-Dist ↓ \downarrow Diversity ↑ \uparrow Steps Top-1 Top-2 Top-3 Motion-R1 [ 67 ] ICLR’26 - 0.515 0.515 0.719 0.719 0.818 0.818 0.201 {0.201} 2.854 2.854 10.026 {10.026} UniMo [ 85 ] AAAI’26 14,000 0.539 {0.539} 0.738 {0.738} 0.831 {0.831} 0.177 {0.177} 2.768 {2.768} 10.042 {10.042} Ours 900 0.535 {0.535} 0.725 {0.725} 0.820 {0.820} 0.242 {0.242} 2.785 {2.785} 9.900 {9.900} Ours ‡ \ddagger 2,600 0.564 {0.564} 0.754 {0.754} 0.841 {0.841} 0.208 {0.208} 2.628 {2.628} 9.883 {9.883}
+
+Methods R-Precision ↑ \uparrow FID ↓ \downarrow MM-Dist ↓ \downarrow Top-1 Top-2 Top-3 Mask-Modeling-based Models MMM [ 72 ] CVPR’24 0.487 0.683 0.782 0.132 3.359 MoMask [ 16 ] CVPR’24 0.490 0.687 0.786 0.116 3.353 MoMask+DisCoRD [ 8 ] ICCV’25 0.504 0.697 0.797 0.056 3.273 Diffusion-based Models MDM [ 83 ] ICLR’23 0.440 0.636 0.742 0.518 3.640 MotionDiffuse [ 108 ] TPAMI’24 0.450 0.641 0.753 0.778 3.490 MLD [ 6 ] CVPR’23 0.461 0.651 0.750 0.431 3.455 ReMoDiffuse [ 109 ] ICCV’23 0.468 0.653 0.754 0.883 3.414 Light-T2M [ 103 ] AAAI’25 0.481 0.676 0.774 0.072 3.281 MARDM-SiT [ 65 ] CVPR’25 0.500 0.500 0.695 0.795 0.114 3.270 LLM-based Models T2M-GPT [ 105 ] CVPR’23 0.487 0.659 0.758 0.335 3.505 MotionLLM* [ 93 ] ICLR’25 0.470 0.664 0.771 0.240 3.377 Ours (S1, w/ IRMoGen) ♣ \clubsuit 0.507 0.696 0.791 0.161 3.234 Ours (S2, w/ IRMoGen) ♣ \clubsuit 0.503 0.698 0.796 0.185 3.212 Ours (S3, w/ IRMoGen) ♣ \clubsuit 0.509 0.701 0.802 0.259 3.166
+
+Methods Bleu-1 ↑ \uparrow Bleu-4 ↑ \uparrow Rouge ↑ \uparrow CIDEr ↑ \uparrow BERT ↑ \uparrow w/ Task Specific Tuning TM2T [ 18 ] 48.90 8.27 38.10 15.80 32.20 MG-MotionLLM [ 90 ] - 8.06 - - 36.70 LaMP [ 51 ] 47.80 13.04 37.10 28.90 32.70 MotionLLM [ 93 ] 54.53 17.65 48.70 33.74 42.63 MoTe [ 94 ] 46.70 11.15 37.40 31.50 30.30 MotionGPT3 [ 114 ] 56.36 17.66 45.00 30.98 35.85 w/o Task Specific Tuning MotionGPT [ 37 ] 48.2 12.47 37.4 29.2 32.4 MotionChain [ 39 ] 48.1 12.56 33.9 33.7 36.9 MG-MotionLLM [ 90 ] - - - - 38.6 MotionGPT3 [ 114 ] 59.08 19.41 46.17 28.72 35.23 Being-M0.5 [ 4 ] - - - 26.78 - Ours (S1) 62.05 22.53 47.51 52.4 42.68
+
+Robustness evaluation on IRG-MotionLLM . In Appendix, we show that our method goes beyond relying on specific reasoning traces but performs robust IRMoGen even if we introduce perturbations to the native reasoning traces.
+
+Emergent cross-model and cross-task synergies. In the Appendix, we show that IRG-MotionLLM can be functioned as a text-motion reward model to enhance existing motion generator. On AToM-general benchmark [ 22 ] , our method outperforms other advanced reward models [ 1 , 99 ] , showcasing the quality and transferability of its motion assessment ability.
+Moreover, evaluation on MotionFix benchmark [ 2 ] shows that IRG-MotionLLM also benefits the adaptation to the motion editing task and outperforms the baseline models [ 93 , 2 ] .
+
+5.3 IRG-MotionLLM v.s. Existing Methods
+
+Comparisons with VQ-based Motion-aware LLMs .
+In Tab. 4 , we compare our IRG-MotionLLM with previous methods with a similar framework on the HumanML3D and KIT-ML datasets. First , compared with our base model MotionLLM [ 93 ] , our training scheme brings stable improvement. Second , our Stage-1 and Stage-2 models outperform GRPO-free methods on most of the metrics. Third , equipped with GRPO-based RL, our Stage-3 model achieves further improvement on text-motion alignment and outperforms Motion-R1 [ 67 ] .
+In alignment with the conclusion of previous work [ 101 ] , vanilla GRPO can bring fluctuation to FID due to the lack of dense supervision on output motion tokens. However, it is still competitive with methods [ 37 , 39 , 90 , 89 , 67 ] that support both text and motion outputs.
+User studies in the Appendix further confirm the semantic alignment and naturalness of the generated motions.
+
+More Discussions on Stage-3 . By default, we use 9k data and train our model for 900 steps in the experiments on HumanML3D dataset.
+However, for the concurrent GRPO-based Motion-aware LLMs, the GRPO training stage is conducted with much larger motion-text pairs and lasts for longer steps ( e.g . , UniMo [ 85 ] uses more than 23k motion data and optimizes the model for 14,000 GRPO steps).
+Hence, a natural exploration is to scale up the training data and extend the training duration for our IRG-MotionLLM. We scale up the training data in Stage-3 to the similar scale as UniMo [ 85 ] and train our model for 2,600 GRPO steps, noted as “ Ours ‡ \ddagger ”. As shown in Tab. 5 , scaling-up training data and extending the training duration significantly performance on most of the metrics (R-Precision, FID, and MM-Dist).
+By aligning the training setting, our method achieves a more competetive FID with existing GRPO-based Motion-aware LLMs, but shows clear superiority on motion-text alignment metrics.
+
+Comparisons with another Evaluator .
+We further evaluate our method with a recently proposed evaluator [ 65 ] , which is more robust to the redundant factors in motion representation. As shown in Tab. 7 , a similar improvement trend is observed. Our model achieves advanced performance compared with existing methods built on various frameworks.
+
+Comparisons on Motion Understanding Task .
+As shown in Tab. 7 , our Stage-1 model also achieves advanced performance in the Motion-to-Text Caption task without task-specific finetuning.
+
+More Comparisons . In the Appendix, we further provide detailed analysis on the comparisons with more models with various frameworks [ 51 , 25 , 102 , 71 , 4 , 88 ] .
+
+5.4 Qualitative Results
+
+In Fig. 6 , we provide qualitative results of our method alongside SoTA motion generation methods. IRG-MotionLLM is able to natively perform interleaved reasoning across motion and text to improve the generation result. More visualizations (including the rendered videos) are provided in the Supplementary.
+
+6 Conclusions
+
+We believe that beyond simply training models on various independent tasks, leveraging motion understanding to enhance generation holds vast research potential. To facilitate future exploration in this direction, we introduce Interleaved Reasoning for Motion Generation (IRMoGen), a novel paradigm that enhances final motion quality by seamlessly interleaving motion generation, assessment, and refinement within a unified reasoning process. We propose a three-stage training scheme to endow and further enhance the model’s capacity for native interleaved reasoning.
+Extensive experiments evaluate the effectiveness and showcase the properties of our IRG-MotionLLM.
+In Appendix, we further discuss the limitations of our work and outline future research directions. We expect our exploration and findings to offer fresh perspectives and inspire new advances in motion generation and motion-aware LLMs.
+
+Acknowledgements
+
+This work was supported partially by NSFC(92470202), Guangdong NSF Project (No. 2023B1515040025), Guangdong Key Research and Development Program(No. 2024B0101040004, No. 2025B0909020002).
+The authors thank Bowen Yin, Boyuan Sun, Zhi Ouyang and Wei-Jin Huang for the valuable discussions.
+The authors also thank anonymous reviewers and ACs for their constructive suggestions.
+
+References
+
+Appendix 0.A Appendix Introduction
+
+This appendix includes more details and analysis of our works:
+
+In Appendix 0.B , we provide more preliminaries about: (1) Text-to-Motion Generation task definition; (2) Motion VQVAE; (3) Motion-aware LLM; (4) GRPO-based Reinforcement Learning.
+
+In Appendix 0.C , we provide more details of our IRG-MotionLLM, including: (1) Base Model; (2) Inference with IRMoGen.
+
+In Appendix 0.D , we provide more details and discussions of the data engine, including: (1) More about the annotation pipeline; (2) More about training data organization; (3) Compare our data engine with the construction of MotionFix [ 2 ] .
+
+In Appendix 0.E , we provide more details about the experiment setups, including: (1) Dataset; (2) Evaluation Metrics; (3) Implementation.
+
+In Appendix 0.F , we provide more experimental results and analysis, including:
+
+Impact of the Manual Check on LLM-based annotations. ( Sec. 0.F.1 )
+
+More Comparisons and Discussions on Text-to-Motion Generation Task. ( Sec. 0.F.2 )
+
+Unified Architecture v.s. Multi-Agent Pipeline. ( Sec. 0.F.3 )
+
+Impact of Multiple Round of Refinement. ( Sec. 0.F.4 )
+
+Robust IRMoGen or Trajectory Dependency? ( Sec. 0.F.5 )
+
+Stage-3 Training: Unleashing the capacity or Hacking the evaluator? ( Sec. 0.F.6 )
+
+Functioning IRG-MotionLLM as a Text-Motion Reward Model. ( Sec. 0.F.7 )
+
+Adapting IRG-MotionLLM to Motion Editing task. ( Sec. 0.F.8 )
+
+User studies. ( Sec. 0.F.9 )
+
+More Qualitative Results. ( Sec. 0.F.10 )
+
+In Appendix 0.G , we discuss the limitations and the potential research directions, including: (1) IRMoGen with advanced MoLLM framework; (2) Motion Assessment beyond text-motion alignment; (3) Scaling-up IRG-MotionLLM; (4) Interleaved Reasoning for broader motion-centric tasks.
+
+Appendix 0.B Preliminaries
+
+0.B.1 Text-to-Motion Generation Task Definition
+
+Text-to-Motion Generation aims at generating 3D human motion aligned with the goal text. In this work, we follow [ 17 , 83 ] to represent the human motion sequence as m 1 : T ∈ ℝ T × D m_{1:T}\in\mathbb{R}^{T\times D} , where T T is the length (number of frames) of the motion sequence. Each human pose m i m_{i} in the human motion sequence is a D D -dimension vector, which includes the root angular velocity along the Y-axis, root linear velocities on the XZ-plane, root height, and local joint positions, velocities, and rotations relative to the root space.
+Please refer to [ 17 ] for more detailed information on human pose representation.
+
+0.B.2 Motion VQVAE
+
+To align better with LLM’s next-token prediction mechanism, a Motion VQ-VAE [ 37 , 90 , 93 ] is adopted to encode motions into discrete representations and also decode these representations back to continuous motions.
+
+Quantization : Given a motion sequence m 1 : T ∈ ℝ T × D m_{1:T}\in\mathbb{R}^{T\times D} , an encoder ℰ \mathcal{E} first encodes it into a sequence of latent embeddings z 1 : T / S ∈ ℝ T / S × d z_{1:T/S}\in\mathbb{R}^{T/S\times d} , where S S denotes the downsampling rate on temporal dimension and d d is the hidden dimensions. After that, the latent embeddings are quantized by a quantizer with a codebook C = { c k } 1 K C=\{c_{k}\}^{K}_{1} , which can be represented as:
+
+where c k ∈ ℝ 𝕕 c_{k}\in\mathbb{R^{d}} , K K is the size of the codebook, and z ^ 1 : T / S \hat{z}_{1:T/S} are the quantization results.
+
+De-quantization : Given the quantization results, a decoder 𝒟 \mathcal{D} can de-quantize them back to the motion sequence: m ^ 1 : T = 𝒟 ( z ^ 1 : T / S ) \hat{m}_{1:T}=\mathcal{D}(\hat{z}_{1:T/S})
+
+Training : We share the same strategy as previous works [ 93 ] to optimize the VQVAE. The training loss is written as:
+
+The first item is the motion reconstruction loss, the second item is a regularization on the joint positions p p , the third item is the commitment loss. s g [ . ] sg[.] denotes the stop-gradient operation, α \alpha and β \beta are the hyper-parameters.
+After training, we keep the Motion VQVAE frozen for further usage.
+
+0.B.3 Motion-aware LLM
+
+Based on the Motion VQVAE, the motion sequence can be discretized into K distinct motion tokens. We map these motion tokens to the motion token vocabulary V m = { < M o t i o n _ i > } i = 1 K V_{m}=\{\textless Motion\_i\textgreater\}^{K}_{i=1} based on their indices. After that, we extend the base LLM vocabulary with these motion-specific codes alone with boundary tokens < M ​ o ​ t ​ i ​ o ​ n > \textless Motion\textgreater and < / M o t i o n > \textless/Motion\textgreater to delineate motion sequence spans within the text ( i.e . , K+2 new tokens).
+After that, given prompt q q and target token sequence x 1 : T x_{1:T} , we can train a motion-aware LLM with standard next-token prediction objective via negative log-likelihood:
+
+During inference, the model is able to freely mixed token sequence (with both text and motion tokens). We can directly extract the generated motion by matching the boundary tokens < M ​ o ​ t ​ i ​ o ​ n > \textless Motion\textgreater and < / M o t i o n > \textless/Motion\textgreater .
+
+0.B.4 GRPO-based Reinforcement Tuning
+
+GRPO is initially proposed to enhance the reasoning capacity of LLM [ 78 , 20 ] , and proven to have promising potential for enhancing Multi-modal LLM [ 40 , 31 , 67 ] .
+The core mechanism of GRPO [ 78 ] is to leverages intra-group ranking feedback to optimize the policy ( i.e . , our IRG-MotionLLM) by encouraging better samples within each group, which eliminates the need of an additional critic model [ 77 , 59 ] or pair-wise preference data [ 75 , 22 , 69 ] .
+
+Specifically, taken the reasoning instruction q q , a group of G G trajectories { o 1 , o 2 , … , o G } \{o_{1},o_{2},...,o_{G}\} are sampled from the model. After that, each trajectory is assigned with a scalar reward r ⁡ ( o i ) r(o_{i}) .
+GRPO then standardizes these scores within the group and optimizes a weighted objective:
+
+where π θ \pi_{\theta} indicates the current policy and π θ o ​ l ​ d \pi_{\theta_{old}} is the previous policy. Based on R ⁡ ( o ) R(o) , the objective is written as:
+
+where π r ​ e ​ f \pi_{ref} is indicates initial policy and β k ​ l \beta_{kl} is a hyper-parameter.
+
+Appendix 0.C More Details about IRG-MotionLLM
+
+0.C.1 Base Model
+
+In our work, we mainly use the MotionLLM from the T2M part of MotionAgent [ 93 ] as our base model. The size of codebook is 512, and the LLM part is build on Gemma2-2B [ 82 ] .
+Based on the training strategy introduced in Appendix 0.B , the base model is trained on text-to-motion generation task. During training, only the LoRA adapter is trainable while the other parameters are frozen. Please refer to the original paper [ 93 ] for more details.
+
+0.C.2 More details about Inference with IRMoGen
+
+Prompted with reasoning instruction and goal text, our Stage-2 and Stage-3 models can natively perform IRMoGen, and adaptively stop reasoning when a satisfactory motion is obtained ( i.e . , the assessment results indicate “ no refinement is needed ”).
+Notably, our Stage-1 model can also perform interleaved generation, assessment and refinement by sequentially using prompts for different tasks together with the outputs from previous steps. To know when to stop reasoning, extra scripts or manual interventions are needed to check the refinement instruction. The this inference pipeline is shown in Fig. 7 .
+
+Additionally, to avoid endless reasoning, we introduce the maximum refinement constraint N m ​ a ​ x N_{max} , i.e . , the model can perform at most N m ​ a ​ x N_{max} rounds of refinement. If the rounds of refinement reach N m ​ a ​ x N_{max} , the later reasoning will be pruned and use the last generated motion as the output.
+
+Appendix 0.D More Details about Data Engine
+
+0.D.1 Details of Annotation Pipeline
+
+As discussed in Sec. 4 , for each anchor text-motion pair, we progressively sample N n ​ e ​ g N_{neg} negative text-motion pairs from the ranked instance pool with a portion p p . In our work, N n ​ e ​ g N_{neg} is set to 4, and p p is set to 90% (9/10) for the HumanML3D dataset and 87.5% (7/8) for the KIT-ML dataset.
+Additionally, we prompt GPT-4o to obtain the goal analysis and the text-motion alignment assessment annotations. The detailed prompts are shown in Fig. 8 and Fig. 9 .
+
+After collecting the LLM-generated annotations, we further conduct a double-check on the generated annotations. We filter out the invalid annotations ( e.g . , empty response or refining an already perfect motion) prior to model training. We further discuss the impact of the filtering strategy in Sec. 0.F.1 .
+
+0.D.2 Training data organization for Stage-1
+
+Based on the annotation pipeline introduced in Sec. 4 and Sec. 0.D.1 , we construct training data for eight tasks in Stage-1 with task-specific instructions and response templates. Fig. 10 shows the examples of task-specific instructions and response templates.
+
+0.D.3 Training data organization for Stage-2
+
+As discussed in Sec. 0.D.1 , each set of negative motion-text pairs includes N n ​ e ​ g N_{neg} negative motion-text pairs for each anchor motion-text pair
+Based on this, we can build reasoning trajectories that match the IRMoGen-CoT template shown in Fig. 3 for the Stage-2 training. Each reasoning trajectories may include at most N n ​ e ​ g N_{neg} intermediate motions and one final motion .
+During training, we remove a random number (0 to 4) of the intermediate motions together with the corresponding assessment results to ensure the diversity of lengths of reasoning trajectories. We also filter out those intermediate motions with refinement instruction of “ No refinements needed ” to ensure only the final motion is perfectly aligned with the goal.
+We also provide an example of the Stage-2 training data Fig. 13 (including once initial generation and three rounds of refinement).
+
+0.D.4 Comparison between the construction of MotionFix [ 2 ]
+
+While both MotionFix dataset and our data engine use motion encoder to retrieve motions, but different in the outcomes.
+MotionFix retrieves most similar motions and provides brief editing prompts. However, our engine retrieves graded multi-level negatives , generates detailed alignment evaluations and corresponding refinement instructions to enable native generation-assessment-refinement loops.
+
+Appendix 0.E More about Experiment Setups
+
+0.E.1 More about Dataset
+
+Following previous works [ 37 , 114 , 93 , 39 , 90 ] on MoLLM, we mainly conduct experiments on HumanML3D dataset [ 17 ] , one of the
+largest motion-text pair datasets. It contains 14,616 motion sequences from AMASS [ 62 ] and HumanAct12 [ 19 ] , along with 44,970 sequence-level textual descriptions. These descriptions capture the semantic meaning of each motion, making HumanML3D widely used for motion generation and understanding tasks.
+To evaluate the generalizability of our approach, we further compare IRG-MotionLLM with other methods on the KIT-ML [ 73 ] dataset, which contains 3911 motion sequences and 6,278 text descriptions. The motion sequences are selected from the KIT [ 73 ] and CMU [ 96 ] datasets.
+We follow the official splitting strategy to split the dataset into training, validation and test set.
+For Stage3 training, we keep the ratio of text mode paired data to text only data to be approximately 1:1. For fair evaluation, we filter out those prompts that also exist in the testing set (considering them identical after converting to lowercase and removing punctuation).
+
+0.E.2 More about Evaluation Metrics
+
+For the Text-to-Motion Generation task , we follow previous works [ 17 , 93 ] to report metrics including R-Precision, FID, MM-Dist, and Diversity. Given the ground-truth motion features f g ​ t f_{gt} , generated motion features f p ​ r ​ e ​ d f_{pred} , and text features f t ​ e ​ x ​ t f_{text} . Here are details about metrics.
+
+- Multimodal Distance (MM-Dist) is utilized to measure the feature-level distance between the text features and the generated motion feature:
+
+where f p ​ r ​ e ​ d , i f_{pred,i} and f t ​ e ​ x ​ t , i f_{text,i} denote the features of the i i -th generated motion and the corresponding text.
+
+- Frechet Inception Distance (FID) measures the distance of motion features distribution between ground-truth and generated motions, which is calculated FID by
+
+where μ g ​ t \mu_{gt} and μ p ​ r ​ e ​ d \mu_{pred} are the means of f g ​ t f_{gt} and f p ​ r ​ e ​ d f_{pred} . Σ \Sigma is the covariance matrix and Tr denotes the trace of a matrix.
+
+- R-Precision (Top-k) is a text-motion retrieval metric. Given the generated motion and a mini-batch of text descriptions (one ground-truth and others are randomly selected from mismatched descriptions), we rank the distances between the motion and text features to get Top-k accuracy of motion-text. Following the official evaluation protocol [ 17 ] , the mini batch size is set to 32, Euclidean distance is adopted, and we report Top-1, Top-2 and Top-3 results.
+
+- Diversity measures the variance of the whole motion sequences across the dataset. We randomly sample N d ​ i ​ v N_{div} pairs of motion and each pair of motion features is denoted by f p ​ r ​ e ​ d , i f_{pred,i} and f ′ p ​ r ​ e ​ d , i f^{{}^{\prime}}_{pred,i} . The diversity can be calculated by
+
+Following official evaluation protocol [ 17 ] , N d ​ i ​ v N_{div} is set to 300.
+
+For most of the evaluation, we adopt the official evaluator from HumanML3D [ 17 ] .
+As this evaluator can be influenced by redundant motion representation [ 65 ] , we also employ a recently proposed evaluator [ 65 ] for further evaluation.
+
+IRG-MotionLLM Stage-1 Stage-2 Stage-3 General Hyper-parameters Batch Size 128 32 32 # GPUs (Nvidia L20s) 32 32 32 Learning Rate 1e-5 1e-5 1e-6 Epochs / Steps (H3D) 10 epochs 10 epochs 900 steps Epochs / Steps (KIT) 4 epochs 4 epochs 300 steps GRPO Hyper-parameters KL weight ( β k ​ l \beta_{kl} ) - - 0.01 Group size ( G G ) - - 4 Max completion length - - 1024
+
+For the Motion-to-Text Caption task , following [ 93 , 37 , 39 ] , we adopt NLP metrics including Bleu [ 68 ] , Rouge-L [ 55 ] , CIDEr [ 84 ] , and BertScore [ 111 ] . Here are details about metrics.
+
+- BLEU [ 68 ] quantifies the overlap between the generated sentences and the reference sentences by comparing n-grams (contiguous word sequences) shared between them. In this work, we compute the 1-gram- and 4-gram-based BLEU score to evaluate the models.
+
+- CIDEr [ 84 ] is originally proposed for image captioning task. It measures the similarity between generated and reference texts using n-gram overlap weighted by TF-IDF. It ensures important but less common phrases are emphasized, rewarding consensus among references while penalizing overly generic outputs.
+
+- ROUGE-L [ 55 ] measures the longest common subsequence (LCS) between the generated caption and the reference captions. Unlike n-gram-based metrics that only consider exact matches of contiguous words, ROUGE-L captures sentence-level structure similarity and allows for non-consecutive word matches as long as they preserve relative order, making it particularly suitable for evaluating fluency and structural consistency in generated text.
+
+- BERTScore [ 111 ] evaluates natural language generation by comparing the semantic similarity between generated and reference texts using contextual embeddings from pre-trained BERT-like models. Unlike traditional metrics that rely on n-gram overlap, BERTScore computes token-level similarity based on meaning, capturing nuances like synonyms and paraphrasing.
+
+0.E.3 More Implementation Details
+
+For experiments on the HumanML3D dataset, we build our base model based on the official weights of MotionLLM [ 93 ] . For experiments on the KIT-ML dataset, we follow the official implementation (see Appendix 0.C and the original paper [ 93 ] ) of MotionLLM [ 93 ] to train the base model for 100 epochs.
+The main hyper-parameters for training our IRG-MotionLLM are shown in Tab. 8 .
+During inference, the Maximum Refinement Constraint N m ​ a ​ x N_{max} is set to 4 (see discussions in Sec. 0.C.2 ). Note that with proper maximum completion length, after Stage-3 training, only 0.2% test reasoning trajectories exceed this constraint.
+All our experiments are conducted on NVIDIA L20 GPUs.
+During inference, TFLOPs increase with the number of refinement rounds: 1.8, 2.4, 3.2, 4.0, and 4.7 for 0 to 4 rounds.
+
+Appendix 0.F More Experiment Results and Discussions
+
+Methods w/ filtering R-Precision ↑ \uparrow FID ↓ \downarrow MM-Dist ↓ \downarrow Top-1 Top-2 Top-3 Ours(S1, w/ IRMoGen) × \times 0.515 0.702 0.797 0.152 2.957 Ours(S1, w/ IRMoGen) ✓ 0.522 0.711 0.805 0.135 2.906
+
+0.F.1 Impact of manual check on the LLM-based annotations.
+
+As discussed in Sec. 4 , we manually filter out the invalid LLM-based annotations prior to model training. Here we conduct a further ablation on our Stage-1 model to evaluate the impact of the filtering strategy. As shown in Tab. 9 , the manual checking and filtering step bring consistent positive impacts to the generation performance.
+
+0.F.2 More Comparisons and Discussions on Text-to-Motion Generation Task.
+
+In Tab. 10 , we further compare our IRG-MotionLLM with methods with other frameworks on Text-to-Motion Generation task. First , IRG-MotionLLM significantly narrows the gap between MoLLMs [ 37 , 89 , 90 , 67 ] and generation-specific models ( e.g . , [ 51 , 65 , 25 ] ), achieving comparable results with the advanced mask-modeling-based motion generator ( e.g . , BAMM [ 71 ] , MoGenST [ 102 ] ).
+While there exists a gap between our approach and the most recent generation-specific method ( i.e . , LAMP [ 51 ] and SALAD [ 25 ] ), we note that it is not a challenge only in MoLLM research [ 90 , 93 , 67 ] .
+In the domain of image generation and understanding [ 113 , 41 , 106 ] , current unified VLMs also do not exhibit a clear superiority over separate models in the understanding or generation tasks.
+Even so, we still believe exploring how to deeply link motion understanding with generation beyond simply training model on various independent tasks is highly valuable for both the MoLLM and motion generation domains. Second , IRG-MotionLLM achieves comparable performance compared with methods trained on much larger close-source datasets [ 4 , 88 ] . We believe our IRG-MotionLLM can also benefit from larger training data and advanced architectures.
+
+Methods w/ GRPO R-Precision ↑ \uparrow FID ↓ \downarrow MM-Dist ↓ \downarrow Diversity ↑ \uparrow Top-1 Top-2 Top-3 HumanML3D Dataset Diffusion-based Motion Generator MDM [ 83 ] ICLR’23 × \times 0.320 ± .005 0.320^{\pm.005} 0.498 ± .004 0.498^{\pm.004} 0.611 ± .007 0.611^{\pm.007} 0.544 ± .044 0.544^{\pm.044} 5.566 ± .027 5.566^{\pm.027} 9.559 ± .086 9.559^{\pm.086} MLD [ 6 ] CVPR’23 × \times 0.481 ± .003 0.481^{\pm.003} 0.673 ± .003 0.673^{\pm.003} 0.772 ± .002 0.772^{\pm.002} 0.473 ± .013 0.473^{\pm.013} 3.196 ± .010 3.196^{\pm.010} 9.724 ± .082 \textbf{9.724}^{\pm.082} MotionDiffuse [ 108 ] TPAMI’24 × \times 0.491 ± .001 0.491^{\pm.001} 0.681 ± .001 0.681^{\pm.001} 0.782 ± .001 0.782^{\pm.001} 0.630 ± .001 0.630^{\pm.001} 3.113 ± .001 3.113^{\pm.001} 9.410 ± .049 9.410^{\pm.049} ReMoDiffuse [ 109 ] ICCV’23 × \times 0.510 ± .005 0.510^{\pm.005} 0.698 ± .006 0.698^{\pm.006} 0.795 ± .004 0.795^{\pm.004} 0.103 ± .004 0.103^{\pm.004} 2.974 ± .016 2.974^{\pm.016} 9.018 ± .075 9.018^{\pm.075} MARDM [ 65 ] CVPR’25 × \times 0.523 0.715 0.810 0.061 - - SALAD [ 25 ] CVPR’25 × \times 0.581 ± .003 \textbf{0.581}^{\pm.003} 0.769 ± .003 \textbf{0.769}^{\pm.003} 0.857 ± .002 \textbf{0.857}^{\pm.002} 0.076 ± .002 0.076^{\pm.002} 2.649 ± .009 \textbf{2.649}^{\pm.009} 9.696 ± .096 9.696^{\pm.096} Mask-Modeling-based Motion Generator MoMask [ 16 ] CVPR’24 × \times 0.521 ± .002 0.521^{\pm.002} 0.713 ± .002 0.713^{\pm.002} 0.807 ± .002 0.807^{\pm.002} 0.045 ± .002 0.045^{\pm.002} 2.958 ± .008 2.958^{\pm.008} - MMM [ 72 ] CVPR’24 × \times 0.515 ± .002 0.515^{\pm.002} 0.708 ± .002 0.708^{\pm.002} 0.804 ± .002 0.804^{\pm.002} 0.089 ± .005 0.089^{\pm.005} 2.926 ± .007 2.926^{\pm.007} 9.577 ± .050 9.577^{\pm.050} BAMM [ 71 ] ECCV’24 × \times 0.525 ± .002 0.525^{\pm.002} 0.720 ± .003 0.720^{\pm.003} 0.814 ± .003 0.814^{\pm.003} 0.055 ± .002 0.055^{\pm.002} 2.919 ± 008 2.919^{\pm 008} 9.717 ± .089 \textbf{9.717}^{\pm.089} MoGenST [ 102 ] NeurIPS’24 × \times 0.529 ± .003 0.529^{\pm.003} 0.719 ± .002 0.719^{\pm.002} 0.812 ± .002 0.812^{\pm.002} 0.033 ± .001 {0.033}^{\pm.001} 2.867 ± .006 2.867^{\pm.006} 9.570 ± .077 9.570^{\pm.077} LAMP [ 51 ] ICLR’25 × \times 0.557 ± .003 \textbf{0.557}^{\pm.003} 0.751 ± .002 \textbf{0.751}^{\pm.002} 0.843 ± .001 \textbf{0.843}^{\pm.001} 0.032 ± .002 \textbf{0.032}^{\pm.002} 2.759 ± .007 \textbf{2.759}^{\pm.007} 9.571 ± .069 9.571^{\pm.069} VQ-based Motion-aware LLM Being-M0 [ 88 ] ICML’25 × \times 0.519 - 0.803 0.166 2.964 - Being-M0.5 ♣ \clubsuit [ 4 ] ICCV’25 × \times 0.528 - 0.815 0.141 2.953 - T2M-GPT [ 105 ] CVPR’23 × \times 0.492 ± .003 0.492^{\pm.003} 0.679 ± .002 0.679^{\pm.002} 0.775 ± .002 0.775^{\pm.002} 0.141 ± .005 0.141^{\pm.005} 3.121 ± .009 3.121^{\pm.009} 9.722 ± .082 9.722^{\pm.082} MotionGPT ♣ \clubsuit [ 37 ] NeurIPS’23 × \times 0.492 ± .003 0.492^{\pm.003} 0.681 ± .003 0.681^{\pm.003} 0.733 ± .006 0.733^{\pm.006} 0.232 ± .008 0.232^{\pm.008} 3.096 ± .008 3.096^{\pm.008} 9.528 ± .071 9.528^{\pm.071} MotionChain ♣ \clubsuit [ 39 ] ECCV’24 × \times 0.504 ± .003 0.504^{\pm.003} 0.617 ± .002 0.617^{\pm.002} 0.790 ± .003 0.790^{\pm.003} 0.248 ± .009 0.248^{\pm.009} 3.033 ± .010 3.033^{\pm.010} 9.470 ± .075 9.470^{\pm.075} MG-MotionLLM ♣ \clubsuit [ 90 ] CVPR’25 × \times 0.516 ± .002 0.516^{\pm.002} 0.706 ± .002 0.706^{\pm.002} 0.802 ± .003 0.802^{\pm.003} 0.303 ± .010 0.303^{\pm.010} 2.952 ± .009 2.952^{\pm.009} 9.960 ± .073 9.960^{\pm.073} ViMoRAG [ 95 ] NeurIPS’25 × \times 0.452 ± .014 0.452^{\pm.014} 0.655 ± .014 0.655^{\pm.014} 0.764 ± .013 0.764^{\pm.013} 0.131 ± .073 0.131^{\pm.073} 3.146 ± .015 3.146^{\pm.015} 9.424 ± .001 9.424^{\pm.001} MotionGPT-2(8B) ♣ \clubsuit [ 89 ] ArXiv’24 × \times 0.496 ± .002 0.496^{\pm.002} 0.691 ± .003 0.691^{\pm.003} 0.782 ± .004 0.782^{\pm.004} 0.191 ± .004 0.191^{\pm.004} 3.080 ± .013 3.080^{\pm.013} 9.860 ± .026 9.860^{\pm.026} MotionGPT-2(2B) ♣ \clubsuit [ 89 ] ArXiv’24 × \times 0.436 0.600 0.697 0.228 3.589 10.081 MotionLLM [ 93 ] ICLR’25 × \times 0.515 ± .004 0.515^{\pm.004} 0.691 ± .003 0.691^{\pm.003} 0.801 ± .004 0.801^{\pm.004} 0.230 ± .009 0.230^{\pm.009} 2.967 ± .020 2.967^{\pm.020} 9.908 ± .102 9.908^{\pm.102} MotionLLM* [ 93 ] ICLR’25 × \times 0.496 ± .002 {0.496}^{\pm.002} 0.684 ± .002 {0.684}^{\pm.002} 0.782 ± .002 {0.782}^{\pm.002} 0.198 ± .006 {0.198}^{\pm.006} 3.029 ± .007 {3.029}^{\pm.007} 9.864 ± .007 {9.864}^{\pm.007} Ours (S1, w/ IRMoGen) ♣ \clubsuit × \times 0.522 ± .003 0.522^{\pm.003} 0.711 ± .002 0.711^{\pm.002} 0.805 ± .002 0.805^{\pm.002} 0.135 ± .005 0.135^{\pm.005} 2.906 ± .009 2.906^{\pm.009} 9.740 ± .080 9.740^{\pm.080} Ours (S2, w/ IRMoGen) ♣ \clubsuit × \times 0.526 ± .002 {0.526}^{\pm.002} 0.717 ± .002 {0.717}^{\pm.002} 0.810 ± .002 {0.810}^{\pm.002} 0.111 ± .005 \textbf{0.111}^{\pm.005} 2.885 ± .008 {2.885}^{\pm.008} 9.819 ± .088 9.819^{\pm.088} Motion-R1 ♣ \clubsuit [ 67 ] ICLR’26 ✓ \checkmark 0.515 ± .003 0.515^{\pm.003} 0.719 ± .002 0.719^{\pm.002} 0.818 ± .002 0.818^{\pm.002} 0.201 ± .004 {0.201}^{\pm.004} 2.854 ± .010 2.854^{\pm.010} 10.026 ± .075 {10.026}^{\pm.075} UniMo ♣ \clubsuit [ 85 ] AAAI’26 ✓ \checkmark 0.539 ± .003 {0.539}^{\pm.003} 0.738 ± .002 {0.738}^{\pm.002} 0.831 ± .002 {0.831}^{\pm.002} 0.177 ± .004 {0.177}^{\pm.004} 2.768 ± .010 {2.768}^{\pm.010} 10.042 ± .076 {10.042}^{\pm.076} Ours (S3, w/ IRMoGen) ♣ \clubsuit ✓ \checkmark 0.535 ± .002 {0.535}^{\pm.002} 0.725 ± .002 {0.725}^{\pm.002} 0.820 ± .002 {0.820}^{\pm.002} 0.242 ± .006 {0.242}^{\pm.006} 2.785 ± .006 {2.785}^{\pm.006} 9.900 ± .094 {9.900}^{\pm.094} Ours ‡ \ddagger (S3, w/ IRMoGen) ♣ \clubsuit ✓ \checkmark 0.564 ± .002 \textbf{0.564}^{\pm.002} 0.754 ± .002 \textbf{0.754}^{\pm.002} 0.841 ± .002 \textbf{0.841}^{\pm.002} 0.208 ± .003 {0.208}^{\pm.003} 2.628 ± .005 \textbf{2.628}^{\pm.005} 9.883 ± .097 {9.883}^{\pm.097} KIT-ML Dataset Diffusion-based Motion Generator MDM [ 83 ] ICLR’23 × \times - - 0.396 ± .004 0.396^{\pm.004} 0.497 ± .021 0.497^{\pm.021} 9.191 ± .022 9.191^{\pm.022} 10.85 ± .109 10.85^{\pm.109} MLD [ 6 ] CVPR’23 × \times 0.390 ± .008 0.390^{\pm.008} 0.609 ± .008 0.609^{\pm.008} 0.734 ± .007 0.734^{\pm.007} 0.404 ± .027 0.404^{\pm.027} 3.204 ± .027 3.204^{\pm.027} 10.800 ± .117 10.800^{\pm.117} MotionDiffuse [ 108 ] TPAMI’24 × \times 0.417 ± .004 0.417^{\pm.004} 0.621 ± .004 0.621^{\pm.004} 0.739 ± .004 0.739^{\pm.004} 1.954 ± .062 1.954^{\pm.062} 2.958 ± .005 2.958^{\pm.005} 11.100 ± .143 \textbf{11.100}^{\pm.143} ReMoDiffuse [ 109 ] ICCV’23 × \times 0.427 ± .014 {0.427}^{\pm.014} 0.641 ± .004 {0.641}^{\pm.004} 0.765 ± .055 {0.765}^{\pm.055} 0.155 ± .006 \textbf{0.155}^{\pm.006} 2.814 ± .012 {2.814}^{\pm.012} 10.800 ± .105 10.800^{\pm.105} SALAD [ 25 ] CVPR’25 × \times 0.477 ± .006 \textbf{0.477}^{\pm.006} 0.711 ± .005 \textbf{0.711}^{\pm.005} 0.828 ± .005 \textbf{0.828}^{\pm.005} 0.296 ± .012 0.296^{\pm.012} 2.585 ± .016 \textbf{2.585}^{\pm.016} 11.097 ± .095 11.097^{\pm.095} Mask-Modeling-based Motion Generator MoMask [ 16 ] CVPR’24 × \times 0.433 ± .007 0.433^{\pm.007} 0.656 ± .005 0.656^{\pm.005} 0.781 ± .005 0.781^{\pm.005} 0.204 ± .011 0.204^{\pm.011} 2.779 ± .022 2.779^{\pm.022} - MMM [ 72 ] CVPR’24 × \times 0.404 ± .005 0.404^{\pm.005} 0.621 ± .005 0.621^{\pm.005} 0.744 ± .004 0.744^{\pm.004} 0.316 ± .028 0.316^{\pm.028} 2.977 ± .019 2.977^{\pm.019} 10.910 ± .101 10.910^{\pm.101} BAMM [ 71 ] ECCV’24 × \times 0.438 ± .009 0.438^{\pm.009} 0.661 ± .009 0.661^{\pm.009} 0.788 ± .005 0.788^{\pm.005} 0.183 ± .013 0.183^{\pm.013} 2.723 ± .026 2.723^{\pm.026} 11.008 ± .094 \textbf{11.008}^{\pm.094} MoGenST [ 102 ] NeurIPS’24 × \times 0.445 ± .006 0.445^{\pm.006} 0.671 ± .006 0.671^{\pm.006} 0.797 ± .005 0.797^{\pm.005} 0.143 ± .004 0.143^{\pm.004} 2.711 ± .024 2.711^{\pm.024} 10.918 ± .090 10.918^{\pm.090} LAMP [ 51 ] ICLR’25 × \times 0.479 ± .006 \textbf{0.479}^{\pm.006} 0.691 ± .005 \textbf{0.691}^{\pm.005} 0.826 ± .005 \textbf{0.826}^{\pm.005} 0.141 ± .013 \textbf{0.141}^{\pm.013} 2.704 ± .018 \textbf{2.704}^{\pm.018} 10.929 ± .101 {10.929}^{\pm.101} VQ-based Motion-aware LLM T2M-GPT [ 105 ] CVPR’23 × \times 0.416 ± .006 0.416^{\pm.006} 0.627 ± .006 0.627^{\pm.006} 0.745 ± .006 0.745^{\pm.006} 0.514 ± .029 0.514^{\pm.029} 3.007 ± .023 3.007^{\pm.023} 10.921 ± .108 10.921^{\pm.108} MotionGPT ♣ \clubsuit [ 37 ] NeurIPS’23 × \times 0.366 ± .005 0.366^{\pm.005} 0.558 ± .004 0.558^{\pm.004} 0.680 ± .005 0.680^{\pm.005} 0.510 ± .016 0.510^{\pm.016} 3.527 ± .021 3.527^{\pm.021} 10.350 ± .084 10.350^{\pm.084} MotionGPT-2(2B) ♣ \clubsuit [ 89 ] ArXiv’24 × \times 0.364 0.364 0.581 0.581 0.699 0.699 1.063 1.063 3.424 3.424 10.603 10.603 MotionLLM § \lx@sectionsign [ 93 ] ICLR’25 × \times 0.416 ± .004 0.416^{\pm.004} 0.637 ± .004 0.637^{\pm.004} 0.746 ± .003 0.746^{\pm.003} 0.560 ± .025 0.560^{\pm.025} 3.001 ± .011 3.001^{\pm.011} 11.209 ± .135 \textbf{11.209}^{\pm.135} Ours (S1, w/ IRMoGen) ♣ \clubsuit × \times 0.425 ± .005 {0.425^{\pm.005}} 0.640 ± .004 0.640^{\pm.004} 0.754 ± .002 0.754^{\pm.002} 0.497 ± .021 0.497^{\pm.021} 2.877 ± .010 {2.877}^{\pm.010} 11.114 ± .095 11.114^{\pm.095} Ours (S2, w/ IRMoGen) ♣ \clubsuit × \times 0.419 ± .006 0.419^{\pm.006} 0.642 ± .006 {0.642}^{\pm.006} 0.763 ± .005 {0.763}^{\pm.005} 0.389 ± .014 {0.389}^{\pm.014} 2.908 ± .026 2.908^{\pm.026} 11.096 ± .121 11.096^{\pm.121} Motion-R1 ♣ \clubsuit [ 67 ] ICLR’26 ✓ \checkmark 0.431 ± .003 0.431^{\pm.003} 0.638 ± .002 0.638^{\pm.002} 0.761 ± .003 0.761^{\pm.003} 0.287 ± .004 \textbf{0.287}^{\pm.004} 3.196 ± .040 3.196^{\pm.040} 10.875 ± .052 10.875^{\pm.052} Ours (S3, w/ IRMoGen) ♣ \clubsuit ✓ \checkmark 0.445 ± .005 \textbf{0.445}^{\pm.005} 0.681 ± .003 \textbf{0.681}^{\pm.003} 0.781 ± .004 \textbf{0.781}^{\pm.004} 0.432 ± .013 {0.432}^{\pm.013} 2.740 ± .017 \textbf{2.740}^{\pm{.017}} 11.115 ± .086 {11.115}^{\pm.086}
+
+Methods # Param Multi- R-Precision ↑ \uparrow FID ↓ \downarrow MM-Dist ↓ \downarrow Diversity ↑ \uparrow Agent? Top-1 Top-2 Top-3 1 MotionLLM* [ 93 ] +Asse.Expert+Ref.Expert 6B ✓ \checkmark 0.508 0.700 0.796 0.194 2.958 9.888 2 MotionLLM* [ 93 ] +Ours(S1) 4B ✓ \checkmark 0.517 0.709 0.806 0.161 2.906 9.811 3 MotionLLM* [ 93 ] 2B × \times 0.496 {0.496} 0.684 {0.684} 0.782 {0.782} 0.198 {0.198} 3.029 {3.029} 9.864 {9.864} 4 Ours (S1, w/o IRMoGen) 2B × \times 0.504 0.504 0.693 0.693 0.785 0.785 0.141 0.141 3.018 3.018 9.814 9.814 5 Ours (S1, w/ IRMoGen) 2B × \times 0.522 0.522 0.711 0.711 0.805 0.805 0.135 0.135 2.906 2.906 9.740 9.740
+
+0.F.3 Unified Architecture v.s. Multi-Agent Pipeline
+
+In Sec. 5.2 , we conduct ablation studies to show that training a model jointly with motion assessment and refinement tasks enhances the text-motion alignment, and interweaving motion generation with assessment and refinement improves the final generation results. However, one may raise the questions that whether training a unified model is necessary, or is it possible to observe similar improvement with a multi-agent pipeline ( i.e . , improving the generated motion from a base model with independent motion assessment and refinement experts)?
+
+To address this, we conduct a further evaluation to compare the unified architecture with multi-agent pipelines. Specifically, we use MotionLLM [ 93 ] as the base model, and consider the following two multi-agent pipelines:
+(1) MotionLLM+Asse.Expert+Ref.Expert : A motion assessment expert (Asse.Expert) and a motion refinement expert (Ref.Expert) are trained upon the base model to specifically perform Motion Refinement Instructing and Instruction-guided Motion Refinement, respectively;
+(2) MotionLLM+Ours(S1) : We directly using our Stage-1 model to perform Motion Refinement Instructing and Instruction-guided Motion Refinement. During inference, the agentic pipelines follow the similar paradigm shown in Fig. 7 , but use various models to perform different tasks.
+
+From results in Tab. 11 , we have the following observations. First , comparing Row-3,4 with Row-1,2,5, introducing motion assessment and refinement brings consistent improvement regardless of the type of assessor and refiner. Second , comparing Row-1 and Row-2, using our Stage-1 model achieves better performance than independent assessment and refinement experts, suggesting that jointly learning assessment, refinement enhances text-motion alignment, resulting in better motion-centric reasoning ability. Third , comparing Row-2 and Row-5, the agentic pipeline achieves close performance with the unified model as they use the same assessor and refiner. However, the unified strategy are more friendly to computational cost with less parameters (2B) compared to the multi-agent pipeline (4B).
+
+0.F.4 Impact of multiple round of refinement.
+
+We dive deeper into the multi-round refinement process to show how the round of refinement affects the generation performance. As shown in Fig. 11 , we constrain the maximum refinement rounds (see discussion in Sec. 0.C.2 ) of our Stage-3 model and visualize the performance on text-motion alignment metrics. By performing more rounds of refinement, the alignment between the generated motion and the goal text is consistently improved.
+
+0.F.5 Robust IRMoGen or Trajectory Dependency?
+
+Previous studies [ 76 , 13 , 43 ] reveal that reasoning LLMs show vulnerability under adversarial attacks, i.e . , the reasoning LLMs suffer from significantly performance drop when introducing small perturbations to the prompts or previous CoT. These studies motivate us to raise a question: Does IRG-MotionLLm perform robust IRMoGen or only response along a fixed reasoning trajectory?
+
+Methods Perturb. Position R-Precision ↑ \uparrow FID ↓ \downarrow MM-Dist ↓ \downarrow Diversity ↑ \uparrow Top-1 Top-3 perturb. only - 0.029 0.084 - 9.957 9.815 Ours w/ perturb. Random 0.527 0.807 0.246 2.850 9.781 Ours w/ perturb. First 0.526 0.810 0.227 2.826 9.874 Ours - 0.535 0.820 0.242 2.785 9.900
+
+To answer this question, as shown in Fig. 12 we introduce perturbations to the native interleaved reasoning trajectory by replacing the first generated motion with a random sampled one (noted as perturbation motion ) from the dataset. After that, we feed the reasoning instruction , goal text , together with the initial reasoning trajectory (containing only the goal analysis and perturbation motion ) back our IRG-MotionLLM to perform further reasoning.
+We evaluate how the perturbation motion could influence the generation performance of our Stage-3 model.
+
+Moreover, in the training data for Stage-2, we assume that the intermediate motions show progressive improvement. Since a more common and realistic scenario is that the reasoning process may occasionally deviate from the ground truth and then correct itself later, such assumption may bring another question: Is our model robust for the occasional deviations? To answer this question, we extend the robustness evaluation mentioned above by further replacing the generated motion with a perturbation at a random position .
+
+As shown in Tab. 12 , introducing perturbation motions to the reasoning trajectories only brings slight performance drop to our IRG-MotionLLM, which showcases the robustness of IRMoGen performed by our method. We provide qualitative visualizations on this study in Sec. 0.F.10 .
+
+0.F.6 Stage-3 Training: Unleashing the capacity or Hacking the evaluator?
+
+In our Stage-3 training stage, we conduct GRPO-based RL tuning to further enhance the generation performance of our method. We follow previous works [ 63 , 67 ] to select the reward model and strictly ensure there are no identical prompts between the RL data and the test set. However, as we use the official evaluator [ 17 ] as the reward model, an extreme question may be raised: Does GRPO-based RL tuning in Stage-3 unleash the potential capacity or simply hack the evaluator?
+
+To answer this question, as shown in Tab. 5 of the main paper, we further compare our IRG-MotionLLM with existing methods by using a newly proposed T2M evaluator [ 65 ] . By performing Stage-3 training, our method achieves the improvement consistent with the results with original evaluator [ 17 ] , and achieves SoTA performance compared with existing methods with various frameworks. These results suggest that Stage-3 training goes far beyond hacking the evaluator and unleashes the potential capacity of our IRG-MotionLLM.
+
+0.F.7 Functioning IRG-MotionLLM as a Text-Motion Reward Model.
+
+So far, we have shown that IRG-Motion performs robust evaluation on the alignment between the generated motion and goal text. However, a question remain unresolved: How can the assessment ability of IRG-MotionLLM benefit existing motion generator? The intuition behind this question is that if our IRG-MotionLLM is capable to perform high-quality and transferable motion assessment, the assessment signal can be used to enhance another motion generator.
+
+To evaluate IRG-MotionLLM’s motion assessment capacity, inspired by existing works on Reinforcement Learning from AI Feedback (RLAIF) [ 22 , 69 , 58 , 107 ] , we function our IRG-MotionLLM as a new reward model to evaluate the alignment between generated motion and the goal text, and use it to further enhance the existing motion generator. We then compare IRG-MotionLLM with other possible reward models [ 1 , 99 ] on AToM-general Benchmark [ 22 ] .
+
+Methods Reward R-Precision ↑ \uparrow FID ↓ \downarrow MM-Dist ↓ \downarrow Diversity ↑ \uparrow Models Top-1 Top-3 MotionGPT - 0.407 0.661 0.188 3.998 9.452 MotionGPT GPT4Vision [ 1 ] 0.410 0.669 0.177 3.943 9.401 + RLAIF MotionPatch [ 99 ] 0.414 0.683 0.164 3.792 9.364 Ours 0.429 0.698 0.127 3.700 9.401
+
+Text-Motion Alignment Score Calculation . Inspired by VQAScore [ 58 ] , we calculate the text-motion alignment score based on the output probability of tokens that contain evaluation signals.
+Specifically, we first ask the model to perform native interleaved reasoning. After that, we use the same strategy as introduced in Sec. 0.F.5 and Fig. 12 to insert the generated motion into the reasoning trajectory.
+After that, we feed the reasoning instruction, goal text goal analysis, generated motion together with step plans and assessment prefix (“ Evaluation: The generated motion ”) to the model. Finally, we compute the output probability of “ perfectly ” on the first output token, and use it as the alignment score. The reason behind this strategy is that in Stage-2, model is trained to respond with “ Evaluation: The generated motion perfectly aligns with … ” only when the given motion and goal text are perfectly aligned.
+
+Building Preference Pairs & Optimization . Following AToM [ 22 ] , we use MotionGPT [ 37 ] as the base model. We use the same goal text prompts as provided in official repository of AToM [ 22 ] to generate motions and build 3600 preference pairs based on the text-motion alignment scores. The optimization details are kept the same as the official implementation of AToM [ 22 ] .
+
+Comparisons .
+We compare our IRG-MotionLLM with GPT-4o [ 33 ] (the reward model used in AToM [ 22 ] ) and MotionPatch [ 99 ] (a SoTA text-motion retrieval model). As shown in Tab. 13 , functioning IRG-MotionLLM as a text-motion reward model clearly enhances the baseline model performance on text-to-motion generation. Additionally, IRG-MotionLLM outperforms other possible reward models, highlighting the quality and transferability of its motion assessment ability.
+
+Methods R @ 1 ↑ \uparrow R @ 2 ↑ \uparrow R @ 3 ↑ \uparrow AvgR ↓ \downarrow TMED † \dagger [ 2 ] 38.7 50.6 62.2 4.2 MotionLLM* [ 93 ] +FT 39.3 54.2 63.8 5.0 Ours+FT 45.3 61.7 70.5 4.0
+
+0.F.8 Adapting IRG-MotionLLM to Motion Editing Task.
+
+A remaining question from the other side is that whether learning assessment and refinement could benefit motion editing task ( i.e . , a similar task to motion refinement). To answer this question, we conduct further evaluation on MotionFix [ 2 ] , a text-based motion editing benchmark. We adapt our model for motion editing by finetuning it on MotionFix training data (+FT) and compare it with the baseline models [ 2 , 93 ] . The generated-to-target retrieval results in Tab. 14 shows the strong performance of IRG-MotionLLM among the baselines, further revealing the cross-task synergy bought by learning IRMoGen.
+
+0.F.9 User Studies
+
+To further evaluate the effectiveness of our method, we employ 4 users to finish the following user studies:
+
+Semantic Alignment & Naturalness . We randomly sample 80 prompts and ask users to score (scale:1-4) the semantic alignment and naturalness of final motions generated by different methods. The average scores are shown in Tab. 15 . Stage-3 training does not degrade the naturalness of the final motions (comparable with Stage-2 model and base model), but significantly improved semantic alignment with the goal texts
+
+Effectiveness of Multi-Round Refinement . To assess multi-round refinement by our model, we first randomly sample 30 pairs of motions before and after each refinement round (120 pairs in total) and ask users to determine whether a refinement is effective (without motion degradation). The average effective rates across refinement rounds 1-4 are: 87%, 80%, 77% and 77%.
+
+We further ask the users to compare 50 randomly sampled initial-final motions pairs. The final motions win in 60%, tie in 28%, and loss in 12% of cases.
+While the multi-round refinement is not perfect, it offers a high probability of generating high-quality results (only 12% degradation).
+
+Methods Semantic ↑ \uparrow Naturalness ↑ \uparrow MotionLLM* [ 93 ] 2.6 3.2 Ours (S2) 2.8 3.4 Ours (S3) 3.4 3.6
+
+0.F.10 More Qualitative Results
+
+More native reasoning trajectories . Fig. 14 shows the native reasoning trajectories (the planning steps are removed) of IRMoGen performed by our IRG-MotionLLM, showcasing its capacities of performing multi-round interleaved reasoning to capture the mis-alignment of the previous generated motion and finally generating a satisfactory motion.
+
+More Robustness Analysis .
+As discussed in Sec. 0.F.5 , we insert perturbation motions into the native reasoning trajectory to evaluate the robustness of our IRG-MotionLLM. Here we provide more qualitative results on this study. As shown in Fig. 15 , even break the native reasoning trajectory, our IRG-MotionLLM can still perform accurate assessment on the perturbation motion, and refine the motion until it has reached the goal.
+
+Failure Analysis . While our IRG-MotionLLM shows strong performance with extensive quantitative and qualitative results, it may fail on highly complex the goal text. Fig. 16 shows one of these cases. The goal text requires the model to generate a motion sequence including four sub-actions in a specific order. As shown in the upper part of Fig. 16 , although our IRG-MotionLLM obtains a three-round refined motion which is much more aligned with the goal than previous generated motions, it still misses the action of “ scratching the head ”. However, we note that generating perfect motion to such complex goal text is also challenging for existing advanced methods [ 16 , 65 , 93 ] .
+
+Appendix 0.G Limitations and Future works
+
+IRMoGen with Advanced MoLLM Frameworks . In this work, we take the first step to explore the novel IRMoGen paradigm within a general VQ-based motion-aware LLM framework. While this architecture elegantly supports IRMoGen via the LLM’s autoregressive nature and enables fair comparisons with existing MoLLMs, it still has limitations. For example, the vanilla VQVAE may lose fine-grained motion details. To address this, building IRG-MotionLLM with advanced VQVAEs ( e.g . , RVQ [ 16 , 3 ] ) can be valuable extension.
+On the other hand, a concurrent work MotionGPT3 [ 114 ] adopts a Mix-of-Transformers [ 53 ] architecture to learn modality-aware knowledge with separate branches, so that the gap between symbolic sequences and continuous trajectories can be bridged. We believe exploring IRMoGen on such novel architectures is also a valuable direction for future research.
+
+Motion Assessment beyond Text-Motion Alignment . Our primary focus is on linking generation with motion assessment and refinement to enhance alignment between motions and goal texts, and our experiments demonstrate the method’s effectiveness. However, beyond text-motion alignment, aspects like physical plausibility and smoothness are also crucial for motion generation. Recently, MotionCritic [ 86 ] proposes to train an additional model to provide quantitative scores for motion realism. However, how to endow MoLLMs with native physical realism assessment to optimize the IRMoGen process remains a worthwhile avenue for exploration. Also, introducing rewards related to physical realism during the Stage-3 training of IRG-MotionLLM is a meaningful future endeavor.
+
+Scaling Up IRG-MotionLLM . We build our IRG-MotionLLM using a 2B LLM and conduct extensive experiments on the popular motion-text datasets, HumanML3D [ 17 ] and KIT-ML [ 73 ] , to thoroughly validate the model’s efficacy. Nevertheless, the limited datasets and model sizes may constrain generalization. We believe scaling up IRG-MotionLLM with larger foundation LLMs and training on larger text-motion datasets ( e.g . , MotionMillion [ 10 ] , ViMoGen [ 56 ] ) will further enhance its interleaved reasoning abilities across a wider variety of goal texts. We leave these explorations for future work.
+
+Interleaved Reasoning for broader Motion-centric Tasks . In this work, we explore whether interleaved reasoning could benefit motion generation.
+Taken T2M, the most general and representative task, as the testbed, we address the core challenges and analyze the properties of our model.
+While text-motion interleaved reasoning for broader motion-centric tasks ( e.g . , motion editing, motion completion) still remains unexplored, our work provides an extensible technical route for future explorations.
+An intuitive extension of our work is to: (1) unify annotations of various motion-centric tasks and build dynamic motion-text interleaved reasoning traces; (2) adapt our multi-stage training scheme to train the model supporting various types of motion-text interleaved reasoning.

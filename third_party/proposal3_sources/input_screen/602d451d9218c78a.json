@@ -1,0 +1,14 @@
+{
+  "url": "https://mlanthology.org/eccv/2024/zuo2024eccv-simple/",
+  "artifact": "third_party/proposal3_sources/input_screen/602d451d9218c78a.json",
+  "read_status": "not_read",
+  "input_labels": [
+    "[A Simple Baseline for Spoken Language to Sign Language Translation with 3D Avatars](https://mlanthology.org/eccv/2024/zuo2024eccv-simple/?utm_source=chatgpt.com)"
+  ],
+  "http_status": 200,
+  "sha256": "0041f276f0a539e02f7ee8fc405f5c75002e4c3fb1f9c417f624b2f130e4ad98",
+  "title": "A Simple Baseline for Spoken Language to Sign Language Translation with 3D Avatars | ML Anthology",
+  "abstract": "The objective of this paper is to develop a functional system for translating spoken languages into sign languages, referred to as Spoken2Sign translation. The …",
+  "preview": "",
+  "status": "acquired_not_read"
+}

@@ -1,0 +1,14 @@
+{
+  "url": "https://aclanthology.org/2024.findings-emnlp.584/",
+  "artifact": "third_party/proposal3_sources/input_screen/8d48e04352a14869.json",
+  "read_status": "not_read",
+  "input_labels": [
+    "[Word-Conditioned 3D ASL Motion Generation](https://aclanthology.org/2024.findings-emnlp.584/?utm_source=chatgpt.com)"
+  ],
+  "http_status": 200,
+  "sha256": "ddea30f02fdd371449bd689bd0989d712420f93242ec2a06f813728fd14f0233",
+  "title": "Word-Conditioned 3D American Sign Language Motion Generation - ACL Anthology",
+  "abstract": "Lu Dong, Xiao Wang, Ifeoma Nwogu. Findings of the Association for Computational Linguistics: EMNLP 2024. 2024.",
+  "preview": "",
+  "status": "acquired_not_read"
+}

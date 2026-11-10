@@ -1,0 +1,14 @@
+{
+  "url": "https://www-i6.informatik.rwth-aachen.de/~koller/RWTH-PHOENIX-2014-T/",
+  "artifact": "third_party/proposal3_sources/input_screen/7135fe64150c69b2.json",
+  "read_status": "not_read",
+  "input_labels": [
+    "[PHOENIX-2014T](https://www-i6.informatik.rwth-aachen.de/~koller/RWTH-PHOENIX-2014-T/?utm_source=chatgpt.com)"
+  ],
+  "http_status": 200,
+  "sha256": "ccfc8560402ae5304b4644018ca5e40dbf22257e8c08ba919d21e46366a8ae5d",
+  "title": "RWTH-PHOENIX-Weather 2014 T:  Parallel Corpus of Sign Language Video, Gloss and Translation",
+  "abstract": "Data Set: RWTH-PHOENIX-Weather 2014 T",
+  "preview": "",
+  "status": "acquired_not_read"
+}

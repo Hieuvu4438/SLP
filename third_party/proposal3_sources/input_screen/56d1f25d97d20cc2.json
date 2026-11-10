@@ -1,0 +1,14 @@
+{
+  "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Pinyoanuntapong_MaskControl_Spatio-Temporal_Control_for_Masked_Motion_Synthesis_ICCV_2025_paper.html",
+  "artifact": "third_party/proposal3_sources/input_screen/56d1f25d97d20cc2.json",
+  "read_status": "not_read",
+  "input_labels": [
+    "**MaskControl**"
+  ],
+  "http_status": 200,
+  "sha256": "63ba449697f6809dd829943159f58750329cbad69c8f84183bb6a31a8296b699",
+  "title": "ICCV 2025 Open Access Repository",
+  "abstract": "Recent advances in motion diffusion models have enabled spatially controllable text-to-motion generation. However, these models struggle to achieve high-precision control while maintaining high-quality motion generation. To address these challenges, we propose MaskControl, the first approach to introduce controllability to the generative masked motion model. Our approach introduces two key innovations. First, Logits Regularizer implicitly perturbs logits at training time to align the distribution of motion tokens with the controlled joint positions, while regularizing the categorical token prediction to ensure high-fidelity generation. Second, Logit Optimization explicitly optimizes the predicted logits during inference time, directly reshaping the token distribution that forces the generated motion to accurately align with the controlled joint positions. Moreover, we introduce Differentiable Expectation Sampling (DES) to combat the non-differential distribution sampling process encountered by logits regularizer and optimization. Extensive experiments demonstrate that MaskControl outperforms state-of-the-art methods, achieving superior motion quality (FID decreases by  77%) and higher control precision (average error 0.91 vs. 1.08). Additionally, MaskControl enables diverse applications, including any-joint-any-frame control, body-part timeline control, and zero-shot objective control. Video visualization can be found at https://anonymous-ai-agent.github.io/CAM",
+  "preview": "",
+  "status": "acquired_not_read"
+}

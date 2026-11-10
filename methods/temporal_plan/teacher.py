@@ -43,11 +43,12 @@ def teacher_partitions(features: Tensor, lengths: Tensor, config: TeacherConfig,
                   score_cache.get(valid_features, config,
                                   None if source_ids is None else source_ids[b]))
         distribution = PartitionDistribution(scores, config.temperature)
+        fixed_durations = distribution.mode() if mode != "sample" else None
         for _ in range(samples):
             if mode == "sample":
                 durations = distribution.sample(generator)
             else:
-                durations = distribution.mode()
+                durations = list(fixed_durations)
                 if mode == "uniform":
                     # Match K to MAP instead of changing count/capacity silently.
                     k = len(durations)

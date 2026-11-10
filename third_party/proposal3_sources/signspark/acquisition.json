@@ -1,0 +1,11 @@
+{
+  "key": "signspark",
+  "url": "https://arxiv.org/html/2603.10446v4",
+  "retrieved_at": "2026-11-06T09:18:51.162223+00:00",
+  "kind": "html",
+  "http_status": 200,
+  "sha256": "59297db4875ace71946ed2e3c99c01852125872e733c02436a4bdf490c2ccf5f",
+  "title": "SignSparK: Efficient Multilingual Sign Language Production via Sparse Keyframe Learning",
+  "chars": 43531,
+  "status": "acquired_not_read"
+}

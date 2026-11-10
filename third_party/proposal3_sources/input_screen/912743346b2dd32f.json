@@ -1,0 +1,15 @@
+{
+  "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Fan_Go_to_Zero_Towards_Zero-shot_Motion_Generation_with_Million-scale_Data_ICCV_2025_paper.html",
+  "artifact": "third_party/proposal3_sources/input_screen/912743346b2dd32f.json",
+  "read_status": "not_read",
+  "input_labels": [
+    "**Go to Zero / MotionMillion**",
+    "**MotionMillion**"
+  ],
+  "http_status": 200,
+  "sha256": "36c1daa94900bee2fee2a0509857400eadefa2bf44db821aa19664c3d81fed97",
+  "title": "ICCV 2025 Open Access Repository",
+  "abstract": "Generating diverse and natural human motion sequences based on textual descriptions constitutes a fundamental and challenging research area within the domains of computer vision, graphics, and robotics. Despite significant advancements in this field, current methodologies often face challenges regarding zero-shot generalization capabilities, largely attributable to the limited size of training datasets. Moreover, the lack of a comprehensive evaluation framework impedes the advancement of this task by failing to identify directions for improvement. In this work, we aim to push text-to-motion into a new era, that is, to achieve the generalization ability of zero-shot. To this end, firstly, we develop an efficient annotation pipeline and introduce MotionMillion--the largest human motion dataset to date, featuring over 2,000 hours and 2 million high-quality motion sequences. Additionally, we propose MotionMillion-Eval, the most comprehensive benchmark for evaluating zero-shot motion generation. Leveraging a scalable architecture, we scale our model to 7B parameters and validate its performance on MotionMillion-Eval. Our results demonstrate strong generalization to out-of-domain and complex compositional motions, marking a significant step toward zero-shot human motion generation.",
+  "preview": "",
+  "status": "acquired_not_read"
+}

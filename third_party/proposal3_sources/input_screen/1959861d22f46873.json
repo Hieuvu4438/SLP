@@ -1,0 +1,14 @@
+{
+  "url": "https://proceedings.neurips.cc/paper/2020/hash/4c5bcfec8584af0d967f1ab10179ca4b-Abstract.html",
+  "artifact": "third_party/proposal3_sources/input_screen/1959861d22f46873.json",
+  "read_status": "not_read",
+  "input_labels": [
+    "F4 ★"
+  ],
+  "http_status": 200,
+  "sha256": "b960c8b1b06c3bd08efa20a2a1487f8ea0c2ec82bf9abdb6af1795cf2b25e9b4",
+  "title": "Denoising Diffusion Probabilistic Models",
+  "abstract": "",
+  "preview": "Denoising Diffusion Probabilistic Models AuthorFeedback Bibtex MetaReview Paper Review Supplemental Abstract We present high quality image synthesis results using diffusion probabilistic models, a class of latent variable models inspired by considerations from nonequilibrium thermodynamics. Our best results are obtained by training on a weighted variational bound designed according to a novel connection between diffusion probabilistic models and denoising score matching with Langevin dynamics, and our models naturally admit a progressive lossy decompression scheme that can be interpreted as a generalization of autoregressive decoding. On the unconditional CIFAR10 dataset, we obtain an Inception score of 9.46 and a state-of-the-art FID score of 3.17. On 256x256 LSUN, we obtain sample quality similar to ProgressiveGAN. Name Change Policy × Requests for name changes in the electronic proceedings will be accepted with no questions asked. However name changes may cause bibliographic tracking issues. Authors are asked to consider this carefully and discuss it with their co-authors prior to requesting a name change in the electronic proceedings. Use the \"Report an Issue\" link to request a name change. Do not remove: This comment is monitored to verify that the site is working properly",
+  "status": "acquired_not_read"
+}

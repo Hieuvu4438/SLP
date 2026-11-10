@@ -1,0 +1,10 @@
+{
+  "source_sha256": "ed94cbbb6a44666877a40150758280746efb586175299c4e440f32d7dc6da3fb",
+  "synthetic_unit": "arbitrary joint-coordinate unit",
+  "root_translation_cost": 0.0,
+  "root_aligned_rotation_cost": 1.4142135623730951,
+  "single_step_cost": 0.10000000000000009,
+  "two_step_cost": 0.20000000000000018,
+  "hand_translation_relative_body_is_invisible_to_isolated_hand_cost": true,
+  "scope": "Isolated upstream functions only; no claim to reproduce paper tables or full evaluator."
+}

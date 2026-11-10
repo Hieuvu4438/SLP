@@ -1,0 +1,11 @@
+{
+  "key": "salad",
+  "url": "https://arxiv.org/html/2503.13836",
+  "retrieved_at": "2026-11-06T09:18:51.933889+00:00",
+  "kind": "html",
+  "http_status": 200,
+  "sha256": "ab92c9f0ba59839dbc6dde9d0459af21aa48b2abf2156cd282fa3273860972f3",
+  "title": "SALAD: Skeleton-aware Latent Diffusion for Text-driven Motion Generation and Editing",
+  "chars": 57720,
+  "status": "acquired_not_read"
+}

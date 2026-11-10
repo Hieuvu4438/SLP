@@ -1,0 +1,50 @@
+{
+  "scope": "Primary RACE-Sign v2 implementation; empirical validation is separate",
+  "tests": 57,
+  "race_tests": 29,
+  "failures": 0,
+  "skipped": 0,
+  "ruff": "pass",
+  "documentation_links": "pass",
+  "author_source_hashes": "pass",
+  "cpu_training_resume": "bit-exact controlled fixture",
+  "cuda_backward": "pass",
+  "real_smplx_reference": "pass including non-principal hand branches",
+  "real_soke_tokenizer": "strict author checkpoint/statistics/decode pass",
+  "real_generator": "official MaDiS CSL; author LFS SHA256 verified",
+  "full_default_integration": {
+    "native_frames": 56,
+    "nfe": 8,
+    "finite": true,
+    "jaw_expression_preserved": true
+  },
+  "existing_SLP_experiment_results_used": false,
+  "race_trained_on_real_dataset": false,
+  "empirical_SOTA_verified": false,
+  "test_commands": [
+    "RACE_SMPLX_PATH=<licensed-model-dir> python -m pytest tests/race_sign tests/test_config.py tests/test_data.py tests/test_methods.py tests/test_metrics.py tests/test_pipeline.py -q",
+    "python -m ruff check methods/race_sign tests/race_sign"
+  ],
+  "implementation_sha256": {
+    "__init__.py": "ec2a000b08bb975f4f00c03e0d8a74bfeed0d322cb18a339a59f4b6e0e0f9a96",
+    "adapters.py": "331dbcffed12a679c88c0f4af391fb6ccbea068c39b47b951d52e996e8ad4b21",
+    "author_checkpoint.py": "01f515a83cd12b9dfbdcb9579faf9c63ffc9a5af1848aa8dc2a7234d337e6972",
+    "cli.py": "8eac1c31e170fa42c55a7cc9b55be96ea46875013b6c0652ef4497547d0b8f92",
+    "config.py": "bc3e8b353d27e00a4b8b77c7320872229a21ba18285af05af813f42e366923fc",
+    "data.py": "15cf6e4d8e8f2490229a8752749bba94374e2a4933e1603947badd5162298e0a",
+    "fetch_assets.py": "1c8c6bb5c58101adfbf46f089f6fd1568629607d72b5fabb202f0b0cf8fd202b",
+    "flow.py": "c34dc7580c837f15c4fd2f0c64b18e9060b782ce765bda878330c33c1756bf4a",
+    "geometry.py": "ca0f2984d703c5eb32d95b7ee699fb398ae5afc30b9f01b57155bdeb4e09f8fe",
+    "integration_check.py": "4823cce7098e389c7006749afb71cd0b08e1d7c98320b99be116fe69549ce835",
+    "losses.py": "9760a62826263387890b85e838b775ce687111aab1a2cfa752c72286f4a5ee53",
+    "madis_adapter.py": "46e2944730d9a016d39ec012bf842dfcc3fb617228c6f3f320c71cc687598745",
+    "method.py": "ebea203be7cd581926a157dfdba95cfa9f27f26be8be7fa45398bee2e3a124b3",
+    "model.py": "a132329f97f38062bee50dedbc4a19ea86da0ff87a098f1dff221dfcecd11650",
+    "pipeline.py": "8224790144827701aade87981774c46b86fb707aa3ccb423100769fe64ca9058",
+    "preparation.py": "7f9c4d5000045480f1588836d1201c073bde0c80d1786e12bccb37f92c599c78",
+    "rotations.py": "274b4eef3e57955a18fb5241fbbc4c92a6e5d4459afaa0ddf68dc91d20199a70",
+    "schema.py": "4c4d2d48bd79e35d7f96eec38562331190fe43f1a2b380091c9ecf6a4b6baef1",
+    "selector.py": "a836baf81d8107b99e782fd974705e41af4dd03c6ac7876dc43eb42423318eae",
+    "training.py": "629028beae7197d76d97fce1c34505b7fafc89fe745c154b125246f21435490b"
+  }
+}

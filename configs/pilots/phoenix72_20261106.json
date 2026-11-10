@@ -1,0 +1,136 @@
+{
+  "name": "phoenix_temporal_plan_pilot_72h_20261106",
+  "not_before": "2026-11-06T00:00:00+07:00",
+  "hours": null,
+  "max_processes": 2,
+  "seed": 0,
+  "gpu": 0,
+  "microbatch": 2,
+  "effective_batch": 64,
+  "min_free_gib": 20,
+  "max_output_gib": null,
+  "annotations": "/home/dongvk/datasets/phoenix14T",
+  "poses": "/home/haipd/SLP/data/processed/madis/Phoenix_2014T",
+  "smplx": "/home/haipd/SLP/third_party/SOKE/deps/smpl_models",
+  "method_config": "/home/haipd/SLP/methods/temporal_plan/config.yaml",
+  "output": "/home/haipd/SLP/outputs/phoenix_pilot72_20261106",
+  "jobs": [
+    {
+      "id": "prepare",
+      "needs": [],
+      "gpu": false,
+      "timeout_hours": null
+    },
+    {
+      "id": "preflight",
+      "needs": [
+        "prepare"
+      ],
+      "gpu": true,
+      "timeout_hours": null
+    },
+    {
+      "id": "common",
+      "needs": [
+        "preflight"
+      ],
+      "gpu": true,
+      "timeout_hours": null
+    },
+    {
+      "id": "evaluator",
+      "needs": [
+        "common"
+      ],
+      "gpu": true,
+      "timeout_hours": null
+    },
+    {
+      "id": "profile",
+      "needs": [
+        "common"
+      ],
+      "gpu": true,
+      "timeout_hours": null
+    },
+    {
+      "id": "map",
+      "needs": [
+        "profile"
+      ],
+      "gpu": true,
+      "timeout_hours": null
+    },
+    {
+      "id": "sample",
+      "needs": [
+        "profile"
+      ],
+      "gpu": true,
+      "timeout_hours": null
+    },
+    {
+      "id": "predict_map",
+      "needs": [
+        "map"
+      ],
+      "gpu": true,
+      "timeout_hours": null
+    },
+    {
+      "id": "predict_sample",
+      "needs": [
+        "sample"
+      ],
+      "gpu": true,
+      "timeout_hours": null
+    },
+    {
+      "id": "evaluate",
+      "needs": [
+        "predict_map",
+        "predict_sample",
+        "evaluator"
+      ],
+      "gpu": true,
+      "timeout_hours": null
+    },
+    {
+      "id": "report",
+      "needs": [],
+      "gpu": false,
+      "timeout_hours": null
+    }
+  ],
+  "gpu_policy": {
+    "mode": "measured_memory",
+    "reserve_fraction": 0.1,
+    "retry_growth_fraction": 0.2,
+    "poll_seconds": 30,
+    "probe_timeout_hours": null
+  },
+  "stage_updates": {
+    "planner": 1284,
+    "generator": 2645,
+    "exposure": 161
+  },
+  "common_updates": {
+    "codec": 3535,
+    "segment": 12285
+  },
+  "generator_reset_update": 2050,
+  "checkpoint_every_updates": 50,
+  "evaluator_training": {
+    "target_updates": 35460,
+    "lr": 3e-05,
+    "checkpoint_every_updates": 250
+  },
+  "recovery": {
+    "map_generator_checkpoint": "/home/haipd/SLP/outputs/phoenix_pilot72_20261106/control_changes/20261107T123401+0700/map/incomplete_generator.pt",
+    "map_generator_sha256": "baab71562dc5b01fd25bf17f59fe9d8088f79fe2d51e43da00e88fac43cc2187",
+    "map_planner_checkpoint": "/home/haipd/SLP/outputs/phoenix_pilot72_20261106/control_changes/20261107T123401+0700/map/stage_planner.pt",
+    "generator_reset_update": 2050,
+    "legacy_sample_planner_discarded_updates": 680,
+    "reason": "No legacy optimizer/RNG snapshots. Preserve MAP weights and use one matched reset at generator update 2050 for both variants. Restart q planner from shared initialization."
+  }
+}

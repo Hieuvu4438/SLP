@@ -1,0 +1,14 @@
+{
+  "url": "https://proceedings.iclr.cc/paper_files/paper/2026/hash/3ea322e6eb11d3852bdb40263547ae78-Abstract-Conference.html",
+  "artifact": "third_party/proposal3_sources/input_screen/09feead434888417.json",
+  "read_status": "not_read",
+  "input_labels": [
+    "**Event-T2M**"
+  ],
+  "http_status": 200,
+  "sha256": "5cb8a9b6ae97bc635908752dec96fe02d9ec6c807c292e302747a165b708ccd5",
+  "title": "Event-T2M: Event-level Conditioning for Complex Text-to-Motion Synthesis",
+  "abstract": "",
+  "preview": "Event-T2M: Event-level Conditioning for Complex Text-to-Motion Synthesis Bibtex Paper Supplemental Abstract Text-to-motion generation has advanced with diffusion models, yet existing systems often collapse complex multi-action prompts into a single embedding, leading to omissions, reordering, or unnatural transitions. In this work, we shift perspective by introducing a principled definition of an event as the smallest semantically self-contained action or state change in a text prompt that can be temporally aligned with a motion segment. Building on this definition, we pro- pose Event-T2M, a diffusion-based framework that decomposes prompts into events, encodes each with a motion-aware retrieval model, and integrates them through event-based cross-attention in Conformer blocks. Existing benchmarks mix simple and multi-event prompts, making it unclear whether models that succeed on single actions generalize to multi-action cases. To address this, we con- struct HumanML3D-E, the first benchmark stratified by event count. Experiments on HumanML3D, KIT-ML, and HumanML3D-E show that Event-T2M matches state-of-the-art baselines on standard tests while outperforming them as event complexity increases. Human studies validate the plausibility of our event definition, the reliability of HumanML3D-E, and the superiority of Event-T2M in generating multi-event motions that preserve order and naturalness close to ground- truth. These results establish event-level conditioning as a generalizable principle for advancing text-to-motion generation beyond single-action prompts. Code and data are available at https://tjswodud.github.io/EventT2M. Name Change Policy × Requests for name changes in the electronic proceedings will be accepted with no questions asked. However name changes may cause bibliographic tracking issues. Authors are asked to consider this carefully and discuss it with their co-authors prior to requesting a name change in the electronic proceedings. Use the \"Report an Issue\" link to request a name change. Do not remove: This comment is monitored to verify that the site is working properly",
+  "status": "acquired_not_read"
+}

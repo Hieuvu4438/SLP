@@ -1,0 +1,15 @@
+{
+  "url": "https://aclanthology.org/2026.acl-long.31/",
+  "artifact": "third_party/proposal3_sources/input_screen/aee00236dcdf7dea.json",
+  "read_status": "not_read",
+  "input_labels": [
+    "S15 ★",
+    "[Hybrid Autoregressive-Diffusion Model](https://aclanthology.org/2026.acl-long.31/?utm_source=chatgpt.com)"
+  ],
+  "http_status": 200,
+  "sha256": "f9f30534d00146c9ac746e7ac7f6a0c2733c7d7ea34260abc602f519fc86f423",
+  "title": "Hybrid Autoregressive-Diffusion Model for Real-Time Sign Language Production - ACL Anthology",
+  "abstract": "Maoxiao Ye, Xinfeng Ye, Sathiamoorthy Manoharan. Proceedings of the 64th Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers). 2026.",
+  "preview": "",
+  "status": "acquired_not_read"
+}

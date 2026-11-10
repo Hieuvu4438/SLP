@@ -1,0 +1,14 @@
+{
+  "url": "https://arxiv.org/abs/2103.00020",
+  "artifact": "third_party/proposal3_sources/input_screen/3d7d444bcdb3d33d.json",
+  "read_status": "not_read",
+  "input_labels": [
+    "Radford et al. — [Learning Transferable Visual Models From Natural Language Supervision — CLIP](https://arxiv.org/abs/2103.00020?utm_source=chatgpt.com), **ICML 2021**"
+  ],
+  "http_status": 200,
+  "sha256": "f1f97fccf5d26c75e369795b14fbf4150037910175d469b1f6d4341a7137ab94",
+  "title": "[2103.00020] Learning Transferable Visual Models From Natural Language Supervision",
+  "abstract": "Abstract: State-of-the-art computer vision systems are trained to predict a fixed set of predetermined object categories. This restricted form of supervision limits their generality and usability since additional labeled data is needed to specify any other visual concept. Learning directly from raw text about images is a promising alternative which leverages a much broader source of supervision. We demonstrate that the simple pre-training task of predicting which caption goes with which image is an efficient and scalable way to learn SOTA image representations from scratch on a dataset of 400 million (image, text) pairs collected from the internet. After pre-training, natural language is used to reference learned visual concepts (or describe new ones) enabling zero-shot transfer of the model to downstream tasks. We study the performance of this approach by benchmarking on over 30 different existing computer vision datasets, spanning tasks such as OCR, action recognition in videos, geo-localization, and many types of fine-grained object classification. The model transfers non-trivially to most tasks and is often competitive with a fully supervised baseline without the need for any dataset specific training. For instance, we match the accuracy of the original ResNet-50 on ImageNet zero-shot without needing to use any of the 1.28 million training examples it was trained on. We release our code and pre-trained model weights at this https URL .",
+  "preview": "",
+  "status": "acquired_not_read"
+}

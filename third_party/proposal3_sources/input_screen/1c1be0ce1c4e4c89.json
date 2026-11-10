@@ -1,0 +1,15 @@
+{
+  "url": "https://aclanthology.org/2024.findings-acl.432/",
+  "artifact": "third_party/proposal3_sources/input_screen/1c1be0ce1c4e4c89.json",
+  "read_status": "not_read",
+  "input_labels": [
+    "S9 ○",
+    "[MS2SL](https://aclanthology.org/2024.findings-acl.432/?utm_source=chatgpt.com)"
+  ],
+  "http_status": 200,
+  "sha256": "0ef292dbfa60561f6284f595b0594d4837e980b15381a7143a8d190b5555bc0d",
+  "title": "MS2SL: Multimodal Spoken Data-Driven Continuous Sign Language Production - ACL Anthology",
+  "abstract": "Jian Ma, Wenguan Wang, Yi Yang, Feng Zheng. Findings of the Association for Computational Linguistics: ACL 2024. 2024.",
+  "preview": "",
+  "status": "acquired_not_read"
+}

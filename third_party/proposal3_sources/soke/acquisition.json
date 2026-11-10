@@ -1,0 +1,11 @@
+{
+  "key": "soke",
+  "url": "https://arxiv.org/html/2411.17799",
+  "retrieved_at": "2026-11-06T09:18:51.162772+00:00",
+  "kind": "html",
+  "http_status": 200,
+  "sha256": "68601100dfa348168d397aaaaf2594e159320980f333a5ddb33e286afe44ecf5",
+  "title": "Signs as Tokens: A Retrieval-Enhanced Multilingual Sign Language Generator",
+  "chars": 39285,
+  "status": "acquired_not_read"
+}

@@ -1,0 +1,690 @@
+                  This CVPR paper is the Open Access version, provided by the Computer Vision Foundation.
+                             Except for this watermark, it is identical to the accepted version;
+                            the final published version of the proceedings is available on IEEE Xplore.
+
+
+
+
+
+    SignPR: A Progressive Vector-Quantized Diffusion Framework for Sign
+                        Language Production
+
+
+            Xiao Liu1†  Shiwei Gan1†  Yafeng Yin1*  Bowen Guo1   Zhiwei Jiang1
+                        Shunmei Meng2   Lei Xie1   Sanglu Lu1
+                   1 State Key Laboratory of Novel Software Technology, Nanjing University, Nanjing 210023, China
+               2 Department of Computer Science and Engineering, Nanjing University of Science and Technology, China
+         liuxiaox@smail.nju.edu.cn   {sw,yafeng}@nju.edu.cn   bowen@smail.nju.edu.cn
+
+           jzw@nju.edu.cn   mengshunmei@njust.edu.cn   {lxie,sanglu}@nju.edu.cn
+
+
+
+                 Abstract
+
+   Sign language production aims to generate sign se-                                                                                                                                                                                                                                                                                                                                            Refinementquences from spoken language, where the generation of
+sign pose sequences from text is often treated as a signif-                                                                                                                                                                                                                                                                         Regional
+icant task. However, due to the differences in grammati-
+cal rules and modalities between sign language pose se-
+                                                                                                                  (a) Progressive structural refinementquences and spoken language text, it is rather challenging
+to convert text into sign poses (i.e., Text2Pose), while main-                           Refining···                 Refining···                Generating···
+taining semantic consistency, motion accuracy and tempo-                    𝐵𝐵1                            𝐵𝐵2                            𝐵𝐵3
+ral coherence.  In this paper, we focus on the Text2Pose
+task, and propose SignPR, a progressive diffusion frame-
+work that jointly models the structural and temporal proper-        Time                                                                                               0                       2                       4                        (frame)
+ties of signing. Structurally, we perform progressive struc-                              (b) Progressive temporal refinement
+tural refinement: a structural VQVAE encodes each frame
+into semantic-aware and region-based discrete representa-                  Figure 1. Our progressive SLP method.
+tions; the diffusion process first produces semantically con-
+                                                                represent the intended sign language expressions.  There-
+sistent poses, and then progressively refines motion details
+                                                                      fore, there was some research work focusing on how to gen-
+under text and semantic conditioning. Temporally, we intro-
+                                                                   erate SL videos from texts [26]. However, due to the great
+duce block-wise causal diffusion, which progressively en-
+                                                                       difficulty in generating realistic and semantically consistent
+forces temporal coherence and enables iterative refinement
+                                                            videos from text, recent studies have increasingly focused
+to earlier generated segments, yielding smoother transitions
+                                                    on generating sign pose sequences from text [6, 33]. In fact,
+and reduced jitter.  Extensive experiments on widely used
+                                                              converting text to sign poses is often treated as a significant
+datasets demonstrate that SignPR achieves superior results
+                                                                task in SLP, since the generated sign poses can be further
+compared with prior T2P methods across multiple metrics,
+                                                         used for realistic video generation.
+producing pose sequences that are semantically faithful,
+motion-accurate, and temporally coherent.                 When generating sign poses from text, some methods
+                                                              introduce glosses as intermediates to bridge grammatical
+                                                         gaps between sign and spoken language. Specifically, based
+1. Introduction                                     on whether using glosses, prior work can be divided into
+                                                        Text2Gloss2Pose (T2G2P) and Text2Pose (T2P) categories.
+Sign Language Production (SLP) [6, 27, 31, 49] aims to    The former leverages gloss annotations to simplify align-
+convert spoken language into sign language (SL) sequences,     ment between the sign and spoken language [32, 33] , but
+thereby bridging communication barriers between deaf peo-     glosses are scarce and costly to label [20, 43], limiting the
+ple and hearing people. Ideally, SL videos can effectively      practicality. The latter bypasses gloss supervision and maps
+   †Equal contribution                                                  text directly to continuous poses [31, 36]. Due to the lack of
+   *Yafeng Yin is the corresponding author.                             gloss annotations, T2P is usually a more challenging task.
+
+
+
+                                                     2198
+
+   In this paper, we focus on the T2P task, i.e., generating      the motion level, it partitions the pose into key sub-regions
+sign poses from text without glosses. Due to the grammat-       (e.g., body, hands, face) and quantizes each as a separate
+ical and modality differences between sign language and      unit to emphasize fine-grained details, which improves mo-
+text, existing T2P methods often face challenges in seman-      tion accuracy.  Built on these discrete representations, we
+tic consistency, motion accuracy, and temporal coherence.     propose a progressive diffusion model, which first generates
+First, how to jointly consider semantic consistency and     semantically consistent poses, and then refines key region
+motion accuracy during modeling? The structural mod-     motion details conditioned on both the semantic-level pose
+eling largely determines how well semantic intent and fine-     tokens and the input text. Secondly, to ensure the tempo-
+grained motion details are preserved.  To simplify pose      ral coherence of the generated pose sequence, we introduce
+modeling, many approaches employ a VQ-VAE to com-     progressive temporal refinement. Inspired by autoregressive
+press continuous pose features into discrete latent tokens.     causal ordering, we perform block-wise causal refinement
+Broadly, these works fall into two categories:  (i) Some      instead of fully parallel diffusion, progressively enforcing
+frame-level models [23, 39, 44] compress and represent the     temporal order and enabling iterative corrections to earlier
+whole body pose in one or multiple frames as a single token     generated segments. Our main contributions are summa-
+or ID, and adopt an autoregressive or diffusion-based model      rized as follows:
+to predict the latent token sequence conditioned on text.                                                                          • To ensure both semantic consistency and motion accu-
+However, such models mainly focus on semantics but lack                                                               racy during modeling, we decouple pose generation into
+sufficient capability to capture motion accuracy, since a sin-                                                            a structural, progressive modeling process. First, we de-
+gle token provides limited capacity to represent fine-grained                                                                sign a structural VQVAE that models pose progressively
+motion details. Yet, as a visual language, sign inherently de-                                                            with the semantic level and the motion level. Second, we
+pends on motion accuracy, reflected through accurate body                                                                introduce a structural diffusion model that first generates
+movement, handshape, and facial expression. (ii) There are                                                                semantically consistent poses, and then refines local de-
+also models [42, 50] that focus on independently modeling                                                                                tails under both semantic-level poses and text conditions.
+local regions to enhance regional details. Although these                                                                          • To ensure temporal coherence during the generation, we
+approaches preserve local fidelity, they fall short on global                                                            adopt a block-wise causal diffusion strategy, where poses
+semantic consistency. This is because limited inter-region                                                                  are generated in temporal blocks and progressively re-
+interaction or simple fusion disrupts cross-region seman-                                                                   fined to enforce causal consistency and mitigate temporal
+tic and temporal alignment, yielding inconsistent compo-                                                                                          jitter.
+sitions. Second, how to achieve temporal coherence dur-                                                                          • We propose SignPR, a progressive VQ-diffusion model
+ing generation? Temporal modeling determines whether                                                                        that focuses on capturing the structural and temporal
+generated poses transition smoothly and causally over time.                                                                   properties of signing during both modeling and gener-
+Existing T2P methods typically adopt either an autoregres-                                                                        ation.  Extensive experiments on widely used datasets
+sive (AR) strategy [23, 44, 50] that predicts poses frame by                                                            demonstrate that our model outperforms prior methods
+frame, or a non-autoregressive strategy [1], such as diffu-                                                                across evaluation metrics.
+sion, that predicts the entire sequence in parallel. AR-based
+models capture temporal causality well but suffer from ex-                                                          2. Related Work
+posure bias and slow decoding. While diffusion models of-
+fer diversity and fast parallel generation, they lack explicit     Latent  Diffusion  Model.  Latent  diffusion  models
+temporal control. Especially in discrete diffusion, parallel    (LDMs) [3, 10] have shown impressive capabilities across
+temporal token updates further weaken causality, causing     generative tasks, including image synthesis [25, 28], video
+jitter and unsmooth inter-frame transitions.                     generation [41, 47], and motion generation [46].  During
+                                                                      training, data are compressed into latent representations
+   Considering the above issues, we propose SignPR (as
+                                                          with an VAE; the LDM then adds noise to these latents and
+shown in Figure 1), a progressive diffusion framework that
+                                                                 learns the corresponding noise distribution. After training,
+performs progressive refinement both structurally and tem-
+                                                                the model reverses this process: it starts from random noise,
+porally, jointly modeling the structural (semantic and mo-
+                                                            denoises the latent step by step, and the VAE decodes the
+tion) and temporal properties of sign language.   Firstly,
+                                                                         final latent to a target sample. Early LDMs were typically
+for semantic consistency and motion accuracy, we intro-
+                                                          designed for continuous latent spaces using VAEs. With the
+duce progressive structural refinement. Specifically, we in-
+                                                           advent of VQ-VAE, VQ-Diffusion was proposed to model
+troduce a structural vector quantization variational autoen-
+                                                              data distributions in a discrete latent space [8].
+coder (VQVAE) that models pose at two different levels. At
+the semantic level, the VQVAE compresses and quantizes
+each frame-level pose into a single token unit to capture the     Sign Language Production.  Most current SLP mod-
+whole-body structure, which reflects the semantic intent. At      els [13, 14, 29, 40] have shifted attention to generating
+
+
+
+                                                     2199
+
+                                                                                            1  2  3  ··· K
+                              Semantic Encoder      Quantization                                Dequantization
+                                                                                  Global Codebook                                Decoder
+                                                                                                                                         ···                        6 3   ··· 9       …                      GCN       TF
+                                                              Semantic quantizer
+
+                      ···              F-GCN      TF                                      ···                        1 5  ··· 9                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      Prediction                                               C                      ···              L-GCN      TF                                      ···                        8 3  ··· 4                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    Transformer                      ···                                                                                                                                                                                                                                                                                                                                                                                                                                                     Structure                      ···              R-GCN      TF                                      ···                        4 8  ··· 5
+
+                      ···              B-GCN      TF                                      ···                        6 7  ··· 1
+                                                                Regional quantizer
+                F: Face              Regional Encoder     Quantization                                 Dequantization
+               L: Left                                      1  2  3  ··· K       1  2  3  ··· K        1  2  3  ··· K       1  2  3  ··· K
+              R: Right
+                                                     Face Codebook    Lhand Codebook   Rhand Codebook   Body Codebook              B: Body
+             TF: Transformer                               (a) Stage 1: Structural VQVAE              C: Concatenation
+
+               Length                            Text embedding                                                         Text embedding
+                predictor         id            (Condition)                   id                             (Condition)
+                                                    pose M                                                             pose M M 9 7
+                                     ···                                          ···  ···  ···  ···
+                                                              C           BERT                              masked M                                                                                           masked M 3 M M
+
+
+                                        M M 4 M                  M            stürmischer                                                                                                                                                                                                                                                     Regional                                                                                                        Semantic         wind auch noch                                                                          F   L   R   B   Semantic sequence
+         an den küsten.                                                                                                     (Condition)
+                Text                       Semantic Denoising U-Net                                     Regional Denoising U-Net
+                                                  (b) Stage 2: Structural Diffusion
+
+              Figure 2. The progressive vector-quantized diffusion framework with S-VQVAE and S-Diffusion modules.
+
+high-quality SL pose sequences, as  it serves as an im-      separate units, but this often results in uncoordinated body
+portant condition for future SL video generation, when     compositions or misaligned temporal relations.  Besides,
+combined with off-the-shelf pose2video models [11]. As      the existing work also suffers from the challenge of tem-
+a result, the following pipelines have emerged, including     poral coherence.  Specifically, the autoregressive models
+Text2Gloss2Pose [32, 33, 38]  , and Text2Pose [15, 31,      [23, 44, 50] preserve temporal causality, but suffer from ex-
+36] . Considering that obtaining gloss annotations is label-     posure bias. The diffusion models [1] often lack explicit
+intensive, Text2Pose (T2P), which directly generates SL     temporal control, especially discrete diffusion with paral-
+pose sequences from text without the need of gloss anno-       lel token updates. These limitations motivate us to design
+tations, has gained more attention [1].  Early T2P mod-     a progressive discrete diffusion method that integrates both
+els directly modeled sign sequences without VAE or VQ-      structural and temporal refinement, yielding accurate mo-
+VAE, which were not capable of generating high-quality      tions and coherent pose sequences. Unlike existing causal
+pose sequences. Further, methods such as T2S-GPT [44],     methods [9], our approach leaves diffusion training un-
+MS2SL [23] and SOKE [50] adopted VAE or VQ-VAE     changed and improves temporal coherence through progres-
+frameworks to encode pose sequences into a single contin-      sive block-wise refinement at inference time.
+uous or discrete latent representation. Then, they adopted
+an AR model that generates pose sequences based on text                                                          3. Method
+and the previous predicted poses [16], or diffusion models
+that formulate pose generation as a denoising process (i.e.,     Overall Framework. The goal of our T2P model is to gen-
+progressively denoise noise into corresponding latent repre-      erate a sequence of 2D SL poses X = {xs}Ss=1, which
+sentations conditioned on text).                                not only semantically align with the corresponding text se-
+   However, the motion accuracy in existing work usually     quence c, but also exhibit natural and precise regional de-
+remains limited.  Specifically, many methods [23, 39, 44]       tails. Here, xs ∈RJ×2 denotes J pose keypoints in the
+treat the whole-body pose of one or multiple frames as a      s-th frame, and S denotes the number of frames. As shown
+single token, where fine-grained hand and facial details are      in Figure 2, the process of our model can be simplified as
+often lost, due to the limited capacity of a single unit. Some      follows.  First, a Structural VQVAE (S-VQVAE) encoder
+other methods [42, 50] generate different body regions as     quantizes the pose sequence X into two types of index
+
+
+
+                                                     2200
+
+(id) sequences: an id sequence Ise = {ise,s}Ss=1 capturing     Pose Quantization with Regional VQVAE.  To refine
+high-level semantic information (i.e., capturing whole-body     region pose details, we propose a regional VQVAE that
+dynamics rather than pose details), and four id sequences     captures region-specific features independently. Each sign
+Ire = {ip,s}Ss=1 capturing details for each region p ∈P,     pose is divided into four body-part regions:  body, right
+where P = {body, right hand, left hand, head}. As a re-     hand, left hand, and head.  For each region, a dedicated
+sult, the original pose sequence X can be represented by   GCN layer encodes the spatial structure, followed by a
+the combination of semantic and regional id sequences: Ise      region-specific two-layer Transformer that models tempo-
+and Ire.  Second, a lightweight two-layer Transformer is      ral dependencies.  This results in four streams of tempo-
+used to predict the target sequence length; and a Structural      rally encoded embeddings Zre = {zp,s}Sp∈P, s=1,  P =
+Diffusion Model (S-Diffusion) is adopted to progressively     {body, right hand, left hand, head}. Each region p is asso-
+denoise random ids into the semantic id sequence ˆIse con-      ciated with a separate codebook Cp, then we adopt the simi-
+ditioned on the input text, which focuses on semantic con-      lar way in semantic VQVAE to get the nearest neighbor ip,s
+sistency.  Then, based on the generated semantic ids ˆIse      of zp,s, and get the discrete id sequence Ip = {ip,s}Ss=1 of
+and the input text, S-Diffusion further generates the regional      the pth region. In this way, each sign pose xs is represented
+id sequences ˆIre, which capture fine-grained and part-wise     by four region-specific id sequences {Ip}p∈P.
+specific pose details.  Finally, after obtaining the seman-       During decoding, the quantized id sequences are mapped
+tic ids ˆIse and regional ids ˆIre from S-Diffusion, we em-     back to latent vectors, i.e., get dequantized embeddings, via
+ploy the S-VQVAE decoder to reconstruct the final pose se-     lookup from the corresponding codebooks. Then, the de-
+quence ˆX based on ˆIse and ˆIre.                              quantized regional embeddings  \{ \hatand the semantic em-
+                                                        bedding \hat          {z}^{se,s}are concatenated, and decoded by the decoder
+3.1. Stage 1: Pose Quantization with S-VQVAE                                   \mathcal{D}^{re}to reconstruct the pose sequence.
+
+VQVAE transforms continuous SL pose generation into a
+                                                          Structural Consistency Constraints for Semantic anddiscrete problem, reducing output dimensionality and help-
+                                                       Regional Latents.  The latent spaces of semantic and re-ing reduce errors common in continuous regression. To ob-
+                                                              gional VQVAEs should remain structurally consistent, sincetain structured discrete representations of sign poses, we in-
+                                                         each whole-body semantic representation corresponds totroduce a Structural VQVAE (S-VQVAE) that maps each
+                                                          a specific composition of regional details.  To enforceframe to semantic latent ids for whole-body dynamics and
+                                                                        this consistency, we introduce a structural consistency con-regional latent ids for motion details.
+                                                                         straint that encourages the semantic latent to predict the re-
+                                                              gional latent ids of the same frame. Specifically, given the
+Pose Quantization with Semantic VQVAE.  We  first     semantic latent feature ˆzse,s of frame s, a lightweight two-
+propose a semantic VQVAE to obtain a semantic pose id      layer MLP ϕp is trained to predict the discrete regional id
+sequence Ise for a sign pose sequence. The semantic VQ-       ip,s for each body part p ∈P. The loss can be formulated
+VAE focuses on capturing the holistic/full-region structural      as:
+                                                                         l
+features from the pose sequence, but may lack the capac-                       \sm a \ h  {L }_{\text {co ns}} =\frac{1}{S}\sum_{s=1}^{S}\sum\in\mathcal\mathcal{L}_{\mathrm(\phi_p(\hat{z}^{se,s}),\,i^{p,s}\right)\label{Eq:StrcLoss}        (2)
+                                                           lity to model region-specific details of a pose.  As illus-                         mat cal
+trated in Figure 2, our semantic encoder Ese comprises a
+Graph Convolutional Network (GCN) [18] layer followed     Training of S-VQVAE.  To train the proposed S-VQVAE,
+by two Transformer layers. The GCN layer is used to map    we combine four types of losses: an L1 reconstruction loss,
+a 2D pose sequence into pose embedding and the trans-     a structural consistency loss shown in Eq. (2), a codebook
+former layers are used to learn whole-body temporal rela-    commitment loss, and a quantization update loss.
+tions among poses. Specifically, given a sequence of coor-
+dinates X = {xs}Ss=1 of 2D pose, we first adopt the en-               b
+coder to encode the joints as semantic latent embeddings                  \tin y \ gine } {al i\gnedm e xt}  {total}=    \
+Zse = Ese(X), where Zse = {zse,s}Ss=1. Then, we search                              athcal {L}_{\t        &\frac {1}
+the semantic codebook Cse = {Csej }Ksej=1, where Kse is the          { }S um  _{s=1}^{S}                                                                                                                                                                             \ u nderbrace{ } \ }_{ \ t{Reconstr u ction}}+
+                                                                                                                                                                                                                                                             (3)                                                                                                                                               |                                                                                                                                                              \codebook size, to find the nearest neighbor is of zse,s based               \s \    hat {x}^ {s}          |_1   tex                                                                                                                                                                                                                                                                - x^{s                                                                                                                                                                       \               un               d
+on the ℓ2 distance in Eq. (1), aiming to get the discrete id                                                                              erbrace {\lambda  _
+sequence Ise = {is}Ss=1 of the pose sequence.                    { t\                     t                                                                                             {c ons}} \m a thcal {L}_{\tex                                                                           s e }} \ +\sum _ {s=1}^{S}\und
+                                                                           ext                     ncy    \ &
+                                                                                                                                t              {             c
+                                                                                                                                           ons}}}_{ \text {Consi               e               rb               r
+                                                                                                                                                               ace {\be ta ^{se} \left\text{sg}[z^{se,s}]-\hat{z}^{se,s}\right\|_2^2}_{\text{Semanticcommitment}}+\sum_{s=1}^{S}\underbrace{\beta^{re}\sum_{p\in\mathcal{P}}\left\text{sg}[z^{p,s}]-\hat{z}^{p,s}\right\|_2^2}_{\text{Regionalcommitment}}&+\sum_{s=1}^{S}\underbrace{\gamma^{se}\leftz^{se,s}-\text{sg}[\hat{z}^{se,s}]\right\|_2^2}_{\text{Semanticquantization}}+\sum_{s=1}^{S}\underbrace{\gamma^{re}\sum_{p\in\mathcal{P}}\leftz^{p,s}-\text{sg}[\hat{z}^{p,s}]\right\|_2^2}_{\text{Regionalquantization}}\end{aligned}
+   \sm a ll         \vs ace {- 1 mm} i^{  s e , s } =   \mat h op     {\arg\min}\limits_{j}z^{se,s}\mathcal{C}^{se}_j\leqj\leK^{se};\mathcal{C}^{se}_j\in\mathcal{C}^{se}\label     Here, ˆxs denotes the reconstructed pose for the sth pose.               p
+                                                                 (1)     βse and βre control the balance of semantic and regional
+
+
+
+                                                     2201
+
+       Text embedding                                        AdaLN: Adaptive Layer Normalization               Block 0         Block 1         Block 2
+       Timestep                                               FFN: Feed Forward Network                                                         M  M  M  M  M  M  M  M  M  M  M  M
+                                                                                                                                                                            Block 0 Block 1 Block 2
+
+
+                                                            0   ෠𝑰𝑰𝒕𝒕𝒔𝒔𝒔𝒔                                                       FFN      AdaLN                            ෠𝑰𝑰𝒕𝒕𝒔𝒔𝒔𝒔                                             Semantic/Regional Denoising U-Net                                          TempAttn      AdaLN                              CrossAttn      AdaLN
+                                                                                                                                                                                                                                                                                                           Block
+                                                                   M  M  M  M  M  M  M  M      𝑇𝑇 1
+                  (a) Semantic U-Net Block                                                                                                                                                                                                                          Block
+                                                                             M  M  M  M    2𝑇𝑇 2       Text embedding                Semantic pose id ( ෠𝑰𝑰𝟎𝟎se )
+       Timestep                                                                                                                                                                                           3𝑇𝑇     Block
+                                                                                           Block-wise Causal Prediction                 Block-wise Causal Mask
+   ෠𝑰𝑰𝒕𝒕𝒓𝒓𝒓𝒓                                                                                              FFN      AdaLN                          ෠𝑰𝑰𝒕𝒕𝒓𝒓𝒓𝒓                                                                                                      AdaLN                              CrossAttn      AdaLN                                          TempAttn      AdaLN                              CrossAttn      AdaLN                                 RegionAttn                                                                           Figure 4. Block-wise causal inference process.
+
+                  (b) Regional U-Net Block
+                                                       Regional Discrete Diffusion Module.  To better generate
+       Figure 3. Semantic and regional denoising U-Nets.            subtle pose details, the regional diffusion performs region-
+                                                                    specific denoising to generate four regional ids (i.e., body,
+branches. γse and γre control the balance of semantic and       left hand, right hand, and head), while conditioned on the
+regional tokens. The stop-gradient operator sg[·] prevents     input text c. Besides, to ensure that the regional diffusion
+gradients from flowing into the codebook during backprop-     focuses more on pose details while maintaining semantic
+agation. Regarding λcons, it controls the weight of the se-      consistency, we further incorporate semantic ids ˆIse0  as con-
+mantic consistency loss.                                          ditions during the denoising process, as shown below.
+                                                                                      \h t  {I}^{r  e }_0 = \phi _l(I^{re}_t,t^{re},{I}^{se}_0)             (6)3.2. Stage 2: Pose Generation with S-Diffusion                             a
+Building upon the two-level latent space learned by S-     Here, ϕl  is a U-Net based denoising network,  ˆIre0  =
+VQVAE, we propose a Structural Discrete Diffusion Model      {ˆIp0}p∈P denotes the set of region-wise id sequences, Iret
+(S-Diffusion), which generates sign pose sequences by us-       is the corresponding noisy input, and tre is the timestep.
+ing a diffusion model to progressively predict semantic and    The regional U-Net retains the semantic backbone but adds
+regional pose ids.                                            following two modules: a region attention RT to facilitate
+                                                             information exchange across regions, and an extra cross-
+                                                                   attention CAse conditioned on the semantic pose:Semantic Discrete Diffusion Module.  At the semantic
+level, the model learns a diffusion process from the input                          \ s mal l \begi n  a{ li gned
+                                                                                          I^{se}                                                                                       (7)text  cto the semantic pose id sequence       . In the train-                                                                       } z ^ p_t  &\leftarrow z ^p_t +  \mathcal{ALN}(\mathcal{RT}(z^p_t),t^{re})z^p_t&\leftarrowz^p_t+\mathcal{ALN}(\mathcal{CA}_{se}(z^p_t,\hat{I}^{se}_0),t^{re})\end{aligned}
+ing process, following VQ-Diffusion [8], we apply a dis-
+crete forward process  q(i^{   s e}_t   ,i^{se}_0) where the ground-truth            I^                                                                                                    \dotsK^{se}\}^S                              3.3. Causal Inference via Progressive Refinementsequence  { s e}_ 0  \ i n \{1, is gradually corrupted via
+a Markov chain. Specifically, at each step, ids are indepen-     Normally,  discrete diffusion updates  all time tokens in
+dently replaced with a random codebook entry or a special      parallel at each denoising step, which weakens temporal
+[MASK] token, yielding the corrupted id sequence      {se}_tI^ .          causality due to the absence of explicit causal modeling,
+   In  the  reverse  diffusion  process, we  follow G2P-     leading to jittery sequences. To address this issue, we pro-
+DDM [42] and adopt a U-Net based denoising network ϕg     pose a novel inference paradigm named causal inference
+to predict the denoised semantic pose id sequence ˆIse0  from      via progressive refinement (InferRef), which requires no re-
+noisy input c, where tse is the diffusion timestep.                training and improves the temporal smoothness and overall
+                                                                 quality of the generated SL videos.
+
+                    a                      \h t  {I}^{s  e }_{0 } =_g(I^{se}_t,t^{se},c)                (4)         Specifically, inspired by autoregressive decoding, Infer-
+                                                      Ref adopts a block-wise causal strategy that progressively
+As shown in Figure 3(a), each semantic U-Net block com-      refines the generated SL sequence.  Before inference, we
+prises a temporal self-attention layer T A (i.e., self attention     use the length predictor in Figure 2 to estimate the target
+is applied in temporal dimension), a cross-attention layer     frame length S, i.e., determining the number of tokens to be
+CA for the text c, and a feedforward module FFN.            denoised. As shown in Figure 4, given a length-S discrete
+                \                                             token sequence I = {is}Ss=1 at an inference step, we fix a                   s m all \ begin   {alig  n ed} z                                                          block size K and partition I into N = ⌈S/K⌉contiguous
+             ^{se } _t& \ leftarrowz  ^ {se}_ t             (5)     blocks I = {Bi}N−1i=0  . The generation is modeled as
+           + m \ a thca l  {ALN}(\math  c al     {TA}(z^{se}_t,t^{se}))z^{se}_t&\leftarrowz^{se}_t+\mathcal{ALN}(\mathcal{CA}(z^{se}_t,t^{se}),c)z^{se}_t&\leftarrowz^{se}_t+\mathcal{ALN}(\mathcal{FFN}(z^{se}_t,t^{se}))\end{aligned}                             l  p
+                                                                                 \ s ma l ( id   c ) =\ pro d          _{i=1}^{N-1}p\big(B_i\midc,B_{<i}\big(8)
+Here, ALN(·) denotes adaptive layer normalization.                                      I\m
+
+
+
+                                                     2202
+
+where c is the text condition and B<i = {Bj}i−1j=0. We ap-     with the AdamW optimizer [22], using a batch size of
+ply a block-wise causal mask that allows tokens in Bi to     32 for 100K iterations. The initial learning rate is set to
+attend to all tokens in B<i and intra-block tokens in Bi,     1 × 10−4 and follows a cosine decay schedule.  All ex-
+while masking future blocks. When predicting Bi, pre-     periments are implemented in PyTorch and conducted on
+viously generated blocks B<i are refined simultaneously,     8 NVIDIA A6000 GPUs.
+yielding temporally coherent, smooth SL sequences.
+                                                               4.1. Comparisons   After applying InferRef in both the semantic and re-
+gional diffusion inference process, we obtain the final de-     For a fair comparison, we mainly reproduce baselines with
+noised token sequences ˆIse0  and ˆIre0  , corresponding to the      publicly available resources  (i.e., PT, G2P-DDM, Sign-
+semantic and region-specific pose ids, respectively. These    IDD) and report our reproduced back-translation results
+are then mapped back to get semantic embedding ˆZse and     under the same experimental settings.
+regional embeddings ˆZp via codebook lookup. Then, the
+final pose is reconstructed by decoding the concatenation of
+ˆZse and ˆZp using S-VQVAE decoder.                       Evaluation on Phoenix14T Dataset.  As shown in Ta-
+                                                                ble 1, we compare our method with both T2G2P models
+                                                      and T2P models. Usually, the T2G2P models yield stronger
+4. Experiments
+                                                                      results than previous T2P models, highlighting the bene-
+Datasets.  We evaluate our model on three publicly avail-        fit of introducing glosses as an intermediate representation.
+able SL datasets.  (1) Phoenix14T [4] is a German SL     However, despite lacking gloss supervision, our SignPR
+dataset with 7096 training, 519 validation, and 642 test sam-     achieves the best performance across all metrics.  Specif-
+ples from 9 signers.  It contains both gloss and translation       ically, compared with the SOTA T2G2P model Sign-IDD,
+annotations with a vocabulary of 1066 glosses and 2877    SignPR improves BLEU-1 from 26.45 to 31.91 and re-
+German words. (2) CSL-Daily [48] is a Chinese SL dataset     duces MPJPE from 47.19 to 23.04. Compared with the T2P
+containing 18401, 1077, and 1176 videos for training, val-     model MoMP, SignPR achieves a BLEU-1 score of 31.91
+idation, and testing from 10 signers. It provides both gloss      (vs. 16.87) and a lower FID of 2.15 (vs. 2.97).
+and translation annotations with 2000 glosses and 2343
+words. (3) USTC-CSL [12] is a Chinese SL dataset with     Evaluation on CSL-Daily Dataset.  Table 2 shows that
+20000 and 5000 SL videos for training and testing from 50    SignPR achieves clear improvements over the baseline
+signers, covering 3100 words in translation annotations.      MoMP. Specifically, it improves BLEU-4 from 2.14 to 3.01
+                                                                (+0.87).  In addition, it reduces FID from 2.95 to 2.47 (-
+Evaluation Metrics.  Following previous T2P and G2P     0.48) and MPJPE from 48.24 to 44.22 (-4.02), indicating
+work [42, 44] , we adopt a SL translation model [7] to per-     enhanced generated pose quality.
+form back-translation, which translates the generated pose
+sequences back into text. We report ROUGE-L [21] and     Evaluation on USTC-CSL Dataset.  We evaluate on
+BLEU-1 to BLEU-4 scores [24] to evaluate the semantic    USTC-CSL under two data splits: Split-I and Split-II. As
+accuracy of generated sign sequences.  Additionally, we    shown in Table 3, our method consistently outperforms PT-
+apply Dynamic Time Warping Mean Joint Error (DTW-   GN across all metrics. On Split-I, it improves ROUGE from
+MJE) [2] to measure temporal alignment between gener-     25.09 to 95.48 and reduces MPJPE from 183.14 to 51.40.
+ated and ground-truth pose sequences.  To further assess      Split-II shows a similar trend, confirming clear gains in both
+motion accuracy, we compute Fr´echet Inception Distance     semantic quality and motion accuracy.
+(FID) and Mean Per Joint Position Error (MPJPE). Specif-
+ically, MPJPE is measured on keypoint coordinates, while     4.2. Qualitative Results
+FID is computed on pose features extracted by the frozen
+                                                             Visualization Comparison. We visualize sign pose sam-
+encoder of our trained S-VQVAE.
+                                                                ples from the ground truth (GT), MoMP, SignPR w/o re-
+                                                                  gional, and SignPR. Back translation is used to assess the
+Implementation Details.  For pose extraction, we use     semantic accuracy of the generated poses. As shown in Fig-
+HRNet [45] to estimate 2D keypoints for each frame, in-     ure 7, MoMP fails to reflect the correct textual semantics
+cluding 42 hand keypoints, 68 facial keypoints, and 11     and produces multiple incorrect poses (red). The SignPR
+upper-body keypoints. For S-VQVAE, the codebook em-     w/o regional variant captures the coarse structure but lacks
+bedding dimension is 768, and both the semantic and re-     accurate pose details, leading to regional errors (yellow) and
+gional codebooks contain 1024 entries. S-VQVAE and S-     semantic drift. In contrast, SignPR generates accurate, co-
+Diffusion comprise 75.50M and 680.04M parameters, re-     herent poses, and the back-translation recovers a sentence
+spectively.  Both S-VQVAE and S-Diffusion are trained      that is mostly correct, with few regional errors.
+
+
+
+                                                     2203
+
+                               DEV                                          TEST
+  Text2Gloss2Pose
+             ROUGE  BLEU1  BLEU4  FID↓  MPJPE↓  DTW-MJE↓  ROUGE  BLEU1  BLEU4  FID↓  MPJPE↓  DTW-MJE↓
+
+  PT-base [30]         8.61      9.53      0.72     2.90    41.92       0.175        8.88      9.47      0.59     3.22    51.35       0.206
+ PT-GN [30]         11.87     12.51     3.88     2.98    40.63       0.171       13.17     13.35     4.31     3.33    50.80       0.204
+ G2P-DDM [42]     20.05     19.97     6.36     2.65    39.34       0.119       20.37     19.40     6.25     2.91    40.02       0.116
+  Sign-IDD [37]      27.97     26.76     8.42     2.22    39.11       0.116       27.11     26.45     8.66     2.46    47.19       0.118
+
+  Text2Pose                       DEV                                          TEST
+
+ PT [30]             8.36      6.11      0.05     3.32    48.60       0.213        8.44      6.22      0.01     3.41    49.37       0.213
+ PT-GN [30]          8.38      7.18      0.01     3.32    48.21       0.212        8.57      9.22      0.01     3.39    48.30       0.211
+ MoMP [32]         16.16     16.30     4.21     3.15    40.96       0.172       17.02     16.87     4.58     2.97    45.71       0.168
+  SignPR             30.84     31.06     9.12     2.13    23.77       0.114       32.86     31.91     9.41     2.15    23.04       0.111
+
+                             Table 1. Comparison of SLP performance on the PHOENIX-14T dataset.
+
+                                                                                                 Original      GT           SignPR       SignPR
+                           TEST                                                                       w/o regional     Text2Pose
+          ROUGE BLEU1 BLEU4 FID↓MPJPE↓DTW-MJE↓
+   PT-GN [30]  7.54    7.12    0.41  3.58  90.28     0.428
+   MoMP [32]  11.67   11.62   2.14  2.95  48.24     0.129
+     SignPR    14.43   14.08   3.01  2.47  44.22     0.108
+
+
+  Table 2. Comparison of SLP performance on the CSL-Daily.
+
+
+                   TEST (Split-I)            TEST (Split-II)
+      Text2Pose
+            ROUGE  BLEU-4  MPJPE↓  ROUGE  BLEU-4  MPJPE↓
+
+     PT-GN [30]    25.09     10.65    183.14    15.22      3.95     237.63
+       SignPR     95.48     94.54     51.40     42.10     17.16     64.92
+
+                                                                   Figure 5. Visualization results with/without regional refinement.
+  Table 3. Comparison of SLP performance on the USTC-CSL.
+
+
+Visualization of Regional Details and Temporal Coher-                  Original
+ence.  As shown in Figure 5, SignPR produces more ac-
+curate regional pose details than the variant without re-               SignPR
+                                                                                                    w/o InferRef
+gional refinement, especially in finger shapes (row 1). Be-
+yond enhancing details, the regional module also compen-                                                                                                SignPR
+sates for semantic stage errors, correcting arm placement
+(row 2) and improving facial expressions (row 3), leading
+                                                                   Figure 6. Visualization results with/without temporal refinement.
+to more faithful and natural sign generation. As shown in
+Figure 6, when causal inference is removed (row 2), the
+generated sequences of SignPR exhibit clear motion dis-                                                             Effect of Key Components in S-VQVAE.  As shown in
+continuities and frame-to-frame jitter, along with incorrect                                                           Table 5, replacing the GCN with a Transformer causes a
+poses. In contrast, with causal inference (row 3), these is-                                                                   clear performance drop, highlighting the advantage of GCN
+sues are greatly alleviated, demonstrating its effectiveness                                                                   for modeling human poses as structured graphs. Remov-
+in improving temporal coherence.                                                             ing the structural consistency loss Lcons further hurts per-
+                                                          formance, indicating that enforcing structural alignment be-
+4.3. Ablation Study on S-VQVAE.                                                      tween semantic and regional representations is crucial.
+We perform all ablation studies on the Phoenix14T dataset.
+                                                               4.4. Ablation Study on S-Diffusion.
+
+Effect of S-VQVAE on Reconstruction Quality.  Table 4     Effect of S-Diffusion on Generation Quality.  Table 6
+evaluates different codebook configurations on pose re-      reports the generation performance under different diffu-
+construction (not generation from text).  Regional code-     sion configurations. The variants using semantic diffusion
+books improve rBLEU, rROUGE and reduce rMPJPE and     only or regional diffusion only show inferior performance.
+rDTW, showing better capture of fine-grained pose details.     While using the structural diffusion framework significantly
+Combining semantic and regional codebooks yields further     improves generation quality, with notable gains in all met-
+gains, indicating that modeling both semantics and regional       rics. Combining semantic and regional diffusion yields the
+structure improves reconstruction quality.                       strongest results.
+
+
+
+                                                     2204
+
+                Text: heute Nacht plus vier Grad an der Ostsee bis minus vier Grad in den Mittelgebirgen. (Plus four degrees on the Baltic Sea coast to minus four degrees in the Central Uplands tonight.)
+
+    GT
+
+
+              Back Translation: heute Nacht (plus) vier Grad überall in Deutschland. (Four degrees everywhere in Germany tonight.)
+
+   MoMP
+
+
+              Back Translation: heute Nacht (plus) vier Grad Unterschied zwischen Ostsee und Mittelgebirgen.  (Four-degree difference between the Baltic Sea and the Central Uplands tonight.)
+    SignPR
+      w/o
+    Regional
+
+              Back Translation: heute Nacht minus vier Grad an der Ostsee und plus vier Grad in den Mittelgebirgen. (Minus four degrees on the Baltic Sea and plus four degrees in the Central
+                         Uplands tonight.)
+
+    SignPR
+
+                                    Inaccurate pose generation                Inaccurate regional pose details
+
+          Figure 7. Qualitative comparison of generated poses from SignPR, the variant (w/o regional) of SignPR and MoMP.
+
+
+
+             Configuration                   VQVAE Reconstruction                                           Variant        ROUGE BLEU1 BLEU4  FID↓ MPJPE↓ DTW-MJE↓
+ Semantic-codebook Regional-codebook rROUGE rBLEU1 rBLEU4 rFID↓rMPJPE↓rDTW-MJE↓                        Text only             23.90    23.12    7.53    2.58    40.32      0.122
+     ✓                            36.69    36.30   10.73   0.76     2.8       0.002                     Semantic Pose only        24.72    24.48    7.69    2.57    36.11      0.118
+               ✓          37.39    37.13   11.30   0.27     2.6       0.001                 Text + Semantic Pose (Concat)   26.42    26.21    8.72    2.44    30.10      0.115
+     ✓           ✓*          37.54    37.06   11.24   0.25     2.5       0.001                   Text + Semantic Pose (CA)     32.86    31.91    9.41    2.15    23.04      0.111
+     ✓         ✓          39.51    39.65   12.92   0.19     2.3       0.001
+                                                                         Table 7. Effect of regional diffusion conditioning.
+Table 4.  Effect of structural VQVAE on reconstruction quality.
+Note: Metrics with prefix ’r’ reflect VQVAE reconstruction qual-            frames/block  s/video ROUGE BLEU1 BLEU4  FID↓ MPJPE↓ DTW-MJE↓
+ity. ’✓*’ indicates shared regional codebook across regions.
+                                            ∞        1.47    31.50    31.24    9.16    2.20    23.79      0.114
+     Variant  ROUGE BLEU1 BLEU4  FID↓ MPJPE↓DTW-MJE↓                  32        1.95    32.03    31.62    9.25    2.28    23.40      0.112
+                                                                                         16        2.11    32.27    31.80    9.30    2.17    23.23      0.112
+   w/o Lcons   24.35    24.08    7.81    2.80    38.63      0.121                     8         2.45    32.86    31.91    9.41    2.15    23.04      0.111
+   w/o GCN   26.64    26.65    7.70    2.35    28.07      0.115
+    SignPR    32.86    31.91    9.41    2.15    23.04      0.111                 Table 8. Ablation on the block-wise causal inference.
+
+     Table 5. Effect of components in proposed S-VQVAE.
+                                           Diffusion Generation                  inference. Using K = ∞(no blocking) as the base, smaller
+ Semantic-Dif Regional-Dif                 ROUGE BLEU1 BLEU4 FID↓MPJPE↓DTW-MJE↓   K yields more blocks and increases inference time. At the
+   ✓                   22.53   22.26   6.31   2.85  42.96     0.124       same time, quality consistently improves. Under the cur-
+          ✓       23.90   23.12   7.53   2.58  40.32     0.122         rent experimental setup, using K=8 yields better results,
+   ✓       ✓∗       27.49   27.26   8.15   2.63  26.06     0.115        with ROUGE improved by +1.36 over the base.
+   ✓      ✓       32.86   31.91   9.41   2.15  23.04     0.111
+
+Table 6. Effect of structural diffusion on generation quality. Note:     5. Conclusion
+✓∗indicates using shared regional codebook across regions.
+                                                              In this work, we focus on the T2P task, aiming to gen-
+                                                                   erate semantically consistent, motion-accurate, and tem-
+Effect of Regional Diffusion Conditioning.  Table 7                                                                porally coherent sign pose sequences from text. We in-
+shows that conditioning on text or semantic pose alone is                                                           troduced SignPR, a progressive diffusion framework that
+insufficient; both semantic and text are needed. The inte-                                                                      jointly models the structural and temporal properties of
+gration method also matters: simple concatenation yields                                                                 signing. Through structural progressive refinement with se-
+moderate gains, whereas the cross-attention (CA) used in                                                         mantic and regional generation and temporal progressive re-
+SignPR performs best.                                                           finement via block-wise causal inference, SignPR achieves
+                                                               superior semantic consistency, motion accuracy, and tem-
+Effect of Block-wise Causal Inference.  As shown in Ta-     poral coherence. Extensive experiments on three datasets
+ble 8, we vary the frames per block K in block-wise causal    show that our method achieves superior performance.
+
+
+
+                                                     2205
+
+6. Acknowledgments                                       model for text generation and modular control.  In Pro-
+                                                                       ceedings of the 61st Annual Meeting of the Association for
+This work  is  supported  in  part by Key  Projects  of          Computational Linguistics (Volume 1: Long Papers), pages
+Jiangsu Provincial Basic Research Program under Grant          11575–11596, 2023. 3
+No.  BK20243040;  National Natural Science Founda-      [10] Jonathan Ho, Ajay Jain, and Pieter Abbeel. Denoising dif-
+tion of China under Grant Nos.  62172208, 92467202,           fusion probabilistic models. Advances in neural information
+62272216;  JiangSu Natural Science Foundation under           processing systems, 33:6840–6851, 2020. 2
+Grant No. BK20251989. This work is partially supported      [11] Li Hu. Animate anyone: Consistent and controllable image-
+by Fundamental and Interdisciplinary Disciplines Break-           to-video synthesis for character animation. In Proceedings of
+through Plan of the Ministry of Education of China (No.            the IEEE/CVF Conference on Computer Vision and Pattern
+JYB2025XDXM118); Collaborative Innovation Center of           Recognition, pages 8153–8163, 2024. 3
+Novel Software Technology and Industrialization.  This      [12]  Jie Huang, Wengang Zhou, Qilin Zhang, Houqiang Li, and
+work is also supported by the 2025 Jiangsu Frontier Tech-          Weiping Li. Video-based sign language recognition without
+nology R&D Project (No.  BF2025004) on Trusted Data           temporal segmentation. In Proceedings of the AAAI confer-
+mining for Cross-Domain Data Security Sharing and Pri-          ence on artificial intelligence, 2018. 6
+vacy Protection.                                                    [13] Wencan Huang, Wenwen Pan, Zhou Zhao, and Qi Tian. To-
+                                                                 wards fast and high-quality sign language production.  In
+References                                                       Proceedings of the 29th ACM International Conference on
+                                                                      Multimedia, pages 3172–3181, 2021. 2
+ [1] Vasileios Baltatzis, Rolandos Alexandros Potamias, Evan-      [14] Wencan Huang, Zhou Zhao, Jinzheng He, and Mingmin
+     gelos Ververas, Guanxiong Sun, Jiankang Deng, and Ste-          Zhang. Dualsign: semi-supervised sign language production
+     fanos Zafeiriou. Neural sign actors: A diffusion model for           with balanced multi-modal multi-task dual transformation.
+    3d sign language production from text.  In Proceedings of           In Proceedings of the 30th ACM international conference on
+     the IEEE/CVF Conference on Computer Vision and Pattern           multimedia, pages 5486–5495, 2022. 2
+     Recognition, pages 1985–1995, 2024. 2, 3                                                                     [15] Eui Jun Hwang, Jung-Ho Kim, and Jong C Park.  Non-
+ [2] Donald J Berndt and James Clifford. Using dynamic time            autoregressive  sign  language  production  with  gaussian
+     warping to find patterns in time series.  In Proceedings of           space. In BMVC, page 197, 2021. 3
+     the 3rd international conference on knowledge discovery and
+                                                                     [16] Eui Jun Hwang, Huije Lee, and Jong C Park.  Autoregres-
+     data mining, pages 359–370, 1994. 6                                                                               sive sign language production: A gloss-free approach with
+ [3] Andreas Blattmann, Tim Dockhorn, Sumith Kulal, Daniel                                                                                discrete representations. arXiv preprint arXiv:2309.12179,
+     Mendelevitch, Maciej Kilian, Dominik Lorenz, Yam Levi,                                                                     2023. 3
+     Zion English, Vikram Voleti, Adam Letts, et al. Stable video
+                                                                     [17] Hyeonho Jeong, Gihyun Kwon, and Jong Chul Ye. Zero-shot
+      diffusion:  Scaling latent video diffusion models to large
+                                                                          generation of coherent storybook from plain text story using
+      datasets. arXiv preprint arXiv:2311.15127, 2023. 2
+                                                                              diffusion models. arXiv preprint arXiv:2302.03900, 2023.
+ [4] Necati Cihan Camgoz, Simon Hadfield, Oscar Koller, Her-
+                                                                     [18] TN Kipf. Semi-supervised classification with graph convo-
+    mann Ney, and Richard Bowden. Neural sign language trans-
+                                                                                 lutional networks. arXiv preprint arXiv:1609.02907, 2016.
+      lation. In Proceedings of the IEEE conference on computer
+                                                              4
+      vision and pattern recognition, pages 7784–7793, 2018. 6
+                                                                     [19] Dimitris Kouremenos, Klimis S Ntalianis, Giorgos Siolas, [5] Prafulla Dhariwal and Alexander Nichol. Diffusion models
+                                                                 and Andreas Stafylopatis. Statistical machine translation for     beat gans on image synthesis. Advances in neural informa-
+                                                                      greek to greek sign language using parallel corpora produced      tion processing systems, 34:8780–8794, 2021.
+                                                                            via rule-based machine translation. In CIMA@ ICTAI, pages
+ [6] Sen Fang, Chunyu Sui, Xuedong Zhang, and Yapeng Tian.
+                                                                    28–42, 2018.
+      Signdiff: Learning diffusion models for american sign lan-
+     guage production. arXiv e-prints, pages arXiv–2308, 2023.      [20] Shyam Krishna and Janmesh Ukey. Gan based indian sign
+    1                                                               language synthesis.  In Proceedings of the Twelfth Indian
+                                                                    Conference on Computer Vision, Graphics and Image Pro- [7] Shiwei Gan, Yafeng Yin, Zhiwei Jiang, Lei Xie, Sanglu Lu,
+                                                                              cessing, pages 1–8, 2021. 1     and Hongkai Wen. Mixsigngraph: A sign sequence is worth
+    mixed graphs of nodes. In The Thirty-ninth Annual Confer-      [21] Chin-Yew Lin and Franz Josef Och. Automatic evaluation
+     ence on Neural Information Processing Systems, 2025. 6               of machine translation quality using longest common sub-
+ [8] Shuyang Gu, Dong Chen, Jianmin Bao, Fang Wen, Bo          sequence and skip-bigram statistics.  In Proceedings of the
+     Zhang, Dongdong Chen, Lu Yuan, and Baining Guo. Vec-         42nd annual meeting of the association for computational
+      tor quantized diffusion model for text-to-image synthesis. In             linguistics (ACL-04), pages 605–612, 2004. 6
+     Proceedings of the IEEE/CVF conference on computer vi-      [22] Ilya Loshchilov and Frank Hutter. Decoupled weight decay
+     sion and pattern recognition, pages 10696–10706, 2022. 2,            regularization. arXiv preprint arXiv:1711.05101, 2017. 6
+    5                                                               [23] Jian Ma, Wenguan Wang, Yi Yang, and Feng Zheng. Ms2sl:
+ [9] Xiaochuang Han, Sachin Kumar, and Yulia Tsvetkov. Ssd-          multimodal spoken data-driven continuous sign language
+     lm: Semi-autoregressive simplex-based diffusion language           production. arXiv preprint arXiv:2407.12842, 2024. 2, 3
+
+
+
+                                                     2206
+
+[24] Kishore Papineni, Salim Roukos, Todd Ward, and Wei-Jing      [37] Shengeng Tang, Jiayi He, Dan Guo, Yanyan Wei, Feng Li,
+     Zhu.  Bleu: a method for automatic evaluation of machine          and Richang Hong.  Sign-idd:  Iconicity disentangled dif-
+      translation. In Proceedings of the 40th annual meeting of the           fusion for sign language production.   In Proceedings of
+     Association for Computational Linguistics, pages 311–318,            the AAAI Conference on Artificial Intelligence, pages 7266–
+     2002. 6                                                         7274, 2025. 7
+[25] Walter HL Pinaya, Petru-Daniel Tudosiu, Jessica Dafflon,      [38] Shengeng Tang, Feng Xue, Jingjing Wu, Shuo Wang, and
+     Pedro F Da Costa, Virginia Fernandez, Parashkev Nachev,          Richang Hong.  Gloss-driven conditional diffusion models
+     Sebastien Ourselin, and M Jorge Cardoso.  Brain imaging            for sign language production. ACM Transactions on Mul-
+     generation with latent diffusion models. In MICCAI work-           timedia Computing, Communications and Applications, 21
+     shop on deep generative models, pages 117–126. Springer,            (4):1–17, 2025. 3
+     2022. 2                                                        [39] Harry Walsh, Abolfazl Ravanshad, Mariam Rahmani, and
+[26] Fan Qi, Yu Duan, Huaiwen Zhang, and Changsheng Xu.          Richard Bowden. A data-driven representation for sign lan-
+     Signgen: End-to-end sign language video generation with la-          guage production.  In 2024 IEEE 18th International Con-
+      tent diffusion. In European Conference on Computer Vision,           ference on Automatic Face and Gesture Recognition (FG),
+     pages 252–270. Springer, 2024. 1                                  pages 1–10. IEEE, 2024. 2, 3
+[27] Razieh Rastgoo, Kourosh Kiani, Sergio Escalera, and Mo-                                                                     [40] Xu Wang, Shengeng Tang, Peipei Song, Shuo Wang, Dan
+    hammad Sabokrou. Sign language production: A review. In                                                               Guo, and Richang Hong. Linguistics-vision monotonic con-
+     Proceedings of the IEEE/CVF conference on computer vi-                                                                                     sistent network for sign language production.  In ICASSP
+     sion and pattern recognition, pages 3451–3461, 2021. 1             2025-2025 IEEE International Conference on Acoustics,
+[28] Robin Rombach, Andreas Blattmann, Dominik Lorenz,          Speech and Signal Processing (ICASSP), pages 1–5. IEEE,
+      Patrick Esser, and Bj¨orn Ommer.  High-resolution image           2025. 2
+     synthesis with latent diffusion models.  In Proceedings of                                                                     [41] Yaohui Wang, Xinyuan Chen, Xin Ma, Shangchen Zhou,
+     the IEEE/CVF conference on computer vision and pattern                                                                           Ziqi Huang, Yi Wang, Ceyuan Yang, Yinan He, Jiashuo Yu,
+      recognition, pages 10684–10695, 2022. 2                                                                       Peiqing Yang, et al.  Lavie: High-quality video generation
+[29] Ben Saunders, Necati Cihan Camgoz, and Richard Bowden.                                                                      with cascaded latent diffusion models. International Journal
+     Adversarial training for multi-channel sign language produc-                                                                                of Computer Vision, 133(5):3059–3078, 2025. 2
+      tion. arXiv preprint arXiv:2008.12405, 2020. 2
+                                                                     [42] Pan Xie, Qipeng Zhang, Peng Taiying, Hao Tang, Yao Du,
+[30] Ben Saunders, Necati Cihan Camgoz, and Richard Bowden.
+                                                                 and Zexian Li. G2p-ddm: Generating sign pose sequence
+     Progressive transformers for end-to-end sign language pro-
+                                                                from gloss sequence with discrete diffusion model. In Pro-
+     duction. In European Conference on Computer Vision, pages
+                                                                       ceedings of the AAAI Conference on Artificial Intelligence,
+     687–705. Springer, 2020. 7
+                                                                    pages 6234–6242, 2024. 2, 3, 5, 6, 7
+[31] Ben Saunders, Necati Cihan Camgoz, and Richard Bowden.
+                                                                     [43] Aoxiong Yin, Tianyun Zhong, Li Tang, Weike Jin, Tao Jin,
+     Continuous 3d multi-channel sign language production via
+                                                                 and Zhou Zhao. Gloss attention for gloss-free sign language
+     progressive transformers and mixture density networks. In-
+                                                                                   translation. In Proceedings of the IEEE/CVF conference on
+     ternational journal of computer vision, 129(7):2113–2135,
+                                                                  computer vision and pattern recognition, pages 2551–2562,
+     2021. 1, 3
+                                                                     2023. 1
+[32] Ben Saunders, Necati Cihan Camgoz, and Richard Bowden.
+                                                                     [44] Aoxiong Yin, Haoyuan Li, Kai Shen, Siliang Tang, and    Mixed signals: Sign language production via a mixture of
+                                                                      Yueting Zhuang. T2s-gpt: Dynamic vector quantization for     motion primitives.  In Proceedings of the IEEE/CVF Inter-
+                                                                            autoregressive sign language production from text.  arXiv     national Conference on Computer Vision, pages 1919–1929,
+                                                                             preprint arXiv:2406.07119, 2024. 2, 3, 6     2021. 1, 3, 7
+                                                                     [45] Changqian Yu, Bin Xiao, Changxin Gao, Lu Yuan, Lei[33] Ben Saunders, Necati Cihan Camgoz, and Richard Bowden.
+                                                                  Zhang, Nong Sang, and Jingdong Wang.   Lite-hrnet: A     Signing at scale: Learning to co-articulate signs for large-
+      scale photo-realistic sign language production. In Proceed-           lightweight high-resolution network.   In Proceedings of
+                                                                            the IEEE/CVF conference on computer vision and pattern     ings of the IEEE/CVF Conference on Computer Vision and
+                                                                             recognition, pages 10440–10450, 2021. 6     Pattern Recognition, pages 5141–5151, 2022. 1, 3
+[34] Jiaming  Song,  Chenlin  Meng,  and  Stefano  Ermon.      [46] Jianrong Zhang, Yangsong Zhang, Xiaodong Cun, Yong
+     Denoising  diffusion  implicit  models.    arXiv  preprint          Zhang, Hongwei Zhao, Hongtao Lu, Xi Shen, and Ying
+     arXiv:2010.02502, 2020.                                          Shan.   Generating human motion from textual descrip-
+[35] Stephanie Stoll, Necati Cihan Camg¨oz, Simon Hadfield, and            tions with  discrete  representations.    In Proceedings  of
+     Richard Bowden.  Sign language production using neural            the IEEE/CVF conference on computer vision and pattern
+     machine translation and generative adversarial networks. In            recognition, pages 14730–14740, 2023. 2
+     Proceedings of the 29th British Machine Vision Conference      [47] Daquan Zhou, Weimin Wang, Hanshu Yan, Weiwei Lv,
+    (BMVC 2018). British Machine Vision Association, 2018.            Yizhe Zhu, and Jiashi Feng.  Magicvideo: Efficient video
+[36] Stephanie Stoll, Armin Mustafa, and Jean-Yves Guillemaut.           generation with latent diffusion models.   arXiv preprint
+     There and back again: 3d sign language generation from text           arXiv:2211.11018, 2022. 2
+     using back-translation. In 2022 International Conference on      [48] Hao Zhou, Wengang Zhou, Weizhen Qi, Junfu Pu, and
+    3D Vision (3DV), pages 187–196. IEEE, 2022. 1, 3                 Houqiang Li.  Improving sign language translation with
+
+
+
+                                                     2207
+
+     monolingual data by sign back-translation. In Proceedings
+      of the IEEE/CVF conference on computer vision and pattern
+      recognition, pages 1316–1325, 2021. 6
+[49] Ronglai Zuo, Fangyun Wei, Zenggui Chen, Brian Mak, Jiao-
+     long Yang, and Xin Tong. A simple baseline for spoken
+     language to sign language translation with 3d avatars.  In
+     European Conference on Computer Vision, pages 36–54.
+     Springer, 2024. 1
+[50] Ronglai Zuo, Rolandos Alexandros Potamias, Evangelos
+     Ververas, Jiankang Deng, and Stefanos Zafeiriou.  Signs
+     as tokens: A retrieval-enhanced multilingual sign language
+      generator.  In Proceedings of the IEEE/CVF International
+     Conference on Computer Vision, pages 23806–23816, 2025.
+      2, 3
+
+
+
+
+
+                                                     2208

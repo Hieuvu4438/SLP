@@ -1,0 +1,14 @@
+{
+  "url": "https://arxiv.org/abs/1607.03827",
+  "artifact": "third_party/proposal3_sources/input_screen/fff64ec361e31478.json",
+  "read_status": "not_read",
+  "input_labels": [
+    "R6 ○"
+  ],
+  "http_status": 200,
+  "sha256": "4b95e20fac6b10f75dcbba0c652744ddb3784d111ad47d3e42a65c88f3fb55f9",
+  "title": "[1607.03827] The KIT Motion-Language Dataset",
+  "abstract": "Abstract: Linking human motion and natural language is of great interest for the generation of semantic representations of human activities as well as for the generation of robot activities based on natural language input. However, while there have been years of research in this area, no standardized and openly available dataset exists to support the development and evaluation of such systems. We therefore propose the KIT Motion-Language Dataset, which is large, open, and extensible. We aggregate data from multiple motion capture databases and include them in our dataset using a unified representation that is independent of the capture system or marker set, making it easy to work with the data regardless of its origin. To obtain motion annotations in natural language, we apply a crowd-sourcing approach and a web-based tool that was specifically build for this purpose, the Motion Annotation Tool. We thoroughly document the annotation process itself and discuss gamification methods that we used to keep annotators motivated. We further propose a novel method, perplexity-based selection, which systematically selects motions for further annotation that are either under-represented in our dataset or that have erroneous annotations. We show that our method mitigates the two aforementioned problems and ensures a systematic annotation process. We provide an in-depth analysis of the structure and contents of our resulting dataset, which, as of October 10, 2016, contains 3911 motions with a total duration of 11.23 hours and 6278 annotations in natural language that contain 52,903 words. We believe this makes our dataset an excellent choice that enables more transparent and comparable research in this important area.",
+  "preview": "",
+  "status": "acquired_not_read"
+}

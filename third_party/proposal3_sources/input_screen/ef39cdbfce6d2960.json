@@ -1,0 +1,14 @@
+{
+  "url": "https://www.robots.ox.ac.uk/~vgg/data/bobsl/",
+  "artifact": "third_party/proposal3_sources/input_screen/ef39cdbfce6d2960.json",
+  "read_status": "not_read",
+  "input_labels": [
+    "[BOBSL](https://www.robots.ox.ac.uk/~vgg/data/bobsl/?utm_source=chatgpt.com)"
+  ],
+  "http_status": 200,
+  "sha256": "911b7c42ffd6383735880980ce81330aeb7b8fae664e84bda55a87490602dc56",
+  "title": "BOBSL",
+  "abstract": "BOBSL Dataset (v1_4), is a large scale dataset of British Sign Language (BSL). It comprises 1,940 episodes (approximately 1,400 hours) of BSL-interpreted BBC broadcast footage accompanied by written English subtitles. BOBSLv1.4 also includes 272 episodes as part of a challenge partition for the ECCV SLRTP 2022 workshop challenge. This partition is not accompanied by subtitles or annotations.",
+  "preview": "",
+  "status": "acquired_not_read"
+}

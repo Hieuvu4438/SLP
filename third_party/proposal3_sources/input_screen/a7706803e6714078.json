@@ -1,0 +1,14 @@
+{
+  "url": "https://aclanthology.org/2021.acl-long.570/",
+  "artifact": "third_party/proposal3_sources/input_screen/a7706803e6714078.json",
+  "read_status": "not_read",
+  "input_labels": [
+    "L2 ★"
+  ],
+  "http_status": 200,
+  "sha256": "0860c5aa35e669b8a3832b1f53729a7c6a9b65f750b6084b26862007866adb72",
+  "title": "Including Signed Languages in Natural Language Processing - ACL Anthology",
+  "abstract": "Kayo Yin, Amit Moryossef, Julie Hochgesang, Yoav Goldberg, Malihe Alikhani. Proceedings of the 59th Annual Meeting of the Association for Computational Linguistics and the 11th International Joint Conference on Natural Language Processing (Volume 1: Long Papers). 2021.",
+  "preview": "",
+  "status": "acquired_not_read"
+}

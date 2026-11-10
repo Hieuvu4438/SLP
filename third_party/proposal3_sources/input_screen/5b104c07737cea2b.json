@@ -1,0 +1,14 @@
+{
+  "url": "https://proceedings.neurips.cc/paper_files/paper/2025/hash/9028b8a3ca98f58e373f0c1497a17448-Abstract-Conference.html",
+  "artifact": "third_party/proposal3_sources/input_screen/5b104c07737cea2b.json",
+  "read_status": "not_read",
+  "input_labels": [
+    "**SnapMoGen / MoMask++**"
+  ],
+  "http_status": 200,
+  "sha256": "ed29cc4a3da4da340d43272ea74ca2cf61ae6cba64a9516b01dbdf4c257a7699",
+  "title": "SnapMoGen: Human Motion Generation from Expressive Texts",
+  "abstract": "",
+  "preview": "SnapMoGen: Human Motion Generation from Expressive Texts Bibtex Paper Supplemental Abstract Text-to-motion generation has experienced remarkable progress in recent years. However, current approaches remain limited to synthesizing motion from short or general text prompts, primarily due to dataset constraints. This limitation undermines fine-grained controllability and generalization to unseen prompts. In this paper, we introduce SnapMoGen, a new text-motion dataset featuring high-quality motion capture data paired with accurate, \\textit{expressive} textual annotations. The dataset comprises 20K motion clips totaling 44 hours, accompanied by 122 detailed textual descriptions averaging 48 words per description (vs. 12 words of HumanML3D). Importantly, these motion clips preserve original temporal continuity as they were in long sequences, facilitating research in long-term motion generation and blending. We also improve upon previous generative masked modeling approaches. Our model, MoMask++, transforms motion into \\textbf{multi-scale} token sequences that better exploit the token capacity, and learns to generate all tokens using a single generative masked transformer. MoMask++ achieves state-of-the-art performance on both HumanML3D and OmniMotion benchmarks. Additionally, we demonstrate the ability to process casual user prompts by employing an LLM to reformat inputs to align with the expressivity and narration style of SnapMoGen. Name Change Policy × Requests for name changes in the electronic proceedings will be accepted with no questions asked. However name changes may cause bibliographic tracking issues. Authors are asked to consider this carefully and discuss it with their co-authors prior to requesting a name change in the electronic proceedings. Use the \"Report an Issue\" link to request a name change. Do not remove: This comment is monitored to verify that the site is working properly",
+  "status": "acquired_not_read"
+}

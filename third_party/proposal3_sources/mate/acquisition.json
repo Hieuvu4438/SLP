@@ -1,0 +1,11 @@
+{
+  "key": "mate",
+  "url": "https://proceedings.iclr.cc/paper_files/paper/2026/file/2fbfefa47aadd5d583439590693b2dcc-Paper-Conference.pdf",
+  "retrieved_at": "2026-11-06T09:18:52.039257+00:00",
+  "kind": "pdf",
+  "http_status": 200,
+  "sha256": "28160db3fe1c84b7eb10030b448c0983ab2cccd1002278b7d97ec0305dcc4de4",
+  "parser": "PyMuPDF",
+  "chars": 63466,
+  "status": "acquired_not_read"
+}

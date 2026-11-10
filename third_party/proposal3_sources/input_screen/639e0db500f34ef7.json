@@ -1,0 +1,14 @@
+{
+  "url": "https://arxiv.org/abs/2603.23617",
+  "artifact": "third_party/proposal3_sources/input_screen/639e0db500f34ef7.json",
+  "read_status": "not_read",
+  "input_labels": [
+    "S17 ★"
+  ],
+  "http_status": 200,
+  "sha256": "a44c09c1f1e48cbb5f35e701a92b2d12f27219487aed899353e960294917aefc",
+  "title": "[2603.23617] M3T: Discrete Multi-Modal Motion Tokens for Sign Language Production",
+  "abstract": "Abstract: Sign language production requires more than hand motion generation. Non-manual features, including mouthings, eyebrow raises, gaze, and head movements, are grammatically obligatory and cannot be recovered from manual articulators alone. Existing 3D production systems face two barriers to integrating them: the body-model fittings they train on retain a facial space too low-dimensional to encode these articulations, and, if richer representations are adopted, standard discrete tokenization suffers from codebook collapse, leaving most of the expression space largely unreachable. We propose SMPL-FX, which couples FLAME's rich expression space with the SMPL-X body parameterisation, and tokenize the resulting representation with modality-specific Finite Scalar Quantization VAEs for body, hands, and face, raising face codebook utilization from 78.8% to 99.0%. M3T is an autoregressive transformer trained on this multi-modal motion vocabulary, with an auxiliary sign-to-text translation objective that encourages semantically grounded embeddings. Across three standard datasets, M3T achieves state-of-the-art sign language production quality, and on NMFs-CSL, where signs are distinguishable only by non-manual features, our model reaches 58.3% accuracy against 49.0% for the strongest comparable baseline, without large-scale sign-language pre-training. Project page: this https URL",
+  "preview": "",
+  "status": "acquired_not_read"
+}

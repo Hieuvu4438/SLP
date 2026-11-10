@@ -1,0 +1,14 @@
+{
+  "url": "https://smpl.is.tue.mpg.de/",
+  "artifact": "third_party/proposal3_sources/input_screen/0fd2449ec1f64971.json",
+  "read_status": "not_read",
+  "input_labels": [
+    "R1 ★"
+  ],
+  "http_status": 200,
+  "sha256": "82f547ea53b22f30e57cbb066c8e08cba260ce4ef81ede4bbc4e1d895b41974e",
+  "title": "SMPL",
+  "abstract": "",
+  "preview": "SMPL SMPL A Skinned Multi-Person Linear Model Introduction SMPL is a realistic 3D model of the human body that is based on skinning and blend shapes and is learned from thousands of 3D body scans. This site provides resources to learn about SMPL, including example FBX files with animated SMPL models, and code for using SMPL in Python, Maya and Unity. Please register to download SMPL and related tools for using SMPL in different animation environments. After registration you will be able to access the Downloads menu at the top menubar. You can then download SMPL with up to 300 shape components, and in several standard versions (male, female, gender neutral). Other Human Body Models SMPL is also available with articulated hands and expressive faces, and can be estimated from images. Please find more information for these at the links below: MANO & SMPL+H (SIGGRAPH Asia 2017): https://mano.is.tue.mpg.de/ Articulated hands SMPL-X (CVPR 2019) : https://smpl-x.is.tue.mpg.de/ Articulated hands and expressive face Additional human body models are available on the following websites: STAR (ECCV 2020): https://star.is.tue.mpg.de/ STAR is a compact realistic model of the human body, with learned sparse spatially local corrective blend shapes, that is is a drop in replacement for SMPL SUPR (ECCV 2022): https://supr.is.tue.mpg.de/ SUPR is a factorized representation of the human body that can be separated into a full suite of body part models, including a novel human foot model with learned contact deformations. In contrast to existing body part models such as FLAME and MANO, the separated body part models are able to capture the full range of head and hand motion. SKEL (SIGGRAPH Asia 2023): https://skel.is.tuebingen.mpg.de/ SKEL is a parametric body model with skin and skeleton meshes, driven by biomechanical pose parameters and incorporating the shape space of SMPL Please use the contact information on those websites for further enquiries about these models. Video: Authors Matthew Loper Naureen Mahmood Javier Romero Gerard Pons-Moll Michael J. Black Abstract We present a learned model of human body shape and pose-dependent shape variation that is more accurate than previou",
+  "status": "acquired_not_read"
+}

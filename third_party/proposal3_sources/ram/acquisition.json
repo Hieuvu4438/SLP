@@ -1,0 +1,11 @@
+{
+  "key": "ram",
+  "url": "https://arxiv.org/html/2601.14788",
+  "retrieved_at": "2026-11-06T09:18:51.969756+00:00",
+  "kind": "html",
+  "http_status": 200,
+  "sha256": "902bbc4824cd41b8d7f1e3a0ef094337b47d29d25b2b949096c91342bfd916f9",
+  "title": "Reconstruction-Anchored Diffusion Model for Text-to-Motion Generation",
+  "chars": 60825,
+  "status": "acquired_not_read"
+}

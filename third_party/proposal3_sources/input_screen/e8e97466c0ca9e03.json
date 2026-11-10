@@ -1,0 +1,14 @@
+{
+  "url": "https://aigeeksgroup.github.io/ReMoMask/",
+  "artifact": "third_party/proposal3_sources/input_screen/e8e97466c0ca9e03.json",
+  "read_status": "not_read",
+  "input_labels": [
+    "**ReMoMask**"
+  ],
+  "http_status": 200,
+  "sha256": "2bdc6dae496e794977c6e8defeba5553699f5f110ea0e7ecfb1f6b8b3d0e9f77",
+  "title": "ReMoMask",
+  "abstract": "",
+  "preview": "ReMoMask ReMoMask: Retrieval-Augmented Masked Motion Generation ECCV 2026 Zhengdao Li 1* Siheng Wang 2* Zeyu Zhang 1*† Hao Tang 1‡ 1 Peking University 2 Jiangsu University * Equal contribution. † Project lead. ‡ Corresponding author. Paper Code Model Your browser does not support the video tag. TLDR: ReMoMask is a retrieval-augmented masked text-to-motion generation model that enhances retrieval precision, improves temporal-spatial alignment, and achieves state-of-the-art performance on motion generation benchmarks. 🔁 Bidirectional Momentum Contrastive Learning : Enables larger negative sample pools to boost retrieval quality beyond batch-size limitations. 🧠 Semantic Spatial-Temporal Attention (SSTA) : Fuses retrieved motion and text features with part-level spatiotemporal awareness to improve coherence and realism. ⚡ Efficient & High-Quality Motion Generation : Built on RVQ-VAE, ReMoMask achieves strong zero-shot performance on HumanML3D and KIT-ML with fewer decoding steps. Method In ReMoMask, a unified framework integrating three key innovations: (1) A Bidirectional Momentum Text-Motion Model decouples negative sample scale from batch size via momentum queues, substantially improving cross-modal retrieval precision; (2) A Semantic Spatiotemporal Attention mechanism enforces biomechanical constraints during part-level fusion to eliminate asynchronous artifacts; (3) RAG-Classier-Free Guidance incorporates minor unconditional generation to enhance generalization. Qualitative Results Your browser does not support the video tag. a man is pretending to be a chicken. constantly pecking at the ground and waving his arms like a chicken. Your browser does not support the video tag. a man is walking forward, favoring his left leg and shifting his walk. he is possibly drunk. Your browser does not support the video tag. a man kicks something or someone with his left leg. Your browser does not support the video tag. a person is looking around, turns to the left, then looks around again. Your browser does not support the video tag. A person is walking on a circle. Your browser does not support the video tag. a person jumps forward three times and then walks a few steps. You",
+  "status": "acquired_not_read"
+}

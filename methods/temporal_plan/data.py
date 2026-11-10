@@ -161,7 +161,8 @@ def load_manifest(path: str | Path, *, split: str) -> MotionDataset:
     return MotionDataset(records, motions, split=split)
 
 
-def validate_train_val(train: MotionDataset, val: MotionDataset | None) -> None:
+def validate_train_val(train: MotionDataset, val: MotionDataset | None, *,
+                       allow_shared_source_groups: bool = False) -> None:
     if train.split != "train" or (val is not None and val.split != "val"):
         raise ValueError("train and validation roles must be explicit")
     train_fps = train.fps_by_language
@@ -174,7 +175,7 @@ def validate_train_val(train: MotionDataset, val: MotionDataset | None) -> None:
     for key in ("name", "source_id"):
         a = {(r["lang"], r[key]) for r in train.records}
         b = {(r["lang"], r[key]) for r in val.records}
-        if a & b:
+        if a & b and not (key == "source_id" and allow_shared_source_groups):
             raise ValueError(f"train/val overlap in {key}")
     paths_a = {str(Path(p).resolve()) for p in train.motions if isinstance(p, (str, Path))}
     paths_b = {str(Path(p).resolve()) for p in val.motions if isinstance(p, (str, Path))}

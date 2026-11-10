@@ -1,0 +1,14 @@
+{
+  "url": "https://www.ecva.net/papers/eccv_2024/papers_ECCV/html/6988_ECCV_2024_paper.php",
+  "artifact": "third_party/proposal3_sources/input_screen/a3d07352d7f9c600.json",
+  "read_status": "not_read",
+  "input_labels": [
+    "[SignGen](https://www.ecva.net/papers/eccv_2024/papers_ECCV/html/6988_ECCV_2024_paper.php?utm_source=chatgpt.com)"
+  ],
+  "http_status": 200,
+  "sha256": "d2e5b5261e795817f6c45c454b4c8ebca514b76dac01a697bbfd28fda2733c90",
+  "title": "ECVA | European Computer Vision Association",
+  "abstract": "\"The seamless transformation of textual input into natural and expressive sign language holds profound societal significance. Sign language is not solely about hand gestures. It encompasses vital facial expressions and mouth movements essential for nuanced communication. Achieving both semantic precision and emotional resonance in text-to-sign language translation is of paramount importance. Our work pioneers direct end-to-end translation of text into sign language videos, encompassing a realistic representation of the entire body and facial expressions. We go beyond traditional diffusion models by tailoring the multi-modal conditions for sign language videos. Additionally, our modified motion-aware sign generation framework enhances alignment between text and visual cues in sign language, further improving the quality of the generated sign language videos. Extensive experiments show that our approach significantly outperforms the state-of-the-art approaches in terms of semantic consistency, naturalness, and expressiveness, presenting benchmark quantitative results on the RWTH-2014, RWTH-2014-T, WLASL, CSL-Daily, and AUTSL. Our code is available at https://github.com/mingtiannihao/SignGen.\"",
+  "preview": "",
+  "status": "acquired_not_read"
+}

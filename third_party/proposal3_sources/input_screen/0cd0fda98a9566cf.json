@@ -1,0 +1,15 @@
+{
+  "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Chen_Multi-level_Causal_LLM-based_Text-to-Motion_Generation_with_Human_Alignment_CVPR_2026_paper.html",
+  "artifact": "third_party/proposal3_sources/input_screen/0cd0fda98a9566cf.json",
+  "read_status": "not_read",
+  "input_labels": [
+    "**MoTiGA**",
+    "[Multi-level Causal LLM-based Text-to-Motion Generation](https://openaccess.thecvf.com/content/CVPR2026/html/Chen_Multi-level_Causal_LLM-based_Text-to-Motion_Generation_with_Human_Alignment_CVPR_2026_paper.html?utm_source=chatgpt.com)"
+  ],
+  "http_status": 200,
+  "sha256": "9d0cb5bf47d1fbf563c5bca7f825fa1ca3a6cec18cba659c5f1c9df2166a63ba",
+  "title": "CVPR 2026 Open Access Repository",
+  "abstract": "Although progress has been made in LLM-based text-driven motion generation, it still has the limitations of generating fine-grained and semantically consistent motions. These limitations stem from: 1) fine-grained motion quantization errors; 2) mismatches between causal reasoning language and non-causal motion representation; and 3) lack of human preference alignment. To solve them, this paper proposes MoTiGA, a multi-level causal LLM-based text-to-motion generation framework with human alignment. Firstly, MoTiGA employs Causal RVQ-VAE for multi-level causal fine-grained motion representation, then explores iterative residual quantization and causal convolutions to reduce fine-grained motion quantization errors, while preserving the causality as language presentation. Furthermore, the framework incorporates a time-lagged causal prediction strategy, enabling parallel prediction across motion token levels while maintaining temporal dependencies. Finally, to enhance human alignment, we propose Multi-level Hybrid-weighted Preference Optimization (MHPO), which dynamically adjusts semantic similarity weighting and continuous similarity scores. For MHPO, we also release the HumanML3D-R dataset, the first large-scale preference dataset for motion generation, with 101,490 human preference pairs. Evaluations show MoTiGA's superior performance, with an 82.3% FID improvement on HumanML3D and a 64.7% improvement on KIT-ML over other LLM-based methods.",
+  "preview": "",
+  "status": "acquired_not_read"
+}

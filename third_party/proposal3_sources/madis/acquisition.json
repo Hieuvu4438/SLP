@@ -1,0 +1,11 @@
+{
+  "key": "madis",
+  "url": "https://arxiv.org/html/2601.19577v2",
+  "retrieved_at": "2026-11-06T09:18:51.162871+00:00",
+  "kind": "html",
+  "http_status": 200,
+  "sha256": "15b8e1e4a9e649bd7b3a5f3b30bb028c628b83c7abe8f07aef4fa2bf8d44fc56",
+  "title": "MaDiS: Taming Masked Diffusion Language Models for Sign Language Generation",
+  "chars": 39803,
+  "status": "acquired_not_read"
+}

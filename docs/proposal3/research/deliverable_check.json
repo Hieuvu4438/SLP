@@ -1,0 +1,14 @@
+{
+  "local_document_links": "pass",
+  "input_row_locators": "pass",
+  "input_entries": 190,
+  "unique_input_urls": 139,
+  "selected_primary_papers": 19,
+  "primary_artifact_hashes": "pass",
+  "fresh_author_repos": 8,
+  "author_source_file_hashes": "pass",
+  "existing_SLP_experiments_used": false,
+  "RACE_experiments_run": false,
+  "empirical_SOTA_verified": false,
+  "scope": "documentation/provenance verification only; no runtime model or benchmark claim"
+}

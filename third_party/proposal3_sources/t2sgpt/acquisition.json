@@ -1,0 +1,11 @@
+{
+  "key": "t2sgpt",
+  "url": "https://arxiv.org/html/2406.07119",
+  "retrieved_at": "2026-11-06T09:18:51.167016+00:00",
+  "kind": "html",
+  "http_status": 200,
+  "sha256": "b03cd19f42a2b502c4d55d2b809219ed1cd57264d672010c77bfc2f8e3497056",
+  "title": "T2S-GPT: Dynamic Vector Quantization for Autoregressive Sign Language Production from Text",
+  "chars": 33274,
+  "status": "acquired_not_read"
+}

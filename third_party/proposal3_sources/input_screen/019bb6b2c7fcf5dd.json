@@ -1,0 +1,15 @@
+{
+  "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Zuo_Signs_as_Tokens_A_Retrieval-Enhanced_Multilingual_Sign_Language_Generator_ICCV_2025_paper.html",
+  "artifact": "third_party/proposal3_sources/input_screen/019bb6b2c7fcf5dd.json",
+  "read_status": "not_read",
+  "input_labels": [
+    "S11 ★",
+    "[Signs as Tokens — SOKE](https://openaccess.thecvf.com/content/ICCV2025/html/Zuo_Signs_as_Tokens_A_Retrieval-Enhanced_Multilingual_Sign_Language_Generator_ICCV_2025_paper.html?utm_source=chatgpt.com)"
+  ],
+  "http_status": 200,
+  "sha256": "86250eb3129720e4e37677725478541ffd3adf4207f86aa16c7e4a4bcf919737",
+  "title": "ICCV 2025 Open Access Repository",
+  "abstract": "Sign language is a visual language that encompasses all linguistic features of natural languages and serves as the primary communication method for the deaf and hard-of-hearing communities. Although many studies have successfully adapted pretrained language models (LMs) for sign language translation (sign-to-text), the reverse task--sign language generation (text-to-sign)--remains largely unexplored. In this work, we introduce a multilingual sign language model, Signs as Tokens (SOKE), which can generate 3D sign avatars autoregressively from text inputs using a pretrained LM. To align sign language with the LM, we leverage a decoupled tokenizer that discretizes continuous signs into token sequences representing various body parts. During decoding, unlike existing approaches that flatten all part-wise tokens into a single sequence and predict one token at a time, we propose a multi-head decoding method capable of predicting multiple tokens simultaneously. This approach improves inference efficiency while maintaining effective information fusion across different body parts. To further ease the generation process, we propose a retrieval-enhanced SLG approach, which incorporates external sign dictionaries to provide accurate word-level signs as auxiliary conditions, significantly improving the precision of generated signs. Extensive qualitative and quantitative evaluations demonstrate the effectiveness of SOKE.",
+  "preview": "",
+  "status": "acquired_not_read"
+}

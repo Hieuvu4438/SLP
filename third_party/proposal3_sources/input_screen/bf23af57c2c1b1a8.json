@@ -1,0 +1,14 @@
+{
+  "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Guo_MotionLab_Unified_Human_Motion_Generation_and_Editing_via_the_Motion-Condition-Motion_ICCV_2025_paper.html",
+  "artifact": "third_party/proposal3_sources/input_screen/bf23af57c2c1b1a8.json",
+  "read_status": "not_read",
+  "input_labels": [
+    "H17 ○"
+  ],
+  "http_status": 200,
+  "sha256": "ea5af34ebc2ea265f9fe469a63632a47b5c76e07dc83078e430912d8911e42e0",
+  "title": "ICCV 2025 Open Access Repository",
+  "abstract": "Human motion generation and editing are key components of computer vision. However, current approaches in this field tend to offer isolated solutions tailored to specific tasks, which can be inefficient and impractical for real-world applications. While some efforts have aimed to unify motion-related tasks, these methods simply use different modalities as conditions to guide motion generation. Consequently, they lack editing capabilities, fine-grained control, and fail to facilitate knowledge sharing across tasks. To address these limitations and provide a versatile, unified framework capable of handling both human motion generation and editing, we introduce a novel paradigm: Motion-Condition-Motion, which enables the unified formulation of diverse tasks with three concepts: source motion, condition, and target motion. Based on this paradigm, we propose a unified framework, MotionLab, which incorporates rectified flows to learn the mapping from source motion to target motion, guided by the specified conditions. In MotionLab, we introduce the 1) MotionFlow Transformer to enhance conditional generation and editing without task-specific modules; 2) Aligned Rotational Position Encoding to guarantee the time synchronization between source motion and target motion; 3) Task Specified Instruction Modulation; and 4) Motion Curriculum Learning for effective multi-task learning and knowledge sharing across tasks. Notably, our MotionLab demonstrates promising generalization capabilities and inference efficiency across multiple benchmarks for human motion. Our code and additional video results are available at: https://diouo.github.io/motionlab.github.io/.",
+  "preview": "",
+  "status": "acquired_not_read"
+}

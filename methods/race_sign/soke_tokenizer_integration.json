@@ -1,0 +1,37 @@
+{
+  "strict_author_tokenizer_loaded": true,
+  "normalized_stats_shape": [
+    133
+  ],
+  "tokens": [
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ]
+  ],
+  "reconstruction_shape": [
+    8,
+    133
+  ],
+  "finite": true,
+  "source": {
+    "adapter": "official_SOKE",
+    "repo": "/home/haipd/SLP/third_party/proposal3_sources/code/SOKE",
+    "tokenizer_sha256": "1b225a317af368a84a37788be07c88af76582223c821d3c55734f73d6a18316c",
+    "generator_sha256": null,
+    "mean_sha256": "38041ea364a5b1e187f7d633edd3ae564e1f8771506b7390fee48e80e3de0c23",
+    "std_sha256": "88ed5e7e9f484d35908088a22295fb6a8c05e1ad50f6dcf2018a253aa6bffee4",
+    "mapping_sha256": null,
+    "upstream_code_sha256": {
+      "mGPT/archs/mgpt_vq.py": "7a0ac0edce64faf28817f276b0197f803898c9f8fccbe02ba7f65c4a6c471afd",
+      "mGPT/archs/mgpt_mbart.py": "dfa79bd923e738c94a66c15ec2960ed3a704b2d44857c61e8d3fb95a8c2828b1",
+      "mGPT/archs/lm_multihead.py": "cca19616610e5d3d17d4b1dfe7cd0e24f9f66823b1a694f1680e8c0196f16ea8"
+    }
+  },
+  "scope": "Real author SOKE tokenizer and stats only; no trained SOKE signing-generator checkpoint used"
+}

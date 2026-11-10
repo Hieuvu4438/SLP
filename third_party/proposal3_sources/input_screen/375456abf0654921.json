@@ -1,0 +1,14 @@
+{
+  "url": "https://tr3e.github.io/intergen-page/",
+  "artifact": "third_party/proposal3_sources/input_screen/375456abf0654921.json",
+  "read_status": "not_read",
+  "input_labels": [
+    "**InterGen**"
+  ],
+  "http_status": 200,
+  "sha256": "985f555902b37f22aa189ac3dfd9e584e7b80ddd7904952ee2a3d97760b9bebd",
+  "title": "InterGen: Diffusion-based Multi-human Motion Generation under Complex Interactions",
+  "abstract": "InterGen: Diffusion-based Multi-human Motion Generation under Complex Interactions.",
+  "preview": "",
+  "status": "acquired_not_read"
+}

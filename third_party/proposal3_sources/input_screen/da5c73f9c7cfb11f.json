@@ -1,0 +1,16 @@
+{
+  "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Guo_MoMask_Generative_Masked_Modeling_of_3D_Human_Motions_CVPR_2024_paper.html",
+  "artifact": "third_party/proposal3_sources/input_screen/da5c73f9c7cfb11f.json",
+  "read_status": "not_read",
+  "input_labels": [
+    "**MoMask**",
+    "H9 ★",
+    "[MoMask](https://openaccess.thecvf.com/content/CVPR2024/html/Guo_MoMask_Generative_Masked_Modeling_of_3D_Human_Motions_CVPR_2024_paper.html?utm_source=chatgpt.com)"
+  ],
+  "http_status": 200,
+  "sha256": "ac91d6c4104660f053c4b2880ffbcdde349ee81d5d78f24baf2d50f9a764430b",
+  "title": "CVPR 2024 Open Access Repository",
+  "abstract": "We introduce MoMask a novel masked modeling framework for text-driven 3D human motion generation. In MoMask a hierarchical quantization scheme is employed to represent human motion as multi-layer discrete motion tokens with high-fidelity details. Starting at the base layer with a sequence of motion tokens obtained by vector quantization the residual tokens of increasing orders are derived and stored at the subsequent layers of the hierarchy. This is consequently followed by two distinct bidirectional transformers. For the base-layer motion tokens a Masked Transformer is designated to predict randomly masked motion tokens conditioned on text input at training stage. During generation (i.e. inference) stage starting from an empty sequence our Masked Transformer iteratively fills up the missing tokens; Subsequently a Residual Transformer learns to progressively predict the next-layer tokens based on the results from current layer. Extensive experiments demonstrate that MoMask outperforms the state-of-art methods on the text-to-motion generation task with an FID of 0.045 (vs e.g. 0.141 of T2M-GPT) on the HumanML3D dataset and 0.228 (vs 0.514) on KIT-ML respectively. MoMask can also be seamlessly applied in related tasks without further model fine-tuning such as text-guided temporal inpainting.",
+  "preview": "",
+  "status": "acquired_not_read"
+}

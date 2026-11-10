@@ -1,0 +1,14 @@
+{
+  "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Lv_Hierarchical_Enhancement_of_Semantic_Priors_for_Disentangled_Text-Driven_Motion_Generation_CVPR_2026_paper.html",
+  "artifact": "third_party/proposal3_sources/input_screen/2510b0337465b455.json",
+  "read_status": "not_read",
+  "input_labels": [
+    "[Hierarchical Enhancement of Semantic Priors](https://openaccess.thecvf.com/content/CVPR2026/html/Lv_Hierarchical_Enhancement_of_Semantic_Priors_for_Disentangled_Text-Driven_Motion_Generation_CVPR_2026_paper.html?utm_source=chatgpt.com)"
+  ],
+  "http_status": 200,
+  "sha256": "e14ddd630e238b545b24445e6682a2c347501430585536b34361641c3af67b30",
+  "title": "CVPR 2026 Open Access Repository",
+  "abstract": "Text-to-motion generation aims to synthesize realistic and semantically aligned 3D human motions from natural language descriptions. Existing diffusion-based methods often rely on isotropic latent priors and shallow cross-modal supervision, which lead to semantic entanglement, limited controllability, and poor interpretability. We propose HESP, a unified diffusion framework that hierarchically enhances semantic priors for disentangled text-driven motion generation. At its core, HESP introduces an Adaptive Gaussian Variational Autoencoder (AG-VAE) that structures the latent motion manifold into multiple semantically coherent submanifolds, enabling interpretable and controllable motion representations. To further bridge linguistic and kinematic semantics, we design a Dynamic Cross-Modal Memory (DCMM) module for adaptive semantic fusion and a Hierarchical Cross-Modal Attention (HCA) mechanism to capture multi-level text-motion correspondences. Extensive experiments on HumanML3D and KIT-ML demonstrate that HESP consistently outperforms state-of-the-art baselines such as SALAD, MoMask, and MDM, achieving improvement while maintaining higher diversity and physical plausibility. Moreover, the structured latent space of HESP provides interpretable clusters that reveal clear semantic boundaries among different motion categories.",
+  "preview": "",
+  "status": "acquired_not_read"
+}

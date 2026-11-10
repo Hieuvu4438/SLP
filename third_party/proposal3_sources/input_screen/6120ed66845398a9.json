@@ -1,0 +1,14 @@
+{
+  "url": "https://github.com/HumanMLLM/IRG-MotionLLM",
+  "artifact": "third_party/proposal3_sources/input_screen/6120ed66845398a9.json",
+  "read_status": "not_read",
+  "input_labels": [
+    "**IRG-MotionLLM**"
+  ],
+  "http_status": 200,
+  "sha256": "e5f253549e49bc04a8adb7945807d139a68da0f1450d366e377da3a1ee80373f",
+  "title": "GitHub - HumanMLLM/IRG-MotionLLM: (ECCV2026) Official repository of paper \"IRG-MotionLLM: Interleaving Motion Generation, Assessment and Refinement for Text-to-Motion Generation\" · GitHub",
+  "abstract": "(ECCV2026) Official repository of paper \"IRG-MotionLLM: Interleaving Motion Generation, Assessment and Refinement for Text-to-Motion Generation\" - HumanMLLM/IRG-MotionLLM",
+  "preview": "",
+  "status": "acquired_not_read"
+}

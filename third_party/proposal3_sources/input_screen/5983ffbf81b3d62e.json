@@ -1,0 +1,14 @@
+{
+  "url": "https://www.openaccess.thecvf.com/content/CVPR2025/html/Wang_TIMotion_Temporal_and_Interactive_Framework_for_Efficient_Human-Human_Motion_Generation_CVPR_2025_paper.html",
+  "artifact": "third_party/proposal3_sources/input_screen/5983ffbf81b3d62e.json",
+  "read_status": "not_read",
+  "input_labels": [
+    "**TIMotion**"
+  ],
+  "http_status": 200,
+  "sha256": "0b5db5b6c52b81a6196d388c64db1c68c8d5f87964106351c4b041778f50697a",
+  "title": "CVPR 2025 Open Access Repository",
+  "abstract": "Human-human motion generation is essential for understanding humans as social beings. Current methods fall into two main categories: single-person-based methods and separate modeling-based methods. To delve into this field, we abstract the overall generation process into a general framework MetaMotion, which consists of two phases: temporal modeling and interaction mixing. For temporal modeling, the single-person-based methods concatenate two people into a single one directly, while the separate modeling-based methods skip the modeling of interaction sequences. The inadequate modeling described above resulted in sub-optimal performance and redundant model parameters. In this paper, we introduce TIMotion (Temporal and Interactive Modeling), an efficient and effective framework for human-human motion generation. Specifically, we first propose Causal Interactive Injection to model two separate sequences as a causal sequence leveraging the temporal and causal properties. Then we present Role-Evolving Scanning to adjust to the change in the active and passive roles throughout the interaction. Finally, to generate smoother and more rational motion, we design Localized Pattern Amplification to capture short-term motion patterns.Extensive experiments on InterHuman and InterX demonstrate that our method achieves superior performance.",
+  "preview": "",
+  "status": "acquired_not_read"
+}

@@ -1,0 +1,14 @@
+{
+  "url": "https://openaccess.thecvf.com/content/ICCV2025W/CV4A11y/html/Fang_SignLLM_Sign_Language_Production_Large_Language_Models_ICCVW_2025_paper.html",
+  "artifact": "third_party/proposal3_sources/input_screen/0439ca53c66c45aa.json",
+  "read_status": "not_read",
+  "input_labels": [
+    "S12 ○"
+  ],
+  "http_status": 200,
+  "sha256": "c074a67806afff30cd51f0d554ad77f219cc84a2928df94c932f3d7b826a579d",
+  "title": "ICCV 2025 Open Access Repository",
+  "abstract": "In this paper, we propose SignLLM, a multilingual Sign Language Production (SLP) large language model, which includes two novel multilingual SLP modes MLSF and Prompt2LangGloss that allow sign language gestures generation from query texts input and question-style prompts input respectively. Both modes can use a new RL loss based on reinforcement learning and a new RL module named Priority Learning Channel. These RL components can accelerate the training by enhancing the model's capability to sample high-quality data. To train SignLLM, we introduce Prompt2Sign, a comprehensive multilingual sign language dataset, which builds from public data, including American Sign Language (ASL) and seven others. This dataset standardizes information by extracting pose information from sign language videos into a unified compressed format. We extensively evaluate SignLLM, demonstrating that our model achieves state-of-the-art performance on SLP tasks across eight sign languages.",
+  "preview": "",
+  "status": "acquired_not_read"
+}

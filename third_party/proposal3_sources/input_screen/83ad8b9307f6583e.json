@@ -1,0 +1,14 @@
+{
+  "url": "https://www.microsoft.com/en-us/research/publication/humantomato-text-aligned-whole-body-motion-generation/",
+  "artifact": "third_party/proposal3_sources/input_screen/83ad8b9307f6583e.json",
+  "read_status": "not_read",
+  "input_labels": [
+    "**HumanTOMATO**"
+  ],
+  "http_status": 200,
+  "sha256": "92052300b82ec4ebdd3265f76d1f161fa7bccac09154f5fc9a7b75418c51f20b",
+  "title": "HumanTOMATO: Text-aligned Whole-body Motion Generation - Microsoft Research",
+  "abstract": "This work targets a novel text-driven whole-body motion generation task, which takes a given textual description as input and aims at generating high-quality, diverse, and coherent facial expressions, hand gestures, and body motions simultaneously. Previous works on text-driven motion generation tasks mainly have two limitations: they ignore the key role of fine-grained hand and face […]",
+  "preview": "",
+  "status": "acquired_not_read"
+}

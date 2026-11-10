@@ -1,0 +1,15 @@
+{
+  "url": "https://signavatars.github.io/",
+  "artifact": "third_party/proposal3_sources/input_screen/2233241adba062c8.json",
+  "read_status": "not_read",
+  "input_labels": [
+    "D4 ★",
+    "[SignAvatars](https://signavatars.github.io/?utm_source=chatgpt.com)"
+  ],
+  "http_status": 200,
+  "sha256": "952156c44adbf36996fee269aaa337dc4644c561b69815a0ddccb00c4ef035f3",
+  "title": "SignAvatars: A Large-scale 3D Sign Language Holistic Motion Dataset and Benchmark",
+  "abstract": "SignAvatars: A Large-scale 3D Sign Language Holistic Motion Dataset and Benchmark",
+  "preview": "",
+  "status": "acquired_not_read"
+}

@@ -1,0 +1,16 @@
+{
+  "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Jiang_MotionMaster_Generalizable_Text-Driven_Motion_Generation_and_Editing_CVPR_2026_paper.html",
+  "artifact": "third_party/proposal3_sources/input_screen/d8190bb623a25be8.json",
+  "read_status": "not_read",
+  "input_labels": [
+    "**MotionGB**",
+    "**MotionMaster**",
+    "[MotionMaster](https://openaccess.thecvf.com/content/CVPR2026/html/Jiang_MotionMaster_Generalizable_Text-Driven_Motion_Generation_and_Editing_CVPR_2026_paper.html?utm_source=chatgpt.com)"
+  ],
+  "http_status": 200,
+  "sha256": "542b769e005eadaac255d4a512de7995c27903749222720676d8d9d5a9082888",
+  "title": "CVPR 2026 Open Access Repository",
+  "abstract": "Synthesizing realistic human motion from natural language holds transformative potential for animation, robotics, and virtual reality. Recent methods handle single-action sequences and simple textual instructions, yet multi-action compositions and precise editing remain elusive due to limited data diversity, inadequate representations, and fragmented pipelines. Critically, most existing methods train motion generation models from scratch, failing to exploithe rich action semantics and long-horizon reasoning already encoded in pretrained Multimodal Large Language Models (MLLMs). Here we show that finetuning a pretrained MLLM with large-scale motion data yields strong zero-shot generalization across diverse text-guided motion generation and editing tasks. We present MotionMaster, a unified framework built on three components: MotionGB, a 10,000-hour dataset expanded from 400 hours of verified motion capture via spatial-temporal augmentation; an FSQ-based tokenizer that preserves both local joint accuracy and global trajectory coherence; and a finetuned MLLM with motion and language tokens in a shared embedding space. MotionMaster outperforms prior methods by 41.6% in multi-action semantic consistency and 20.8% in body-part composition. These results demonstrate that pretraining knowledge from MLLMs transfers effectively to motion understanding, opening a viable path toward general-purpose motion intelligence.",
+  "preview": "",
+  "status": "acquired_not_read"
+}

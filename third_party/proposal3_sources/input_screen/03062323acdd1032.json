@@ -1,0 +1,14 @@
+{
+  "url": "https://guytevet.github.io/mdm-page/",
+  "artifact": "third_party/proposal3_sources/input_screen/03062323acdd1032.json",
+  "read_status": "not_read",
+  "input_labels": [
+    "**MDM — Human Motion Diffusion Model**"
+  ],
+  "http_status": 200,
+  "sha256": "bff00b2ffcdfa114ea8eff3f4aa929154004b63c93ffb98f3a79ccca8f7c4673",
+  "title": "Human Motion Diffusion Model",
+  "abstract": "",
+  "preview": "Human Motion Diffusion Model MDM: Human Motion Diffusion Model ICLR2023 (Top-25%) Guy Tevet , Sigal Raab , Brian Gordon , Yonatan Shafir , Daniel Cohen-Or , Amit H. Bermano Tel Aviv University, Israel arXiv Code Demo Abstract Natural and expressive human motion generation is the holy grail of computer animation. It is a challenging task, due to the diversity of possible motion, human perceptual sensitivity to it, and the difficulty of accurately describing it. Therefore, current generative solutions are either low-quality or limited in expressiveness. Diffusion models, which have already shown remarkable generative capabilities in other domains, are promising candidates for human motion due to their many-to-many nature, but they tend to be resource hungry and hard to control. In this paper, we introduce Motion Diffusion Model (MDM), a carefully adapted classifier-free diffusion-based generative model for the human motion domain. MDM is transformer-based, combining insights from motion generation literature. A notable design-choice is the prediction of the sample, rather than the noise, in each diffusion step. This facilitates the use of established geometric losses on the locations and velocities of the motion, such as the foot contact loss. As we demonstrate, MDM is a generic approach, enabling different modes of conditioning, and different generation tasks. We show that our model is trained with lightweight resources and yet achieves state-of-the-art results on leading benchmarks for text-to-motion and action-to-motion. The MDM framework has a generic design enabling different forms of conditioning. We showcase three tasks: text-to-motion, action-to-motion, and unconditioned generation. We train the model in a classifier-free manner, which enables trading-off diversity to fidelity, and sampling both conditionally and unconditionally from the same model. In the text-to-motion task, our model generates coherent motions that achieve state-of-the-art results on the HumanML3D and KIT benchmarks. Moreover, our user study shows that human evaluators prefer our generated motions over real motions 42% of the time. In action-to-motion, MDM outperforms the state-of-the-a",
+  "status": "acquired_not_read"
+}

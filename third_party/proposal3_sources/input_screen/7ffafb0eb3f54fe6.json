@@ -1,0 +1,14 @@
+{
+  "url": "https://is.mpg.de/ps/de/publications/teach-2022",
+  "artifact": "third_party/proposal3_sources/input_screen/7ffafb0eb3f54fe6.json",
+  "read_status": "not_read",
+  "input_labels": [
+    "**TEACH**"
+  ],
+  "http_status": 200,
+  "sha256": "a4a5ce716ed9e2932e6248cbf449aed3473e1ab6a6d16359b036b4da8bc9888b",
+  "title": "Bot Detection",
+  "abstract": "Please wait while we check if you are a Human",
+  "preview": "",
+  "status": "acquired_not_read"
+}

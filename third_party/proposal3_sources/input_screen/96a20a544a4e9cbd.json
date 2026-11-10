@@ -1,0 +1,14 @@
+{
+  "url": "https://openaccess.thecvf.com/content/CVPR2021W/ChaLearn/html/Rastgoo_Sign_Language_Production_A_Review_CVPRW_2021_paper.html",
+  "artifact": "third_party/proposal3_sources/input_screen/96a20a544a4e9cbd.json",
+  "read_status": "not_read",
+  "input_labels": [
+    "L3 ○"
+  ],
+  "http_status": 200,
+  "sha256": "bb79fc33d81491a7297539a9bcd5f7af5d90b4fee834991fa9f63652f9fc2ee0",
+  "title": "CVPR 2021 Open Access Repository",
+  "abstract": "Sign Language is the dominant yet non-primary form of communication language used in the deaf and hearing-impaired community. To make an easy and mutual communication between the hearing-impaired and the hearing communities, building a robust system capable of translating the spoken language into sign language and vice versa is fundamental. To this end, sign language recognition and production are two necessary parts for making such a two-way system. Sign language recognition and production need to cope with some critical challenges. In this survey, we review recent advances in Sign Language Production (SLP) and related areas using deep learning. This survey aims to briefly summarize recent achievements in SLP, discussing their advantages, limitations, and future directions of research.",
+  "preview": "",
+  "status": "acquired_not_read"
+}

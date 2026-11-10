@@ -1,0 +1,15 @@
+{
+  "url": "https://openaccess.thecvf.com/content/ICCV2023/html/Petrovich_TMR_Text-to-Motion_Retrieval_Using_Contrastive_3D_Human_Motion_Synthesis_ICCV_2023_paper.html",
+  "artifact": "third_party/proposal3_sources/input_screen/9ae2ac612158c850.json",
+  "read_status": "not_read",
+  "input_labels": [
+    "**TMR**",
+    "H5 ★"
+  ],
+  "http_status": 200,
+  "sha256": "d29f31b13e0a67a555fa8e472f674e1597c6436abab9756f0f4ffe3fb4ba47f1",
+  "title": "ICCV 2023 Open Access Repository",
+  "abstract": "In this paper, we present TMR, a simple yet effective approach for text to 3D human motion retrieval. While previous work has only treated retrieval as a proxy evaluation metric, we tackle it as a standalone task.\n Our method extends the state-of-the-art text-to-motion synthesis model TEMOS, and incorporates a contrastive loss to better structure the cross-modal latent space. We show that maintaining the motion generation loss, along with the contrastive training, is crucial to obtain good performance. We introduce a benchmark for evaluation and provide an in-depth analysis by reporting results on several protocols. Our extensive experiments on the KIT-ML and HumanML3D datasets show that TMR outperforms the prior work by a significant margin, for example reducing the median rank from 54 to 19. Finally, we showcase the potential of our approach on moment retrieval. Our code and models are publicly available\n at https://mathis.petrovich.fr/tmr.",
+  "preview": "",
+  "status": "acquired_not_read"
+}

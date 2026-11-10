@@ -1,0 +1,15 @@
+{
+  "url": "https://ustc-slr.github.io/datasets/2021_csl_daily/",
+  "artifact": "third_party/proposal3_sources/input_screen/75e98a139e8f205e.json",
+  "read_status": "not_read",
+  "input_labels": [
+    "D3 ★",
+    "[CSL-Daily](https://ustc-slr.github.io/datasets/2021_csl_daily/?utm_source=chatgpt.com)"
+  ],
+  "http_status": 200,
+  "sha256": "40889fc672bdafb49034f9f1ffec9acc4a27e810d67166aa4defa5a5e32f0568",
+  "title": "CSL-Daily Dataset | Visual Sign Language Research Group",
+  "abstract": "",
+  "preview": "CSL-Daily Dataset | Visual Sign Language Research Group Search CSL-Daily Dataset Jan 1, 2021 Introduction CSL-Daily is a large-scale continuous SLT dataset. It provides both spoken language translations and gloss-level annotations. The topic revolves around people's daily lives (e.g., travel, shopping, medical care), the most likely SLT application scenario. Download The CSL-Daily database is released to universities and research institutes for research purpose only. To request the access right to the data resources, please follow the instructions below: Download the CSL-Daily Dataset Release Agreement ; Read all items and conditions carefully ; Complete it appropriately. Note that the agreement should be signed by a full-time staff member (that is, the student is not acceptable). Please scan the signed agreement, send it to (ustc_vslrg At 126.com) and CC to Prof. Zhou (zhwg At ustc.edu.cn). If you are a student, please also CC to the full-time staff member who sign the agreement. Reference Please cite the following papers if you use CSL-Daily for your research Hao Zhou, Wengang Zhou, Weizhen Qi, Junfu Pu, and Houqiang Li, \"Improving Sign Language Translation with Monolingual Data by Sign Back-Translation,\" IEEE/CVF International Conference on Computer Vision and Pattern Recognition (CVPR) , 2021. Besides, you can refer to the following papers for continuous SLR published by our group: Hezhen Hu, Weichao Zhao, Wengang Zhou, and Houqiang Li, \"SignBERT+: Hand-model-aware Self-supervised Pre-training for Sign Language Understanding,\" IEEE Trans. Pattern Anal. Mach. Intell. (TPAMI) , 2023. Contact If you have any questions about the dataset and our papers, please feel free to contact us: Wengang Zhou , Professor, USTC, zhwg AT ustc.edu.cn Houqiang Li , Professor, USTC, lihq AT ustc.edu.cn Weichao Zhao , Ph.D Student, USTC, saruka AT mail.ustc.edu.cn Cite × Copy Download",
+  "status": "acquired_not_read"
+}

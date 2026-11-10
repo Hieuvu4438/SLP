@@ -1,0 +1,15 @@
+{
+  "Literature Review Sign Language Production 3fe76acc225880b0aabcc29d2ca17fab.md": {
+    "sha256": "83a09669203ab7dd1b977e6e2417e50f663f44fee7f02ad278972c3aaf775e50",
+    "bytes": 107147
+  },
+  "Recent Papers Text to Motion Human Generation 40e76acc2258801db2feee04749d984c.md": {
+    "sha256": "294947b7d2b3888d7c3de9e3089d4e3ded9cd5480aae3b51c4ab045bb9c6f0df",
+    "bytes": 27575
+  },
+  "counts": {
+    "linked_table_entries": 190,
+    "unique_urls": 139,
+    "note": "URLs are not unique papers; duplicate venue/project/arxiv links need semantic deduplication."
+  }
+}

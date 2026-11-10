@@ -1,0 +1,14 @@
+{
+  "url": "https://www.ecva.net/papers/eccv_2020/papers_ECCV/html/1430_ECCV_2020_paper.php",
+  "artifact": "third_party/proposal3_sources/input_screen/fe44676e61eaac07.json",
+  "read_status": "not_read",
+  "input_labels": [
+    "S2 ★"
+  ],
+  "http_status": 200,
+  "sha256": "0ccb70fed6483b2b683bfca5a4d087450246271388d5f5ac50323f11162ade8a",
+  "title": "ECVA | European Computer Vision Association",
+  "abstract": "The goal of automatic Sign Language Production (SLP) is to translate spoken language to a continuous stream of sign language video at a level comparable to a human translator. If this was achievable, then it would revolutionise Deaf hearing communications. Previous work on predominantly isolated SLP has shown the need for architectures that are better suited to the continuous domain of full sign sequences. In this paper, we propose Progressive Transformers, the first SLP model to translate from discrete spoken language sentences to continuous 3D sign pose sequences in an end-to-end manner. A novel counter decoding technique is introduced, that enables continuous sequence generation at training and inference. We present two model configurations, an end-to-end network that produces sign direct from text and a stacked network that utilises a gloss intermediary. We also provide several data augmentation processes to overcome the problem of drift and drastically improve the performance of SLP models. We propose a back translation evaluation mechanism for SLP, presenting benchmark quantitative results on the challenging RWTH-PHOENIX-Weather-2014T (PHOENIX14T) dataset and setting baselines for future research. Code available at https://github.com/BenSaunders27/ProgressiveTransformersSLP.\"",
+  "preview": "",
+  "status": "acquired_not_read"
+}

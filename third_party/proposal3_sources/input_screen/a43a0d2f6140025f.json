@@ -1,0 +1,14 @@
+{
+  "url": "https://mlanthology.org/eccv/2024/dai2024eccv-motionlcm/",
+  "artifact": "third_party/proposal3_sources/input_screen/a43a0d2f6140025f.json",
+  "read_status": "not_read",
+  "input_labels": [
+    "[MotionLCM](https://mlanthology.org/eccv/2024/dai2024eccv-motionlcm/?utm_source=chatgpt.com)"
+  ],
+  "http_status": 200,
+  "sha256": "341ca1fa2af01dd2ad74dda1dc0e9953925bfef29be5298e8c254bc42caff189",
+  "title": "MotionLCM: Real-Time Controllable Motion Generation via Latent Consistency Model | ML Anthology",
+  "abstract": "This work introduces MotionLCM, extending controllable motion generation to a real-time level. Existing methods for spatial-temporal control in text-conditioned …",
+  "preview": "",
+  "status": "acquired_not_read"
+}

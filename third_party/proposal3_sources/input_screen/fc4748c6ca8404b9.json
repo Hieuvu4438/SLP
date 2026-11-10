@@ -1,0 +1,16 @@
+{
+  "url": "https://openaccess.thecvf.com/content/CVPR2024/html/Barquero_Seamless_Human_Motion_Composition_with_Blended_Positional_Encodings_CVPR_2024_paper.html",
+  "artifact": "third_party/proposal3_sources/input_screen/fc4748c6ca8404b9.json",
+  "read_status": "not_read",
+  "input_labels": [
+    "**FlowMDM**",
+    "H13 ★",
+    "[FlowMDM](https://openaccess.thecvf.com/content/CVPR2024/html/Barquero_Seamless_Human_Motion_Composition_with_Blended_Positional_Encodings_CVPR_2024_paper.html?utm_source=chatgpt.com)"
+  ],
+  "http_status": 200,
+  "sha256": "7103f198278149cde77e4963092c8760c5e0f9e76a1e8136349dae7a073a6318",
+  "title": "CVPR 2024 Open Access Repository",
+  "abstract": "Conditional human motion generation is an important topic with many applications in virtual reality gaming and robotics. While prior works have focused on generating motion guided by text music or scenes these typically result in isolated motions confined to short durations. Instead we address the generation of long continuous sequences guided by a series of varying textual descriptions. In this context we introduce FlowMDM the first diffusion-based model that generates seamless Human Motion Compositions (HMC) without any postprocessing or redundant denoising steps. For this we introduce the Blended Positional Encodings a technique that leverages both absolute and relative positional encodings in the denoising chain. More specifically global motion coherence is recovered at the absolute stage whereas smooth and realistic transitions are built at the relative stage. As a result we achieve state-of-the-art results in terms of accuracy realism and smoothness on the Babel and HumanML3D datasets. FlowMDM excels when trained with only a single description per motion sequence thanks to its Pose-Centric Cross-ATtention which makes it robust against varying text descriptions at inference time. Finally to address the limitations of existing HMC metrics we propose two new metrics: the Peak Jerk and the Area Under the Jerk to detect abrupt transitions.",
+  "preview": "",
+  "status": "acquired_not_read"
+}

@@ -1,0 +1,14 @@
+{
+  "url": "https://lijiaman.github.io/projects/chois/",
+  "artifact": "third_party/proposal3_sources/input_screen/c6f9eeb887130a54.json",
+  "read_status": "not_read",
+  "input_labels": [
+    "**CHOIS**"
+  ],
+  "http_status": 200,
+  "sha256": "297ab1d8123f388b74b326d158a5e5c66b1df131e92cf04a5faeab4fbf233ed0",
+  "title": "Controllable Human-Object Interaction Synthesis",
+  "abstract": "A framework that takes initial states, object waypoints as input to synthesize both human motion and object motion.",
+  "preview": "",
+  "status": "acquired_not_read"
+}

@@ -1,0 +1,11 @@
+{
+  "key": "hybridsign",
+  "url": "https://aclanthology.org/2026.acl-long.31.pdf",
+  "retrieved_at": "2026-11-06T09:18:51.401079+00:00",
+  "kind": "pdf",
+  "http_status": 200,
+  "sha256": "f296c607dcd71adae339abdf2c7f909d6c542252089d81e6273fba4c7ec00e65",
+  "parser": "PyMuPDF",
+  "chars": 64955,
+  "status": "acquired_not_read"
+}

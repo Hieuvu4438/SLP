@@ -1,0 +1,15 @@
+{
+  "url": "https://pubmed.ncbi.nlm.nih.gov/38285589/",
+  "artifact": "third_party/proposal3_sources/input_screen/21e421e70a0203ae.json",
+  "read_status": "not_read",
+  "input_labels": [
+    "**MotionDiffuse**",
+    "[MotionDiffuse](https://pubmed.ncbi.nlm.nih.gov/38285589/?utm_source=chatgpt.com)"
+  ],
+  "http_status": 203,
+  "sha256": "befba46c6a6a18513e8d9aa4d6759ec72993b274f7cf00b43793d4778b1c2383",
+  "title": "pubmed.ncbi.nlm.nih.gov",
+  "abstract": "",
+  "preview": "pubmed.ncbi.nlm.nih.gov Cookies must be enabled Enable cookies for pubmed.ncbi.nlm.nih.gov and reload this page to continue.",
+  "status": "acquired_not_read"
+}

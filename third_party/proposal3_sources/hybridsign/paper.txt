@@ -1,0 +1,775 @@
+   Hybrid Autoregressive-Diffusion Model for Real-Time Sign Language
+                              Production
+
+                  Maoxiao Ye   Xinfeng Ye  Mano Manoharan
+                             University of Auckland, New Zealand
+ {xye804@aucklanduni.ac.nz, x.ye@auckland.ac.nz, mano.manoharan@auckland.ac.nz}
+
+
+
+                 Abstract                We   propose   HybridSign,    a   hybrid
+                                                       autoregressive-diffusion model  that combines
+       Earlier Sign Language Production (SLP) mod-                                                      the strengths of both paradigms for low-latency
+       els typically relied on autoregressive decoding,                                               SLP. In  this paper, low latency refers to the     which naturally preserves temporal causality
+                                                            ability to emit the first pose frame quickly and      but suffers from error accumulation at inference
+       time. More recent diffusion-based approaches       then continue generation frame by frame, which
+      improve generation quality through iterative         is more  informative  for  interactive use than
+      denoising, yet their sequence-level refinement        reporting only the total offline generation time.
+      process introduces substantial latency. To ad-      The  autoregressive  pathway  provides  causal
+       dress this trade-off, we propose HybridSign, a                                               frame generation, while the flow-based diffusion
+      hybrid autoregressive-diffusion model for low-                                              pathway improves per-frame refinement quality.
+       latency sign language production that combines
+                              A  Multi-Scale  Pose  Representation  design      causal frame generation with flow-based dif-
+                                                     captures complementary face, body, and hand      fusion refinement. A Multi-Scale Pose Rep-
+      resentation module captures fine-grained ar-      dynamics,  and  a Confidence-Aware Causal
+       ticulator features, while a Confidence-Aware       Attention mechanism uses keypoint reliability to
+     Causal Attention mechanism leverages joint-      improve robustness. Our main contributions are
+       level confidence scores to improve robustness      summarized as follows:
+      under noisy 2D pose observations.  Experi-
+      ments on PHOENIX14T and How2Sign show                                                                    • A hybrid autoregressive-diffusion framework
+       that HybridSign consistently achieves the best                                                                for low-latency SLP that combines frame-wise       quality–efficiency trade-off among the com-
+                                                          causal generation with flow-based diffusion      pared baselines. On the How2Sign test split, it
+      reaches BLEU-1/4 scores of 30.12/6.48 and            refinement.
+   DTW of 3.89, while reducing time-to-first-
+      frame to 5.90 s and increasing throughput to            • A three-expert multi-scale pose representation
+      10.17 FPS under a 60-frame evaluation proto-          and fusion design that preserves fine-grained
+       col.                                                      articulator details while explicitly modeling
+                                                      coupled bimanual motion.
+  1  Introduction
+                                                                    • A confidence-aware causal attention mecha-
+  Sign language relies on coordinated body, hand,                                                 nism and a self-forcing training protocol for
+  and facial motion, making automatic sign lan-                                                    improving robustness under noisy 2D pose
+  guage production a challenging structured gener-                                                            observations.
+  ation problem. A practical SLP system must pre-
+  serve temporal coherence, articulate fine-grained                                         2  Related Work
+  local motion, and respond with low latency. Exist-
+  ing approaches typically favor either autoregressive   Sign language is a primary means of communica-
+  models (Saunders et al., 2020a,b; Tang et al., 2022),    tion for deaf and hard-of-hearing communities, yet
+  which model temporal dependencies well but suffer   communication barriers remain common because
+  from exposure bias during inference, or diffusion   many hearing individuals do not know sign lan-
+  models (Huang et al., 2021; Xie et al., 2024; Tang   guage. Early research therefore focused mainly
+  et al., 2025), which generate higher-quality poses   on Sign Language Recognition (SLR) (Guo et al.,
+  but incur substantial sampling cost.                2017; Hu et al., 2023a,b; Koller, 2020; Zhao et al.,
+                                          750
+Proceedings of the 64th Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers), pages 750–763
+                                July 2-7, 2026 ©2026 Association for Computational Linguistics
+
+2023) and Sign Language Translation (SLT) (Cam-    typically treat pose generation as a coordinate re-
+goz et al., 2020a; Gong et al., 2024; Guo et al.,   gression problem, guided by gloss or semantic in-
+2019). More recently, increasing attention has been    put. Subsequently, Sign-IDD (Tang et al., 2024b)
+directed toward SLP, which aims to generate sign    integrates an attribute-controllable diffusion mod-
+motion from linguistic input.                        ule that leverages skeletal direction and length at-
+                                                          tributes to constrain joint associations, thereby en-
+2.1  Sign Language Production                   abling more precise and controllable pose genera-
+Initial studies in SLP predominantly relied on rule-    tion.
+based animation techniques to translate textual in-
+                                       3  Preliminaryputs into synthetic avatar-based sign language ani-
+mations (Mazumder et al., 2021; McDonald et al.,   In this section, we introduce the fundamental con-
+2016; Segouat, 2009). These methods typically    cepts and notations used in our framework, includ-
+employed predefined templates and handcrafted    ing autoregressive modeling, diffusion-based gen-
+lookup rules to map sentences or glosses to ges-    eration, human pose representation, and attention
+tures. While these systems offered interpretable   mechanisms.
+sign animations, they suffered from high data col-
+lection costs, limited scalability, and poor general-   3.1  Autoregressive Modeling
+ization to unseen sentences or grammatical struc-                                                 Autoregressive models generate a sequence by
+tures.                                             modeling each element conditioned on its previ-
+                                              ous elements.  For a sequence of human poses
+2.2  Autoregressive models in SLP
+                                  P = {P1, P2, . . . , PT }, where Pt ∈RJ×D rep-With the advent of deep learning, more flexi-   resents the positions of J joints at time t in D-
+ble and data-driven SLP models were introduced.   dimensional space, the autoregressive factorization
+Text2Sign (Stoll et al., 2020) introduces a multi-    is:
+stage pipeline for SLP, which decomposes the over-
+all process into three sequential subtasks: text-to-        YT
+gloss1 translation, gloss-to-pose generation, and             p(P) =    p(Pt | P<t)           (1)
+pose-to-video synthesis.  While effective, such                        t=1
+pipeline designs introduced potential efficiency is-     This formulation allows for temporal modeling
+sues and error propagation between stages. To    but is prone to error accumulation due to its greedy
+address this, (Saunders et al., 2020b) presented    generation process.
+the first end-to-end autoregressive model that di-
+                                                    3.2  Diffusion Modelsrectly generates sign pose sequences from glosses.
+Further improvements followed, including a multi-   Score-based diffusion models.  Diffusion mod-
+channel adversarial model (Saunders et al., 2020a)    els learn to generate data by reversing a grad-
+and a Mixture Density Transformer (Saunders et al.,   ual noising process.  Traditional diffusion mod-
+2021) to better model the multi-modal nature of    els (Song et al., 2021, 2020; Nichol and Dhariwal,
+sign gestures.                                  2021) follow the denoising diffusion probabilistic
+                                            model (DDPM) framework (Ho et al., 2020), where
+2.3  Diffusion models in SLP                    a data sample x0 is progressively perturbed over
+Recently, diffusion models have shown strong po-  T steps using a predefined noise schedule {βt}Tt=1.                                          The forward process is defined as:tential in SLP due to their capacity for model-
+ing complex output distributions. Methods such
+as SignDiff (Fang et al., 2025), G2P-DDM (Xie            p
+                                                     q(xt    =        1          βtI)   (2)et  al., 2024), and GCDM (Tang et  al., 2025)                 | xt−1)   N(xt;    −βtxt−1,
+leverage denoising diffusion probabilistic models
+                                                   This results in:(DDPMs (Ho et al., 2020)) to generate sign pose se-
+quences by gradually refining Gaussian noise into
+meaningful joint coordinates. These approaches                                                       q(xt  x0) =       √¯αtx0, (1            (3)                                                                                             |      N(xt;          −¯αt)I)
+   1Gloss is a written representation of signs using capitalized                        Qt
+                                                                               s=1 αs.words to show the meaning and order of the signs.            where αt = 1 −βt and ¯αt =
+                                        751
+
+  The denoising model is trained to predict the
+added noise ϵ:                                          Ct = {ct,1, ct,2, . . . , ct,J}          (8)
+                    h                          These confidence scores are used later in our
+                                                 (4)                                                       attention mechanism to modulate the influence of         LDiff = Ex0,t,ϵ ∥ϵ −ϵθ(xt, t)∥2i
+                                               each joint during pose generation (Section 4.4).  However, traditional diffusion models have slow
+sampling speeds, which significantly hinder low-                                                    3.4  Attention Mechanism
+latency generation.
+                                We build upon the standard scaled dot-product at-
+Flow-based Diffusion Models.  In contrast to    tention mechanism. Given query Q ∈Rn×d, key
+DDPMs, flow-based diffusion models (Lipman  K ∈Rm×d, and value                                                      V ∈Rm×d matrices, theet al., 2024, 2023; Liu et al., 2022) learn an ex-    attention is computed as:
+plicit transformation between noise and data using
+invertible mappings. These models parameterize                                              QK⊤
+the denoising process as an ODE (or deterministic     Attention(Q, K, V ) = softmax  √ d   V  (9)flow) rather than a stochastic process. Specifically,
+                                             To preserve temporal causality in generation, wethey model a continuous-time trajectory between
+                                                apply a causal mask to prevent attention to futurethe data distribution and a base noise distribution
+                                                 time steps.using a neural network as the vector field.
+                                                         Later, in our proposed method, we extend this  The process is defined through the following
+                                                   formulation to include confidence-awareness, bias-differential equation:
+                                                    ing the attention distribution based on joint reliabil-
+                                                             ity (Section 4.4).
+    dx(t)
+      = vθ(x(t), t),   x(0)        I)    (5)     dt                ∼N(0,
+  Here, vθ is a neural network trained to match the
+score or displacement between perturbed data and
+clean data. This flow transports samples from the
+base distribution (e.g., Gaussian) at t = 0 to the
+data distribution at t = 1.
+ A popular training objective is the flow matching
+loss:
+
+             "                #
+                                            2
+    = Ex0,t,z   vθ(xt, t)    −xt       (6)  LFlow             −x0 t     2
+  where xt = (1−t)z+tx0 is a linear interpolation
+between a noise sample z ∼N(0, I) and a datasample x0.
+  This objective encourages the model to learn a
+displacement field that transports noise into data
+along straight paths, offering a deterministic alter-
+native to stochastic diffusion, thereby accelerating
+                                                       Figure 1: Overview of Hybrid Autoregressive-Diffusion
+training efficiency and sampling speed.                                                  Model.
+3.3  Human Pose Representation
+A human pose at time t is represented as a set of J   4  Method
+joints:                                           Our framework integrates a Hybrid Autoregressive-
+                                                  Diffusion model, Multi-Scale Pose Representa-
+   Pt = {pt,1, pt,2, . . . , pt,J},    pt,j ∈RD    (7)    tion and Fusion modules, and a Confidence-Aware
+  Each joint is also associated with a confidence   Causal Attention mechanism for temporally coher-
+score ct,j ∈[0, 1], denoted as:                          ent, high-quality sign language pose generation.
+                                        752
+
+                                                    the denoiser of the diffusion model by applying
+                                             an attention mask M ∈Rn×n to its self-attention                                             mechanism:
+                                     (
+                                                             0       if j                                                    Mij =        ≤i         (10)
+                                  −∞   if j > i
+                                                  so that each position i can only attend to posi-
+                                                        tions j ≤i (i.e., current and previous tokens).
+                                           To address the distribution mismatch between
+                                                      training and inference commonly observed in au-
+                                                      toregressive models, we draw on the training strat-
+                                             egy proposed in Self-Forcing (Huang et al., 2025).
+                                                    Instead of relying on ground truth during training,
+                                                our model always conditions the next step on its
+                                       own previously generated articulators. Specifically,
+                                                            at each time step t, the model produces
+
+                                                                                ˜At = fAR(˜A<t),
+                                                                 ˜A<t = {˜A1, . . . , ˜At−1},        (11)
+                                                                                ˜At = {˜Ft, ˜Ht, ˜Bt}.
+                                               where ˜Ft, ˜Ht, and ˜Bt denote the generated face,
+                                                 hands, and body components at time step t, re-
+                                                         spectively. These components are fused into a full-
+                                               frame pose and then decomposed again to serve as
+                                                    the condition for the next step. Using ˜At for the
+                                                           articulator tuple avoids overloading the confidence
+                                                     notation Ct introduced in Section 3.3.
+Figure 2: Expert module for facial features in the Multi-   Self-forcing protocol.  For each sentence, the
+Scale Pose Representation Module.                                                                    first frame is generated from the text condition
+                                                     alone. For t > 1, the three experts generate the
+4.1  Overview                                     current face, hand, and body components in par-
+                                                                allel, conditioned on the decomposed prediction
+As shown in Figure 1, given a natural language sen-
+                                             from time t−1. During training, we do not replacetence, the model generates a temporally consistent                                                             this autoregressive condition with the ground truth.
+pose sequence frame by frame. The Multi-Scale                                      As a result, training and inference share the same
+Pose Representation module first produces face,                                                   conditioning path, which substantially reduces ex-
+body, and hand articulators via dedicated Expert                                                posure bias. The holistic Soft-DTW loss (Cuturi
+modules, which are fused into a full pose frame.                                             and Blondel, 2018) is applied on the generated se-
+The fused pose is then decomposed and used as the                                             quence to provide sequence-level supervision and
+autoregressive condition for the next frame. Joint                                                        further mitigate error accumulation.
+confidence scores guide the process to improve                                           To improve training efficiency and sampling
+accuracy and realism.                                                    speed, we adopt a flow-based diffusion model (Lip-
+                                     man et al., 2024, 2023) instead of the traditional
+4.2  Hybrid Autoregressive-Diffusion Model                                        DDPM-based approach (Ho et al., 2020; Song et al.,
+To the best of our knowledge, this is the first SLP    2020). Flow matching enables learning a continu-
+model that combines autoregressive and diffusion   ous transformation path that maps the initial distri-
+paradigms for SLP, aiming to harness the advan-   bution directly to the target distribution, allowing
+tages of both.                                   sampling to be completed in fewer steps and en-
+   Specifically, we introduce causal attention into   hancing both training and sampling efficiency.
+                                        753
+
+                         Figure 3: Confidence-Aware Causal Attention Mechanism.
+
+4.3  Multi-Scale Pose Representation Module    Attention module (Figure 3), which integrates key-
+                                                     point confidence scores into the attention computa-Sign language involves coordinated motion across
+                                                        tion to downweight unreliable inputs.face, body, and hands. To capture this, we design
+                                               Given a sentence S, the model generates a posea Multi-Scale Pose Representation module (Fig-
+                                              sequence x = x(1), . . . , x(T), where each x(t)ure 2) that partitions keypoints into three anatom-                               ∈
+ical groups and processes each with a dedicated   RJ×d represents J keypoints. Each keypoint has
+expert module.                                 an associated confidence score c(t)i         1].                                                                       ∈[0,
+  Given a sequence of T frames with N keypoints
+                                            Confidence-Weighted Attention.  In causal at-per frame, each keypoint p(i)t = [x(i)t  , y(i)t  , c(i)t  ] is                                                         tention, timestep t only attends to 1, . . . , t:
+embedded as:
+
+                                                             QtK⊤s
+             s(i)t = MLP(p(i)t  ) + PE(t),       (12)                    exp   √dk                                                                     αt,s =                            (16)
+                                           Pt       QtK⊤j
+                                                                   j=1 exp   √dk  We divide the keypoints into groups G =Gface, Gbody, Ghands and extract group-specific fea-
+tures:                               We introduce a confidence bias to this formula-
+                                                           tion:
+      S(k)t = s(i)t    i        k = 1, 2, 3     (13)                         | ∈Gk,
+                                                        QtK⊤s
+  Each group sequence is processed by a scale-                                                      exp   √dk + β · ¯c(s)                                                              αt,s =                                  (17)
+specific expert      to capture intra-scale depen-         Pt       QtK⊤j               E(k)                                           j=1 exp   √dkdencies:                                           + β · ¯c(j)
+
+                                                                          1 PJ                                                                         i=1 c(s)i   is the average key-                           1   , . . . , S(k)T  ])      (14)     where ¯c(s) = J        H(k) = E(k)([S(k)
+                                                   point confidence, and β is a learnable scalar con-  We average-pool over joints and apply attention-
+                                                           trolling the strength of the bias.based fusion across scales:
+                                                   This allows the model to attend more to reliable
+                                                frames during decoding.
+   X3
+   Ht =     α(k)t  H(k)t   ,                             4.5  Training Objectives
+        k=1
+                                            (15)   Our model is optimized using a composite loss that
+          exp w⊤tanh wfH(k)t                                              combines three complementary objectives: joint ac-  α(k)t =                                                  .      P3                                        curacy, kinematic consistency, and temporal align-           j=1 exp w⊤tanh wfH(j)t
+                                                ment.
+  The fused representation Ht serves as input for                                                 Joint loss  To encourage accurate joint localiza-subsequent generation modules.
+                                                             tion, we minimize the mean absolute error between
+4.4  Confidence-Aware Causal Attention          predictions and ground truth:
+    Mechanism
+                     XJ
+To improve robustness in autoregressive pose gen-           = 1                      (18)                                                                     Ljoint    J                                                                          ∥pj −ˆpj∥1,eration, we propose a Confidence-Aware Causal                                                                     j=1
+                                        754
+
+                                   DEV                                TEST   Methods
+                           B1↑   B4↑  ROUGE↑  WER↓  DTW↓  FID↓   B1↑   B4↑  ROUGE↑  WER↓  DTW↓  FID↓
+  PT (Saunders et al., 2020b)     12.51   3.88     11.87     96.85        -          -     13.35   4.31     13.17     96.50        -          -
+  G2P-DDM (Xie et al., 2024)        -         -            -            -           -          -     16.11   7.50         -       77.26        -          -
+  GCDM (Tang et al., 2025)      22.88   7.64     23.35     82.81    11.18   39.87  22.03   7.91     23.20     81.94    11.10   49.22
+  GEN-OBT (Tang et al., 2022)   24.92   8.68     25.21     82.36        -          -     23.08   8.01     23.49     81.78        -          -
+   Sign-IDD (Tang et al., 2024b)  25.40   8.93     27.60     77.72    5.09    39.11  24.80   9.08     26.58     76.66    6.20    47.19
+   HybridSign (Ours)           26.98   9.26     28.07     75.81    4.07    38.28  25.77  10.03    27.97     75.02    4.96    45.50
+   Ground Truth                 29.77  12.13    29.60     74.17    0.00    0.00   29.76  11.93    28.98     71.94    0.00    0.00
+
+Table 1: Performance comparison on PHOENIX14T. Higher B1/B4/ROUGE indicates better back-translation
+quality, while lower WER/DTW/FID indicates better motion fidelity and temporal alignment.
+
+                                  DEV                               TEST   Methods
+                           B1↑   B4↑  ROUGE↑  WER↓  DTW↓  FID↓   B1↑   B4↑  ROUGE↑  WER↓  DTW↓  FID↓
+  PT (Saunders et al., 2020b)     14.34   4.07     8.12     96.91    10.53   55.02  14.05   4.12     8.42     96.47    10.18   54.57
+  G2P-DDM (Xie et al., 2024)    19.82   5.37    12.47     90.05    8.25    50.48  19.48   5.12    12.21     89.58    7.97    49.83
+  GCDM (Tang et al., 2025)      26.43   5.84    15.53     91.92    6.32    46.19  25.91   5.57    15.21     91.43    6.13    45.71
+  GEN-OBT (Tang et al., 2022)   28.63   6.14    16.23     91.07    7.08    48.03  27.82   5.92    15.88     90.63    6.87    47.28
+   Sign-IDD (Tang et al., 2024b)  29.12   6.27    17.01     89.95    4.76    35.03  28.90   6.06    16.21     89.98    4.86    39.02
+   HybridSign (Ours)           30.71   6.92    18.96     87.11    3.76    34.19  30.12   6.48    18.02     88.30    3.89    37.10
+   Ground Truth                 35.20   8.89    22.45     83.79    0.00    0.00   34.01   8.03    21.87     81.94    0.00    0.00
+
+Table 2: Performance comparison on How2Sign. Higher B1/B4/ROUGE indicates better back-translation quality,
+while lower WER/DTW/FID indicates better motion fidelity and temporal alignment.
+
+where pj ∈Rd and ˆpj ∈Rd denote the ground-   Adaptive total loss We balance the three terms
+truth and predicted position of joint j, and ∥· ∥1 is   with dynamic weights computed from the in-the ℓ1 norm.                                       verse exponential moving average (EMA) of each
+                                                         loss (Liu et al., 2019). Let    i  be the EMA of lossBone loss  To preserve bone orientations and kine-                                      ¯L(t)                                                               i at iteration t, and ϵ > 0 a small constant to avoidmatic consistency, we penalize orientation devia-
+                                                      division by zero. The weight for loss i istions:
+                                                              −1       XB                                                                                                         i + ϵ                 1                                                                                      ¯L(t)                                                                                                                        ,      i = 1, . . . , N,         =                                                            λ(t)i  = PN                                           2,      (19)                                                                 −1         Lbone   B                          ∥qb −ˆqb∥2                        j=1                                                                                             j + ϵ                      b=1                                                                                          ¯L(t)                                                                                                (22)
+where qb and ˆqb are the ground-truth and predicted   with N = 3 in our case. The final objective at
+orientation (e.g. unit quaternions or axis-angle vec-                                                          iteration t is
+tors) of bone b, and ∥· ∥2 denotes the Euclideannorm.  If orientations are represented as quater-                                                                                                                 soft-dtw.                                                       L(t)                                                                      total =  λ(t)1  L(t)                                                                                           joint + λ(t)2  L(t)                                                                                   bone + λ(t)3  L(t)
+nions, consider using a geodesic/angular metric as                                                (23)
+an alternative.                                     This adaptive weighting scheme emphasizes
+                                                       losses that are relatively smaller (via inverse EMA),
+Soft-DTW loss  To align predicted and ground-                                               promoting stable and balanced training across spa-
+truth pose sequences temporally, we employ differ-                                                                    tial accuracy, kinematic consistency, and temporal
+entiable Dynamic Time Warping (Soft-DTW) (Cu-                                                   alignment.
+turi and Blondel, 2018):
+       X                   5  Experiment
+               A    Lsoft-dtw = minγ                           ∥xi −yj∥22,    (20)                                                    5.1  Experimental Setup                          (i,j)∈A
+where xi and yj are per-frame pose descriptors,   Datasets. We evaluate the proposed method
+A is an alignment path, and γ > 0 controls the   on two benchmarks: PHOENIX14T (Camgoz
+smoothness of the soft minimum:                      et al., 2018) and How2Sign (Duarte et al., 2021).
+                       !     PHOENIX14T is a German Sign Language corpus
+         Xk
+                                                        that consists of 8,257 sentence-level samples and                                    e−ai/γ   .  minγ{a1, . . . , ak} = −γ log                                                2,887 unique German words. How2Sign is a large-                                 i=1
+                                            (21)    scale American Sign Language corpus designed for
+                                        755
+
+    Text      But if you come across your pile, and it hasn't done those things, then you're going to want to turn your pile.
+
+
+
+  Original
+
+
+
+
+
+    GT
+
+
+
+
+
+   Ours
+
+
+
+
+    Text      Today I am going to be showing you how to make Gourmet French Fries cooked in duck fat.
+
+
+
+  Original
+
+
+
+
+
+   GT
+
+
+
+
+
+   Ours
+
+
+Figure 4: Visualization examples of generated poses on How2Sign. We compare HybridSign with the ground-truth
+poses and the original video frames for clear evaluation.
+
+
+sign language understanding and generation tasks,   pose fed to the next step is always the model predic-
+containing more than 80 hours of multimodal data.    tion rather than the ground truth, which keeps the
+                                                  conditioning distribution consistent with the self-
+Evaluation  Metrics.  Following  the  existing    forcing design described in Section 4.2. Unless
+works (Xie et al., 2024; Tang et al., 2025, 2024b,a),   otherwise stated, the ablation results in Tables 4–6
+we used a pre-trained SLT model (Camgoz et al.,    are reported on the How2Sign test split.
+2020b) for back-translation, converting generated
+sign language pose sequences back to text, and then    5.2  Comparisons with Baseline Models
+evaluated the results with BLEU (Papineni et al.,  We conducted both qualitative and quantitative
+2002), ROUGE (Lin, 2004), WER, DTW, and FID.   analyses to evaluate the model’s performance.
+
+Training and inference protocol.  Unless oth-     Method                      Latency (s)↓  Throughput (FPS)↑
+erwise stated, all models generate sequences of    GCDM (Tang et al., 2025)         52.18             1.15
+60 frames. The three articulator experts are exe-      Sign-IDD (Tang et al., 2024b)      40.31             1.49                                                  G2P-DDM (Xie et al., 2024)       25.78             2.33
+cuted in parallel within each time step, while the      HybridSign                      5.90            10.17
+autoregressive dependency is imposed only across
+time. We report time-to-first-frame as latency, i.e.,    Table 3: Latency and throughput comparison under the
+                                                   60-frame evaluation protocol. Latency measures time-the wall-clock time required to output the first pose
+                                                              to-first-frame rather than the total sequence generation
+frame of a 60-frame sequence, because this quantity                                                          time.
+best reflects interactive usability. Throughout the
+paper, our use of the term real-time therefore refers
+to this low-latency, continuous generation setting   Quantitative Analysis.  Tables 1 and 2 present
+relative to prior diffusion-based SLP systems rather   a comparison of HybridSign and the baseline
+than to instantaneous end-to-end video synthesis.   models on PHOENIX14T and How2Sign, respec-
+During both training and inference, the previous    tively. Across both datasets, HybridSign delivers
+                                        756
+
+the strongest overall quality–efficiency trade-off      Modules  B1↑   B4↑  DTW↓  Latency (s)↓  Throughput (FPS)↑
+and achieves the best results among the compared     RNN      23.47   5.02    6.89       4.72             9.71
+                                                          CA†      25.08   5.83    5.50       5.48            10.95
+methods on the reported metrics.                     CACA‡   30.12   6.48    3.89       5.90            10.17
+  Table 3 compares latency and throughput with
+the baseline models. Here, latency refers to the    Table 5: Ablation study results of autoregressive back-
+                                                  bones on the How2Sign  test  split.  CA† denotestime required to generate the first frame of the
+                                                   Causal Attention, and CACA‡ denotes Confidence-60-frame sequence, rather than the total time to                                              Aware Causal Attention.
+produce the entire video. This reflects the model’s
+initial response speed, which is especially impor-
+tant for interactive deployment where a system        Experts               B1↑   B4↑  DTW↓  Latency (s)↓  Throughput (FPS)↑
+should start responding before the entire sequence       14 (whole(face + pose)body + lh + rh)   22.3329.17   5.146.03    7.025.72       7.697.73             7.807.76
+is synthesized. HybridSign achieves substantially       3 (face + body + hands)  30.12   6.48    3.89       5.90            10.17
+lower latency and higher throughput than the com-   Table 6: Ablation study results of different expert de-
+pared diffusion-based baselines, indicating a strong    compositions on the How2Sign test split.
+quality–efficiency trade-off for low-latency sign
+language production.
+                                                    5.3  Ablation Study  Performance differences across the two datasets
+are relatively small, which is partly attributable  We conducted three ablation studies on the genera-
+to our use of a unified 2D pose representation    tion of 60-frame sign language pose sequences to
+across both benchmarks.  This choice improves    systematically evaluate our method. Unless oth-
+cross-dataset consistency and computational effi-   erwise stated, the ablations are reported on the
+ciency, but it also removes depth cues that are im-   How2Sign test split.  Specifically, we compared
+portant for subtle hand-face interactions and for dis-   the proposed hybrid approach with a pure diffu-
+ambiguating overlapping articulators. Our Multi-   sion model and a pure autoregressive model, and
+Scale Pose Representation and Confidence-Aware    further investigated the impact of different atten-
+Causal Attention mitigate this issue by emphasiz-    tion mechanisms and varying numbers of expert
+ing reliable local structure, yet they do not fully re-   modules.
+cover missing 3D information. Notably, the DTW      Table  4 compares the performance and effi-
+score is reduced by approximately 20% thanks to    ciency of a pure diffusion model and a pure autore-
+the Soft-DTW loss (Cuturi and Blondel, 2018),   gressive model. Specifically, the diffusion model
+which improves temporal alignment and stabilizes    adopts the DiT architecture  (Peebles and Xie,
+long-horizon autoregressive generation.              2023), while the autoregressive model uses a Trans-
+                                               former decoder with teacher forcing  (Vaswani
+Qualitative Analysis.  Figure 4 illustrates repre-    et  al., 2017).  Experimental results show that,
+sentative generated poses alongside the correspond-                                                 thanks to its multi-step denoising process, the dif-
+ing ground truth, and Figure 5 further expands                                                     fusion model achieves very high generation quality
+the qualitative evaluation with more diverse ex-                                             and reaches the best scores on both the B1 and B4
+amples. Across both figures, HybridSign preserves                                                     metrics. However, its temporal consistency and
+the global motion trend, hand trajectories, and ma-                                                  generation efficiency lag significantly behind the
+jor body posture changes. The most visible devia-                                                     other models, making it unsuitable for low-latency
+tions occur in subtle bone lengths, fine wrist angles,                                                     scenarios. In contrast, the autoregressive model
+and local configurations when multiple articulators                                                  generates frame-by-frame, resulting in extremely
+become spatially close. Even in these cases, the                                           low first-frame latency, but suffers from a notice-
+generated poses remain semantically interpretable,                                                   able quality drop due to the mismatch between
+which is consistent with the strong back-translation                                                      training and inference. Our proposed approach
+scores in Tables 1 and 2.                                             combines the high-quality generation of diffusion
+  Modes                                     Latency      Throughput        models with the frame-by-frame generation of au-                    B1↑   B4↑  DTW↓            (s)↓             (FPS)↑
+  Diffusion Mode       30.25   6.55    8.06       32.89             1.83         toregressive models, achieving both strong perfor-
+  Autoregressive            Mode  26.15                                5.40    4.49                                                   5.53                                                                  10.85
+                        30.12   6.48                                                   5.90                                                                  10.17       mance and efficiency.  Hybrid Mode                                        3.89
+                                                  Table  5  presents  the  performance  differ-
+Table 4: Ablation study results of generation modes on   ences among various autoregressive implemen-
+the How2Sign test split.                                  tations,  including a  recurrent neural network
+                                        757
+
+(RNN) (Graves, 2012), a standard causal atten-   In practice, the most challenging cases arise when
+tion mechanism (Vaswani et  al., 2017), and a    the hands approach the face, when one hand oc-
+confidence-aware causal attention mechanism. The    cludes the other, or when similar 2D projections
+results indicate that the RNN-based model achieves    correspond to different 3D articulations. The qual-
+very low generation quality, but due to its com-    itative examples in Figures 4 and 5 suggest that
+putational simplicity compared to attention mech-   HybridSign is robust for dominant planar motion,
+anisms,  it exhibits excellent first-frame latency.   but still exhibits larger local deviations in precisely
+However, its strict sequential dependency limits    these ambiguous cases. We therefore view 3D-
+overall efficiency, resulting in lower throughput   aware sign production as an important next step:
+than attention-based methods.  In contrast, the   our hybrid autoregressive-diffusion framework is
+confidence-aware causal attention mechanism in-   agnostic to the pose dimensionality and can nat-
+corporates confidence scores, assigning different    urally benefit from richer 3D or multi-view pose
+attention weights based on the reliability of key-   annotations when such data become available.
+points, which leads to the best generation qual-
+ity while maintaining strong applicability in low-   6  Conclusions
+latency scenarios.
+  Table 6 presents the results of varying the num-  We introduce a hybrid autoregressive-diffusion
+ber of expert modules. The experiments include us-   framework for low-latency SLP that combines
+ing a single expert module (treating the entire pose   temporal modeling with high-quality refinement.
+as a whole), using three expert modules to handle    Multi-scale pose representation and confidence-
+the face, body, and hands separately, and using four   aware causal attention improve both accuracy and
+expert modules to handle the face, body, left hand,   robustness. Experiments on PHOENIX14T and
+and right hand individually. The single-expert set-   How2Sign validate the effectiveness of the ap-
+ting cannot capture local articulator-specific details,   proach in both generation quality and efficiency
+leading to a significant drop in generation quality.   under a low-latency evaluation setting.
+More importantly, the comparison between three
+and four experts reveals that finer decomposition   7  Limitations
+is not always better.  In sign language, the two
+hands form a strongly coupled subsystem: many   While our hybrid autoregressive-diffusion frame-
+signs rely on symmetry, anti-symmetry, relative   work achieves state-of-the-art performance for low-
+hand distance, and precise cross-hand timing. A    latency SLP, several limitations remain.   First,
+unified hands expert can model these bimanual de-   the approach depends on annotated sign language
+pendencies directly within one latent space. By    datasets, which are still limited in size and diver-
+contrast, splitting the hands into two experts forces     sity, potentially restricting generalization to less-
+the fusion stage to reconstruct cross-hand relations    represented sign languages or signing styles. Sec-
+only after separate generation, which weakens ex-   ond, although the multi-scale representation cap-
+plicit modeling of relative geometry and increases    tures hand and facial details, subtle finger artic-
+the chance of temporal misalignment.  This ex-   ulations and non-manual signals (e.g., eye gaze
+plains why the four-expert variant underperforms   and mouth gestures) are not yet fully modeled. Fi-
+the three-expert design in both quality and effi-    nally, while the current inference speed is promis-
+ciency. Therefore, three experts provide the best    ing for interactive applications, further optimiza-
+trade-off, balancing local specialization with coher-    tion may be required for deployment on resource-
+ent bimanual coordination.                          constrained devices.
+
+5.4  Discussion on 2D Pose Representation                                      Acknowledgments
+Our model adopts 2D poses as a pragmatic repre-
+sentation to keep preprocessing consistent across   Manoharan and Ye were supported in part by the
+PHOENIX14T and How2Sign and to avoid in-   Smart Ideas (UOA2493, Developing a Reo Turi In-
+troducing dataset-specific 3D supervision require-    terpreter for Ngati Turi/Sign Language Interpreter
+ments.  This design is effective for large-scale   Using Weighted Multimodal Network for Mahuta
+benchmarking, but it also exposes a clear limitation:    ki Tai) funded by the MBIE, New Zealand.
+depth ambiguity is collapsed in the 2D projection.
+                                        758
+
+References                                   Hezhen Hu, Weichao Zhao, Wengang Zhou, and
+                                                  Houqiang Li. 2023b. Signbert+: Hand-model-aware
+Necati Cihan Camgoz, Simon Hadfield, Oscar Koller,                                                             self-supervised pre-training for sign language under-
+  Hermann Ney, and Richard Bowden. 2018. Neu-                                                              standing. IEEE Transactions on Pattern Analysis and
+   ral sign language translation. In Proceedings of the                                                  Machine Intelligence, 45(9):11221–11239.
+  IEEE Conference on Computer Vision and Pattern
+  Recognition (CVPR).                                             Wencan Huang, Wenwen Pan, Zhou Zhao, and Qi Tian.
+                                                      2021. Towards fast and high-quality sign languageNecati Cihan Camgoz, Oscar Koller, Simon Hadfield,
+                                                          production. Proceedings of the 29th ACM Interna-  and Richard Bowden. 2020a. Multi-channel trans-
+                                                                tional Conference on Multimedia.  formers for multi-articulatory sign language transla-
+   tion. Preprint, arXiv:2009.00299.                                         Xun Huang, Zhengqi Li, Guande He, Mingyuan Zhou,
+                                                    and Eli Shechtman. 2025. Self forcing: Bridging theNecati Cihan Camgoz, Oscar Koller, Simon Hadfield,
+                                                                       train-test gap in autoregressive video diffusion. arXiv  and Richard Bowden. 2020b. Sign language trans-
+                                                             preprint arXiv:2506.08009.   formers: Joint end-to-end sign language recognition
+  and translation. Preprint, arXiv:2003.13830.                                                  Oscar Koller. 2020.  Quantitative survey of the state
+Z. Cao, G. Hidalgo Martinez, T. Simon, S. Wei, and Y. A.      of the art in sign language recognition.  Preprint,
+  Sheikh. 2019.  Openpose: Realtime multi-person      arXiv:2008.09918.
+  2d pose estimation using part affinity fields. IEEE
+                                              Chin-Yew Lin. 2004. ROUGE: A package for auto-  Transactions on Pattern Analysis and Machine Intel-
+                                                       matic evaluation of summaries. In Text Summariza-   ligence.
+                                                              tion Branches Out, pages 74–81, Barcelona, Spain.
+Marco Cuturi and Mathieu Blondel. 2018. Soft-dtw: a      Association for Computational Linguistics.
+   differentiable loss function for time-series. Preprint,
+  arXiv:1703.01541.                               Yaron Lipman, Ricky T. Q. Chen, Heli Ben-Hamu,
+                                                    Maximilian Nickel, and Matt Le. 2023.  Flow
+Amanda Duarte, Shruti Palaskar, Lucas Ventura, Deepti      matching  for  generative  modeling.    Preprint,
+  Ghadiyaram, Kenneth DeHaan, Florian Metze, Jordi      arXiv:2210.02747.
+   Torres, and Xavier Giro-i Nieto. 2021. How2Sign:
+ A Large-scale Multimodal Dataset for Continuous    Yaron Lipman, Marton Havasi, Peter Holderrieth, Neta
+  American Sign Language. In Conference on Com-      Shaul, Matt Le, Brian Karrer, Ricky T. Q. Chen,
+   puter Vision and Pattern Recognition (CVPR).          David Lopez-Paz, Heli Ben-Hamu, and Itai Gat.
+                                                      2024.  Flow matching guide and code.  Preprint,
+Sen Fang, Chunyu Sui, Yanghao Zhou, Xuedong Zhang,      arXiv:2412.06264.
+  Hongbin Zhong, Yapeng Tian, and Chen Chen. 2025.
+   Signdiff: Diffusion model for american sign language    Shikun Liu, Edward Johns, and Andrew J. Davison.
+   production. Preprint, arXiv:2308.16082.                2019. End-to-end multi-task learning with attention.
+                                                              Preprint, arXiv:1803.10704.
+Jia Gong, Lin Geng Foo, Yixuan He, Hossein Rahmani,
+  and Jun Liu. 2024. Llms are good sign language   Xingchao  Liu, Chengyue Gong,  and Qiang  Liu.
+   translators. Preprint, arXiv:2404.00925.                2022.  Flow straight and fast: Learning to gener-
+                                                              ate and transfer data with rectified flow.  Preprint,Alex Graves. 2012. Sequence transduction with recur-                                                        arXiv:2209.03003.   rent neural networks. Preprint, arXiv:1211.3711.
+                                                        Seshadri Mazumder, Rudrabha Mukhopadhyay, Vinay P.Dan Guo, Shengeng Tang, and Meng Wang. 2019. Con-
+                                                    Namboodiri, and C. V. Jawahar. 2021. Translating   nectionist temporal modeling of video and language:
+                                                             sign language videos to talking faces. In Proceedings  a joint model for translation and sign labeling. In
+                                                                 of the Twelfth Indian Conference on Computer Vision,  Proceedings of the Twenty-Eighth International Joint
+                                                     Graphics and Image Processing (ICVGIP).  Conference on Artificial Intelligence (IJCAI), pages
+  751–757.                                                 John McDonald, Rosalee  J. Wolfe, Jerry Schnepp,
+Dan Guo, Wengang Zhou, Houqiang Li, and Meng       Julie Hochgesang, Diana Gorman Jamrozik, Marie
+  Wang. 2017. Online early-late fusion based on adap-     Stumbo, Larwan Berke, Melissa Bialek, and Farah
+   tive hmm for sign language recognition. ACM Trans-     Thomas. 2016. An automated technique for real-
+   actions on Multimedia Computing, Communications,      time production of lifelike animations of american
+  and Applications, 14(1):1–18.                            sign language. Universal Access in the Information
+                                                               Society, 15(4):551–566.
+Jonathan Ho, Ajay Jain, and Pieter Abbeel. 2020. De-
+   noising diffusion probabilistic models.  Preprint,   Alex Nichol and Prafulla Dhariwal. 2021. Improved
+  arXiv:2006.11239.                                    denoising diffusion probabilistic models. Preprint,
+                                                        arXiv:2102.09672.
+Hezhen Hu, Junfu Pu, Wengang Zhou, and Houqiang Li.
+  2023a. Collaborative multilingual continuous sign    Kishore Papineni, Salim Roukos, Todd Ward, and Wei-
+  language recognition: A unified framework. IEEE       Jing Zhu. 2002. Bleu: a method for automatic evalu-
+  Transactions on Multimedia, 25:7559–7570.              ation of machine translation. In Proceedings of the
+                                        759
+
+  40th Annual Meeting of the Association for Compu-   Shengeng Tang, Feng Xue, Jingjing Wu, Shuo Wang,
+   tational Linguistics, pages 311–318, Philadelphia,     and Richang Hong. 2025. Gloss-driven conditional
+   Pennsylvania, USA. Association for Computational       diffusion models for sign language production. ACM
+   Linguistics.                                             Trans. Multimedia Comput. Commun. Appl., 21(4).
+
+William Peebles and Saining Xie. 2023.  Scalable    Ashish Vaswani, Noam Shazeer, Niki Parmar, Jakob
+   diffusion models with  transformers.    Preprint,      Uszkoreit, Llion Jones, Aidan N. Gomez, Lukasz
+  arXiv:2212.09748.                                       Kaiser, and Illia Polosukhin. 2017. Attention is all
+                                                 you need. Preprint, arXiv:1706.03762.
+Ben Saunders, Necati Cihan Camgoz, and Richard
+                                               Pan Xie, Qipeng Zhang, Peng Taiying, Hao Tang, Yao  Bowden. 2020a.   Adversarial training for multi-
+                                                   Du, and Zexian Li. 2024. G2p-ddm: Generating sign  channel  sign  language  production.     Preprint,
+                                                       pose sequence from gloss sequence with discrete dif-  arXiv:2008.12405.
+                                                          fusion model. Proceedings of the AAAI Conference
+                                                 on Artificial Intelligence, 38(6).Ben Saunders, Necati Cihan Camgoz, and Richard
+  Bowden. 2020b.    Progressive transformers  for                                                Weichao Zhao, Hezhen Hu, Wengang Zhou, Jiaxin Shi,
+  end-to-end sign language production.   Preprint,                                                  and Houqiang Li. 2023. Best: Bert pre-training for
+  arXiv:2004.14874.                                                             sign language recognition with coupling tokenization.
+                                                           In Proceedings of the AAAI Conference on Artificial
+Ben Saunders, Necati Cihan Camgoz, and Richard       Intelligence, volume 37, pages 3597–3605.
+  Bowden. 2021.   Continuous 3d multi-channel
+   sign language production via progressive  trans-  A  Additional Implementation and  formers and mixture density networks.  Preprint,
+  arXiv:2103.06982.                               Evaluation Details
+                                               This appendix provides supplementary details onJérémie Segouat. 2009. A study of sign language coar-
+   ticulation. ACM Sigaccess Accessibility and Comput-   data preprocessing, training configuration, evalua-
+   ing, 93.                                              tion protocols, and additional qualitative results.
+
+Jiaming Song, Chenlin Meng, and Stefano Ermon.  B  Datasets and Preprocessing
+  2020. Denoising diffusion implicit models. Preprint,
+  arXiv:2010.02502.                               Datasets. We  use two benchmark  datasets:
+                                   PHOENIX14T  (Camgoz  et   al.,  2018)  and
+Yang  Song,  Jascha  Sohl-Dickstein,  Diederik  P.                                        How2Sign (Duarte et al., 2021). We follow the  Kingma, Abhishek Kumar, Stefano Ermon, and
+  Ben Poole. 2021. Score-based generative modeling    official train/validation/test splits for both datasets.
+  through stochastic differential equations. Preprint,
+  arXiv:2011.13456.                                                                Dataset        Language  Gloss annotations  Continuous signing   Native pose keypoints
+                                                                       PHOENIX14T   German         Yes               Yes             No
+                                                                                 How2Sign        English         Yes               Yes                Yes
+Stephanie Stoll, Necati Camgoz, Simon Hadfield, and
+  Richard Bowden. 2020.  Text2sign: Towards sign    Table 7: Overview of the datasets used in this work.
+  language production using neural machine translation    “Native pose keypoints” indicates whether pose annota-
+  and generative adversarial networks. International                                                             tions are provided by the original dataset release.
+  Journal of Computer Vision.
+
+Shengeng Tang, Jiayi He, Lechao Cheng, Jingjing                                            Pose    extraction   and    representation.  Wu, Dan Guo, and Richang Hong. 2024a.  Dis-
+                                   PHOENIX14T does not provide pose sequences,   crete to continuous: Generating smooth transition
+  poses from sign language observation.  Preprint,   whereas How2Sign includes pre-extracted 2D
+  arXiv:2411.16810.                             pose data. To keep the representation consistent
+                                                   across datasets, we extract 2D keypoints from
+Shengeng Tang, Jiayi He, Dan Guo, Yanyan Wei, Feng                                     PHOENIX14T video frames using OpenPose (Cao   Li, and Richang Hong. 2024b. Sign-idd: Iconicity
+   disentangled diffusion for sign language production.    et al., 2019). The final pose representation contains
+   Preprint, arXiv:2412.13609.                    137 keypoints per frame, covering the body, hands,
+                                            and face. Each keypoint is represented by its 2D
+Shengeng Tang, Richang Hong, Dan Guo, and Meng    coordinates together with a confidence score.
+  Wang. 2022. Gloss semantic-enhanced network with
+   online back-translation for sign language production.   Normalization.  To improve training stability, we
+   In Proceedings of the 30th ACM International Con-                                                 normalize the x and y coordinates of all keypoints   ference on Multimedia, MM ’22, page 5630–5638,
+  New York, NY, USA. Association for Computing    separately. Confidence scores are already bounded
+  Machinery.                                         in [0, 1] and are therefore kept unchanged. These
+                                        760
+
+confidence values are later used by the Confidence-   number of reference words. Lower WER indicates
+Aware Causal Attention module described in Sec-    better preservation of the input semantics.
+tion 4.4.
+                                             D.2  Motion-based Metrics
+C  Training Details and Hyperparameters   DTW.  Dynamic Time Warping (DTW) measures
+                                                     the alignment cost between two motion sequencesHardware and runtime.  Training is performed
+                                                          that may differ in temporal dynamics:separately on the two datasets using a single
+80GB NVIDIA A100 GPU. On PHOENIX14T,        X
+                                  DTW(X, Y ) = min                     (25)the model converges in approximately 40 hours;                       π       ∥xi −yj∥2,
+on How2Sign, training requires approximately 45                                 (i,j)∈π
+hours under the same hardware setup.                                           where π denotes a valid warping path. In our set-
+                                                           ting, DTW is computed over pose trajectories toOptimization setup.  Unless otherwise stated in
+                                                      evaluate structural and temporal similarity betweenthe main text, all experiments use the hyperparam-
+                                                 generated and ground-truth motion. Lower DTWeters listed in Table 8. The default configuration
+                                                       indicates better temporal alignment.uses three experts and bfloat16 precision, matching
+the setting reported for the main results.                                             FID.  Fréchet Inception Distance (FID) evaluates
+                                                    the distributional similarity between real and gen-D  Evaluation Metrics                                                     erated samples in a feature space:
+Standard text-generation metrics cannot be applied
+directly to sign pose sequences. Following prior   FID = ∥µr−µg∥22+Tr Σr + Σg −2(ΣrΣg)1/2   ,
+work, we therefore use a pre-trained sign language                                                (26)
+translation model for back-translation, convert the   where (µr, Σr) and (µg, Σg) are the means and
+generated pose sequence back into text, and re-   covariance matrices of real and generated samples,
+port both text-based and motion-based metrics. For    respectively. In our experiments, FID is adapted to
+efficiency reporting, latency denotes time-to-first-   pose-based sign generation by extracting features
+frame and throughput denotes the average gener-   from keypoint sequences. Lower FID indicates
+ated frames per second under the same 60-frame   more realistic generation.
+protocol used in the main paper.
+                              E  Additional Qualitative Examples
+D.1  Text-based Metrics
+                                                 Figure 5 provides additional qualitative examples
+BLEU.  BLEU (Papineni et al., 2002) measures                                            on How2Sign. Compared with Figure 4 in the main
+n-gram precision between the back-translated sen-
+                                                    paper, these examples cover more diverse motion
+tence and the reference sentence. We report BLEU-
+                                                        patterns and lexical content, further illustrating that
+1 and BLEU-4 to capture unigram and 4-gram over-
+                                             HybridSign preserves temporally coherent hand–
+lap, respectively. Higher BLEU indicates better
+                                           body coordination while staying close to the refer-
+semantic agreement with the source sentence.
+                                               ence pose sequence.
+ROUGE-L. ROUGE (Lin, 2004)  is a recall-
+oriented metric. We use ROUGE-L, which is based
+on the longest common subsequence between the
+back-translated sentence and the reference. Higher
+ROUGE-L indicates stronger overlap in sentence
+content and ordering.
+
+WER.  Word Error Rate (WER) measures the dis-
+crepancy between the back-translated sentence and
+the original reference:
+
+                S + D + I
+       WER =                  ,          (24)
+              N
+where S, D, and I denote the numbers of sub-
+stitutions, deletions, and insertions, and N is the
+                                        761
+
+           So you would divide that damage evenly among the targets, but you also have to pay one additional colorless Mana for each additional
+    Text
+              target.
+
+
+
+  Original
+
+
+
+
+
+   GT
+
+
+
+
+
+   Ours
+
+
+
+
+    Text      But, you've also got to realize that that X divided evenly, rounded down amongst the number of targets.
+
+
+
+  Original
+
+
+
+
+
+   GT
+
+
+
+
+
+   Ours
+
+
+
+
+                        If you were to have a sidewall like this it might just shave off a nice top layer of it but with a serrated edge you can cut right into it and do
+    Text              better turns.
+
+
+
+  Original
+
+
+
+
+
+   GT
+
+
+
+
+   Ours
+
+
+
+
+     Text    So when you get clay on your tool, any tool for that matter, clean it off, set it aside.
+
+
+
+   Original
+
+
+
+
+
+   GT
+
+
+
+
+    Ours
+
+
+Figure 5: Additional qualitative examples on How2Sign. Compared with Figure 4, these samples cover more
+diverse motion patterns and lexical contents, showing that HybridSign remains close to the reference sequence while
+preserving temporally coherent hand–body coordination.762
+
+Hyperparameter      PHOENIX14T    How2Sign
+Seed                     42            42
+Optimizer           AdamW      AdamW
+Learning rate                1e-4            1e-4
+Weight decay                0.01            0.01
+Scheduler             ExponentialLR  ExponentialLR
+Decay factor                  0.5              0.1
+Batch size                  8             16
+Epochs                    5             3
+Dropout                      0.1              0.2
+Embedding dimension       512           768
+Numerical precision        bfloat16          bfloat16
+Number of experts           3             3
+
+                Table 8: Training hyperparameters used in our experiments.
+
+
+
+
+
+                                  763

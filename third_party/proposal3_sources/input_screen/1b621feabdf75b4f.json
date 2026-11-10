@@ -1,0 +1,14 @@
+{
+  "url": "https://arxiv.org/abs/2603.10446",
+  "artifact": "third_party/proposal3_sources/input_screen/1b621feabdf75b4f.json",
+  "read_status": "not_read",
+  "input_labels": [
+    "S16 ★"
+  ],
+  "http_status": 200,
+  "sha256": "20184a815f1656b9c85c87a5b6170c671d74ad37fef0cfc4357f02a1eba929c9",
+  "title": "[2603.10446] SignSparK: Efficient Multilingual Sign Language Production via Sparse Keyframe Learning",
+  "abstract": "Abstract: Sign Language Production (SLP) faces a fundamental trade-off: direct text-to-pose models suffer from regression-to-the-mean effects, while dictionary-retrieval methods produce disjointed transitions. To resolve this, we propose a novel training paradigm that leverages sparse keyframes to capture the underlying kinematic distribution of human signing. By generating dense motion from discrete anchors, our approach mitigates regression-to-the-mean while ensuring fluid articulation. To achieve this at scale, we introduce FAST, an ultra-efficient sign segmentation model that automatically mines precise temporal boundaries. We then present SignSparK, a Conditional Flow Matching (CFM) framework that utilizes these temporal anchors to synthesize 3D signing sequences. This keyframe-driven formulation also unlocks Keyframe-to-Pose (KF2P) generation, making precise spatiotemporal editing of signing sequences possible. Furthermore, SignSparK scales across four distinct sign languages, constituting the largest multilingual SLP framework to date, and integrates 3D Gaussian Splatting for photorealistic rendering. Extensive evaluations demonstrate that SignSparK achieves state-of-the-art across diverse SLP tasks and multilingual benchmarks. Our code is available at this https URL .",
+  "preview": "",
+  "status": "acquired_not_read"
+}

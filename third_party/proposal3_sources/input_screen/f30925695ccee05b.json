@@ -1,0 +1,15 @@
+{
+  "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Fan_Open_the_Motion_Door_Atomic_Motion_Decomposition_and_Recomposition_for_CVPR_2026_paper.html",
+  "artifact": "third_party/proposal3_sources/input_screen/f30925695ccee05b.json",
+  "read_status": "not_read",
+  "input_labels": [
+    "**Open the Motion Door / Atomic Motion**",
+    "[Open the Motion Door](https://openaccess.thecvf.com/content/CVPR2026/html/Fan_Open_the_Motion_Door_Atomic_Motion_Decomposition_and_Recomposition_for_CVPR_2026_paper.html?utm_source=chatgpt.com)"
+  ],
+  "http_status": 200,
+  "sha256": "f0e4440eda042488e1e24f8ec4bc97287bdb52f6615ab40f89fd5244aa6a7420",
+  "title": "CVPR 2026 Open Access Repository",
+  "abstract": "Text-to-motion generation is a fundamental task in computer vision, aiming to synthesize 3D human motion sequences from natural language descriptions. However, due to the limited scale and diversity of existing datasets, models trained to directly map raw text to motion often struggle to generalize to out-of-domain textual inputs. We observe that although high-level motion semantics vary widely, many motions share a common set of underlying atomic motions--that is, simple, reusable body-part movements. Building on this insight, we introduce an **Atomic Motion Decomposition and Recomposition** framework for open-vocabulary text-to-motion generation. Our approach consists of two key components: a **Textual Decomposition** module that parses out-of-domain descriptions into atomic motion units, and an **Atomic Recomposition** module that integrates these units to produce the final motion sequence. Our model achieves a competitive performance on the in-domain HumanML3D dataset, and extensive experiments on two out-of-domain datasets (IDEA400 and Mixamo) demonstrate that our method substantially outperforms state-of-the-art approaches in open-vocabulary motion generation.",
+  "preview": "",
+  "status": "acquired_not_read"
+}

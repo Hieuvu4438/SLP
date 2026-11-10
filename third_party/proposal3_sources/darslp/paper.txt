@@ -1,0 +1,226 @@
+Disentangle and Regularize: Sign Language Production with Articulator-Based Disentanglement and Channel-Aware Regularization
+
+In this work, we propose DARSLP, a simple gloss-free, transformer-based sign language production (SLP) framework that directly maps spoken-language text to sign pose sequences. We first train a pose autoencoder that encodes sign poses into a compact latent space using an articulator-based disentanglement strategy, where features corresponding to the face, right hand, left hand, and body are modeled separately to promote structured and interpretable representation learning. Next, a non-autoregressive transformer decoder is trained to predict these latent representations from word-level text embeddings of the input sentence. To guide this process, we apply channel-aware regularization by aligning predicted latent distributions with priors extracted from the ground-truth encodings using a KL divergence loss. The contribution of each channel to the loss is weighted according to its associated articulator region, enabling the model to account for the relative importance of different articulators during training. Our approach does not rely on gloss supervision or pretrained models, and achieves state-of-the-art results on the PHOENIX14T and CSL-Daily datasets.
+
+
+
+1 Introduction
+
+Sign language is the primary mode of communication for Deaf and Hard-of-Hearing (DHH) individuals, involving a rich interplay of manual (hand movements) and non-manual (facial expressions, body posture) features. With the rise of deep learning, sign language production (SLP)—the task of generating sign sequences from spoken text—has gained increasing attention. However, producing natural and continuous sign articulation remains challenging due to its complex spatial-temporal dynamics.
+
+Recent efforts focus on generating skeletal pose sequences as an intermediate representation, which offers a structured and efficient way to model articulation, separating motion synthesis from video rendering [ 19 ] . Yet, generating natural and expressive sign sequences remains an open challenge. Many models regress to mean poses, losing detail in hand and finger movements [ 30 , 17 ] , resulting in overly simplified gestures. Autoregressive models often suffer from error accumulation, leading to unnatural transitions [ 20 , 21 ] . To address these issues, techniques such as adversarial training, progressive transformers, and mixture density networks (MDNs) have been explored [ 22 ] , but still fall short in producing smooth and expressive hand articulations.
+
+A significant research direction in SLP is reducing reliance on gloss annotations, intermediate labels between spoken and sign language. Although gloss-based models achieve strong performance, gloss annotation is costly, time-consuming, and often inconsistent across datasets, limiting scalability. To address this, gloss-free SLP has gained attention, targeting direct text-to-sign generation without gloss supervision [ 11 , 30 , 35 ] . While promising, these models still face challenges in generating smooth transitions and expressive signing.
+
+We propose DARSLP, a simple yet effective transformer-based SLP framework that directly translates spoken language text into continuous sign pose sequences without intermediate gloss annotations. The contribution of our work to the SLP domain can be summarized as follows:
+
+We introduce an articulator-based disentanglement mechanism implemented via a pose autoencoder, where features corresponding to the face, right hand, left hand, and body are explicitly separated into distinct channel groups. This structured representation enables selective weighting of articulators (e.g., emphasizing hand movements) and facilitates the estimation of articulator-specific latent statistics. To the best of our knowledge, this straightforward yet effective inductive bias has not been previously explored in the context of SLP.
+
+We propose a channel-aware regularization strategy for training the non-autoregressive transformer by aligning predicted latent distributions with articulator-based channel priors derived from the autoencoder. In contrast to common variational methods that impose prior constraints, our approach directly computes these priors from observed channel distributions. Empirical results show that this regularization improves motion diversity and realism, and effectively reduces the regression-to-the-mean problem in generated pose sequences.
+
+Unlike most prior methods that depend on gloss supervision, our model eliminates the need for gloss annotations while surpassing both gloss-based and gloss-free baselines in back-translation performance. It achieved third place in the CVPR 2025 SLRTP Challenge [ 31 ] , demonstrating state-of-the-art performance in sign pose generation.
+
+2 Related Work
+
+Sign language production (SLP) aims to generate sign sequences from spoken language text. Recently, studies have focused on producing skeletal pose sequences instead of full video synthesis, as this intermediate representation is more practical and generalizable [ 19 ] . Generating photorealistic videos from these poses remains a separate challenge. One of the primary challenges in continuous SLP, akin to continuous sign language translation (SLT), stems from the lack of one-to-one alignment between spoken language and sign language sequences. Realistic generation requires more than concatenating isolated signs; it demands smooth transitions and semantic coherence throughout the sequence. However, many SLP models still struggle to produce natural inter-sign dynamics.
+
+2.1 Autoregressive Approaches
+
+A major unsolved problem in SLP research is regression to the mean, a phenomenon in which generated sign sequences converge to average motion patterns, resulting in unnatural and overly simplified gestures [ 30 ] , [ 17 ] . This leads to reduced expressiveness and semantic drift, lowering communication quality.
+
+The field of SLP has seen significant advancements since the pioneering work of Stoll et al. (2018), who used neural machine translation (NMT) to map text to glosses, but failed to produce continuous, natural sign sequences [ 23 ] . Later, Saunders et al . (2020a) introduced a transformer-based SLP model, but its autoregressive decoding amplified the regression-to-the-mean effect [ 20 ] . To mitigate this, Saunders et al . (2020b) incorporated adversarial training with a multi-channel sign production framework. Although this approach systematically addressed the regression-to-the-mean problem for the first time, it did not fully resolve it [ 21 ] .
+
+Later, methods such as progressive transformers and mixture density networks (MDN) have been explored, combined with data augmentation and adversarial training techniques [ 22 ] . Despite these efforts, user evaluations indicate that the regression-to-the-mean problem persists. While MDN attempt to model the natural variation in sign sequences, it fails to capture fine-grained finger movements.
+
+Our framework departs from autoregressive decoding entirely, eliminating sequential dependencies that amplify over-smoothing. By combining a non-autoregressive structure, which substantially reduces inference time [ 8 , 10 , 9 ] , with a disentangled latent space, our approach addresses the regression-to-the-mean problem while producing expressive and natural motion without the need for adversarial objectives or complex multi-stage designs.
+
+2.2 Non-Autoregressive Approaches
+
+To address limitations in autoregressive decoding, Hwang et al . (2021) proposed NSLP-G, which used a Variational Autoencoder (VAE) to generate sign poses in a Gaussian latent space [ 9 ] . However, it struggled with sequence length prediction and failed to capture fine-grained finger movements. A follow-up model introduced length regulators and replaced MSE with BCE loss, improving low-variance detail modeling [ 10 ] . Still, hand articulation remained poorly encoded, as VAEs tended to emphasize larger body motions and overlook fine manual features.
+
+Ma et al . (2024) tackled the regression-to-the-mean problem by introducing a dual-decoder transformer, separating manual and full-body decoding [ 17 ] . Although this improved hand modeling, the approach suffered from high computational cost and sensitivity to data quality, limiting its scalability and generalization.
+
+Our work advances non-autoregressive SLP by introducing a semantically structured latent space that explicitly disentangles hands, face, and body. This factorization allows for finer modeling of manual and non-manual features while maintaining computational efficiency. Furthermore, our length prediction mechanism provides robust temporal control without instability.
+
+2.3 Gloss-Free Approaches
+
+While gloss-based SLP models yield high accuracy, gloss annotation is costly and time-consuming, limiting scalability. To address this, gloss-free approaches aim to translate spoken language directly into sign language sequences without gloss labels. Hwang et al . (2024) proposed SignVQNet, converting pose sequences into discrete tokens within an autoregressive structure [ 11 ] . Walsh et al . (2024) also leveraged vector quantization (VQ) to reduce gloss dependency [ 30 , 29 ] . However, VQ-based models often produce unnatural transitions and lose fine-grained motion detail. Yin et al . (2024) addressed this with Dynamic VQ (DVQ-VAE), which adapts encoding length to information density [ 35 ] , but challenges with smooth transitions and autoregressive error accumulation persist.
+
+Alternative symbolic systems like HamNoSys [ 7 ] and SignWriting [ 24 ] aim to replace glosses by encoding articulatory or visual features. These have shown promise in tasks like Text-to-HamNoSys (T2H) [ 28 ] and SignWriting-based synthesis [ 1 , 14 ] , but still require manual annotation and lack scalability.
+
+In contrast, our work adopts a fully gloss-free approach that learns to generate continuous sign poses directly from spoken text, enabling end-to-end, scalable SLP without intermediate linguistic supervision.
+
+2.4 Latent Space Modeling and Disentanglement
+
+Beyond discrete tokenization, several studies have explored continuous latent space modeling using autoencoders or VAEs [ 9 , 10 ] . These methods aim to learn compact embeddings capturing both manual and non-manual features. However, they typically treat pose data holistically, leading to inefficient encoding of fine-grained articulations, particularly for hands and fingers, while favoring global motion patterns.
+
+Outside the SLP domain, autoencoders have demonstrated success in learning structured representations across modalities, supporting tasks such as sequence modeling [ 4 ] , biomedical analysis [ 32 ] , and latent variable modeling [ 15 ] . In multimodal settings, disentangling representations is key to modeling distinct signal sources while preserving coherence.
+
+Motivated by this, we design a structurally disentangled autoencoder tailored to the multimodal nature of sign language, separating latent representations for hands, face, and body. Unlike prior SLP works that rely on holistic or discrete representations, our method explicitly captures the dynamics of each articulator group.
+
+Additionally, we leverage KL divergence as a targeted regularization signal over these disentangled channels. While widely used in VAEs for latent control [ 2 ] , KL loss remains underexplored in SLP. We apply it outside a variational setting to enforce structural coherence across regions, improving representation smoothness without sacrificing detail.
+
+3 Methodology
+
+3.1 Pose Autoencoder
+
+To model the multimodal structure of sign language articulation, we design a structurally disentangled pose autoencoder that encodes and reconstructs sign poses within a compact latent space. Rather than aiming to achieve disentanglement in the strict unsupervised sense, we explicitly incorporated an architectural design that encourages the model to learn semantically organized representations. This design introduces a multi-modal latent factorization that aligns well with the physical structure and functional roles of each body part in sign language expression.
+
+Our model processes 3D skeleton sequences comprising 8 upper body and 21 left hand, 21 right hand joints, along with 128 facial keypoints, each represented by (x, y, z) coordinates. As shown in Figure 1 , the encoder is anatomically partitioned into four regions, upper body, right hand, left hand, and face, each handled by a dedicated linear encoder. The pose autoencoder takes these 3D joint coordinates arranged in a fixed, anatomically consistent order defined by the dataset’s skeleton topology (e.g., Mediapipe format).
+
+Based on ablation results (Section 4.2 ), we fix the total latent space to 80 dimensions, assigning 16 to the face and distributing the remaining 64 across other regions in proportion to their joint counts; Upper body (8 joints): mapped from 8 × 3 to 8 dimensions, Right/Left hand (21 joints each): mapped from 21 × 3 to 28 dimensions per hand, Face (128 joints): mapped from 128 × 3 to 16 dimensions. Although the face has high raw input dimensionality, many of its keypoints—particularly in the cheeks, jawline, and forehead—exhibit correlated motion. This redundancy allows the encoder to use fewer latent dimensions for the face without significantly affecting reconstruction quality.
+
+To accommodate the characteristics of each dataset, we use slightly different autoencoder architectures. For PHOENIX14T [ 3 ] , each articulator is encoded using a single linear projection layer, allowing direct mapping from raw 3D joint inputs to their respective latent representations. This simple and efficient structure is sufficient for PHOENIX14T, which has a more constrained linguistic domain and relatively lower articulatory variability. The decoder modules also consist of single linear layers per region, mirroring the encoder structure. For CSL-Daily [ 36 ] , which involves broader linguistic context and higher articulatory variability, we introduce an additional projection layer with nonlinearity for Right/Left hand and face regions. Specifically, each region is encoded using a two-layer MLP comprising a linear projection, a PReLU activation, and a second linear layer. This increased representational capacity helps stabilize the latent space, particularly for hand and face regions where variability is highest. The intermediate hidden dimension is set to 40 for both hands and 96 for the face. Decoder modules follow the same structure, using symmetric two-layer MLPs with matching intermediate widths.
+
+3.2 Transformer Model
+
+Following the latent pose representation learned by the pose autoencoder, the second part of our framework generates sign pose embeddings conditioned on spoken language text. We utilize a Transformer-based architecture that maps sentence-level text to the latent space learned by the pose autoencoder.
+
+Our model, as illustrated in Figure 2 , uses a Transformer encoder-decoder architecture. Input text to the encoder is represented by 768-dimensional BERT-based word embeddings, which are linearly projected to 512-dimension to match the model’s internal dimensions. The encoder consists of 3 layers with 4 attention heads and 1024-dimensional feed-forward networks, along with positional encoding to retain temporal ordering of the text sequence.
+
+The decoder follows a non-autoregressive structure to reduce error accumulation and predicts 80-dimensional latent vectors corresponding to the autoencoder’s space. It includes 6 layers with 8 attention heads and the same 1024-dimensional feed-forward size. Temporal dynamics are initialized using learned time queries derived from a fixed stationary reference pose, where both hands rest downward as when signers are not performing a sign. This pose is projected into the decoder space and expanded across all time steps to provide a consistent initialization for sequence generation.
+
+Ground truth 80-dimensional pose encodings are extracted using the pretrained autoencoder and serve as structured supervision for transformer training. These encodings provide structurally disentangled representations of manual (hands) and non-manual (face, upper body) articulators, guiding the model in learning mappings from text to pose. To ensure alignment with the autoencoder’s latent space, we incorporate L1 and KL-based regularization during training, encouraging accurate and coherent pose generation.
+
+We also incorporate a length predictor to dynamically adjust the length of the generated sign sequences based on the given input sentences. First, a temporal mean pooling is applied, averaging across the temporal dimension while ignoring padding positions. This sentence-level embedding from the encoder is passed through a linear layer with sigmoid activation to predict a normalized length ratio (0–1), which corresponds to the proportion of the maximum possible sequence length required to represent the given input sentence. The module is trained using supervision from ground-truth sequence lengths, promoting temporal alignment consistent with semantic load, in line with the prior work [ 35 ] .
+
+The predicted latent sequence is decoded into 3D pose keypoints using the pretrained pose autoencoder’s decoder. This design enables efficient, end-to-end sign pose generation without the need for additional refinement or post-processing.
+
+3.3 Training Procedure
+
+Our training follows a two-stage strategy for mapping spoken language to continuous sign pose sequences. In the first stage, we train a structurally disentangled autoencoder to learn compact latent representations that separately encode manual (hands) and non-manual (face, upper body) features. In the second stage, a non-autoregressive Transformer is trained to predict these latent representations from word-level text embeddings of the input sentence, supervised by the ground-truth encodings from the pretrained autoencoder.
+
+3.3.1 Training the Pose Autoencoder
+
+The structurally disentangled autoencoder is trained to minimize a weighted reconstruction loss across four anatomical regions, body (B), right hand (RH), left hand (LH), and face (F) combined with L1 regularization applied only to encoder weights to promote sparsity:
+
+Here, 𝐱 R ( i ) \mathbf{x}_{R}^{(i)} and 𝐱 ^ R ( i ) \hat{\mathbf{x}}_{R}^{(i)} denote the ground truth and reconstructed keypoints for region R R at frame i i , and N R N_{R} is the number of frames. The first term is a weighted L1 reconstruction loss, where the weights w R w_{R} allow articulator-specific emphasis during training. The second term is an L1 regularization loss applied solely to the encoder weights, a strategy used in sparse autoencoders [ 27 ] . This preserves the decoder’s full capacity to reconstruct fine-grained spatial dynamics, which is particularly critical for manual articulators like fingers.
+
+3.3.2 Training Generator Model
+
+The training objective of our transformer model is divided into two phase to effectively balance the learning of accurate pose encodings and structured latent space distribution. In the first-phase, the model is trained to predict ground truth (GT) pose encodings obtained from the pretrained pose autoencoder. In this phase, we minimize an L1 loss between the predicted encodings for the transformer model and the obtained GT encodings.
+
+Here, z ^ t ( R ) \hat{z}_{t}^{(R)} and z t ( R ) z_{t}^{(R)} denote the predicted and ground-truth latent embeddings for region R R at timestep t t , and w R w_{R} are region-specific weights. The second term supervises the predicted sequence length ratio r ^ \hat{r} using the ground-truth r r . We will refer to this model as DARSLP .
+
+In the second phase of the training, we incorporate a KL divergence term to promote generalization and preserve the distributions of the structurally disentangled latent space. We refer to the resulting model as DARSLP-KL , which extends the training of the first-phase model by adding regularization on the channel distributions (Eqn. 3 ). In this context, during training, we enforce the predicted latent channel distributions to align with precomputed priors derived from ground truth encodings for each articulator region.
+
+Here, μ ( c ) \mu^{(c)} and σ ( c ) \sigma^{(c)} denote the batch-wise mean and variance of predicted latent channels, while μ prior ( c ) \mu_{\text{prior}}^{(c)} and σ prior ( c ) \sigma_{\text{prior}}^{(c)} are prior statistics computed from the autoencoder’s training embeddings.
+
+4 Experiments
+
+4.1 Implementation Details
+
+Datasets. We evaluate our model on two continuous sign language datasets. PHOENIX-2014T [ 3 ] contains 8,247 German Sign Language sentences aligned with gloss and spoken German. We use the 3D pose annotations from the CVPR 2025 SLRTP Challenge [ 31 ] , where 2D keypoints extracted via MediaPipe Holistic [ 16 ] are uplifted to 3D using Ivashechkin et al . ’s method [ 13 ] , yielding N × 178 × 3 N\times 178\times 3 tensors. CSL-Daily [ 36 ] includes 20,654 Chinese Sign Language (CSL) sentences from 10 signers. We extract 3D poses using MediaPipe Holistic, standardizing each frame to 178 keypoints (upper body, hands, face). To ensure consistency across signers and datasets, poses are normalized by centering on the neck and scaling by shoulder width.
+
+Autoencoder training settings. We assign region-specific weights to the reconstruction loss: w RH = w LH = 1.5 w_{\text{RH}}=w_{\text{LH}}=1.5 , w F = 1.0 w_{\text{F}}=1.0 , w B = 0.5 w_{\text{B}}=0.5 .
+These weights prevent high-variance upper body motions from overshadowing fine-grained hand and facial cues. L1 regularization
+with λ = 1 × 10 − 4 \lambda=1\times 10^{-4} promotes encoder sparsity. Optimization is performed using the Adam optimizer, with a learning rate of 2 × 10 − 4 2\times 10^{-4} and beta parameters set to ( 0.5 , 0.9 ) (0.5,0.9) . The pose autoencoder is trained for 270 epochs on both PHOENIX14T and CSL-Daily datasets.
+
+Transformer training settings. For L1 loss, we use; w RH = 14 w_{\text{RH}}=14 , w LH = 10 w_{\text{LH}}=10 , w F = 2 w_{\text{F}}=2 , decided based on ablation studies (Section 4.3 ) comparing different weighting schemes. Hands carry the core lexical content in sign language, with the right hand as dominant in DGS and CSL, conveying most meaning, and the left hand serving a supportive role. The body offers coarse spatial context, while the face encodes grammatical and emotional cues but involves redundant motion across many keypoints. We apply similar region-based weighting in both the autoencoder and transformer training settings to reflect these functional roles. Regions are weighted accordingly, guided by ablation results.
+
+We employ the Adam optimizer with a learning rate of 2 × 10 − 4 2\times 10^{-4} , weight decay of 1 × 10 − 4 1\times 10^{-4} , and a ReduceLROnPlateau scheduler (factor 0.9, patience 40) in both phases of the training. Early stopping based on validation loss is applied to prevent overfitting. Training is performed on a 4×NVIDIA A100-SXM4-40GB setup using PyTorch Lightning [ 5 ] .
+
+4.2 Ablation Study on Latent Dimensionality
+
+We first analyze how different allocations of latent dimensions across body, hands, and face affect performance. Table 1 compares multiple configurations, keeping the body+hands dimension fixed or varied and adjusting the face block. Results are reported on the PHOENIX14T development set for all ablations.
+
+Latent Dim Config. B1↑ B2↑ B3↑ B4↑ chrF↑ ROUGE↑ 32 hands&body + 8 face 20.79 11.81 8.34 6.43 27.01 18.44 64 hands&body + 8 face 22.54 13.84 9.75 7.44 28.58 21.18 128 hands&body + 8 face 20.44 11.99 8.45 6.54 27.43 18.67 64 hands&body + 16 face 24.07 14.25 9.73 7.25 28.51 21.30 64 hands&body + 32 face 23.04 14.00 9.88 7.54 28.67 21.42 64 hands&body + 64 face 20.75 12.39 8.72 6.67 27.71 19.07 80-dim entangled (no split) 19.61 11.34 7.97 6.13 27.21 18.10
+
+The ablation results in Table 1 show that the best overall performance is achieved with 64 latent dimensions allocated to body and hands, distributed proportionally to joint counts (8 for body, 28 for each hand) to preserve anatomical consistency. For the face, despite having a much larger number of keypoints (128), we observe that 8, 16, and 32 latent dimensions all produce very similar results. This indicates strong interdependence among facial keypoints, allowing the face representation to be effectively compressed into a compact latent block without loss of information. Furthermore, all disentangled models outperform the entangled configuration with an 80-dimensional flat latent vector in BLEU-4 and ROUGE metrics, highlighting the benefit of factorized and structured representations.
+
+4.3 Ablation Study on Generator Training
+
+We next analyze the impact of region-specific L1 loss weighting on generator training. In this context, the three numbers in ( w R ​ H − w L ​ H − w F w_{R\text{H}}-w_{L\text{H}}-w_{F} ) indicate the weighting coefficients assigned to the right hand, left hand, and face regions, respectively. As shown in Table 2 , moderate weighting of the hands, such as (5-5-1), consistently improves performance over the unweighted baseline (1-1-1), demonstrating the benefit of emphasizing manual components. Further gains are achieved by prioritizing the dominant right hand, with the best results observed at the (14-10-2) configuration for the 64H&B + 16F setup. Increasing the weights beyond this point causes a clear performance drop.
+
+RH-LH-F B1↑ B2↑ B3↑ B4↑ chrF↑ ROUGE↑ 64H&B + 32F (1-1-1) 23.04 14.00 9.88 7.54 28.67 21.42 (5-5-1) 23.64 14.90 10.50 8.13 29.52 22.30 (7-5-1) 20.76 12.25 8.44 6.46 27.51 19.36 (14-10-2) 20.55 12.58 8.86 6.79 27.19 18.93 (21-15-2) 19.92 12.20 8.50 6.40 26.72 18.12 64H&B + 16F (1-1-1) 24.07 14.25 9.73 7.25 28.51 21.30 (7-5-1) 23.96 15.16 10.68 8.06 29.23 22.48 (14-10-1) 24.18 15.47 11.00 8.50 29.52 22.81 (14-10-2) 24.97 15.91 11.35 8.72 29.67 23.25 (14-10-4) 22.85 13.82 9.49 7.14 27.91 21.21 (21-15-2) 24.51 15.18 10.59 7.88 29.27 22.30 64H&B + 8F (1-1-1) 22.54 13.84 9.75 7.44 28.58 21.18 (5-5-1) 23.03 14.46 10.38 8.03 29.08 21.62 (7-5-1) 22.18 13.73 9.53 7.19 27.90 20.78 (14-10-2) 21.59 13.47 9.44 7.16 27.47 19.27 (21-15-2) 20.98 12.88 8.90 6.80 26.84 18.70
+
+We further investigate the impact of KL regularization and its scheduling. As shown in Table 3 , omitting KL results in suboptimal performance, while applying it from the start causes instability. Our two-phase strategy, where the model is first trained with only L1 loss and then fine-tuned with KL, achieves the best results across all metrics. This supports prior findings in VAE literature [ 2 , 25 , 6 ] that KL regularization must be carefully scheduled. While our model does not follow a variational formulation, the findings emphasize that applying regularization in a staged manner can still play a critical role in enforcing structure within the latent space.
+
+Model B1↑ B2↑ B3↑ B4↑ chrF↑ ROUGE↑ GT (dev) 30.92 21.34 16.01 12.74 34.71 30.19 L1 w/o KL 24.97 15.91 11.35 8.72 29.67 23.25 L1 + w/ KL 20.78 12.64 9.01 6.98 27.92 19.66 Two-Phase (Ours) 28.41 19.31 14.45 11.40 31.85 26.93
+
+4.4 Latent Space Analysis
+
+To isolate and interpret the contribution of each articulator within the latent spaces of both entangled and disentangled autoencoders, we adopt a targeted visualization strategy on the PHOENIX14T dataset. For each input sample, only the keypoints of a selected region (e.g., right hand) are retained, while all other keypoints are replaced with a canonical reference pose that is computed as the mean pose over the training set. This masking ensures that variation in the latent space is driven solely by the selected region, while the remaining parts of the body remain fixed, minimizing confounding effects and providing a stable reference frame. The masked sequences are then passed through the model to obtain 80-dimensional latent representations, which are standardized using training statistics for visualization.
+
+Principal Component Analysis (PCA) [ 33 ] is first applied to the latent representations to suppress noise and retain the most informative variance components. This is followed by Uniform Manifold Approximation and Projection (UMAP) [ 18 ] , which maps the PCA-reduced features to a 2D space for clearer visualization. Both PCA and UMAP are fitted on the training set and consistently applied to the development set to ensure comparability. This unified analysis pipeline allows fair comparison between entangled and disentangled autoencoders. In particular, masking is crucial for the entangled AE, as it does not maintain region-specific latent channels and would otherwise produce entangled activations influenced by irrelevant articulators.
+
+In the entangled AE visualization, the body and face are represented as compact, near-unimodal clusters with substantial overlap between different articulators (Fig. 3 (a)). In contrast, the disentangled AE preserves the intrinsic variance of each region, resulting in more structured and well-separated latent distributions 3 (b)). The hands and face, in particular, display rich and complex multi-modal patterns that reflect the fine-grained dynamics of sign language movements. This separation reveals underlying structures in the data that are suppressed in the entangled representation, indicating that the disentangled AE is more effective at capturing region-specific motion patterns critical for sign language production.
+
+(a) Entangled AE
+
+(b) Disentangled AE
+
+In addition to analyzing the latent space of autoencoders, we further examine how the latent representations produced by our Transformer-based generator compare to those of the AE and how KL regularization influences these representations. To this end, we perform a separate PCA analysis for each articulator. Latent channels corresponding to the body, right hand, left hand, and face are standardized using region-specific training statistics, and distinct PCA models are fitted on each region’s training data to obtain independent 2D projections.
+
+As shown in Fig. 4 (a), the AE produces compact, stable distributions while transformer without KL regularization produces more scattered and noisy patterns that deviate from the AE (Fig. 4 (b)). Introducing KL regularization guides the Transformer’s distributions toward the AE prior, reducing noise and enhancing compactness, particularly in the face and hand regions 4 (c), indicating that KL improves the structural organization of the latent space.
+
+(a) GT regional PCA
+
+(b) Transformer w/o KL
+
+(c) Transformer w/ KL
+
+(d) GT - Transformer w/o KL
+
+(e) GT - Transformer w/ KL
+
+To quantify the mismatch between the AE and the Transformer, we compute smooth 2D density estimates within each PCA plane and visualize the difference (GT minus Transformer) as heatmaps. Fig. 4 (c–d) illustrates the discrepancies between the two projected distributions. Without KL regularization, deviations are diffuse and scattered; particularly in the face and hand regions. When KL is applied, these differences become more centered and structured, suggesting that KL promotes a more coherent alignment of the Transformer’s latent space with the AE prior.
+
+4.4.1 Statistical Analysis of the Latent Spaces
+
+Further, statistical analysis of the learned latent representations reveals meaningful distinctions in the encoding behavior across regions for both dataset. In Figure 5 , we present example histograms and corresponding entropy values for selected channel distributions from each structurally disentangled latent subspace (face, body, right hand, and left hand) learned by the autoencoder.
+
+(a) Right hand channels (avg. entropy: 2.01).
+
+(b) Left hand channels (avg. entropy: 2.22).
+
+(c) Face channels (avg. entropy: 0.14).
+
+(d) Body channels (avg. entropy: 1.11).
+
+As can be seen, the face channels have minimal variance. In contrast, the right and left hand channels show broader, more dispersed distributions with higher entropy and standard deviation across most dimensions, confirming the rich variability and critical role of manual articulators in sign expression. The body encodings fall somewhere in between, reflecting more stable but still semantically relevant movement, however body region spans a larger physical space and thus generates higher magnitude latent activations, even when the underlying motion is less semantically dense. To mitigate this effect and maintain balanced learning, we increase the contribution of semantically richer regions by weighting.
+
+These distributional differences confirm that the latent space is semantically partitioned. They also highlight the need for targeted regularization and proper loss weighting. This encourages the model to focus more on dense, information-rich regions while still preserving reconstruction quality across all articulators.
+
+(a) Right hand channels (avg. entropy: 2.98).
+
+(b) Left hand channels (avg. entropy: 3.19).
+
+(c) Face channels (avg. entropy: 2.21).
+
+(d) Body channels (avg. entropy: 1.65).
+
+The latent space structure observed in CSL-Daily mirrors that of PHOENIX14T, with clear separation between articulator groups and similar relative entropy patterns, manual articulators exhibit the highest variability, followed by face and body (Figure 6 ). CSL-Daily encodings exhibit broader distributions across all articulator groups, as reflected by higher entropy values, particularly in the manual articulators. The left and right hand channels display the widest spread, with average entropies around 3.0, indicating increased variability and expressiveness in CSL’s daily conversational context. Even face channels, which previously showed limited variance, now present more active and information-rich distributions. This broader activation aligns with CSL-Daily’s more diverse signer pool and open-domain language, reinforcing the need for careful latent space design.
+
+4.5 Test Results
+
+Table 4 reports test set results on PHOENIX14T, comparing our method with recent autoregressive and non-autoregressive approaches.
+The DARSLP baseline already outperforms most prior work without requiring gloss annotations, demonstrating the benefit of disentangled latent encodings.
+Adding KL divergence during the second training phase further improves generalization, boosting BLEU-4 from 8.72 to 11.07 and ROUGE from 23.25 to 32.55.
+This confirms that aligning predicted embeddings with learned priors reduces overfitting to dominant high-variance features (e.g., body motion) and yields smoother, more accurate sign pose sequences.
+
+Model G DTW↓ B1↑ B2↑ B3↑ B4↑ chrF↑ ROUGE↑ GT † - 0.000 34.43 22.08 16.13 12.81 34.62 35.22 Autoregressive PT Base [ 30 ] ✓ 0.197 6.27 3.33 2.14 1.59 9.50 14.52 PT FP&GN [ 30 ] ✓ 0.191 11.45 7.08 5.08 4.04 19.09 14.52 G2P-MP [ 34 ] ✓ 0.146 15.43 10.69 8.26 6.98 - - G2P-DDM [ 34 ] ✓ 0.116 16.11 11.37 9.22 7.50 - - SignVQNet [ 12 ] ✗ 0.299 - - - 6.88 - - Stitching T2P [ 30 ] ✗ 0.572 25.14 13.54 8.98 6.67 29.50 26.49 GCDM [ 26 ] ✓ - 22.03 14.21 10.16 7.91 23.20 - Non-Autoregressive NSLP-G [ 12 ] ✗ 0.638 - - - 5.56 - - NSLP-G w/o FT [ 12 ] ✗ 0.646 - - - 4.41 - - NAT-AT [ 8 ] ✓ 0.177 14.26 9.93 7.11 5.53 21.87 18.72 NAT-EA [ 8 ] ✓ 0.146 15.12 10.45 7.99 6.66 22.98 19.43 NSVQ + Non-AR [ 29 ] ✗ 0.105 27.74 16.36 11.75 9.20 - 27.93 DARSLP (Ours) ✗ 0.0439 24.97 15.91 11.35 8.72 29.67 23.25 DARSLP + KL (Ours) ✗ 0.0394 33.17 20.47 14.38 11.07 31.69 32.55
+
+Qualitative examples in Figure 7 show that the model captures key manual and non-manual articulations. While the outputs are not frame-perfect reproductions, they generally preserve the semantic intent and flow of the original signing. Despite relying on a non-autoregressive decoder, the model is able to produce smooth transitions and plausible motion patterns, suggesting that the proposed representation and training approach effectively support expressive sign generation. These results, achieved without gloss supervision or large pretrained models, demonstrate the effectiveness and efficiency of our proposed framework under limited supervision.
+
+a) Predicted
+
+b) Ground Truth
+
+a) Predicted
+
+b) Ground Truth
+
+Generalization to CSL-Daily. We evaluate our finalized transformer model, selected on PHOENIX14T, on the CSL-Daily dataset using the same architecture and training strategy. To accommodate CSL-Daily’s broader linguistic context and higher variance, we added another projection layer when mapping keypoints to the 80-dimensional latent space. This produced latent distributions, particularly for the right hand, that aligned more closely with the assumed Gaussian prior, making KL regularization more effective (see Supplementary Material for details). As shown in Table 5 , the model with KL divergence regularization outperforms the variant trained without KL across all metrics. Despite the domain shift, our model achieves competitive BLEU and ROUGE scores relative to ground-truth, which sets an upper-bound, demonstrating strong generalization to new language content and signer variability. As no prior SLP results exist for sign pose generation task on this dataset, we compare our performance against the ground truth (GT) baseline.
+
+Model DTW-MJE↓ B1↑ B2↑ B3↑ B4↑ chrF↑ R↑ GT 0.000 21.81 10.90 6.31 4.02 5.26 21.63 DARSLP 0.177 18.72 8.33 4.46 2.73 4.24 19.13 DARSLP+KL 0.175 20.47 9.55 5.45 3.53 4.89 20.55
+
+5 Conclusions and Future Work
+
+We proposed a gloss-free sign language production framework that combines context-aware text encoding, a semantically structured latent pose space, and dynamic temporal control within a unified architecture. Despite not relying on gloss annotations or large pretrained generative models, the proposed approach achieves competitive performance through a compact design and targeted training strategy.
+
+Beyond its practical performance, this framework offers a promising research direction by enabling interpretable analysis of region-wise latent behavior. Our visualizations demonstrate how the model responds to variance in specific articulators, offering key insights into the internal dynamics of sign language generation. To the best of our knowledge, this is the first work to present such a targeted, interpretable latent space analysis in the context of sign language production. As such, it also contributes to the broader goal of interpretable AI in sequence generation models.
+
+While qualitative results demonstrate smooth and plausible motions, there is still room to improve visual fidelity and expressiveness. Current evaluation of SLP models relies heavily on back-translation, which introduces additional uncertainty. More direct and reliable evaluation techniques are needed to assess generation quality more faithfully. In parallel with improving evaluation, further architectural refinements and training strategies are also needed. Although this study adopts a region-wise latent structure and disentangled modeling across articulators, assigning appropriate loss weights remains challenging, as each region exhibits different levels of motion complexity and semantic importance. Future work will explore adaptive weighting schemes that better reflect joint-level contributions, particularly to capture the hierarchical motion structure of hands more effectively.
+
+References

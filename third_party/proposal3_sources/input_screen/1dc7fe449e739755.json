@@ -1,0 +1,14 @@
+{
+  "url": "https://arxiv.org/abs/2506.07460",
+  "artifact": "third_party/proposal3_sources/input_screen/1dc7fe449e739755.json",
+  "read_status": "not_read",
+  "input_labels": [
+    "[SIGNER](https://arxiv.org/abs/2506.07460?utm_source=chatgpt.com)"
+  ],
+  "http_status": 200,
+  "sha256": "c88ecb909ba7adc62886294b36f61085ac373492e21a74c3150e73ef38af9c16",
+  "title": "[2506.07460] SIGNER: Temporally Grounded Sign Language Generation via Time-Resolved Conditioning",
+  "abstract": "Abstract: Sign language generation (SLG), also known as text-to-sign generation, aims to bridge the communication gap between signers and non-signers. Unlike many other generative tasks, SLG must satisfy two fundamental linguistic constraints. First, sign language expresses meaning through a sequence of gestures aligned with word-like units called glosses, and therefore requires correct lexical ordering to preserve intended meaning. Second, each gesture should faithfully reflect the intended gloss (semantic accuracy). Despite recent progress, existing SLG methods frequently produce signs with incorrect lexical order and low semantic accuracy. A common limitation of prior approaches stems from globally fused conditioning strategies, which weaken temporal grounding, the temporal correspondence between glosses and their realized sign segments. This often leads to incorrect lexical order and semantically ambiguous signs. To address this limitation, we propose SIGNER, a SIGN language generation framework with timE-Resolved conditioning to ensure temporal grounding, leveraging a temporal-gloss condition and local temporal fusion (LTF). SIGNER constructs a temporal-gloss condition by estimating a gloss sequence and its durations from input text, and assigning gloss semantics across the temporal dimension. We then introduce LTF, a temporally grounded fusion module that integrates the temporal-gloss condition within a constrained temporal window during denoising. By enforcing temporal locality in condition fusion, LTF preserves temporal grounding, leading to correct lexical ordering and clearer per-gloss semantics. Experiments on Phoenix-2014T and CSL-Daily demonstrate state-of-the-art performance, further supported by motion-smoothness analysis. The project page is available here this https URL .",
+  "preview": "",
+  "status": "acquired_not_read"
+}

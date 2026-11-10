@@ -1,0 +1,20 @@
+{
+  "SOKE": {
+    "url": "https://github.com/2000ZRL/SOKE",
+    "commit": "5cbc55d84b5a7cbf05a9cf020c468052e8d94d00",
+    "runtime_imports": [
+      "mGPT/archs/mgpt_vq.py",
+      "mGPT/archs/mgpt_mbart.py",
+      "mGPT/archs/lm_multihead.py"
+    ]
+  },
+  "MaDiS": {
+    "url": "https://github.com/2000ZRL/MaDiS",
+    "commit": "071828ea1b94530dc7ff0a6c009c0a7c6d1f0784",
+    "runtime_imports": [
+      "mGPT/archs/madis.py",
+      "mGPT/archs/masked_diffusion.py",
+      "mGPT/utils/load_checkpoint.py"
+    ]
+  }
+}

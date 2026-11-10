@@ -1,0 +1,506 @@
+BLANC: Adaptive Temporal Scheduling for Sign Language Production
+
+Sign language production (SLP) aims to synthesize expressive signing motion from written text. Modeling signing motion presents two key temporal challenges. First, fine-grained hand articulations demand higher temporal resolution than relatively slower body movements. Second, signing events unfold over variable durations, calling for adaptive temporal scheduling during generation. To address these challenges, we first introduce a Multi-Rate Vector Quantizer (MRVQ), an articulation-decoupled motion tokenizer that represents the body and both hands as separate discrete streams at distinct temporal resolutions. Building on this representation, we propose Blanc ( BL ock-wise A daptive diffusio N with Articulatory C lock), a gloss-free SLP framework that generates variable-duration motion blocks causally while denoising tokens in parallel within each block. At its core, a Latent Articulatory Clock (LAC) learns temporal structure from multi-scale motion-derived partitions to predict block durations and sequence termination during generation. We further introduce inference-time body-conditioned hand refinement to improve coordination across articulators. Extensive experiments on PHOENIX-2014T and CSL-Daily demonstrate that Blanc achieves state-of-the-art performance in sign language production.
+
+
+
+1 Introduction
+
+Sign language is a primary means of communication for Deaf and Hard-of-Hearing (DHH) communities Padden and Humphries (1988) , making automatic sign language technologies important for improving access to information and communication Yin et al. (2021) . While substantial progress has been made in sign language understanding and translation Camgoz et al. (2018) ; Gong et al. (2024) ; Li et al. (2025) , generating expressive sign motion directly from spoken-language text remains comparatively challenging. Sign language production (SLP) Saunders et al. (2020) ; Saunders et al. (2022) ; Zuo et al. (2025) addresses this problem by synthesizing articulated signing motion from text. The difficulty lies in realizing linguistic content as continuous motion: the model must preserve the intended meaning while inferring the detailed poses, transitions, and timing that are not explicitly specified by the input text.
+
+Realizing a sentence as signing motion requires coordinated movements of the body and both hands, rather than merely an ordered list of static poses Zuo et al. (2025) ; Baltatzis et al. (2024a) . These articulators evolve at different temporal rates, while individual signing events and transitions span highly variable durations. These temporal properties pose two key challenges for SLP: (1) motion representation must accommodate articulator-specific temporal dynamics while preserving fine-grained hand motion, and (2) motion generation must account for the variable durations of signing events and transitions.
+
+The first challenge concerns motion representation. Recent approaches encode continuous sign motion as discrete latent tokens for conditional generation Xie et al. (2024) ; Yu et al. (2024) ; Zuo et al. (2025) . However, fine-grained hand articulation and body motion exhibit distinct temporal dependencies Sandler (2012) ; Ma et al. (2024) . With a shared token rate, coarse tokenization can discard hand detail, whereas fine tokenization increases the token budget for all articulators. This motivates allocating temporal resolution separately to the body and hands.
+
+The second challenge concerns motion generation: determining how much motion to generate at each step. Figure 1 (a) compares generation strategies by their temporal units and scheduling schemes. Autoregressive models extend motion token by token Xie et al. (2024) ; Zuo et al. (2025) , whereas full-sequence discrete diffusion denoises tokens in parallel over a predefined temporal horizon Zuo et al. (2026) . Block diffusion combines causal progression across blocks with parallel denoising within each block Arriola et al. (2025) ; Liu et al. (2026) . However, fixed-duration blocks impose uniform generation intervals that may split coherent articulations or merge distinct motion phases. This motivates adaptive block durations that follow the temporal structure of signing Sandler (2010) ; Loos et al. (2022) . The two challenges are complementary: articulation-specific token rates do not determine generation intervals, and adapting block durations does not address detail lost during tokenization.
+
+We introduce Blanc ( BL ock-wise A daptive diffusio N with Articulatory C lock), a gloss-free SLP framework that couples multi-rate motion representation with adaptive block diffusion. To address the first challenge, we propose an articulation-decoupled multi-rate vector-quantized motion tokenizer (MRVQ) that encodes the body and both hands as separate discrete streams at articulation-specific temporal resolutions. This preserves fine-grained hand motion while keeping the body representation compact.
+
+To address the second challenge, we extend Block Denoising Diffusion Discrete Language Models (BD3-LMs) Arriola et al. (2025) with variable-duration generation blocks. Our generator progresses causally across blocks and denoises tokens in parallel within each block, preserving the distinct temporal rates of the body and hand streams. At inference, generation intervals must be determined without access to the target motion. Our Latent Articulatory Clock (LAC) causally predicts block durations and sequence termination from the source text and generated motion history, enabling generation without a prescribed total sequence length. LAC learns temporal scheduling from motion-derived partitions produced by a deterministic multi-scale teacher. The teacher detects persistent changes in frozen body and hand codebook embeddings, providing temporal supervision without gloss-boundary annotations. Figure 1 (b) compares our predicted block boundaries with uniform partitions using CSLR-estimated sign transitions Cheng et al. (2020) as a reference. Our boundaries align more closely with these estimated transitions, suggesting that motion-informed scheduling better reflects the temporal structure of signing.
+
+To better preserve the linguistic information conveyed by hand articulations, we further propose body-conditioned hand refinement, which remasks and re-predicts selected hand tokens while keeping the initially generated body tokens fixed.
+
+Our contributions are as follows:
+
+We propose MRVQ, an articulation-decoupled multi-rate tokenizer that preserves fine-grained hand motion with compact body representations.
+
+We introduce Blanc , an adaptive block diffusion framework that leverages a motion-supervised LAC to predict variable block durations and sequence termination.
+
+Our framework achieves state-of-the-art performance on PHOENIX-2014T and CSL-Daily, supported by extensive ablation studies.
+
+2 Related Works
+
+Diffusion-based Sign Language Production. Diffusion models Ho et al. (2020) ; Rombach et al. (2022) have been increasingly adopted for sign language production (SLP), enabling high-fidelity and diverse motion generation.
+Early approaches focused on continuous motion modeling, incorporating anatomical graph structures Baltatzis et al. (2024a) , disentangled bone representations Tang et al. (2025a) , and joint-aware denoising architectures Yu et al. (2026) to improve motion plausibility.
+Recent studies have further explored linguistic conditioning and gloss-free generation to enhance semantic alignment and temporal coherence Tang et al. (2025b) ; He et al. (2025) ; Zhang and others (2024) .
+Meanwhile, discrete diffusion approaches have emerged to model sign motion through quantized representations, offering an alternative to continuous motion generation Liu et al. (2026) ; Zuo et al. (2026) ; Wang and others (2025) .
+
+Block-wise Diffusion for Variable-Length Generation. Discrete diffusion models enable parallel generation Sahoo et al. (2024) ; Nie et al. (2026) , while block-wise diffusion combines autoregressive decoding across blocks with parallel denoising within each block Arriola et al. (2025) . However, fixed-size blocks impose rigid generation boundaries, motivating recent studies to improve generation efficiency and training-inference alignment Wu et al. (2026) ; Wang et al. (2026) ; Sun et al. (2025) . Other approaches explore adaptive block scheduling based on token confidence and semantic content Lu et al. (2026) ; Zhang et al. (2026) ; Zhu et al. (2026) ; Jain (2026) . Despite these advances, existing approaches primarily focus on text generation, without explicitly considering the temporal dynamics of articulated motion.
+
+Temporal Structure Learning for Sign Language. Temporal structure has been studied in sign language understanding through temporal segmentation Renz et al. (2021) , sign boundary detection Rastgoo et al. (2025) , and gloss-to-frame alignment for recognizing continuous signing Pu et al. (2019) .
+In sign language production, such temporal modeling has been further exploited for sequence progression, gloss-wise duration prediction, length regulation, and co-articulation Saunders et al. (2020) ; Huang et al. (2021) ; Saunders et al. (2022) .
+Recently, explicit duration modeling has been used to construct temporally grounded linguistic conditions for generation Lee et al. (2025) .
+
+3 Method
+
+3.1 Background: Block Diffusion Modeling
+
+Autoregressive (AR) models generate sequences token by token, requiring L L sequential decoding steps for a sequence of length L L .
+Diffusion language models Nie et al. (2026) ; Yang et al. (2026) ; Ye et al. () , in contrast, update multiple token positions jointly but require iterative denoising.
+BD3-LMs Arriola et al. (2025) combine these paradigms by generating autoregressively across blocks while denoising the tokens within each block in parallel.
+
+Given a token sequence 𝐱 \mathbf{x} , BD3-LMs partition it into B = L / L ′ B=L/L^{\prime} consecutive blocks of a fixed length L ′ L^{\prime} .
+Denoting the b b -th block by 𝐱 b \mathbf{x}^{b} and all preceding blocks by 𝐱 < b \mathbf{x}^{<b} , the sequence likelihood factorizes as
+
+Each block is generated through a discrete diffusion process conditioned on the previously generated clean blocks.
+Thus, BD3-LMs reduce autoregressive dependencies from individual tokens to blocks while enabling parallel generation within each block.
+
+3.2 Motion Representation and Tokenization
+
+Data Preparation. Following prior works Yu et al. (2024) ; Kim et al. (2026) , we represent sign language sequences using 3D pose parameters. We employ 3D estimators tailored to distinct anatomical regions: specifically, SMPLer-X Cai et al. (2023) for extracting body pose and WiLoR Potamias et al. (2025) for capturing hand articulations. To ensure high-fidelity pose estimation, we apply an additional optimization step, as detailed in the supplementary material. Ultimately, each processed sign motion is represented as a continuous sequence 𝐒 ∈ ℝ T × d s \mathbf{S}\in\mathbb{R}^{T\times d_{s}} , where T T denotes the sequence length and d s = 133 d_{s}=133 , consistent with the motion representation used in Zuo et al. (2025) ; Zuo et al. (2026) . Further details on the pose fitting procedure and quantitative evaluations of the fitted poses, are provided in the Appendix A .
+
+Articulation-Decoupled Multi-Rate Tokenizer. To address the motion representation challenge, we design a discrete representation that accommodates articulator-specific temporal dynamics while preserving fine-grained hand motion.
+To this end, we propose a Multi-Rate Vector Quantizer (MRVQ), an articulation-decoupled tokenizer based on VQ-VAE Van Den Oord et al. (2017) .
+Following prior works Zuo et al. (2025) ; Yu et al. (2024) , we model the body, left hand, and right hand with independent VQ-VAEs.
+This separation allows us to assign articulator-specific temporal resolutions, as illustrated in Figure 3 (a).
+
+As shown in Figure 2 , hand motion exhibits substantially faster temporal variation than body motion, with 2.47 × 2.47\times higher linear velocity and 2.18 × 2.18\times higher angular velocity.
+Motivated by this observation, we use part-specific temporal compression factors, setting r b = 4 r_{b}=4 for the body and r l = r r = 2 r_{l}=r_{r}=2 for the hands.
+Each hand stream therefore has twice the temporal resolution of the body stream.
+
+Given a motion sequence 𝐒 ∈ ℝ T × d s \mathbf{S}\in\mathbb{R}^{T\times d_{s}} , we split it into part-wise streams 𝐒 p \mathbf{S}_{p} , where p ∈ { b , l , r } p\in\{b,l,r\} .
+Each stream is encoded independently as
+
+where L p L_{p} denotes the latent sequence length of articulator p p .
+Quantizing these latent vectors with a part-specific codebook of size K p K_{p} yields a discrete token sequence
+
+The three streams jointly form the multi-rate discrete representation
+
+Here, L b L_{b} , L l L_{l} , and L r L_{r} denote the token lengths of the body, left-hand, and right-hand streams, respectively, while N tok N_{\mathrm{tok}} is the total number of tokens across all three streams.
+This representation retains the temporal order within each stream and serves as the discrete input to the subsequent block diffusion model.
+
+The tokenizer is trained with the objective
+
+Additional details on tokenizer implementation are provided in the Appendix B .
+
+3.3 BLANC
+
+Given the discrete motion representation, we seek to organize generation blocks that better reflect the temporal structure of sign articulation. However, BD3-LMs Arriola et al. (2025) employ fixed-size blocks, which may disrupt coherent articulatory patterns by partitioning motion independently of its underlying temporal structure. To address this limitation, we propose BLANC , which leverages motion-derived temporal boundaries to learn adaptive block scheduling.
+The training and inference process of Blanc are illustrated in Figure 3 (b) and (c), respectively.
+Further details can be found Appendix C .
+
+3.3.1 Learning the Latent Articulatory Clock
+
+Adapting the duration of each generation block to the temporal structure of signing poses two challenges: identifying suitable generation boundaries without gloss annotations and predicting block durations without access to future motion. Gloss-based segmentation requires linguistic annotations and assumes that lexical boundaries align with suitable motion-generation units. To address these challenges, inspired by Kang et al. (2022) , we introduce a Latent Articulatory Clock (LAC) that separates motion-based temporal structure discovery from its causal execution.
+
+Where to split and how long? The first challenge is to determine where a motion sequence should be divided into generation blocks and how long each block should persist. We introduce a Multi-scale teacher (MS-Teacher) that derives variable-length block boundaries and duration targets by aggregating motion changes across articulators and temporal scales.
+
+Given a target motion 𝐒 \mathbf{S} , we obtain part-wise latent embeddings 𝐪 p \mathbf{q}^{p} from MRVQ. At each body-rate timestep t t , we measure motion variation as the cosine distance between the average latent embeddings before and after t t , 𝐪 ¯ t , h p , − \bar{\mathbf{q}}^{p,-}_{t,h} and 𝐪 ¯ t , h p , + \bar{\mathbf{q}}^{p,+}_{t,h} , over progressively coarser temporal scales h ∈ { 1 , 2 , 4 } h\in\{1,2,4\} .
+We aggregate these changes across branches into a motion-change score μ t \mu_{t} and measure their cross-branch agreement ρ t \rho_{t} , yielding the boundary score
+
+We select local maxima of s t s_{t} as motion-supported boundary candidates.
+
+Rather than treating all candidates as block boundaries, we solve a bounded exact-cover problem using dynamic programming to partition the sequence into K K variable-length blocks. The partition covers the entire sequence without gaps or overlaps, constrains each block duration to [ d min , d max ] [d_{\min},d_{\max}] , and favors boundaries with strong motion evidence. Let τ k \tau_{k} denote the endpoint of the k k -th block, with τ 0 = 0 \tau_{0}=0 and τ K = L b \tau_{K}=L_{b} . The resulting block duration is
+
+which serves as the duration supervision for LAC.
+
+How to execute the clock causally? The second challenge is to reproduce this motion-derived temporal structure at inference time, where the target motion and its partition are unavailable. We therefore train a causal LAC controller that predicts the duration of the next block from the input text and previously generated motion.
+
+Given the input text sequence 𝐲 \mathbf{y} , a trainable text encoder produces token-level representations 𝐇 y \mathbf{H}^{y} .
+At generation step k k , LAC uses accumulated text coverage Tu et al. (2016) to obtain a remaining semantic representation 𝐮 k \mathbf{u}_{k} that emphasizes insufficiently covered content.
+In parallel, the motion history 𝐱 < k \mathbf{x}_{<k} is taken from the target motion up to the teacher-derived boundary during training, while at inference it consists of the previously generated blocks. We map these motion tokens to their frozen MRVQ codebook embeddings and summarize them with a unidirectional GRU Cho et al. (2014) , obtaining 𝐦 k − 1 \mathbf{m}_{k-1} .
+
+We then combine the remaining semantic representation 𝐮 k \mathbf{u}_{k} , 𝐦 k − 1 \mathbf{m}_{k-1} , and a learnable event-position embedding 𝐞 k \mathbf{e}_{k} through f LAC f_{\mathrm{LAC}} . These representations are projected and used to update a recurrent state with a GRU cell. The updated state then attends to the text representation 𝐇 y \mathbf{H}^{y} through cross-attention, and the recurrent state and attended text context are fused to form the latent articulatory event state
+
+The event state 𝐠 k \mathbf{g}_{k} captures both the semantic content yet to be expressed and the current motion progression. Based on this state, LAC predicts the duration distribution of the next block:
+
+During training, LAC is supervised by motion-derived durations d k ∗ d_{k}^{*} . At inference, it predicts d ^ k \hat{d}_{k} at each block-wise autoregressive step, adapting the generation schedule to the remaining text semantics and previously generated motion.
+
+Method PHOENIX-2014T CSL-Daily DTW-PA-JPE ↓ \downarrow DTW-JPE ↓ \downarrow B-T ↑ \uparrow DTW-PA-JPE ↓ \downarrow DTW-JPE ↓ \downarrow B-T ↑ \uparrow Body Hand Body Hand BLEU-4 ROUGE-L Body Hand Body Hand BLEU-4 ROUGE-L T2M † Stoll et al. (2022) 36.54 3.63 35.69 24.12 0.31 5.95 28.83 3.58 30.97 18.63 0.00 10.80 MotionGPT Jiang et al. (2023) 8.22 1.70 8.31 9.07 5.62 16.88 10.05 2.19 9.86 10.65 0.00 9.15 MoMask Guo et al. (2024) 8.20 1.58 7.91 7.69 6.44 19.81 10.58 2.15 10.51 9.61 0.57 15.89 SOKE (no dict.) Zuo et al. (2025) 8.24 1.64 8.69 8.07 5.13 23.86 9.94 1.77 9.63 8.70 2.66 21.13 SignPR † Liu et al. (2026) 7.87 1.87 7.67 7.43 1.04 9.82 10.63 2.37 10.75 9.72 0.27 13.06 SignSparK (no KF) Low et al. (2026) 8.35 1.81 8.32 7.96 1.21 10.08 9.83 2.16 9.17 8.78 0.32 12.82 Blanc ( w/o Refinement) 7.57 1.49 7.31 7.01 9.58 24.83 9.67 1.71 9.48 8.19 1.86 18.52 Blanc 7.58 1.48 7.33 7.00 9.85 25.36 9.75 1.71 9.54 8.25 2.13 19.05
+
+3.3.2 Block-wise Motion Generation
+
+Block Diffusion Training. During training, each motion-derived interval defines a multi-stream block 𝐱 k = ( 𝐱 b , k , 𝐱 l , k , 𝐱 r , k ) \mathbf{x}_{k}=(\mathbf{x}_{b,k},\mathbf{x}_{l,k},\mathbf{x}_{r,k}) , where 𝐱 p , k \mathbf{x}_{p,k} contains tokens from stream p p aligned with the body-rate interval ( τ k − 1 , τ k ] (\tau_{k-1},\tau_{k}] .
+We train the block diffusion model to recover randomly masked tokens in 𝐱 k \mathbf{x}_{k} , conditioned on the input text 𝐲 \mathbf{y} , preceding ground-truth blocks 𝐱 < k \mathbf{x}_{<k} , and the latent articulatory event state 𝐠 k \mathbf{g}_{k} .
+Bidirectional denoising within each block produces an unrefined prediction 𝐱 ~ k \tilde{\mathbf{x}}_{k} .
+
+Training Objective. We jointly optimize the block diffusion generator and LAC using the following objective:
+
+Here, ℒ motion \mathcal{L}_{\mathrm{motion}} supervises masked motion token prediction, while ℒ dur \mathcal{L}_{\mathrm{dur}} trains LAC using motion-derived duration targets d k ∗ d_{k}^{*} . To preserve semantic consistency, ℒ align \mathcal{L}_{\mathrm{align}} aligns denoised motion predictions with the input text using a separately pretrained, frozen text–motion aligner. The remaining objectives and implementation details
+are provided in the Appendix C.3 .
+
+Inference. Given the input text 𝐲 \mathbf{y} , we initialize the motion-history state as 𝐦 0 = 𝐦 BOS \mathbf{m}_{0}=\mathbf{m}_{\mathrm{BOS}} for the first block.
+At each step k k , LAC predicts the latent articulatory event state 𝐠 k \mathbf{g}_{k} and duration d ^ k \hat{d}_{k} based on the input text and previously generated motion 𝐱 ^ < k \hat{\mathbf{x}}_{<k} .
+Conditioned on 𝐲 \mathbf{y} , 𝐱 ^ < k \hat{\mathbf{x}}_{<k} , and 𝐠 k \mathbf{g}_{k} , block diffusion generates an initial motion block 𝐱 ~ k \tilde{\mathbf{x}}_{k} through a single parallel denoising pass.
+
+To better preserve the linguistic information conveyed by hand articulations, we introduce entropy-guided hand refinement. We select the top η \eta fraction of hand tokens within the current block ranked by normalized predictive entropy in descending order. The selected tokens are remasked and re-predicted in a single refinement pass using the same generator, while keeping the body and unselected hand tokens fixed, yielding the refined block 𝐱 ^ k \hat{\mathbf{x}}_{k} .
+The refined motion updates the history state for subsequent block-wise autoregressive generation until EOS is predicted.
+Finally, the frozen MRVQ decoder reconstructs the continuous sign motion.
+
+4 Experiments
+
+Datasets. For sign language production, we use two datasets following previous works Lee et al. (2025) ; Sung et al. (2026) : PHOENIX-2014T (Ph-T) Camgoz et al. (2018) and CSL-Daily (CSL) Zhou et al. (2021) , which contain approximately 8K and 20K video-text pairs for German and Chinese sign language, respectively.
+
+Evaluation Metrics. To evaluate our model, we assess the generated sign sequences in terms of motion quality and linguistic accuracy. For motion quality, we report Dynamic Time Warping-aligned Joint Position Error (DTW-JPE) and its Procrustes-aligned variant (DTW-PA-JPE).
+For linguistic accuracy, we train a back-translation model Saunders et al. (2020) on our 3D sign representations and report BLEU-4 Papineni et al. (2002) and ROUGE-L Lin (2004) following Zuo et al. (2025) ; Baltatzis et al. (2024a) ; Lee et al. (2025) .
+We additionally evaluate the reconstruction quality of the tokenizer using Procrustes-Aligned Mean Per Joint Position Error (PA-MPJPE) Lin et al. (2023) ; Yu et al. (2024) .
+
+4.1 Comparison with State-of-the-Art Methods
+
+We compare our method with recent gloss-free sign language production approaches on both datasets. Our baselines include general text-to-motion generation methods, such as T2M Stoll et al. (2022) , MotionGPT Jiang et al. (2023) , and MoMask Guo et al. (2024) , as well as recent sign-specific approaches, including SOKE Zuo et al. (2025) , SignPR Liu et al. (2026) , and SignSparK Low et al. (2026) . For SOKE and SignSparK, we use their gloss-free settings for a fair comparison.
+
+Method Ph-T (JPE) ↓ \downarrow CSL (JPE) ↓ \downarrow Body Hands Body Hands MotionGPT Jiang et al. (2023) 29.78 5.69 30.71 4.27 MoMask Guo et al. (2024) 23.65 5.27 25.07 4.12 SOKE Zuo et al. (2025) 25.63 4.66 21.56 3.41 Ours (MRVQ) 15.48 4.37 11.80 3.06
+
+Quantitative Results for SLP. Table 1 compares our method with gloss-free SLP approaches on Ph-T and CSL. General text-to-motion models transfer poorly to sign language, particularly in fine-grained hand articulation and linguistic preservation. Blanc , in contrast, achieves strong motion quality across both datasets, especially for hand motion, while maintaining competitive back-translation performance. Moreover, refinement consistently improves back-translation quality with little change in motion error, indicating that body-conditioned hand refinement enhances linguistic fidelity without sacrificing geometric quality.
+
+Qualitative Results for SLP. Figure 4 presents qualitative comparisons with SOKE and SignSparK. Our method more closely matches the ground truth hand positions, particularly in relation to the face and torso. In contrast, SOKE better captures the wrist rotation in some cases, resulting in a hand orientation closer to the reference.
+
+Tokenizer Reconstruction. We compare the motion reconstruction performance of our tokenizer against existing methods Jiang et al. (2023) ; Guo et al. (2024) ; Zuo et al. (2025) that employ VQ-VAE-based tokenizers, with the results reported in Table 2 . Our proposed tokenizer achieves the lowest reconstruction error across both body and hand regions on two datasets. In particular, it yields substantial improvements in body reconstruction while consistently outperforming prior methods on the hands. These results demonstrate that the articulation-decoupled multi-rate design effectively preserves part-specific motion characteristics and enables more precise motion tokenization.
+
+4.2 Ablation Studies
+
+Effect of Adaptive Block Scheduling.
+
+Block Size ( L ′ L^{\prime} ) Ph-T CSL DTW-PA-JPE ↓ \downarrow B-T ↑ \uparrow DTW-PA-JPE ↓ \downarrow B-T ↑ \uparrow Body Hands BLEU-4 Body Hands BLEU-4 L ′ = 1 L^{\prime}=1 (AR) 9.10 1.69 6.37 11.14 2.01 0.68 L ′ = 5 L^{\prime}=5 11.33 2.10 4.37 15.17 2.59 0.98 L ′ = 10 L^{\prime}=10 11.79 2.23 4.10 14.79 2.56 0.98 L ′ = 20 L^{\prime}=20 10.95 2.11 4.76 14.53 2.56 1.18 Blanc 7.58 1.48 9.85 9.75 1.71 2.13
+
+To assess adaptive block scheduling, we compare Blanc with fixed-block baselines based on BD3-LMs Arriola et al. (2025) , using L ′ ∈ { 1 , 5 , 10 , 20 } L^{\prime}\in\{1,5,10,20\} .
+As shown in Table 3 , the fixed-block baselines are sensitive to the choice of block size.
+Autoregressive generation ( L ′ = 1 L^{\prime}=1 ) yields the lowest body and hand errors among the fixed-block settings on both datasets.
+On CSL-Daily, however, larger fixed blocks achieve higher BLEU-4 scores despite their higher motion errors. Blanc achieves the best performance on all reported metrics, improving BLEU-4 from 6.37 6.37 to 9.85 9.85 on PHOENIX-2014T and from 1.18 1.18 to 2.13 2.13 on CSL-Daily over the respective best fixed-block scores.
+These results support adapting generation durations to the temporal structure of signing to improve both motion fidelity and linguistic accuracy.
+
+Temporal Supervision DTW-PA-JPE ↓ \downarrow B-T ↑ \uparrow Boundary ↑ \uparrow Body Hands BLEU-4 Precision F1 PHOENIX-2014T Uniform 7.93 1.51 8.98 55.49 37.89 Shuffled 7.63 1.50 8.54 54.57 37.26 Single-Scale 7.58 1.48 8.44 60.14 41.07 Multi-Scale (Ours) 7.58 1.48 9.85 62.06 42.37 CSL-Daily Uniform 10.10 1.81 1.06 47.60 29.91 Shuffled 9.77 1.75 1.91 47.43 29.81 Single-Scale 9.63 1.72 1.93 59.41 37.34 Multi-Scale (Ours) 9.75 1.71 2.13 60.28 37.88
+
+Effect of Motion-Derived Temporal Supervision. Table 4 compares three LAC supervision variants: Uniform uses equal-duration blocks, Shuffled randomly reorders motion-derived durations, and Single-Scale extracts boundaries using ℋ = { 1 } \mathcal{H}=\{1\} instead of { 1 , 2 , 4 } \{1,2,4\} .
+We additionally evaluate boundary alignment using precision and F1 against CSLR-estimated boundaries Cheng et al. (2020) , with further details provided in the Appendix D.2 .
+
+Our multi-scale supervision achieves the highest BLEU-4 and boundary alignment scores on both datasets while maintaining competitive motion errors.
+Compared with Single-Scale , the improvements in both semantic fidelity and boundary alignment suggest that multi-scale temporal cues provide more informative supervision beyond pose accuracy alone.
+
+Setting Ph-T CSL DTW-PA-JPE ↓ \downarrow B-T ↑ \uparrow DTW-PA-JPE ↓ \downarrow B-T ↑ \uparrow Body Hands BLEU-4 Body Hands BLEU-4 LAC Component Ablation w/o Motion Feedback 7.81 1.54 9.64 9.87 1.91 0.23 w/o Alignment Loss 7.61 1.49 9.54 9.79 1.72 1.54 Refinement Method w/o Refinement 7.57 1.49 9.58 9.67 1.71 1.86 Body + Hands 7.59 ▼ \blacktriangledown 1.49 9.19 ▼ \blacktriangledown 9.78 ▼ \blacktriangledown 1.70 ▲ \blacktriangle 1.82 ▼ \blacktriangledown Body Refinement 7.57 1.48 ▲ \blacktriangle 9.08 ▼ \blacktriangledown 9.85 ▼ \blacktriangledown 1.72 ▼ \blacktriangledown 1.76 ▼ \blacktriangledown Hands Refinement (Ours) 7.58 ▼ \blacktriangledown 1.48 ▲ \blacktriangle 9.85 ▲ \blacktriangle 9.75 ▼ \blacktriangledown 1.71 2.13 ▲ \blacktriangle
+
+Effect of LAC Components and Refinement. Table 5 examines motion feedback ( 𝐱 < k \mathbf{x}_{<k} ), semantic alignment ( ℒ align \mathcal{L}_{\mathrm{align}} ), and inference-time refinement. Removing motion feedback increases motion errors on both datasets and substantially degrades back-translation performance on CSL, underscoring the importance of conditioning the clock on motion history. Removing the alignment loss also lowers BLEU-4 on both datasets, supporting the role of semantic supervision in preserving linguistic content.
+
+Hand-only refinement improves BLEU-4 on both datasets, with slightly higher body DTW-PA-JPE but comparable hand accuracy. In contrast, body-only and joint body–hand refinement reduce BLEU-4, suggesting that hand-focused refinement improves linguistic fidelity with minimal geometric trade-offs.
+
+5 Conclusion
+
+We presented Blanc , a gloss-free sign language production framework that combines multi-rate motion tokenization with adaptive block diffusion. MRVQ represents body and hand motion at distinct temporal resolutions, while the Latent Articulatory Clock learns from motion-derived temporal supervision to predict block durations and sequence termination. Body-conditioned hand refinement further improves hand articulation using the generated body motion as context. Experiments on PHOENIX-2014T and CSL-Daily demonstrate strong motion fidelity and competitive back-translation performance, supporting the effectiveness of combining articulation-specific temporal resolutions with adaptive generation intervals.
+
+Limitations
+
+Our method relies on reconstructed 3D sign motion due to the limited availability of 3D annotations in existing sign language datasets. Consequently, reconstruction errors, particularly in fine-grained hand articulations, may affect generation quality. Moreover, while back-translation provides an automatic measure of linguistic fidelity, it may not fully capture the naturalness and comprehensibility of generated signing. Our evaluation does not include human assessments by fluent signers, which remains an important direction for future work. Finally, although our method does not require gloss supervision, our boundary evaluation relies on CSLR-derived alignments, which may not precisely reflect underlying articulatory transitions.
+
+References
+
+Appendix Contents BLANC: Adaptive Temporal Scheduling
+
+Appendix A 3D Pose Fitting and Refinement
+
+Following prior works Baltatzis et al. (2024b) ; Zuo et al. (2025) , we curate frame-level SMPL-X Pavlakos et al. (2019) annotations from monocular RGB videos using state-of-the-art methods for 3D body and hand reconstruction. Given a monocular RGB video, we first estimate a rough SMPL-X pose with SMPLer-X Cai et al. (2023) and substitute its hand poses with high-fidelity MANO Romero et al. (2022) predictions from WiLoR Potamias et al. (2025) . Since WiLoR provides only a right-hand MANO model and estimates left hands on horizontally flipped inputs, we map the left-hand rotations back to the SMPL-X left-hand frame using the mirror transform M = diag ⁡ ( − 1 , 1 , 1 ) M=\mathrm{diag}(-1,1,1) , i.e. , R ↦ M ​ R ​ M R\mapsto MRM , and recover each wrist’s local rotation by inverting the body kinematic chain.
+
+We then refine the initial SMPL-X pose by optimizing the upper-body joint rotations and a sequence-level weak-perspective camera, while keeping the global orientation, lower body, shape, jaw, expression, hands, and wrists fixed. The optimization minimizes the reprojection error between MediaPipe 2D keypoints Lugaresi et al. (2019) and projected SMPL-X joints for the shoulders, elbows, wrists, and nose, excluding lower-body landmarks. The reprojection loss is compactly written as
+
+where J ^ 3 ​ D \hat{J}^{3D} denotes the predicted SMPL-X joints, J 2 ​ D J^{2D} denotes the corresponding MediaPipe keypoints, and π ⁡ ( J ) = s ​ J x ​ y + 𝐭 \pi(J)=sJ_{xy}+\mathbf{t} is the weak-perspective projection. The notation ∥ ⋅ ∥ 1 , ρ , W \|\cdot\|_{1,\rho,W} denotes a visibility-weighted robust L 1 L_{1} loss with the Geman–McClure penalty ρ σ ​ ( x ) = σ 2 ​ x 2 σ 2 + x 2 \rho_{\sigma}(x)=\frac{\sigma^{2}x^{2}}{\sigma^{2}+x^{2}} .
+
+Since frame-wise reprojection fitting can produce temporally unstable motion due to noisy 2D detections and depth ambiguity, we additionally impose a temporal smoothness loss on the reconstructed SMPL-X vertices and joints:
+
+where V f V_{f} and J f J_{f} denote the SMPL-X vertices and joints at frame f f , respectively.
+
+We also use an L 2 L_{2} pose regularization term to suppress implausible upper-body poses:
+
+where 𝒰 \mathcal{U} is the set of optimized upper-body joints.
+
+The final fitting objective is defined as
+
+We minimize this objective with Adam and keep the substituted hands fixed throughout the optimization.
+
+Following Zuo et al. (2025) , we quantitatively evaluate our fitting procedure on the SGNify dataset Forte et al. (2023) , with results reported in Table 6 . Our method achieves strong reconstruction performance, particularly for the hands, obtaining the lowest error on the left hand and competitive performance on the right hand. Meanwhile, it maintains comparable accuracy for the body against strong 3D pose estimation baselines. These results demonstrate that our fitting procedure effectively preserves fine-grained hand articulations while maintaining accurate body pose reconstruction. Qualitative results in Figure 5 further demonstrate that our method faithfully captures both body pose and fine-grained hand articulations.
+
+Method Body ↓ \downarrow Left Hand ↓ \downarrow Right Hand ↓ \downarrow FrankMoCap Rong et al. (2020) 78.07 20.47 19.62 PIXIE Feng et al. (2021) 60.11 25.02 22.42 PyMAF-X Zhang et al. (2023) 68.61 21.46 19.19 SMPLify-X Pavlakos et al. (2019) 56.07 22.23 18.83 SGNify Forte et al. (2023) 55.63 19.22 17.50 OSX Lin et al. (2023) 47.32 18.34 18.12 NSA Baltatzis et al. (2024a) 46.42 16.17 15.23 SMPLer-X Cai et al. (2023) 42.98 28.28 24.86 SOKE Zuo et al. (2025) 46.73 10.55 8.94 Ours 46.48 9.17 9.83
+
+Appendix B Additional Details of the Multi-Rate Vector Quantizer
+
+Following the notation in the main paper and Figure 3 (a), we detail the codebook assignment, motion reconstruction, and individual training losses of MRVQ.
+
+B.1 Quantization and Codebook Optimization
+
+Each latent feature is quantized using a part-specific codebook 𝒞 p = { 𝐜 p i } i = 1 N p \mathcal{C}_{p}=\{\mathbf{c}_{p}^{i}\}_{i=1}^{N_{p}} .
+We use N b = 96 N_{b}=96 codebook entries for the body and N l = N r = 192 N_{l}=N_{r}=192 entries for the hand streams.
+Before quantization, the latent vectors and codebook embeddings are ℓ 2 \ell_{2} -normalized; thus, nearest-neighbor assignment is equivalent to cosine-similarity-based quantization:
+
+This produces an articulator-specific discrete sequence 𝐱 p = ( x p 1 , … , x p L p ) \mathbf{x}_{p}=(x_{p}^{1},\ldots,x_{p}^{L_{p}}) .
+
+Following VQ-VAE Razavi et al. (2019) , we update the codebook embeddings using exponential moving averages (EMA) rather than direct gradient-based optimization.
+We additionally monitor code utilization and reinitialize under-utilized entries during training to prevent codebook collapse and improve token diversity.
+
+B.2 Motion Reconstruction
+
+The interleaved tokens defined in the main paper are first separated into their part-wise streams and mapped back to codebook embeddings. The resulting latent sequences are decoded by the part-specific decoders 𝒟 p \mathcal{D}_{p} .
+Each decoder upsamples its latent sequence to the original frame rate, after which the reconstructed streams are concatenated to recover the complete motion:
+
+B.3 Training Objectives
+
+The tokenizer objective in Equation combines reconstruction, forward-kinematics, and commitment losses.
+We define each component below; optimization settings and loss weights are reported in Appendix D.5 and Table 8 .
+
+Reconstruction loss. For each articulator, the reconstruction term is a Smooth- ℓ 1 \ell_{1} loss between the reconstructed and ground-truth motion representations:
+
+Forward-kinematics loss. To preserve the articulated 3D geometry, we additionally apply a forward-kinematics loss.
+Let FK ⁡ ( ⋅ ) \operatorname{FK}(\cdot) denote the SMPL-X Pavlakos et al. (2019) forward-kinematics operation that maps motion parameters to 3D joint positions.
+We minimize the Euclidean distance between the joints obtained from the reconstructed and ground-truth motions:
+
+Commitment loss. We further use the standard VQ commitment loss Van Den Oord et al. (2017) to keep the encoder outputs close to their assigned codebook embeddings:
+
+where sg ⁡ [ ⋅ ] \operatorname{sg}[\cdot] denotes the stop-gradient operation.
+
+Appendix C Additional Details of Blanc
+
+This section expands the training and inference procedures in Figure 3 (b) and (c), following the notation of the main paper.
+The motion sequence 𝐱 = ( 𝐱 1 , … , 𝐱 L b ) \mathbf{x}=(\mathbf{x}^{1},\ldots,\mathbf{x}^{L_{b}}) contains L b L_{b} body-rate units, each comprising one body token and two tokens from each hand.
+A block 𝐱 k \mathbf{x}_{k} spans units τ k − 1 + 1 \tau_{k-1}+1 through τ k \tau_{k} and contains 5 ​ d k 5d_{k} tokens, where d k = τ k − τ k − 1 d_{k}=\tau_{k}-\tau_{k-1} .
+MRVQ is frozen throughout generator training.
+
+C.1 Multi-Scale Motion Teacher
+
+Multi-scale boundary evidence. The MS-Teacher identifies temporal changes in the frozen MRVQ embedding space without gloss annotations.
+To compare the three articulators at a common temporal resolution, we retain the body embedding and average the two hand embeddings within each body-rate unit:
+
+where 𝐜 p i \mathbf{c}_{p}^{i} is a codebook embedding and norm \operatorname{norm} denotes ℓ 2 \ell_{2} normalization.
+We use both the original sequence and a normalized three-unit moving average, providing complementary sensitivity to abrupt and persistent changes.
+
+For each articulator, view, and radius h ∈ { 1 , 2 , 4 } h\in\{1,2,4\} , we compute the cosine distance between the mean embeddings on either side of a candidate cut t t .
+Writing these means as 𝐳 ¯ t , h p , − \bar{\mathbf{z}}^{p,-}_{t,h} and 𝐳 ¯ t , h p , + \bar{\mathbf{z}}^{p,+}_{t,h} , as in the main paper, the evidence for branch j j is
+
+The left and right neighborhoods contain at most h h units and are truncated at the sequence endpoints.
+We normalize each branch across the interior cuts using its median and median absolute deviation (MAD):
+
+where κ MAD \kappa_{\mathrm{MAD}} is the Gaussian consistency factor for MAD, with the MAD lower-bounded by 10 − 4 10^{-4} .
+This normalization makes boundary evidence comparable across articulators and scales.
+Let w j w_{j} denote normalized branch weights, with total weights 0.35 0.35 , 0.325 0.325 , and 0.325 0.325 assigned to the body, left hand, and right hand, respectively, and equal weights across views and radii within each part.
+We obtain
+
+Thus, a boundary receives a high score when motion change is both pronounced and consistent across branches.
+
+Bounded exact-cover partition. The candidate set 𝒞 \mathcal{C} contains local maxima of s t s_{t} above a sequence-specific score quantile.
+We then select the partition by maximizing
+
+where
+
+The boundary penalty β \beta discourages excessive segmentation, while γ \gamma penalizes cuts unsupported by the candidate set without excluding cuts needed to satisfy the duration bound.
+The number of blocks K K is determined jointly with their boundaries.
+Dynamic programming solves this problem using
+
+with V ⁡ ( 0 ) = 0 V(0)=0 , R ⁡ ( 0 ) = 0 R(0)=0 , and unreachable states assigned − ∞ -\infty .
+Backtracking from L b L_{b} yields the duration targets d k ∗ d_{k}^{*} .
+We use γ = 0.35 \gamma=0.35 for both datasets; ( β , quantile ) (\beta,\text{quantile}) is ( 0.50 , 0.55 ) (0.50,0.55) for PHOENIX-2014T and ( 0.40 , 0.45 ) (0.40,0.45) for CSL-Daily.
+Duration bounds are reported in Table 9 .
+
+We also assign each duration a confidence c k c_{k} from its ending boundary.
+For k < K k<K , this is s τ k ​ ρ τ k s_{\tau_{k}}\rho_{\tau_{k}} , multiplied by 0.25 0.25 for non-candidate cuts and clipped to [ 0.05 , 1 ] [0.05,1] ; the final block has c K = 1 c_{K}=1 .
+These confidences reduce the influence of weak temporal targets during duration supervision.
+The teacher is deterministic and is used only during training.
+
+C.2 Latent Articulatory Clock
+
+Remaining semantics and motion history. Let 𝐇 y = ( 𝐇 1 y , … , 𝐇 J y ) \mathbf{H}^{y}=(\mathbf{H}^{y}_{1},\ldots,\mathbf{H}^{y}_{J}) be the encoded input text and v k − 1 , j v_{k-1,j} its accumulated coverage before block k k , initialized to zero.
+The remaining semantic representation in Figure 3 (b) is
+
+Coverage is a learned measure of semantic progress rather than an explicit word-to-motion alignment.
+
+To summarize motion, we project the five frozen codebook embeddings in each 𝐱 t \mathbf{x}^{t} into a shared space and average them to form a window feature 𝝍 t \boldsymbol{\psi}^{t} .
+A unidirectional GRU processes these features in temporal order; its state at the end of block k − 1 k-1 gives 𝐦 k − 1 \mathbf{m}_{k-1} .
+The first block uses the learned state 𝐦 0 = 𝐦 BOS \mathbf{m}_{0}=\mathbf{m}_{\mathrm{BOS}} .
+Training uses preceding ground-truth blocks, whereas inference uses completed generated blocks.
+
+Event state and duration. Using the event-position embedding 𝐞 k \mathbf{e}_{k} , LAC updates its recurrent state and attends to the text:
+
+Here, P P and F F are learned projections, [ ⋅ ; ⋅ ] [\cdot;\cdot] denotes concatenation, and 𝜶 k \boldsymbol{\alpha}_{k} is the attention distribution averaged across heads.
+A learned gate ζ k = σ ⁡ ( G ⁡ [ 𝐠 k ; 𝐭 k ] ) \zeta_{k}=\sigma(G[\mathbf{g}_{k};\mathbf{t}_{k}]) updates coverage as
+
+The duration head uses a bounded discrete hazard parameterization.
+Let ν k , d ∈ ( 0 , 1 ) \nu_{k,d}\in(0,1) be the predicted probability of ending the block at duration d d , conditional on reaching that duration.
+Then
+
+The hazards are sigmoid outputs of a projection of 𝐠 k \mathbf{g}_{k} .
+The resulting log masses form f dur ​ ( 𝐠 k ) f_{\mathrm{dur}}(\mathbf{g}_{k}) in the main paper’s softmax expression.
+This construction assigns all probability mass to the permitted duration range.
+
+Sequence termination. Termination is evaluated after completing a block, so the decision can depend on the newly committed motion.
+Let 𝐮 k + 1 \mathbf{u}_{k+1} be the remaining semantic summary computed from updated coverage v k v_{k} , and let r ¯ k + 1 = J − 1 ​ ∑ j max ⁡ ( 1 − v k , j , 0 ) \bar{r}_{k+1}=J^{-1}\sum_{j}\max(1-v_{k,j},0) .
+The stopping probability is
+
+This separates the duration of the current block from the decision to end the entire sequence.
+
+C.3 Training Objectives
+
+We expand the objective in Equation 10 below.
+Expectations are over training examples and sampled corruptions unless otherwise specified.
+We write ℓ H \ell_{\mathrm{H}} for Smooth- ℓ 1 \ell_{1} loss, averaged over its indicated entries.
+
+Motion generation. We use ℒ motion \mathcal{L}_{\mathrm{motion}} as a collective term for masked motion prediction and auxiliary reconstruction and representation regularization.
+For each teacher-defined block, the generator recovers masked motion tokens conditioned on the input text 𝐲 \mathbf{y} , clean preceding blocks 𝐱 < k \mathbf{x}_{<k} , and the event state 𝐠 k \mathbf{g}_{k} .
+This objective follows the block diffusion formulation Arriola et al. (2025) , preserving causal dependence across blocks while allowing bidirectional interactions within each block.
+
+Duration, length, and termination. The confidence-weighted duration objective is
+
+where n n indexes examples and k k indexes their valid blocks.
+To prevent local duration biases from accumulating, we also supervise the expected total duration:
+
+Finally, the EOS head is supervised to continue after every non-final block and stop after the final block:
+
+Semantic alignment. We use a symmetric contrastive objective for paired text and motion embeddings.
+For normalized pairs { ( 𝐚 n , 𝐛 n ) } n = 1 B \{(\mathbf{a}_{n},\mathbf{b}_{n})\}_{n=1}^{B} , define
+
+The text–motion aligner in Figure 3 (b) is pretrained on paired text and target MRVQ embeddings and then frozen.
+Let A y A_{y} and A x A_{x} denote its text and motion encoders.
+For generator supervision, we construct 𝐙 mix \mathbf{Z}^{\mathrm{mix}} using predicted normalized latents at masked positions and target codebook embeddings elsewhere, and apply
+
+Gradients pass through the frozen motion encoder to the generator’s continuous predictions, avoiding non-differentiable token sampling.
+Examples with dropped text conditioning are excluded from this loss.
+
+Counterfactual event conditioning. To encourage the generator to use text-dependent event states, we form counterfactual states 𝐠 k − \mathbf{g}_{k}^{-} from mismatched text within the minibatch while retaining the same motion history and teacher partition.
+Let ℓ + \ell^{+} and ℓ − \ell^{-} denote the mean masked-motion negative log-likelihoods under the matched and counterfactual event states, respectively.
+We optimize
+
+These likelihoods exclude termination symbols and use unweighted token averages.
+The generator’s direct text input is kept fixed, so the comparison specifically tests its dependence on the text-conditioned event representation.
+
+Loss weights. Table 7 reports the maximum coefficients for the duration, length, EOS, alignment, and counterfactual terms in Equation 10 .
+Auxiliary weights are introduced with linear ramps early in training; all active coefficients reach their listed values within the first 2,500 optimization steps.
+Optimization and architectural settings are given in Appendix D.5 .
+
+Loss coefficient Ph-T CSL λ d \lambda_{d} 0.20 0.25 λ len \lambda_{\mathrm{len}} 0.25 0.75 λ e \lambda_{e} 0.10 0.10 λ a \lambda_{a} 0.10 0.10 λ c ​ f \lambda_{cf} 0.05 0.05
+
+C.4 Inference and Hand Refinement
+
+Figure 3 (c) illustrates inference from text alone.
+Starting from 𝐦 0 = 𝐦 BOS \mathbf{m}_{0}=\mathbf{m}_{\mathrm{BOS}} and zero text coverage, LAC predicts 𝐠 k \mathbf{g}_{k} and selects the most probable duration,
+
+We allocate 5 ​ d ^ k 5\hat{d}_{k} masked positions and jointly predict all body and hand tokens in one parallel denoising pass, obtaining the draft block 𝐱 ~ k \tilde{\mathbf{x}}_{k} .
+The predicted duration determines the block size; no target sequence length or teacher partition is provided.
+
+Guided sampling. Let ℓ \boldsymbol{\ell} be the fully conditioned logits, ℓ − y \boldsymbol{\ell}^{-y} the logits with direct text conditioning dropped, and ℓ − g \boldsymbol{\ell}^{-g} the logits with event conditioning dropped.
+We use
+
+with w y = 2.0 w_{y}=2.0 and w g = 1.5 w_{g}=1.5 .
+Tokens are sampled with temperature 1.0 1.0 and nucleus threshold 0.9 0.9 .
+
+Entropy-guided hand refinement. For a hand-token position i i belonging to part p p , let P i P_{i} be the draft distribution obtained from the guided logits over its N p N_{p} codebook entries.
+Its normalized predictive entropy is
+
+We pool the 4 ​ d ^ k 4\hat{d}_{k} hand positions across both hands and select the ⌈ η ​ 4 ​ d ^ k ⌉ \lceil\eta\,4\hat{d}_{k}\rceil largest entropies, forming ℳ k hand \mathcal{M}_{k}^{\mathrm{hand}} .
+These positions are remasked and predicted once more using the same generator:
+
+All body tokens and unselected hand tokens remain fixed, allowing uncertain hand articulations to be revised in the context of the draft body trajectory.
+We use η = 1.0 \eta=1.0 on PHOENIX-2014T and η = 0.15 \eta=0.15 on CSL-Daily.
+Refinement introduces neither additional parameters nor a separate training objective.
+
+The refined block 𝐱 ^ k \hat{\mathbf{x}}_{k} updates the motion-history GRU before the EOS decision in Equation 31 .
+Generation stops when q k ≥ 0.65 q_{k}\geq 0.65 .
+As finite decoding safeguards, we allow at most 32 blocks and restrict duration choices to those that fit within the remaining sequence capacity.
+Generation also stops if no permitted duration fits.
+Finally, the complete generated token sequence is decoded by the frozen MRVQ decoder to obtain continuous motion 𝐒 ^ \hat{\mathbf{S}} .
+Neither the motion teacher nor the semantic aligner is used at inference.
+
+Appendix D Experimental Details
+
+D.1 Dataset Documentation and Statistics
+
+PHOENIX-2014T Camgoz et al. (2018) contains German Sign Language weather forecasts paired with German text, while CSL-Daily Zhou et al. (2021) contains Chinese Sign Language sentences covering everyday topics, paired with Chinese text. Both datasets provide continuous signing sequences and gloss annotations. Our reconstructed 3D poses are derived from these videos and retain the source datasets’ language, domain, and signer coverage without expanding their demographic coverage.
+
+The standard training, validation, and test splits contain approximately 7.1K, 0.5K, and 0.6K video–text pairs for PHOENIX-2014T, and 18.4K, 1.1K, and 1.2K pairs for CSL-Daily, respectively.
+
+D.2 Evaluation Metrics
+
+DTW-JPE. We evaluate motion in 3D joint space, allowing generated and reference sequences to have different lengths.
+For a part with J J joints, let 𝐏 ~ i , j \tilde{\mathbf{P}}_{i,j} and 𝐐 ~ u , j \tilde{\mathbf{Q}}_{u,j} denote generated and reference joint positions at frames i i and u u , respectively, after pelvis centering for the body or wrist centering for each hand.
+The frame-pair cost is the mean per-joint position error:
+
+Following the cumulative DTW convention used in our comparisons with SOKE Zuo et al. (2025) , we report
+
+where Π \Pi contains monotonic warping paths connecting the endpoints of the two sequences.
+This score accumulates local MPJPE along the optimal path without dividing by the path length.
+
+DTW-PA-JPE. This variant additionally removes differences in global scale, rotation, and translation through similarity Procrustes alignment.
+Let 𝒯 i , u \mathcal{T}_{i,u} be the least-squares similarity transform aligning generated frame i i to reference frame u u .
+Using the original, uncentered joint positions 𝐏 \mathbf{P} and 𝐐 \mathbf{Q} , we compute
+
+For both metrics, body error is evaluated on 12 upper-body/head joints and hand error on 21 points per hand.
+For body Procrustes alignment, the transform is fitted to the full SMPL-X joint set before selecting the evaluation joints; each hand is aligned independently.
+We average the two hand scores and report the mean over test sequences, with lower values indicating better motion fidelity.
+For tokenizer reconstruction, PA-MPJPE instead averages Procrustes-aligned joint errors at corresponding frames, without temporal warping.
+
+BLEU-4 and ROUGE-L. We assess linguistic preservation by translating generated motion back into text using the same pretrained back-translation model for all compared methods.
+BLEU-4 Papineni et al. (2002) measures corpus-level n n -gram agreement up to order four, while ROUGE-L Lin (2004) measures longest-common-subsequence overlap with the reference text.
+We use the SacreBLEU-based BLEU and ROUGE-L implementations distributed with SOKE, 1 1 1 https://github.com/2000ZRL/SOKE/tree/main/mGPT/metrics with word-level evaluation for PHOENIX-2014T and character-level evaluation for CSL-Daily.
+Both scores are reported on a 0–100 scale, with higher values indicating better performance.
+
+Boundary precision and F1. We compare block boundaries with pseudo-reference boundaries derived from CSLR-estimated gloss spans Cheng et al. (2020) , placing each reference boundary midway between consecutive spans.
+Excluding sequence endpoints, we perform one-to-one matching within a tolerance of ± 4 \pm 4 motion frames.
+Precision measures the fraction of proposed boundaries that are matched, and F1 balances precision with reference-boundary recall.
+Counts are pooled across test sequences before computing the scores.
+These metrics assess agreement with recognition-derived temporal structure; the pseudo-references are used only for evaluation.
+
+D.3 Baseline Implementation Details
+
+We retrain MotionGPT, MoMask, SOKE, and SignSparK Jiang et al. (2023) ; Guo et al. (2024) ; Zuo et al. (2025) ; Low et al. (2026) from scratch using their official implementations and recommended training configurations. For methods without directly usable implementations, we reproduce them based on the architectural and training details in the original papers.
+
+We implement Blanc based on the official BD3-LMs codebase Arriola et al. (2025) 2 2 2 https://github.com/kuleshov-group/bd3lms , adapting it for text-conditioned sign language production.
+
+D.4 Hardware, Model Size, and Computational Budget
+
+Our computing infrastructure consists of four NVIDIA RTX A6000 GPUs.
+
+MRVQ contains approximately 59.0M trainable parameters. The Blanc training model contains approximately 295M parameters in total, of which 246.2M are trainable. These counts exclude MRVQ; the total includes the frozen 42.2M-parameter semantic aligner and other auxiliary modules. Parameter counts are nearly identical across the two datasets.
+
+For each dataset, training Blanc on four NVIDIA RTX A6000 GPUs takes approximately 12 hours, corresponding to 48 GPU-hours. Thus, the two main generator training runs require approximately 96 GPU-hours in total. These estimates exclude tokenizer training, semantic-aligner pretraining, preprocessing, evaluation, baseline training, hyperparameter search, and ablation experiments.
+
+D.5 Hyperparameter Settings
+
+Tables 8 and 9 summarize the main hyperparameters for MRVQ and Blanc , respectively. We train a separate tokenizer and generator for each dataset and freeze MRVQ during generator training.
+
+MRVQ. We train MRVQ on 64-frame motion windows using Smooth- ℓ 1 \ell_{1} reconstruction loss. The FK loss weight is linearly increased to 10 over the first 20 epochs. Codebooks are updated with EMA, and the same hyperparameters are used for both datasets.
+
+Blanc . The generator is trained for 10,000 optimization steps with linear learning-rate warm-up followed by cosine decay to 10% of the peak learning rate. The evaluated checkpoints are taken at 9,000 steps for PHOENIX-2014T and 10,000 steps for CSL-Daily. At inference, each block is generated in parallel, followed by one body-conditioned hand refinement pass. We remask all hand tokens on PHOENIX-2014T and the most uncertain 15% on CSL-Daily, keeping body tokens fixed within the refinement pass.
+We report generation results from a fixed trained checkpoint using sampling seed 42.
+
+Hyperparameter Value Hidden / code dimension 512 / 512 Transformer layers / heads 4 / 8 Temporal compression (body / hands) 4 / 2 Codebook size (body / each hand) 96 / 192 Training window (frames) 64 Optimizer AdamW Learning rate 2 × 10 − 4 2\times 10^{-4} Adam β 1 , β 2 \beta_{1},\beta_{2} ( 0.9 , 0.99 ) (0.9,0.99) Weight decay 0 Batch size 32 Training epochs 500 LR schedule Warm-up + cosine Warm-up steps 1,000 Gradient clipping norm 1.0 Reconstruction weights (body / L / R) 1 / 2 / 2 FK loss weight 10 Commitment coefficient 0.25 Codebook EMA decay 0.99
+
+Hyperparameter Ph-T CSL Generator dimension 768 Generator layers / heads 12 / 12 LAC hidden / event dimension 512 / 256 Dropout 0.1 Block duration (body-rate units) 2–11 2–18 MS-Teacher radii { 1 , 2 , 4 } \{1,2,4\} Optimizer AdamW Learning rate 1 × 10 − 4 1\times 10^{-4} Adam β 1 , β 2 \beta_{1},\beta_{2} ( 0.9 , 0.95 ) (0.9,0.95) Weight decay 0.01 Batch size per device 16 Gradient accumulation steps 2 Training steps 10,000 LR schedule Warm-up + cosine Warm-up steps 500 200 Gradient clipping norm 1.0 Text / event guidance scale 2.0 / 1.5 Sampling temperature / top- p p 1.0 / 0.9 Hand refinement passes 1 Hand remasking ratio 1.0 0.15
+
+Appendix E Additional Experiments
+
+E.1 Qualitative Results of MRVQ
+
+Figure 6 compares MRVQ reconstructions with those of MotionGPT, MoMask, and SOKE. In the highlighted examples, MRVQ more closely preserves the reference hand configurations and their positions relative to the face and torso, while maintaining the overall upper-body posture. These visual comparisons complement the quantitative reconstruction results in Table 2 , illustrating the preservation of fine-grained articulatory details through tokenization and reconstruction.
+
+E.2 Semantic Preservation of Motion Tokenizers
+
+To evaluate how well each motion tokenizer preserves linguistic information, we tokenize the ground-truth motion using the tokenization schemes adopted by existing methods, reconstruct the motion, and measure its performance with the same back-translator. We additionally report feature-level back-translation performance by directly feeding the ground-truth motion into the back-translator, providing a reference for quantifying the degradation introduced by tokenization. As shown in Table 10 , our MRVQ consistently achieves the best back-translation performance across both datasets, with substantially smaller degradation from the feature-level results than existing tokenizers. This indicates that the proposed articulation-decoupled multi-rate tokenization better preserves linguistically meaningful information during discretization and reconstruction.
+
+Method Ph-T ↑ \uparrow CSL ↑ \uparrow BLEU-4 ROUGE-L BLEU-4 ROUGE-L Feature Space GT 13.36 31.39 7.35 31.09 Token Space MotionGPT 9.95 25.67 4.97 25.81 MoMask 10.07 26.37 5.04 26.10 SOKE 11.04 27.30 5.55 26.55 MRVQ (Ours) 12.49 30.27 6.21 29.08
+
+E.3 Ablation of Refinement
+
+Figure 7 examines the fraction of hand tokens remasked during the single refinement pass, with body tokens kept fixed.
+The effect depends on the dataset: BLEU-4 is highest at 100% refinement on PHOENIX-2014T and 15% on CSL-Daily, corresponding to our selected configurations.
+However, the lowest overall DTW-PA-JPE occurs at 15% and 100%, respectively.
+Thus, the configurations with the strongest back-translation performance do not minimize reference-based geometric error.
+This trade-off suggests that the two metrics capture complementary aspects of generated signing, and that increasing the refinement ratio does not consistently improve both.
+
+Appendix F Discussion
+
+F.1 Broader Impacts and Ethical Considerations
+
+Blanc may support more accessible communication for Deaf and Hard-of-Hearing communities by advancing text-driven sign language production. However, generated signing may convey incorrect meanings, and limited training data may underrepresent diverse signing styles and language varieties. Practical deployment should therefore involve evaluation with fluent signers and consultation with Deaf communities. Such systems should complement professional interpreters, with their limitations clearly communicated to users. Generated signing should be identified as synthetic to avoid attributing unintended statements to real signers.
+
+F.2 Data Privacy, Licenses, and Release
+
+The use and release of sign language data should respect signers’ privacy and applicable usage conditions. Our implementation builds on BD3-LMs under Apache-2.0, while the SMPLer-X code used for pose extraction is provided under the non-commercial S-Lab License 1.0. CSL-Daily is governed by a non-commercial research agreement that restricts redistribution. Other third-party datasets and models remain subject to their respective usage and distribution terms.
+
+We plan to release our code, trained checkpoints, and reconstructed 3D poses with applicable license and attribution notices. Release of dataset-derived artifacts is subject to verification of the original terms and any necessary permissions from the rights holders.
+
+F.3 Use of AI Assistants
+
+We used ChatGPT and Codex to assist with translation and grammar correction during manuscript preparation. The authors reviewed and revised all AI-assisted content and take full responsibility for the accuracy and integrity of the paper.

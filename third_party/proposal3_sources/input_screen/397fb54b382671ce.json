@@ -1,0 +1,14 @@
+{
+  "url": "https://arxiv.org/abs/2604.23264",
+  "artifact": "third_party/proposal3_sources/input_screen/397fb54b382671ce.json",
+  "read_status": "not_read",
+  "input_labels": [
+    "H20 ★"
+  ],
+  "http_status": 200,
+  "sha256": "fbec2fede4b7ef3d24caf9c1393c05a7700a62fb48467e0c228690085dac4863",
+  "title": "[2604.23264] MotionHiFlow: Text-to-motion via hierarchical flow matching",
+  "abstract": "Abstract: Text-to-motion generation aims to generate 3D human motions that are tightly aligned with the input text while remaining physically plausible and rich in fine-grained detail. Although recent approaches can produce complex and natural movements, they usually operate at only one temporal scale, which limits both semantic alignment and temporal coherence. Inspired by the fact that complex motions are conceptualized hierarchically rather than at a single temporal scale in the human cognitive system, we propose \\textit{MotionHiFlow}, a hierarchical flow matching framework to generate motion progressively by constructing flow path from low to high temporal scales. The flows at lower scales capture high-level semantics and coarse motion structures, while flows at higher scales refine temporal details. To link the flows across scales, we introduce a novel cross-scale transition process, ensuring continuity and preserving noise consistency. Furthermore, by integrating a Text-Motion Diffusion Transformer and a topology-aware Motion VAE, MotionHiFlow explicitly models structural dependencies among joints via joint-aware positional encoding and skeletal topology, enabling precise semantic alignment alongside fine-grained motion details. Extensive experiments on HumanML3D and KIT-ML benchmarks demonstrate state-of-the-art performance, with ablation studies confirming the effectiveness of the hierarchical design and key components. Code is available at this https URL .",
+  "preview": "",
+  "status": "acquired_not_read"
+}

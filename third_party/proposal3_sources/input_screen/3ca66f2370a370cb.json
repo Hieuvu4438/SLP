@@ -1,0 +1,15 @@
+{
+  "url": "https://openaccess.thecvf.com/content/CVPR2026W/GenSign/html/Faure_The_Impact_of_VAE_Design_on_Latent_Pose_Representations_for_CVPRW_2026_paper.html",
+  "artifact": "third_party/proposal3_sources/input_screen/3ca66f2370a370cb.json",
+  "read_status": "not_read",
+  "input_labels": [
+    "S18 ○",
+    "[The Impact of VAE Design on Latent Pose Representations](https://openaccess.thecvf.com/content/CVPR2026W/GenSign/html/Faure_The_Impact_of_VAE_Design_on_Latent_Pose_Representations_for_CVPRW_2026_paper.html?utm_source=chatgpt.com)"
+  ],
+  "http_status": 200,
+  "sha256": "acfdc6951fbdc7665fb7b7eb6ed3ffbab46a01f705ed17279b33f8e6e9f79492",
+  "title": "CVPR 2026 Open Access Repository",
+  "abstract": "Latent diffusion approaches to sign language production (SLP) rely on an initial stage that learns an encoding of sign pose sequences, enabling generative modeling in the resulting latent space. The autoencoder used in this stage is typically evaluated in terms of reconstruction quality using geometric metrics common in SLP. While informative, these metrics do not fully capture latent space properties that may influence the training and performance of the downstream generative model. In this work, we investigate how architectural and training objective design choices in a variational autoencoder (VAE) for sign pose encoding affect latent space structure, and how these differences translate into the performance of a latent diffusion model for text-to-sign generation. Our experiments on Phoenix14T dataset show that variations in generative performance, measured through back-translation BLEU scores, can sometimes be better explained by differences in latent space properties than by VAE reconstruction accuracy alone.",
+  "preview": "",
+  "status": "acquired_not_read"
+}

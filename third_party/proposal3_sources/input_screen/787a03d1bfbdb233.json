@@ -1,0 +1,14 @@
+{
+  "url": "https://is.mpg.de/ps/publications/temos-2022",
+  "artifact": "third_party/proposal3_sources/input_screen/787a03d1bfbdb233.json",
+  "read_status": "not_read",
+  "input_labels": [
+    "[TEMOS](https://is.mpg.de/ps/publications/temos-2022?utm_source=chatgpt.com)"
+  ],
+  "http_status": 200,
+  "sha256": "924aa8e53c4d8ac461dda39ba4161f8f17bf8bc2b75bf870dcb61706a93a0685",
+  "title": "Bot Detection",
+  "abstract": "Please wait while we check if you are a Human",
+  "preview": "",
+  "status": "acquired_not_read"
+}

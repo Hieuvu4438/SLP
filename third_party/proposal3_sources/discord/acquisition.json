@@ -1,0 +1,11 @@
+{
+  "key": "discord",
+  "url": "https://arxiv.org/html/2411.19527",
+  "retrieved_at": "2026-11-06T09:18:51.165889+00:00",
+  "kind": "html",
+  "http_status": 200,
+  "sha256": "2724525e22ef34f1c606579f7497b7c42ba8ae4880a2765424f6fda73fe6943d",
+  "title": "DisCoRD: Discrete Tokens to Continuous Motion via Rectified Flow Decoding",
+  "chars": 57182,
+  "status": "acquired_not_read"
+}

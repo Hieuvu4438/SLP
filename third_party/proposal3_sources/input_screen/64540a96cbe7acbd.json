@@ -1,0 +1,14 @@
+{
+  "url": "https://github.com/OpenRobotLab/UniHSI",
+  "artifact": "third_party/proposal3_sources/input_screen/64540a96cbe7acbd.json",
+  "read_status": "not_read",
+  "input_labels": [
+    "**UniHSI**"
+  ],
+  "http_status": 200,
+  "sha256": "2f20aa787757f57a6e3a6fa2647d38e00dd2117fe0b66dea25d70c474a4e04d8",
+  "title": "GitHub - InternRobotics/UniHSI: [ICLR 2024 Spotlight] Unified Human-Scene Interaction via Prompted Chain-of-Contacts · GitHub",
+  "abstract": "[ICLR 2024 Spotlight] Unified Human-Scene Interaction via Prompted Chain-of-Contacts - InternRobotics/UniHSI",
+  "preview": "",
+  "status": "acquired_not_read"
+}

@@ -1,0 +1,14 @@
+{
+  "url": "https://openaccess.thecvf.com/content/ICCV2025/html/Park_A_Unified_Framework_for_Motion_Reasoning_and_Generation_in_Human_ICCV_2025_paper.html",
+  "artifact": "third_party/proposal3_sources/input_screen/360ffa4065fa2585.json",
+  "read_status": "not_read",
+  "input_labels": [
+    "**MoLaM**"
+  ],
+  "http_status": 200,
+  "sha256": "ea018782a9a86cc04a831e5160e833188542f15ec6c781a96151ad3db8c6712d",
+  "title": "ICCV 2025 Open Access Repository",
+  "abstract": "Recent advancements in large language models (LLMs) have significantly improved their ability to generate natural and contextually appropriate text, enabling more human-like interactions. However, understanding and generating interactive human-like motion, especially involving coordinated interactive motion, remains a challenging problem due to its inherent complexity. To address this, we present MoLaM, the Interactive Motion-LAnguage Model, a unified architecture that jointly processes language and motion modalities for understanding, generating, and controlling interactive motions in multi-turn conversational settings. Unlike prior approaches limited to uni-directional tasks (e.g., text-to-motion or motion-to-text), MoLaM supports a wide range of bi-directional and multi-turn tasks. We also introduce Inter-MT2, a large-scale instruction tuning dataset containing 82.7K multi-turn interactive motion instructions and 153K motion samples, covering tasks such as editing, question answering, and story generation. Leveraging LLMs and motion diffusion models, MoLaM demonstrates strong performance across five interactive motion tasks: motion-to-text, text-to-motion, reaction generation, motion editing, and motion reasoning, outperforming or matching task-specific baselines with a single, unified model.",
+  "preview": "",
+  "status": "acquired_not_read"
+}

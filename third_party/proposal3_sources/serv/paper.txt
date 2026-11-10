@@ -1,0 +1,1115 @@
+      SeRV: Semantic-Aligned Residual Vector Quantization for American Sign
+                           Language Generation
+
+                    Hongyu Wu1  Xu Wu1   Tianhao Wu2   Jiawei Yu2
+                               Phuc Nguyen3   Jian Liu2   Yi Wu1
+                              1University of Oklahoma   2University of Georgia
+                                    3University of Massachusetts Amherst
+
+
+
+                        Abstract                Among SLG approaches, tokenization-based meth-
+                                                         ods (Yin et al., 2024; Zuo et al., 2025) convert con-
+             American Sign Language (ASL) generation re-       tinuous sign motions into discrete tokens, and some
+             mains challenging due to limited paired text-      methods additionally use external sign dictionaries
+          ASL motion data and the difficulty of learning2026                                                   and retrieval to guide generation (Zuo et al., 2025).
+             motion representations both precise for recon-
+                                                        Accurate generation also depends on whether the                struction and predictable from linguistic input.
+                                                            learned tokens preserve the fine-grained hand ar-Oct           Existing methods rely on motion tokenizers op-
+               timized for reconstruction, without explicit se-        ticulation that carries ASL meaning. Yet existing
+              mantic supervision from paired text. As a result,       tokenizers are primarily trained for motion recon-13
+                the learned tokens remain limited in supporting        struction, without explicit alignment between their
+               semantically consistent and fine-grained ASL       token representations and the semantics of the con-
+             motion generation. To address this limitation,                                                               ditioning text. Consequently, signs with distinct
+           we propose SeRV (Semantic-Aligned Residual
+                                                     meanings may receive similar token representa-
+              Vector Quantization), a semantic-aligned RVQ
+                                                                     tions, making the text-to-token mapping difficult               tokenizer for ASL generation. SeRV learns a[cs.CV]
+               semantically structured residual token space        to learn and potentially yielding natural-looking
+             by combining global-level motion–text align-       motions that convey the wrong meaning (Zuo et al.,
+             ment with token-level text-conditioned super-       2025; Yin et al., 2024; Zuo et al., 2026).
+                vision. Building on this tokenizer, a Hierar-        Moreover, current 3D SLG models are trained
+                chical GPT predicts residual motion tokens      on small-scale  data,  as existing 3D ASL  re-
+                in a coarse-to-fine manner, generating struc-                                                              sources (Duarte et al., 2021; Yu et al., 2024) remain
+                 turally coherent and semantically aligned 3D
+                                                               limited in scale and diversity, which restricts their          ASL motion. We further construct a large-
+                                                                generalization to open-domain vocabulary.                scale reconstructed 3D ASL motion–text bench-
+            mark by recovering paired 3D motion from          In this work, we propose SeRV (Semantic-
+           OpenASL videos. Experiments on How2Sign       Aligned Residual Vector Quantization), which
+             and OpenASL show that SeRV outperforms         trains a Residual Vector-Quantized Variational Au-
+                six state-of-the-art baselines, with user stud-       toEncoder (RVQ-VAE) (Lee et al., 2022; Guo et al.,
+                 ies assessing reconstruction quality and seman-                                                         2024) with linguistic supervision rather than recon-arXiv:2609.05742v2             tic fidelity. Samples of our reconstructed 3D                                                                 struction alone, so that its residual codes become
+          ASL motion are available on our project page:
+                                                               predictable from language. SeRV trains the en-             https://signvideos.github.io/Demo/.
+                                                         coder with two semantic alignment objectives: a
+                                                                  global-level alignment on the base-level (coarsest)        1  Introduction
+                                                                 tokens, and a token-level motion–text alignment on
+        American Sign Language (ASL) is the primary    the fully quantized latent, driving coarse tokens to
+         communication method of Deaf and Hard-of-   encode sentence-level semantics while finer residu-
+         Hearing (DHH) communities, but the lack of fluent    als refine articulatory details. Building on this to-
+           signers creates substantial communication barriers.   ken space, we further propose Hierarchical GPT, an
+        To bridge this gap, recent AI research has focused   RVQ-aware autoregressive generator that predicts
+        on Sign Language Translation (SLT) (Jang et al.,   tokens level by level, conditioned on per-token text
+         2025; Li et al., 2025; Wong et al., 2024) and Sign    features and the previously decoded lower-level
+         Language Generation (SLG) (Zuo et al., 2025; Yu   motion tokens. Unlike flat (Guo et al., 2025) or
+            et al., 2024; Fang et al., 2025a; Yin et al., 2024).   two-stage (Guo et al., 2024) prediction, this design
+
+
+                                                  1
+
+                    How2Sign
+                 Body                     DTW-JPE ↓                       generate continuous sign poses or videos directly
+                            6.44                         from text via Transformers (Saunders et al., 2020,
+                                                 2021, 2022; Fang et al., 2025a), GANs (Stoll et al.,
+                                      How2Sign
+   OpenASL                                  Hands DTW-JPE ↓        2020), or diffusion models (Fang et al., 2025b;      B-4 ↑                                                  9.16
+       4.82                                    Qi et al., 2024).  However, operating in a con-
+                                                  tinuous output space makes long-horizon gener-
+                                                     ation harder to stabilize and offers limited dis-
+                                    How2Sign
+   OpenASL                              B-4 ↑               crete structure for scalable autoregressive model-
+Hands     DTW-JPE ↓                             3.67                ing. Recent SLG methods tokenize 3D sign mo-       11.10
+                  OpenASL                             tion into discrete codes. Early efforts use pose-
+                Body DTW-JPE ↓                           level VQ-VAE (Xie et al., 2024b) or VQ-GAN-                           8.81
+                         Prog. Trans.         S-MotionGPT                     style video tokenizers (Esser et al., 2021; Xie et al.,
+                     T2S-GPT          MoMask++
+                  SOKE                                      MaDiS                      2024a). More recent work targets 3D motion: Sig-
+                     Ours                                 nAvatars (Yu et al., 2024) pairs a large-scale 3D
+                                                          holistic sign dataset with a VQ-VAE codebook;
+Figure 1: Comparison with state-of-the-art methods on   T2S-GPT (Yin et al., 2024) uses dynamic vector
+How2Sign and OpenASL. Axes show body and hand                                                     quantization for adaptive-length codes; SOKE (Zuo
+DTW-JPE (lower is better) and back-translation BLEU-
+                                                           et al., 2025) tokenizes upper-body, left-hand, and4 (B-4; higher is better), oriented so that farther from
+                                                   right-hand separately and generates multilingualthe center is better. SeRV achieves the best result on all
+six metrics.                                           signs via a pretrained LM with dictionary retrieval;
+                                     MaDiS (Zuo et al., 2026) combines part-wise to-
+                                                kens with masked diffusion language modeling and
+preserves the residual hierarchy and yields struc-
+                                                              tri-level cross-modal pretraining.
+turally coherent ASL motion. Our contributions
+                                                   Despite these advances, existing motion tok-
+are summarized as follows:
+                                                     enizers primarily preserve motion fidelity through
+    • We propose SeRV, a semantic-aligned RVQ    reconstruction-oriented objectives, without encour-
+     tokenizer whose residual tokens are precise   aging the learned representations to capture the
+     for reconstruction and predictable from text,    linguistic semantics of signs. Consequently, tokens
+    and the Hierarchical GPT generator.              that accurately reconstruct gestures may not be well
+                                                   aligned with their textual meanings.
+    • We construct a reconstructed 3D ASL motion–
+                                     3D ASL Resources. Existing resources such as
+     text benchmark by recovering paired 3D sign
+                                        How2Sign (Duarte et al., 2021), SignAvatars (Yu
+    motion from OpenASL videos using the offi-
+                                                           et al., 2024), and Neural Sign Actors (Baltatzis
+      cial paired clips and data split.
+                                                           et al., 2024) provide valuable 3D sign resources,
+    • Experiments on How2Sign and OpenASL    but paired 3D ASL motion–text data remain limited
+    show that SeRV outperforms six state-of-the-    in scale and diversity. OpenASL (Shi et al., 2022)
+      art baselines on all six reported metrics (Fig-    offers a large collection of in-the-wild continuous
+     ure 1; Table 1). User studies assess recon-  ASL videos with paired text, but lacks 3D motion
+     struction quality and the semantic fidelity of    annotations. We reconstruct SMPL-X motion from
+     generated motion.                      OpenASL videos to expand paired 3D ASL motion–
+                                                         text resources and support larger-scale training of
+                                                    sign generation models.2  Related Work
+
+Sign Language Generation (SLG).             3  Methodology
+  Early SLG methods  often adopt cascaded
+pipelines, bridging text and sign motion via glosses,   The overview of our framework is shown in Fig-
+skeletons, or pose sequences (Stoll et al., 2020;   ure 2 and Figure 3. Our method has two stages:
+Zelinka and Kanis, 2020). These intermediate rep-  SeRV (Semantic-Aligned Residual Vector Quanti-
+resentations provide linguistic or structural guid-    zation), a text-aligned RVQ tokenizer, and Hierar-
+ance but require costly annotations and risk infor-    chical GPT, a coarse-to-fine token generator. SeRV
+mation bottlenecks or error accumulation (Saun-   converts continuous 3D ASL motion into residual
+ders et al., 2021; Zuo et al., 2025, 2026). Others    discrete tokens while aligning the motion repre-
+
+
+                                         2
+
+sentations with the paired transcript. Hierarchical    sentence-level embedding with the level-0 quan-
+GPT then predicts these residual tokens from text    tized latent q(0), a coarse content representation of
+in a coarse-to-fine autoregressive order, and the pre-   the ASL motion, and use the token-level features
+dicted tokens are decoded by the learned motion    in a motion–text late interaction loss over quan-
+decoder to reconstruct the final 3D ASL motion.      tized motion latents. These losses inject global and
+                                                     token-level textual supervision into the tokenizer.
+3.1  Preliminaries of RVQ-VAE
+Given a sign motion sequence S ∈RT×ds, with   Global-Level Sign–Text Alignment. We align
+                                                      q(0) with the paired text representation so that theT frames and motion-feature dimension ds, a mo-
+tion encoder E produces a continuous latent se-   learned ASL motion tokens retain text-relevant se-
+quence z = E(S) ∈RT ′×C, with temporal length    mantics. Given the paired transcript c, a frozen
+T ′ and feature dimension C. A codebook C =    pretrained T5 encoder (Chung et al., 2024) Etext
+{em}K−1m=0 is a learnable set of K embedding vec-   produces token-level text features F = Etext(c) ∈
+tors em ∈RC; each latent vector is quantized to   RLt×dc, where Lt is the tokenized text length and
+its nearest code, and the selected index serves as a    dc is the T5 hidden dimension. We use the aver-
+discrete token. We adopt residual vector quantiza-   age hidden state over non-padded tokens as the
+tion with L codebooks {Cl}L−1l=0 (Guo et al., 2024;    sentence-level representation f ∈Rdc. On the mo-
+Lee et al., 2022). Starting from r(0) = z, stage l    tion side, we summarize q(0) into a global motion
+computes q(l) = Q(l)(r(l)) and updates the resid-   embedding g(0) using temporal mean pooling. The
+ual r(l+1) = r(l) −q(l), where Q(l)(·) is nearest-   motion and text embeddings are then projected into
+neighbor quantization with Cl. The selected index   a shared semantic space and ℓ2-normalized.
+                                                       and ˆfj denote these embeddings for sam-k(l)t  ∈{0, . . . , K −1} at position t is the discrete      Let ˆg(0)i
+motion token. Each residual r(l) and quantized    ples i and j in a mini-batch of size B, with cosine
+sequence q(l) lies in RT ′×C. The final quantized    similarity s(0)ij = sim(ˆg(0)i   ,ˆfj). Lglobal is a sym-
+latent is ˆz = PL−1l=0 q(l), decoded to ˆS = D(ˆz) by    metric InfoNCE loss (Oord et al., 2018; Radford
+the motion decoder D. The RVQ-VAE is trained    et al., 2021) over s(0) with temperature τ, aver-
+with a reconstruction loss and a per-level embed-   aging the motion-to-text and text-to-motion direc-
+ding constraint:                                          tions; matched motion–text pairs serve as positives
+                                             and the other in-batch samples as negatives.
+                L−1
+ LRVQ = Lrec + β X  r(l) −sg h q(l)i 2  ,  (1)   Token-Level Sign–Text Alignment.  The global-                                   F
+                     l=0                                level contrastive loss provides global alignment but
+                                                      leaves token-level text–motion interactions implicit.where Lrec = ∥S −ˆS∥1, sg[·] is the stop-gradient
+                                 We therefore introduce a late-interaction loss (Yaooperator, and β weights the embedding constraint.
+                                                           et al., 2021) that averages token-wise maximumHere, ∥· ∥F is the Frobenius norm over the latent
+                                                            similarities between text tokens and quantized ASLsequence, and the reconstruction ℓ1 norm sums
+                                              motion latents.absolute elementwise errors. Codebooks receive
+                                                For text features, we reuse the T5 token hid-no gradients; each code is instead updated as an
+                                            den states F ∈RLt×dc; for motion features, weexponential moving average (decay 0.99) of the
+                                                use the fully quantized latent ˆz = PL−1l=0 q(l) ∈residuals assigned to it, and unused codes are reset
+                                     RT ′×C. Separate token-level projection heads mapto residuals sampled from the current batch. We
+                                           them into a shared normalized space, with projec-apply a straight-through estimator at every level, so
+                                                      tion dimension da, producing ˜F ∈RLt×da andthe reconstruction and semantic losses update the
+                                                             ˜Z ∈RT ′×da.  For each ASL motion–text pair,encoder through the quantizer.
+                                    we compute a token-wise cosine similarity ma-
+3.2  SeRV Model Architecture                       trix A ∈RLt×T ′, where Au,v = sim(˜Fu, ˜Zv)
+                                              measures the similarity between the u-th text to-Unlike a reconstruction-only RVQ-VAE, SeRV
+                                            ken and the v-th motion latent.  Let ΩF andadds semantic supervision from paired transcripts
+during tokenizer training. As illustrated in Fig-  ΩZ denote valid text-token and motion-latent po-
+                                                           sitions.  We define the late-interaction scoresure 2, a frozen T5 encoder (Chung et al., 2024)
+                                                                          1                             P                                                   as sF→Z =                                                                                                                                         |provides both sentence-level and token-level text                                                                u∈ΩF maxv∈ΩZ Au,v and                                                                       |ΩF
+                                                                   1 Pfeatures from the same transcript. We align the   sZ→F =                                                          v∈ΩZ maxu∈ΩF Au,v. Each valid                                                                   |ΩZ|
+
+                                         3
+
+Figure 2: Overview of SeRV. In the diagram, x and ˆx denote S and ˆS, respectively. The late-interaction panel shows
+the projected features ˜F and ˜Z. We introduce a global-level loss Lglobal on the level-0 motion representation and a
+token-level loss Ltok on the fully quantized latent sequence. Together with the standard RVQ tokenizer objective
+LRVQ, these objectives encourage the learned discrete motion tokens to preserve motion fidelity while retaining
+text-relevant semantics.
+
+
+
+
+    Multi-Layer Codebook
+                                                      Tokens at                                 Tokens at
+
+
+                                                                                                                            Output Sign Motion
+                              ......                                                                                                      Sign                     Frames                               Coarse          Residual          Residual          ...       Coarse           Residual          Residual       Motion
+                                          Motion         Refinement       Refinement              Motion         Refinement        Refinement     Decoder                                                             .........
+                                       Decoder...         Decoder...          Decoder...              Decoder...          Decoder...          Decoder...       D (·)
+            Layers                                                                                                                                                                                                                                            t
+                                              Layer 0          Layer 1            Layer l                Layer 0           Layer 1           Layer l
+
+     They are just        Text
+     supporting me     Encoder
+         Text Transcript                                                               Hierarchical GPT
+
+Figure 3: Hierarchical GPT for coarse-to-fine ASL motion generation. The diagram labels Qtl denote discrete tokens
+k(l)t  ; output ˆx denotes ˆS. Given the text feature from the frozen condition encoder, the generator autoregressively
+predicts SeRV tokens over time and RVQ levels. For each time step, a coarse decoder first predicts the level-0 token,
+while residual decoders progressively predict higher-level tokens conditioned on the temporal history, the generated
+coarser tokens, and the text feature. The predicted multi-level tokens are then decoded by the shared motion decoder
+to reconstruct the ASL motion sequence.
+
+
+token is therefore matched to its closest token in   Here, LRVQ denotes the standard RVQ tokenizer
+the other modality.                                    objective, Lglobal aligns the coarse level-0 motion
+  Given a mini-batch of size B, let sZ→Fij    denote    representation with sentence-level text semantics,
+the motion-to-text score obtained by averaging over   while Ltok encourages fine-grained interactions be-
+the motion latents of sample i and maximizing over   tween text tokens and quantized ASL motion la-
+the text tokens of sample j. Conversely, sF→Zij    av-    tents. The coefficients λglobal and λtok balance the
+erages over the text tokens of sample i and maxi-   two semantic alignment objectives.
+mizes over the motion latents of sample j. Thus,
+                                                    3.3  Hierarchical GPT
+the row index is the query sample and the column
+index is the candidate sample in each direction.      Hierarchy-aligned generation.  We propose Hi-
+  Ltok applies the same symmetric InfoNCE loss    erarchical GPT, an RVQ-aware autoregressive gen-
+to these scores with a token-level temperature τ ′.     erator that predicts SeRV tokens over both time and
+                                                     quantization depth. We reuse the frozen T5 encoder
+Training Objective.  The overall training objec-   and its token-level text features F = Etext(c) ∈
+tive of SeRV is defined as                         RLt×dc, where c is the input text. The sentence-
+                                                        level vector f used for global alignment is the
+ LSeRV = LRVQ + λglobalLglobal + λtokLtok. (2)   pooled representation of F.  Let k0:L−11:Tq   be the
+
+                                         4
+
+multi-level token hierarchy produced by SeRV,   4  Performance Evaluation
+where L is the number of RVQ levels, Tq is the
+                                                                ′                   4.1  Experimental Methodologytoken sequence length (Tq = T  for the motion
+tokens), and k(l)t   is the token at time t and level    Datasets. We evaluate on two ASL datasets,
+l. Following the text-aligned hierarchy learned by   How2Sign (Duarte et al., 2021) and OpenASL (Shi
+SeRV, the generator predicts lower-level coarse    et  al.,  2022).   For How2Sign, we  use  its
+tokens before higher-level residual tokens:       SMPL-X motion annotations and the  official
+                                                           train/validation/test split. For OpenASL, we recon-                   Tq L−1
+p(k0:L−1              | F) = Y Y p(k(l)t   | k0:L−1<t     , k0:l−1t      , F)   struct 3D SMPL-X signing motion from the source    1:Tq                                                   videos; the reconstruction pipeline and dataset
+                t=1 l=0
+                                                 (3)    statistics are detailed in Appendix A.1 and A.6.
+where p(·) is the categorical distribution over code-   For both datasets, we represent sign motion as se-
+book entries, k0:L−1<t    denotes all tokens before time   quences of SMPL-X parameters covering upper-
+t, and k0:l−1t    denotes coarser tokens already gen-   body and hand joints. We assess reconstruction
+erated (empty for l = 0). This keeps temporal    quality in Appendix A.4.1.
+causality and coarse-to-fine dependencies.
+                                              Evaluation metrics & Implementation.  Since
+Coarse-to-fine decoding.  We implement Eq. (3)    generated sign sequences may differ in length from
+with a coarse token decoder followed by resid-   the ground truth, we follow prior 3D sign language
+ual token decoders.  At each time step  t, the    generation work and use Dynamic Time Warping
+coarse decoder predicts the level-0 token k(0)t  from   over Joint Position Error (DTW-JPE) (Zuo et al.,
+the previous token history and the text feature F,   2025; Cai et al., 2019) to measure sequence-level
+capturing the coarse text-conditioned motion pat-   motion distance. DTW temporally aligns the gen-
+tern. The coarse decoder is a causal Transformer    erated and reference sequences before computing
+built with LLaMA-style blocks, including RM-    joint-position errors. We compute DTW-JPE sepa-
+SNorm, SwiGLU, and rotary positional embed-    rately for the body and each hand, and report Body
+dings (RoPE) (Touvron et al., 2023).              and Hands, where Hands is the mean of the left-
+  For each higher level l > 0, a residual decoder   and right-hand errors. For tokenizer reconstruc-
+predicts k(l)t  conditioned on the previous token his-    tion, where the generated motion is frame-aligned
+tory k0:L−1<t     , the coarser tokens k0:l−1t    already gen-   with the input, temporal alignment is unnecessary;
+erated at the current time step, and the text feature   we instead report PA-MPJPE, the Mean Per-Joint
+F.                                                 Position Error after Procrustes alignment with ro-
+  The embeddings of these coarser tokens are fed    tation, translation, and scale. We use a pre-trained
+to the residual decoder, allowing higher levels to    back-translator (Li et al., 2025) and report BLEU-
+refine the current coarse representation rather than   4 (B-4); details of the back-translator and formal
+generate the motion state from scratch. Since resid-   metric definitions are provided in Appendix A.7.
+ual decoders mainly model refinement details, we  We train the framework in two stages. SeRV uses
+use fewer Transformer layers while retaining atten-  L = 3 RVQ levels, latent dimension C = 512, and
+tion layers for fine-grained articulation modeling.   codebook size K = 512 per level. Hierarchical
+This decoding process follows the coarse-to-fine   GPT uses a hidden dimension of 1024 and 16 atten-
+hierarchy learned by SeRV.                            tion heads; the coarse decoder and the two residual
+                                                decoders contain 9, 6, and 3 Transformer layers,
+Training objective.  Let ˆy(l)t  denote the predicted    respectively. Full details are in Appendix A.8.
+token distribution at level l and time step t, and let
+k(l)t  be the corresponding ground-truth token from    4.2  Comparison with State-of-the-Art
+the frozen SeRV tokenizer. The generator is trained       Methods
+with a level-wise cross-entropy loss:
+                                We compare SeRV with three baseline groups
+            L−1       Tq                         (Table 1):  sign-generation models Progressive                  1
+   LHGPT = X λl X CE  ˆy(l)t  , k(l)t    ,    (4)   Transformers (Saunders et al., 2020) and T2S-
+                  Tq
+               l=0      t=1                 GPT (Yin et al., 2024); general motion-generation
+where Tq is the token length, λl is the loss weight   models S-MotionGPT (Jiang et al., 2023a) and
+for level l, and CE(·, ·) denotes cross-entropy.     MoMask++ (Guo et al., 2025), adapted to SMPL-
+
+
+                                         5
+
+Table 1: Comparison with state-of-the-art methods on How2Sign and OpenASL. Body and Hands are DTW-JPE
+(lower is better); B-4 denotes back-translation BLEU-4 (higher is better).
+
+
+                                              How2Sign             OpenASL
+           Method
+                                       Body↓  Hands↓  B-4↑  Body↓  Hands↓  B-4↑
+
+             Prog. Trans.‡ (Saunders et al., 2020)   14.74    30.17    1.10   17.23    32.35    1.70
+           T2S-GPT‡ (Yin et al., 2024)          12.65    18.44    1.50   16.45    26.13    1.80
+            S-MotionGPT∗(Jiang et al., 2023a)    12.41    13.74    2.30   10.42    13.45    2.79
+          MoMask++∗(Guo et al., 2025)         9.06     11.34    2.12   10.23    13.03    2.73
+         SOKE† (Zuo et al., 2025)              7.75     10.08    2.70    9.89     12.69    3.17
+          MaDiS (Zuo et al., 2026)              6.59     9.45     3.04    9.35     11.77    4.01
+
+          SeRV                                6.44     9.16     3.67    8.81     11.10    4.82
+
+  Notes. Hands averages both hands. ∗: adapted motion-generation models; ‡: How2Sign DTW-JPE from SOKE reimplementations; †: external sign dictionaries.
+  All B-4 scores are re-evaluated using a back translator; all OpenASL results are reproduced in this work. See Sections 4.1–4.2 and Appendix A.7 for sources and
+  evaluation details.
+
+
+
+
+
+Figure 4: Qualitative comparison of text-to-3D ASL generation. For each of six examples, we show the reference
+signer video (top) and the 3D motion generated by SOKE and by our method (SeRV). The top three examples are
+from How2Sign; the bottom three are from OpenASL. More qualitative example videos are available on our project
+page: https://signvideos.github.io/Demo/.
+
+
+X sign motion; and recent sign-specific mod-   2026), including SOKE’s reimplementations of
+els SOKE (Zuo  et  al., 2025) and concurrent    Prog. Trans. and T2S-GPT. All OpenASL results
+MaDiS (Zuo et al., 2026). How2Sign DTW-JPE   come from our implementations and reproductions
+values are taken from prior work (Zuo et al., 2025,   under the same SMPL-X representation, data split,
+
+
+
+                                         6
+
+Table 2: Reconstruction performance of different mo-
+tion tokenizers on How2Sign and OpenASL. We report          S-MotionGPT              21%
+PA-MPJPE in mm (lower is better).
+                                                                    SOKE                 27%
+
+              How2Sign      OpenASL                SeRV (Ours)                               52%
+  Method
+            Body↓  Hands↓  Body↓  Hands↓                         0%      10%     20%     30%     40%     50%     60%
+
+                                                                                                                       Preference (%)
+ VQ-VAE     24.07    7.96    28.90    7.45
+  Multi-VAE   19.37    6.65    24.60    6.22                                                       Figure 5: Preference rates from 5 professional ASL sign-
+ SeRV        16.23    6.13     17.53    5.65                                                              ers selecting the method that best conveys text meaning.
+
+
+                                                       Table 3: Bidirectional text–sign retrieval with batch size
+and evaluation protocol. As shown in Table 1, ear-
+                                               64 (higher is better).
+lier sign-generation methods and adapted general
+motion generators trail recent sign-specific models,            Dataset     Tokenizer  Direction R@1↑ R@5↑ R@10↑
+especially on hand motion, suggesting that tokeniz-               RVQ                 11.61   37.28    59.04                                                                              T →S
+ers designed for general motion struggle to capture          How2Sign  SeRVRVQ                 14.526.73    46.9727.05    73.2147.10
+                                                                                     S →T
+fine-grained sign articulation. SeRV achieves the                  SeRV                 8.42    34.08    58.41
+
+                                                                              T →Sbest results on all metrics on both How2Sign and                RVQSeRV                16.84   50.16    76.00                                                                                                                   22.38   65.21    88.22
+                                                                OpenASL
+                                                                                     S →TOpenASL. Notably, it outperforms SOKE without                RVQSeRV                 9.83    36.39    62.01                                                                                                                   12.98   47.30    79.18
+relying on an external sign dictionary.
+
+Performance of Tokenizer Reconstruction.  We
+                                                  volving 5 professional ASL signers to evaluate the
+further evaluate whether the proposed tokenizer
+                                                semantic alignment between generated sign mo-
+preserves the input 3D motion.
+                                                        tions and their corresponding text annotations.
+  As shown in Table 2, SeRV achieves the lowest
+                                                           Specifically, we randomly selected 20 sign se-
+reconstruction errors on both How2Sign and Ope-
+                                              quences and presented participants with avatars
+nASL. Compared with the standard VQ-VAE and
+                                                   generated by different methods alongside their cor-
+the part-wise Multi-VAE tokenizer used in SOKE,
+                                                responding text annotations. For each sequence,
+SeRV consistently reduces body and hand recon-
+                                                      participants were asked to select the generated
+struction errors, indicating that the proposed seman-
+                                                      avatar that best conveyed the semantic meaning of
+tic alignment does not compromise motion fidelity.
+                                                    the given text. The study was approved by our in-
+The gains are especially important for downstream
+                                                             stitution’s IRB (Appendix A.5). MaDiS (Zuo et al.,
+generation, as a more accurate residual token space
+                                               2026) is not included because it was open-sourced
+provides cleaner targets for predicting both coarse
+                                                           after the study had been distributed to participants.
+body motion and fine-grained hand articulation.
+                                       As shown in Figure 5, our method was selected in
+4.3  Qualitative Comparison              52% of the trials, substantially surpassing SOKE
+                                                           at 27% and S-MotionGPT at 21%. These resultsWe provide qualitative comparisons in Figure 4.
+                                                     align with the above qualitative and quantitativeFor each input transcript, we show the 3D signing
+                                                     evaluations, indicating that SeRV generates signmotion generated by SOKE and SeRV. Compared
+                                              motions that more faithfully convey the meaningwith SOKE, SeRV produces more accurate hand
+                                                    of the input text.configurations, especially for the fine-grained hand-
+shapes that carry important linguistic information;
+                                                    4.5  Ablation Studies
+for instance, in the “Clean the tools” example,
+the baseline outputs leave the hands in a weakly   Text–sign  retrieval  analysis. We  evaluate
+articulated, near-static pose, whereas our method   whether SeRV learns a more text-aligned  to-
+reproduces the intended handshape. Our method   ken space via bidirectional text–sign retrieval,
+also yields more plausible upper-body posture with    representing  text with frozen T5 embeddings
+fewer self-contact artifacts.                      and motion with pooled latents from the frozen
+                                                   tokenizer encoder. As shown in Table 3, SeRV
+4.4  User Study                                              improves all recall metrics in both directions on
+In addition to the objective metrics presented in   How2Sign and OpenASL, indicating that semantic
+the previous tables, we conducted a user study in-   supervision improves cross-modal alignment.
+
+
+                                         7
+
+Table 4:  Effect of SeRV tokenizer objectives on    Table 6:  Effect of the Ltok supervision target on
+How2Sign and OpenASL. We report DTW-JPE (lower   How2Sign. Each row trains a separate tokenizer; su-
+is better) and B-4 (higher is better). All variants use the    pervising more complete cumulative latents improves
+same generator. RVQ uses only LRVQ; SeRV adds both    generation and retrieval.
+semantic objectives.
+                                                               Supervision target       DTW-JPE B/H↓  R@1↑
+                      How2Sign         OpenASL
+ Tokenizer Objective                                             Level 0 (q(0))                6.62 / 9.45      12.65
+               Body↓Hands↓B-4↑Body↓Hands↓B-4↑                                                               Levels 0–1 (q(0) + q(1))      6.56 / 9.32      13.80
+ RVQ                6.82    9.63   2.89   9.50   11.95  3.90         Full latent (ˆz)                6.44 / 9.16      14.52
+ RVQ +Lglobal        6.67    9.50   3.15   9.26   11.66  4.02
+ RVQ +Ltok          6.53    9.31   3.37   9.09   11.42  4.34
+ SeRV               6.44    9.16   3.67   8.81   11.10  4.82     Table 7: Cumulative contribution of RVQ levels on
+                                                How2Sign, using the same trained SeRV tokenizer. level
+Table  5:  Ablation on generator  architectures on   0 captures most of the retrieval signal, while later levels
+How2Sign and OpenASL. All variants use the same    mainly improve reconstruction. R@1: text-to-sign /
+SeRV tokenizer. Lower is better for DTW-JPE.             sign-to-text.
+
+                    How2Sign      OpenASL           Representation        PA-MPJPE B/H↓   R@1↑  Generator
+                  Body↓  Hands↓  Body↓  Hands↓                                                            Level 0 (q(0))              20.84 / 8.06    13.61 / 7.79
+  Flat AR              7.73    10.41    13.43    15.33        Levels 0–1 (q(0) + q(1))    17.42 / 6.71    14.18 / 8.16
+  Two-stage            7.21     9.86    12.24    13.80         Full latent (ˆz)              16.23 / 6.13    14.52 / 8.42
+  Hierarchical GPT    6.44     9.16     8.81    11.10
+
+
+                                              each refinement level on lower-level tokens (see
+Effect of SeRV Tokenization. We ablate the
+                                            Appendix A.2.2).
+tokenizer objectives with a fixed generator (Ta-
+ble 4; Figure 8 in Appendix A.9).  On both
+How2Sign and OpenASL, adding Lglobal or Ltok   Cumulative Contribution of RVQ Levels.  We
+to the reconstruction-only RVQ consistently im-   also reconstruct motion and perform retrieval us-
+proves generation, especially for hands, and com-   ing the cumulative latent up to each RVQ level
+bining both performs best on all metrics, indicating    (Table 7). level 0 alone captures most of the cross-
+that the two objectives are complementary. The   modal retrieval signal, while later levels mainly
+per-token alignment analysis in Appendix A.3 fur-   improve geometric reconstruction with smaller re-
+ther suggests that Lglobal aligns captions with mo-    trieval gains, indicating a coarse-to-fine division of
+tions at the sentence level, whereas Ltok strength-   labor across the hierarchy (see Appendix A.2.3).
+ens word-level matches.
+
+                                       5  ConclusionEffect of Hierarchical Generation.  Using the
+same SeRV tokenizer, we compare Hierarchical
+                                We present SeRV, a semantic-aligned RVQ to-GPT with a flat autoregressive (Flat AR) baseline
+                                                   kenizer for text-to-3D ASL generation.  Unlikethat predicts all residual tokens as one sequence
+                                                    reconstruction-only tokenizers, SeRV uses global-and a two-stage baseline that predicts coarse and
+                                                        level and token-level motion–text alignment toresidual tokens in separate stages. As shown in Ta-
+                                                       learn residual tokens that are both precise and text-ble 5, Hierarchical GPT outperforms both baselines
+                                                       predictable. Building on SeRV, Hierarchical GPTon body and hand motion on both datasets, show-
+                                                        predicts residual tokens over time and quantizationing that preserving the residual token hierarchy is
+                                                depth while preserving the coarse-to-fine hierar-key to accurate ASL generation.
+                                                    chy. To support scalable training and evaluation,
+Effect of Cumulative-Latent Supervision.  We   we construct a large-scale reconstructed 3D ASL
+further examine where to apply Ltok: the level-0 la-   motion–text benchmark from OpenASL. Exper-
+tent, the cumulative latent of levels 0–1, or the full   iments on How2Sign and OpenASL show state-
+cumulative latent. As shown in Table 6, supervis-    of-the-art performance, with consistent gains in
+ing more complete cumulative latents consistently   body and hand motion accuracy; ablations confirm
+improves both generation and text-to-sign retrieval,   the contributions of both semantic alignment and
+which aligns with Hierarchical GPT conditioning    hierarchy-aligned generation.
+
+
+                                         8
+
+6  Limitations                                Wang, Mostafa Dehghani, Siddhartha Brahma, and
+                                                1 others. 2024.  Scaling instruction-finetuned lan-
+Our framework has several limitations. First, au-      guage models. Journal of machine learning research,
+toregressive decoding generates tokens sequen-      25(70):1–53.
+tially, limiting inference parallelism for long se-
+                                           Amanda Duarte, Shruti Palaskar, Lucas Ventura, Deepti
+quences; masked, semi-autoregressive, or diffusion-      Ghadiyaram, Kenneth DeHaan, Florian Metze, Jordi
+based decoding could improve speed while preserv-       Torres, and Xavier Giro-i Nieto. 2021. How2sign: a
+ing temporal coherence. Second, although seman-       large-scale multimodal dataset for continuous ameri-
+                                                      can sign language. In Proceedings of the IEEE/CVFtic alignment improves hand motion, our objective
+                                                        conference on computer vision and pattern recogni-
+does not explicitly supervise handshape, palm ori-                                                                     tion, pages 2735–2744.
+entation, or sign-level articulatory categories; hand-
+specific objectives or finer hand tokenization could    Patrick Esser, Robin Rombach, and Bjorn Ommer. 2021.
+                                                Taming transformers for high-resolution image syn-address this. Third, our representation does not
+                                                                    thesis. In Proceedings of the IEEE/CVF conference
+model facial expression and emotion, which are es-     on computer vision and pattern recognition, pages
+sential non-manual components of sign language;      12873–12883.
+facial parameters and emotion-aware supervision
+                                              Sen Fang, Chen Chen, Lei Wang, Ce Zheng, Chunyu
+could yield more expressive and natural avatars.
+                                                             Sui, and Yapeng Tian. 2025a.  Signllm: Sign lan-
+Fourth, our reconstructed OpenASL motion is not      guage production large language models. In 2025
+noise-free; fine-grained finger articulation may still     IEEE/CVF International Conference on Computer
+be inaccurate under occlusion or fast motion, and       Vision Workshops (ICCVW), pages 6681–6693. IEEE.
+hands that leave the camera frame cannot be reli-                                                Sen Fang, Chunyu Sui, Yanghao Zhou, Xuedong Zhang,
+ably recovered. Finally, our framework conditions     Hongbin Zhong, Yapeng Tian, and Chen Chen.
+only on text; multi-modal inputs such as speech,      2025b. Signdiff: Diffusion model for american sign
+glosses, reference videos, or style prompts could      language production.  In 2025 IEEE 19th Interna-
+                                                              tional Conference on Automatic Face and Gesture
+enable more controllable and expressive genera-
+                                                        Recognition (FG), pages 1–11. IEEE.
+tion.
+                                              Chuan Guo, Inwoo Hwang, Jian Wang, and Bing Zhou.
+7  Ethical Considerations                         2025. Snapmogen: Human motion generation from
+                                                          expressive texts. Advances in Neural Information
+We plan to publicly release the reconstructed Ope-      Processing Systems, 38:99939–99955.
+nASL benchmark, subject to applicable permis-
+                                              Chuan Guo, Yuxuan Mu, Muhammad Gohar Javed, Sen
+sions and licensing requirements. Any release                                               Wang, and Li Cheng. 2024. Momask: Generative
+would include only SMPL-X parameters indexed     masked modeling of 3d human motions.  In Pro-
+by the original OpenASL clip IDs, without redis-      ceedings of the IEEE/CVF Conference on Computer
+tributing the source videos (Appendix A.6). Both       Vision and Pattern Recognition, pages 1900–1910.
+human studies in this paper were approved by our                                                Youngjoon Jang, Haran Raajesh, Liliane Momeni, Gül
+institution’s IRB, and all participants provided in-      Varol, and Andrew Zisserman. 2025. Lost in transla-
+formed consent (Appendices A.4.1 and A.5).              tion, found in context: Sign language translation with
+                                                          contextual cues. In Proceedings of the IEEE/CVF
+                                                     Conference on Computer Vision and Pattern Recog-
+References                                                    nition, pages 8742–8752.
+
+Vasileios Baltatzis, Rolandos Alexandros Potamias,   Biao Jiang, Xin Chen, Wen Liu, Jingyi Yu, Gang Yu,
+   Evangelos Ververas, Guanxiong Sun, Jiankang Deng,      and Tao Chen. 2023a. Motiongpt: Human motion as
+  and Stefanos Zafeiriou. 2024. Neural sign actors:      a foreign language. Advances in Neural Information
+  A diffusion model for 3d sign language production      Processing Systems, 36:20067–20079.
+  from text. In Proceedings of the IEEE/CVF Confer-
+  ence on Computer Vision and Pattern Recognition,   Tao Jiang, Peng Lu, Li Zhang, Ningsheng Ma, Rui
+   pages 1985–1995.                                  Han, Chengqi Lyu, Yining Li, and Kai Chen. 2023b.
+                                                   Rtmpose: Real-time multi-person pose estimation
+Xingyu Cai, Tingyang Xu, Jinfeng Yi, Junzhou Huang,      based on mmpose. arXiv preprint arXiv:2303.07399.
+  and Sanguthevar Rajasekaran. 2019. Dtwnet: A dy-
+  namic time warping network. Advances in neural   Doyup Lee, Chiheon Kim, Saehoon Kim, Minsu Cho,
+   information processing systems, 32.                   and Wook-Shin Han. 2022. Autoregressive image
+                                                          generation using residual quantization. In Proceed-
+Hyung Won Chung, Le Hou, Shayne Longpre, Barret       ings of the IEEE/CVF conference on computer vision
+  Zoph, Yi Tay, William Fedus, Yunxuan Li, Xuezhi      and pattern recognition, pages 11523–11532.
+
+
+                                         9
+
+Zecheng Li, Wengang Zhou, Weichao Zhao, Kepeng       All-in-one-stage expressive human pose and shape
+  Wu, Hezhen Hu, and Houqiang Li. 2025. Uni-sign:       estimation. In Proceedings of the IEEE/CVF con-
+  Toward unified sign language understanding at scale.      ference on computer vision and pattern recognition,
+  arXiv preprint arXiv:2501.15187.                      pages 1834–1843.
+
+Ilya Loshchilov and Frank Hutter. 2017.   Decou-   Hugo Touvron, Thibaut Lavril, Gautier Izacard, Xavier
+  pled weight decay regularization.  arXiv preprint       Martinet, Marie-Anne Lachaux, Timothée Lacroix,
+  arXiv:1711.05101.                                        Baptiste Rozière, Naman Goyal, Eric Hambro, Faisal
+                                                         Azhar, Aurelien Rodriguez, Armand Joulin, Edouard
+Aaron van den Oord, Yazhe Li, and Oriol Vinyals. 2018.      Grave, and Guillaume Lample. 2023. Llama: Open
+   Representation learning with contrastive predictive      and efficient foundation language models.  arXiv
+   coding. arXiv preprint arXiv:1807.03748.                 preprint arXiv:2302.13971.
+
+Rolandos Alexandros Potamias, Jinglei Zhang, Jiankang   Ryan Wong, Necati Cihan Camgoz, and Richard Bow-
+  Deng, and Stefanos Zafeiriou. 2025.  Wilor: End-      den. 2024.  Sign2gpt: Leveraging large language
+   to-end 3d hand localization and reconstruction in-     models for gloss-free sign language translation. In
+   the-wild.  In Proceedings of the Computer Vision       International Conference on Learning Representa-
+  and Pattern Recognition Conference, pages 12242–       tions.
+  12254.
+                                               Pan Xie, Taiying Peng, Yao Du, and Qipeng Zhang.
+Fan Qi, Yu Duan, Huaiwen Zhang, and Changsheng      2024a. Sign language production with latent motion
+  Xu. 2024. Signgen: End-to-end sign language video       transformer. In Proceedings of the IEEE/CVF Win-
+   generation with latent diffusion. In European Confer-       ter Conference on Applications of Computer Vision,
+  ence on Computer Vision, pages 252–270. Springer.      pages 3024–3034.
+
+Alec Radford, Jong Wook Kim, Chris Hallacy, Aditya   Pan Xie, Qipeng Zhang, Peng Taiying, Hao Tang, Yao
+  Ramesh, Gabriel Goh, Sandhini Agarwal, Girish Sas-     Du, and Zexian Li. 2024b. G2p-ddm: Generating
+   try, Amanda Askell, Pamela Mishkin, Jack Clark,       sign pose sequence from gloss sequence with discrete
+  Gretchen Krueger, and Ilya Sutskever. 2021. Learn-      diffusion model. In Proceedings of the AAAI Con-
+   ing transferable visual models from natural language       ference on Artificial Intelligence, volume 38, pages
+   supervision. In International conference on machine      6234–6242.
+   learning, pages 8748–8763. PmLR.
+                                               Lewei Yao, Runhui Huang, Lu Hou, Guansong Lu,
+Ben Saunders, Necati Cihan Camgoz, and Richard Bow-     Minzhe Niu, Hang Xu, Xiaodan Liang, Zhenguo
+   den. 2020. Progressive transformers for end-to-end       Li, Xin Jiang, and Chunjing Xu. 2021.   Filip:
+   sign language production. In European Conference       Fine-grained interactive language-image pre-training.
+  on Computer Vision, pages 687–705. Springer.           arXiv preprint arXiv:2111.07783.
+
+Ben Saunders, Necati Cihan Camgoz, and Richard Bow-   Aoxiong Yin, Haoyuan Li, Kai Shen, Siliang Tang, and
+   den. 2021. Continuous 3d multi-channel sign lan-      Yueting Zhuang. 2024.  T2s-gpt: Dynamic vector
+  guage production via progressive transformers and       quantization for autoregressive sign language produc-
+  mixture density networks. International journal of       tion from text. In Proceedings of the 62nd Annual
+  computer vision, 129(7):2113–2135.                   Meeting of the Association for Computational Lin-
+                                                                 guistics (Volume 1: Long Papers), pages 3345–3356.
+Ben Saunders, Necati Cihan Camgoz, and Richard Bow-
+   den. 2022. Signing at scale: Learning to co-articulate    Zhengdi Yu, Shaoli Huang, Yongkang Cheng, and Tolga
+   signs for large-scale photo-realistic sign language       Birdal. 2024.  Signavatars: A large-scale 3d sign
+   production. In Proceedings of the IEEE/CVF Con-      language holistic motion dataset and benchmark. In
+   ference on Computer Vision and Pattern Recognition,     European Conference on Computer Vision, pages 1–
+  pages 5141–5151.                                       19. Springer.
+
+Bowen Shi, Diane Brentari, Greg Shakhnarovich, and    Jan Zelinka and Jakub Kanis. 2020. Neural sign lan-
+  Karen Livescu. 2022. Open-domain sign language      guage synthesis: Words are our glosses. In Proceed-
+   translation learned from online video. In Proceedings       ings of the IEEE/CVF winter conference on applica-
+   of the 2022 Conference on Empirical Methods in       tions of computer vision, pages 3395–3403.
+  Natural Language Processing, pages 6365–6379.
+                                                   Ronglai Zuo, Rolandos Alexandros Potamias, Qi Sun,
+Stephanie Stoll, Necati Cihan Camgoz, Simon Hadfield,      Evangelos Ververas, Jiankang Deng, and Stefanos
+  and Richard Bowden. 2020. Text2sign: towards sign       Zafeiriou. 2026. Madis: Taming masked diffusion
+  language production using neural machine translation      language models for sign language generation. arXiv
+  and generative adversarial networks. International       preprint arXiv:2601.19577.
+  Journal of Computer Vision, 128(4):891–908.
+                                                    Ronglai Zuo, Rolandos Alexandros Potamias, Evange-
+Qingping Sun, Yanjun Wang, Ailing Zeng, Wanqi Yin,       los Ververas, Jiankang Deng, and Stefanos Zafeiriou.
+  Chen Wei, Wenjia Wang, Haiyi Mei, Chi-Sing Leung,      2025. Signs as tokens: A retrieval-enhanced multilin-
+  Ziwei Liu, Lei Yang, and Zhongang Cai. 2024. Aios:      gual sign language generator. In Proceedings of the
+
+
+                                         10
+
+  IEEE/CVF International Conference on Computer   A.2  Additional Controlled Ablation Studies
+   Vision, pages 23806–23816.
+                                We conduct additional controlled experiments to
+A  Appendix                                         isolate the contributions of the semantic objectives
+                                              and analyze the behavior of the residual representa-A.1  Curating SMPL-X Poses
+                                                        tion hierarchy. Unless otherwise specified, all vari-
+We curate SMPL-X annotations by fusing three                                                       ants share the same architecture, data split, training
+complementary estimators: AiOS (Sun et al., 2024)                                                    schedule, and evaluation protocol.
+for whole-body pose, WiLoR (Potamias et  al.,
+                                           The  analyses  in Appendix A.2.2 and Ap-
+2025) for fine-grained hand articulation, and RTM-
+                                               pendix A.2.3 are summarized in Section 4.5 of
+Pose (Jiang et al., 2023b) for accurate 2D arm
+                                                     the main text, where the corresponding tables (Ta-
+keypoints. Given a signing video, we initialize
+                                                     ble 6 and Table 7) are reported. The semantic-loss
+SMPL-X parameters with AiOS, taking the highest-
+                                                weight analysis in Appendix A.2.4 is reported only
+confidence person in each frame and stabilizing
+                                                        in this appendix (Table 9). This appendix gives the
+body shape and camera parameters across the se-
+                                                              full setup and extended discussion.
+quence. We then replace the AiOS finger poses
+with WiLoR estimates, which better capture the
+handshapes that carry ASL meaning.               A.2.1  Controlled Tokenizer-Objective
+  Since the independently estimated hands may          Ablation
+be misaligned with the body, we refine the upper-
+                                                 Table 8 consolidates the reconstruction and gener-
+body pose so that the arms connect consistently to
+                                                     ation results of each tokenizer objective, extend-
+the WiLoR hands while matching the 2D evidence.
+                                                  ing Table 4. The generation variants use the same
+With the finger poses fixed, we optimize a per-
+                                                   generator and differ in whether the global-level
+frame correction δf to the initial upper-body pose
+                                                  alignment objective Lglobal and the token-level text-
+by minimizing
+                                                 conditioned objective Ltok are enabled. Adding
+                                                          either semantic objective to the reconstruction-onlyLfit = L2D + λoriLori + λtempLtemp + λregLreg.
+                                RVQ improves both generation and reconstruction                                                 (5)
+                                            on both datasets, and combining both performs bestThe reprojection term aligns the projected shoulder,
+                                            on all metrics, indicating that semantic supervisionelbow, and wrist joints with the RTMPose key-
+                                                does not come at the cost of reconstruction fidelity.points and WiLoR wrist positions:
+                                    On both datasets, adding Lglobal or Ltok to
+     L2D = Pf,j wf,j ρ Π(ˆJf,j) −J2Df,j  ,    (6)    the reconstruction-only RVQ lowers body/hand
+                                    DTW-JPE and raises B-4, e.g., from 6.82/9.63 to
+where Π is the perspective projection, wf,j is a    6.67/9.50 and 6.53/9.31 on How2Sign, and from
+per-joint confidence weight, and ρ is a robust                                                  9.50/11.95 to 9.26/11.66 and 9.09/11.42 on Ope-
+penalty. The orientation term Lori aligns the re-                                        nASL. Combining both objectives gives the best
+constructed wrist rotations with the WiLoR global                                                   generation results on both datasets (6.44/9.16 and
+hand orientations. The temporal term penalizes                                                      8.81/11.10). Reconstruction error also decreases as
+the velocity  ˙δf =  δf −δf−1 and acceleration    the semantic objectives are added, from 17.65/6.85
+¨δf = δf −2δf−1 + δf−2 of the corrections:           to 16.23/6.13 on How2Sign and from 18.92/6.41 to
+                                                  17.53/5.65 on OpenASL, indicating that semantic
+      Ltemp = Pf  ∥˙δf∥22 + λacc∥¨δf∥22  ,    (7)                                                   supervision does not compromise reconstruction
+                                                                fidelity.and the regularizer keeps the pose near its initial-
+ization and prevents arm–torso penetration:
+                                                 A.2.2  Effect of Cumulative-Latent
+       Lreg = Pf  ∥δf∥2W + λcolLcol,f  ,     (8)          Supervision
+
+where ∥· ∥W is a per-joint weighted ℓ2 norm and  We further investigate which residual representa-
+Lcol,f is the arm–torso collision penalty for frame    tion should receive token-level semantic super-
+f. We optimize in two stages, first fitting the po-   vision.  Let q(l) denote the quantized contribu-
+sitional terms and then adding Lori to correct the    tion of RVQ level l, using the notation from Sec-
+wrist orientations.                                    tion 3.1. The cumulative latent up to level k ∈
+
+
+                                         11
+
+Table 8: Tokenizer-objective ablation on How2Sign and OpenASL. Reconstruction is measured by PA-MPJPE (B/H,
+in mm) and generation by DTW-JPE (B/H; lower is better for both) and B-4 (higher is better). All variants share the
+same RVQ architecture and generator. Each semantic objective improves both reconstruction and generation, and
+combining them performs best on all metrics.
+
+
+  Tokenizer     H2S Recon. B/H↓  OpenASL Recon. B/H↓  H2S Gen. B/H↓, B-4↑  OpenASL Gen. B/H↓, B-4↑
+
+ RVQ              17.65 / 6.85          18.92 / 6.41           6.82 / 9.63, 2.89          9.50 / 11.95, 3.90
+ RVQ +Lglobal     17.05 / 6.55          18.31 / 6.12           6.67 / 9.50, 3.15          9.26 / 11.66, 4.02
+ RVQ +Ltok       16.65 / 6.35          17.88 / 5.89           6.53 / 9.31, 3.37          9.09 / 11.42, 4.34
+ SeRV             16.23 / 6.13          17.53 / 5.65           6.44 / 9.16, 3.67          8.81 / 11.10, 4.82
+
+
+{0, . . . , L −1} is defined as                         Table 9:  Sensitivity to the semantic-loss weight on
+                                            How2Sign (PA-MPJPE in mm). The reported weight
+                          k                           of 0.005 gives the best generation; a smaller weight
+                  ˆz(≤k) = X q(l).              (9)    slightly favors reconstruction, while a larger one de-
+                         l=0                          grades both.
+
+  We train otherwise identical tokenizers by apply-
+                                                        λsem  Recon. PA-MPJPE B/H↓Gen. DTW-JPE B/H↓
+ing Ltok to the level-0 latent, the cumulative latent
+from levels 0–1, or the full cumulative latent from       0.05        18.71 / 7.02             6.73 / 9.58
+                                                             0.005        16.23 / 6.13             6.44 / 9.16
+all RVQ levels.                                                           0.0005       15.77 / 6.05             6.66 / 9.40
+  As shown in Table 6, applying supervision to
+increasingly complete cumulative representations
+consistently improves semantic retrieval and gener-                                              These results indicate a coarse-to-fine division
+ation quality. Body/hand DTW-JPE decreases from                                                   of labor across the RVQ hierarchy. The first level
+6.62/9.45 with level-0 supervision to 6.56/9.32 with                                                      represents the dominant motion structure and most
+levels 0–1 and 6.44/9.16 with the full latent. R@1                                                   of the text-related information, whereas later lev-
+similarly increases from 12.65 to 13.80 and 14.52.                                                         els mainly refine geometric details while slightly
+  This result is consistent with the design of the                                                    strengthening cross-modal alignment.
+Hierarchical GPT. Each refinement level is gener-
+ated conditioned on the text and lower-level motion    A.2.4  Semantic-Loss Weight Sensitivity
+tokens. Supervising the cumulative latent therefore
+                                We analyze the sensitivity of SeRV by tying the
+encourages the representation available at each re-
+                                           two semantic-loss weights in the SeRV training
+finement stage to remain compatible with this con-
+                                                       objective: λglobal = λtok = λsem. All model com-
+ditional generation process.
+                                                ponents and other training settings are fixed while
+  This does not imply that later residual levels
+                                                          jointly varying these two weights.
+independently encode word-level semantics.
+                                        As shown in Table 9, a relatively small weight
+A.2.3  Cumulative Contribution of RVQ          of 0.0005 slightly favors reconstruction, achieving
+       Levels                               body and hand PA-MPJPE of 15.77/6.05. How-
+To characterize the role of each residual level, we    ever, it produces weaker downstream generation
+evaluate progressively accumulated latent represen-   than the reported setting. The weight λsem = 0.005
+tations from the trained SeRV tokenizer. For each    achieves the best generation performance, with
+setting, we reconstruct motion and evaluate text-to-   body and hand DTW-JPE of 6.44/9.16. Increasing
+sign and sign-to-text retrieval using the cumulative    the weight to 0.05 degrades both reconstruction
+latent available up to the corresponding RVQ level.   and generation.
+  Table 7 shows that level 0 already captures most     The results reveal a trade-off between geometric
+of the cross-modal retrieval signal, achieving T2S    reconstruction and semantic predictability. Among
+and S2T R@1 scores of 13.61 and 7.79, respec-   the weights tested in Table 9, λsem =  0.005
+tively. Adding subsequent residual levels substan-   gives the lowest generation error, whereas 0.0005
+tially improves reconstruction, reducing body and    gives the lowest reconstruction error. The setting
+hand PA-MPJPE from 20.84/8.06 to 16.23/6.13.    λglobal = λtok = 0.005 matches the main experi-
+Retrieval performance also improves gradually to   ments and yields the same body/hand DTW-JPE as
+14.52/8.42.                                      Table 1.
+
+
+                                         12
+
+A.3  Per-Token Alignment Analysis                                                   (a) Raw                 (b) global only      cos
+                                                                                                                                                                                0.8
+                                                           We
+To examine how each semantic objective shapes                pressthis
+the token space at the word level, we compare              buttonwhich
+four tokenizers that differ only in their semantic             opensthe
+losses: RVQ, RVQ +Lglobal, RVQ +Ltok, and               door
+                                                                                                      only                  (d) Full               0.0SeRV. Since tokenizers trained without Ltok lack a                              (c) tok
+                                                           We
+word–motion projection, we freeze each tokenizer                press
+                                                                                                                 this
+and train the same projection heads with the token-             button
+                                                                                 which
+level objective, so that the differences reflect the             opens
+                                                                                                    the
+quantized motion space. For each test caption, we               door                                                             −0.8
+compute the cosine similarity between every word,                  0    10Motion20 token30    40 0    10Motion20 token30    40
+averaged over its sub-words, and every quantized
+                                                                                                            (e) Word match margin (paired − mean control peak)
+motion token of the paired signing. Each word                        Raw     Global    Token      Full
+is summarized by its match margin, defined as
+its peak similarity on the paired motion minus its           0.4
+mean peak similarity over eight length-matched                   Margin 0.2
+sequences from other videos.
+  Figures 6 and 7 show three test captions. With           0.0
+reconstruction-only latents, most words peak on the         We    press     this    button   which   opens    the    doorsame generic motion token, and the margins remain
+close to zero. Lglobal alone raises the similarity of
+every word over a broad span of the signing but    Figure 6: Per-token alignment of the test caption “We
+moves nearly all peaks to a single shared token,    press this button, which opens the door.” under four
+capturing that the caption and the motion match    training objectives. (a)–(d) Word–token cosine similar-
+                                                                             ity, where circles mark the best-matching token of eachas a whole rather than which part of the motion
+                                                   word. (e) Word match margin.
+each word corresponds to. Ltok alone produces
+sharper, word-specific peaks for several content
+words, such as button, steering, and belly. SeRV    fied temporal alignment. The late-interaction score
+produces the sharpest peaks and the largest content-    is invariant to the order of motion tokens, the match
+word margins on average, reaching 0.52 for button   margin reflects discrimination between paired and
+and 0.40 for press, while function words without    unpaired motion, and T5 token features are contex-
+a manual counterpart in ASL, such as this and the,    tualized by the whole sentence, so a peak need not
+stay near zero.                                     coincide with the sign of the corresponding word.
+   Qualitatively, the matches do not simply follow    Verifying temporal correspondence would require
+the English word order. Multi-word expressions    signer-annotated sign boundaries, which we leave
+such as belly button, arch up, and handle bar each    to future work.
+peak on a single motion segment, and bar receives
+                                            A.4  OpenASL Reconstruction Quality Auditonly a small margin; scooter, which ends its cap-
+tion, peaks near the start of the signing, and button    A.4.1  Human Audit Protocol
+is matched before press. Some content words, such                                         To assess the quality of the reconstructed 3D mo-
+as opens and not, remain weakly matched.                                                           tion, we randomly sample 50 clips from the Ope-
+  Across  all  2,308  test  captions,  the mean   nASL pairs and collect 300 independent ratings
+content-word margin increases from 0.03 for the   from human participants. The participants are hear-
+reconstruction-only RVQ to 0.11, 0.33, and 0.38    ing volunteers recruited through a collaboration
+with Lglobal, Ltok, and SeRV, respectively.          with our university.  Participation was voluntary
+  The two objectives are therefore complemen-   and unpaid; all participants provided informed con-
+tary: Lglobal organizes the sentence-level geometry,    sent, no personally identifying information was
+whereas Ltok strengthens word-level cross-modal    collected, and the audit was approved by our in-
+association.                                               stitution’s Institutional Review Board (IRB). Each
+  We note  that  this analysis measures word-   reconstructed mesh sequence is shown side-by-side
+specific cross-modal association rather than veri-   with its source video, and participants rate how well
+
+
+                                         13
+
+                           (a) Raw                 (b) global only      cos
+            Pull                                                                  0.9
+             the
+           belly
+         button                                                                                                   (a) Raw                 (b) global only      cos 0.7
+              in                                                                The
+            so                                                                         handle
+             that                                                                               bar
+          you're                                                                                                       is
+            not                                                                    what
+           letting                                                                   you
+          your                                                                                   turn
+          back                                                             when
+           arch                                                                               you're
+           up                                                                                steering
+                                                                                                  the
+                                                                                   0.0             scooter                        (c) tok only                  (d) Full
+            Pull                                                                                                                                                             0.0             the                                                                                                (c) tok only                  (d) Full
+           belly                                                                The
+         button                                                                         handle
+              in                                                                               bar
+            so                                                                                                       is
+             that                                                                    what
+          you're                                                                   you
+            not                                                                                   turn
+           letting                                                             when
+          your                                                                               you're
+          back                                                                                steering
+           arch                                                                                   the
+           up                                                             −0.9            scooter                                                             −0.7
+              0      10     20     30  0      10     20     30                         0    10    20    30    40 0    10    20    30    40
+                   Motion token            Motion token                                  Motion token            Motion token
+
+                  (e) Word match margin (paired − mean control peak)                              (e) Word match margin (paired − mean control peak)
+                     Raw     Global    Token      Full                                   Raw     Global    Token      Full
+      0.6
+                                                                                              0.4
+
+
+      0.4
+
+                                                                                              0.2
+       Margin 0.2                                                                                                                                                                                          Margin
+
+
+                                                                                              0.0
+      0.0
+          Pull the bellybutton in so thatyou're notletting your back arch up           The handle  bar  is what you  turn when you'resteering  thescooter
+
+
+“Pull the belly button in so that you’re not letting your back arch   “The handle bar is what you turn when you’re steering the
+
+                             up.”                                                            scooter.”
+
+ Figure 7: Per-token alignment for two longer test captions, with panels as in Figure 6. Under the full objective, belly
+ button, arch up, and handle bar each share a single segment, and scooter is matched near the start of the signing
+ although it ends the caption.
+
+
+ the reconstructed mesh reflects the signing in the    Table 10: Human audit of reconstructed OpenASL mo-
+                                                                 tion. Human participants rate 50 randomly sampled source video on a five-point scale. The five levels
+                                                               clips on a five-point scale, producing 300 ratings.
+ are defined as follows:
+
+   1 Very poorly: the reconstructed motion does        Score  Rating     Number of ratings  Percentage
+     not correspond to the signing in the video,       5     Very well         180         60.0%
+     and the hand and arm movements are largely       4     Well             72         24.0%
+                                                         3     Moderately        30         10.0%      incorrect.
+                                                         2     Poorly            14          4.7%
+   2 Poorly: only parts of the signing are captured,       1     Very poorly        4          1.3%
+     with major errors in the hand or arm motion.          Total                  300        100.0%
+   3 Moderately: the overall signing is recogniz-
+      able, but noticeable errors remain in the hand-
+                                                                 articulation.     shapes, finger articulation, or movement tra-
+      jectories.
+                                          As shown in Table 10, 84.0% of the ratings judge
+   4 Well: the reconstruction matches the signing                                                       the reconstruction to reflect the signing well or very
+     with only minor deviations.                                                      well, 10.0% moderately, and only 6.0% poorly or
+   5 Very well: the reconstruction faithfully repro-   very poorly, giving an average score of 4.37 out
+     duces the signing, including fine-grained hand    of 5. These results indicate that most audited re-
+
+
+                                         14
+
+constructions faithfully capture the signing in their   2D/3D keypoint annotations, covering both iso-
+source videos. Low scores mainly arise when the    lated and continuous signs with multiple prompt
+hands of the signer move out of the camera frame,    types. However, existing resources are either rel-
+where the reconstruction lacks visual evidence for    atively limited in ASL scale, constructed from
+the hands; these segments do not affect the mean-   studio-recorded benchmarks, or designed for gen-
+ing conveyed by the signing. We keep all samples    eral multi-prompt/multilingual 3D sign production
+to preserve the official OpenASL split, and since    rather than large-scale paired text-to-3D ASL gen-
+all methods are trained and evaluated on the same    eration from in-the-wild videos.
+reconstructions, this noise affects them equally.        Table 11 summarizes the comparison. We use
+                                                    the official OpenASL video–text pairs and data
+A.5  User Study Details
+                                                                split without additional dataset filtering. OpenASL
+This section provides details of the user study in    contains 98,417 translation pairs and 288 hours of
+Section 4.4.                          ASL video from approximately 220 signers (Shi
+                                                           et al., 2022), with 96,476 training, 966 validation,
+Participants and recruitment.  The study in-                                              and 975 test pairs. We reconstruct SMPL-X motion
+volved five professional ASL signers, recruited                                                      for these paired clips. The duration denotes the
+through a collaboration with our university.                                                              official source-video corpus duration.
+
+Task and instructions. We randomly selected
+20 sign sequences.  For each sequence, partici-   Release and license.  OpenASL is distributed un-
+pants were shown the input English text together    der the CC BY-NC-ND 4.0 license (Shi et al., 2022).
+with the avatars generated by SeRV, SOKE, and  We plan to publicly release the reconstructed Ope-
+S-MotionGPT, and were asked to select the avatar   nASL benchmark upon publication, subject to ap-
+that best conveyed the meaning of the text. Method    plicable permissions and licensing requirements.
+names were hidden, and the display order of the   Any release would include only per-clip SMPL-
+methods was randomized.               X parameters indexed by the original OpenASL
+                                                        clip IDs. The source videos and English trans-
+Compensation.   Participation was voluntary, and                                                        lations would not be redistributed and should be
+participants received no monetary compensation.                                                  obtained from the original OpenASL release. The
+                                                 permissions and licensing terms applicable to dis-Consent and ethics.  All participants provided
+                                                          tributing the reconstructed parameters remain to beinformed  consent  and  were  told  that  their
+                                                  confirmed.anonymized responses would be used for research
+publication. No personally identifying informa-
+tion was collected. The study was approved by our   A.7  Evaluation Metric Definitions
+institution’s Institutional Review Board (IRB).
+                                  We provide formal definitions of the metrics used in
+A.6  Comparison with Existing 3D Sign          Section 4.1. PA-MPJPE is reported in millimeters
+     Resources                             (mm). DTW-JPE follows the evaluation protocol
+                                                   of SOKE (Zuo et al., 2025), so that our scores
+Recent 3D sign language resources have made
+                                                    are directly comparable with previously reported
+important progress toward avatar-based sign lan-
+                                         How2Sign results.
+guage understanding and generation.  Early 3D
+ASL resources such as How2Sign provide aligned
+videos, depth, and English transcripts, but their   Notation.  Let ˆP =  {ˆpi} ˆTi=1 denote the joint
+scale and signer coverage remain limited for train-   sequence extracted from a generated motion and
+ing high-capacity text-to-motion generators. More  P = {pj}Tj=1 the corresponding reference joint
+recent SLG systems further curate SMPL-X poses    sequence, where each frame contains J 3D joints
+for existing continuous sign language benchmarks,   and p(k)j   , ˆp(k)i  ∈R3 are the reference and gener-
+including How2Sign, CSL-Daily, and Phoenix-   ated positions of joint k, respectively. Each frame
+2014T, enabling token-based 3D sign generation     is a J × 3 joint-coordinate array. The per-frame
+across multiple languages.  In parallel, SignA-    joint position error between generated frame i and
+vatars introduces a large-scale holistic 3D sign    reference frame j is computed after translating the
+language dataset with SMPL-X, MANO, and    generated frame so that its alignment joint r coin-
+
+
+                                         15
+
+Table 11: Comparison with existing 3D sign language motion resources. OpenASL pair counts and duration follow
+the official video–text corpus; duration denotes source videos rather than a separately measured post-reconstruction
+total. “Text paired” indicates whether spoken-language text is paired with the 3D motion.
+
+
+  Dataset                                       Lang.          Clips / Pairs    Duration   Text Paired
+  How2Sign-3D (Duarte et al., 2021)           ASL           35K        80+h     ✓
+ SOKE Curated 3D Poses (Zuo et al., 2025)  ASL / CSL / DGS  35K / 20K / 8K      –      ✓
+  SignAvatars (Yu et al., 2024)                   Multi-SL         70K        117h     ✓
+  Reconstructed OpenASL (Ours)             ASL            98,417       288h     ✓
+
+
+cides with that of the reference frame:               Table 12: Reference back-translation BLEU-4 scores
+                                                             for ground-truth motions on How2Sign and OpenASL.
+
+             J
+        1
+d(i, j) = X  (ˆp(k)i  −ˆp(r)i  ) −(p(k)j  −p(r)j  )  2,          Input              How2Sign  OpenASL       J
+           k=1                                                Ground-truth motion       8.2         12.4
+                                            (10)
+where r is the pelvis for the upper-body joints and
+the wrist for each hand.                             reference joints:
+                                         (R⋆t , a⋆t , s⋆t ) = arg min
+DTW-JPE.  Since the generated and reference se-                             Rt,at,st
+quences may differ in length, we align them with                     J
+dynamic time warping. Let W be the set of mono-                    X stRtˆp(k)t + at −p(k)t   22.
+tonic warping paths π = {(i, j)} satisfying the                  k=1
+                                                                                                (13)standard boundary, monotonicity, and continuity
+                                       PA-MPJPE is then the per-joint error averaged overconstraints. DTW selects the path with minimum
+                                                                 all frames after alignment:cumulative cost,
+
+                                                                     T   J
+                                                           1
+      π⋆= arg min X  d(i, j),       (11)   PA-MPJPE = X X
+              π∈W                             TJ t=1 k=1               (14)                              (i,j)∈π
+                                                                    s⋆t R⋆t ˆp(k)t + a⋆t −p(k)t    2.
+and DTW-JPE is the accumulated cost along the
+                                                 Back-translation BLEU-4.  Our back-translation
+optimal path:
+                                                    evaluator is based on Uni-Sign (Li et al., 2025),
+                                            which takes 2D pose sequences as input. For each
+      DTW-JPE = X  d(i, j).      (12)    dataset, we reproject the ground-truth 3D motions
+                             (i,j)∈π⋆                     of the training split into 2D poses and fine-tune the
+                                                  corresponding pretrained Uni-Sign model on these
+Following SOKE, the accumulated cost is not nor-   pose–text pairs. During evaluation, generated 3D
+malized by the path length and is computed on   motions are reprojected into 2D poses in the same
+SMPL-X joint coordinates in meters; the reported   way and translated by the frozen evaluator, and
+score is its average over all test sequences. We   BLEU-4 is computed against the reference tran-
+compute Eq. (10) over the body, left-hand, and    scripts. All B-4 scores in Table 1, including base-
+right-hand joint sets separately, and report Hands    line scores, are obtained through this re-evaluation.
+as the mean of the left- and right-hand errors.         For  reference,  Table 12  reports  the back-
+                                                         translation BLEU-4 scores of ground-truth motions
+PA-MPJPE.  For tokenizer reconstruction the    using the same dataset-specific evaluators and 3D-
+output is frame-aligned with the input (ˆT = T), so   to-2D projection protocol.
+no temporal warping is required. For each frame t,
+                                            A.8  Implementation details.we apply a similarity Procrustes alignment that esti-
+mates a rotation Rt ∈SO(3), translation at ∈R3,  We train the framework in two stages: SeRV tok-
+and scale st > 0. The optimal alignment mini-   enizer training followed by Hierarchical GPT train-
+mizes the residual between the reconstructed and    ing. In the first stage, the SeRV tokenizer is trained
+
+
+                                         16
+
+on the training split with the RVQ reconstruction    transcript representation.
+objective and two semantic alignment objectives:
+                                              Residual Refinement Decoder.  Higher-level to-
+the global-level motion–text alignment loss and the
+                                                kens are predicted by residual refinement decoders.
+token-level motion–text late-interaction loss. Un-
+                                          Each residual decoder predicts refinement tokens
+less otherwise specified, we use L = 3 residual
+                                                  conditioned on the text feature, previous temporal
+quantization levels, a latent dimension of C = 512,
+                                                    tokens, and the lower-level tokens already gener-
+and a codebook size of K = 512 at each level. The
+                                                   ated at the current time step. Rather than gener-
+motion encoder downsamples the input sequence
+                                                     ating motion from scratch, these decoders refine
+by a factor of 4, so each discrete token corresponds
+                                                    the representation produced by lower RVQ levels.
+to four motion frames.
+                                                   Concretely, the level-1 decoder is conditioned on
+  For semantic supervision, we use a frozen T5 en-
+                                                      the level-0 token embeddings, while the level-2 de-
+coder (Chung et al., 2024) to encode the paired tran-
+                                                 coder is conditioned on the additive coarse context
+script. The mean-pooled T5 hidden states are used
+                                            formed by level-0 and level-1 token embeddings.
+as sentence-level text embeddings for the global
+                                                This design follows the additive structure of RVQ,
+alignment loss, where they are aligned with the
+                                             where later codebooks encode residual details over
+temporally pooled level-0 quantized motion rep-
+                                                     the coarse motion state.
+resentation. The token-level T5 hidden states are
+                                            The generator uses a hidden dimension of 1024,
+used in the late-interaction loss, where they are
+                                           16 attention heads, a dropout rate of 0.1, and a max-
+matched with the fully quantized motion latent se-
+                                    imum token length of 100. The coarse motion de-
+quence. The SeRV training objective is LSeRV =                                                  coder contains 9 Transformer layers, while the two
+LRVQ + λglobalLglobal + λtokLtok. Unless other-                                                        residual refinement decoders contain 6 and 3 layers,
+wise specified, we set λglobal = λtok = 0.005,
+                                             ′                                respectively. We train the generator for 150 epochsβ = 0.25, and τ = τ = 0.07. The sensitivity
+                                                with AdamW, using a batch size of 16, a learning
+analysis in Appendix A.2.4 ties these two weights                                                         rate of 2 × 10−4, a weight decay of 0.01, and co-
+and varies their common value λsem. We optimize
+                                                      sine learning-rate decay. At inference time, tokens
+the tokenizer with AdamW (Loshchilov and Hutter,
+                                                      are generated in the same coarse-to-fine order until
+2017) for 500 epochs using a batch size of 128, an
+                                              an EOS token is predicted or the maximum length
+initial learning rate of 4 × 10−4, a weight decay of
+                                                                is reached. We use autoregressive sampling with
+0.1, and cosine learning-rate decay.
+                                                a temperature of 1.0. The predicted multi-level
+   In the second stage, Hierarchical GPT is trained                                                 token streams are decoded by the frozen SeRV de-
+to autoregressively predict the residual token hierar-                                                coder into continuous SMPL-X motion features,
+chy produced by the frozen SeRV tokenizer. Given                                            which are then converted into joints or vertices for
+frozen T5 text features, the generator predicts to-                                                       evaluation. All experiments are conducted on four
+kens over time and RVQ depth in a coarse-to-fine                                    NVIDIA L40S GPUs; training the full framework
+order. This preserves the residual hierarchy learned                                          (SeRV tokenizer and Hierarchical GPT) takes about
+by SeRV instead of flattening all residual tokens                                             one day, i.e., roughly 96 GPU hours.
+into a single sequence.
+                                            A.9  Additional Qualitative Results on
+Coarse Motion Decoder.  The level-0 decoder         Ablation Study
+predicts coarse motion tokens from the text con-
+                                                 Figure 8 provides additional qualitative ablation
+dition and previous temporal history. Since the
+                                                             results, showing that semantic alignment improves
+level-0 RVQ code carries the dominant motion
+                                            hand articulation and the fidelity of generated 3D
+structure, this decoder is responsible for generating
+                                  ASL motions.
+the coarse text-conditioned signing trajectory. We
+implement it as a causal Transformer with LLaMA-
+style blocks, including RMSNorm, SwiGLU feed-
+forward layers, rotary positional embeddings, and
+prefix-based conditioning on the T5 text features.
+The T5 token features are projected to the generator
+hidden dimension and prepended as conditioning
+tokens, allowing the decoder to autoregressively
+predict coarse motion tokens while attending to the
+
+
+                                         17
+
+Figure 8: Each example shows the reference (top),
+reconstruction-only baseline (middle, without Lglobal
+and Ltok), and SeRV (bottom). Semantic-aligned RVQ
+enables SeRV to better preserve hand details and gener-
+ate more faithful signing motions.
+
+
+
+
+
+                                         18

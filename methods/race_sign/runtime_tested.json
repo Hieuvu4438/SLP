@@ -1,0 +1,17 @@
+{
+  "python": "3.13.5",
+  "packages": {
+    "torch": "2.11.0+cu128",
+    "transformers": "5.5.4",
+    "huggingface_hub": "1.14.0",
+    "numpy": "2.2.6",
+    "scipy": "1.17.1",
+    "smplx": "0.1.28",
+    "omegaconf": "2.3.0",
+    "sentencepiece": "0.2.1",
+    "pyyaml": "6.0.3",
+    "pytest": "9.0.3",
+    "ruff": "0.15.22"
+  },
+  "cuda": "12.8"
+}

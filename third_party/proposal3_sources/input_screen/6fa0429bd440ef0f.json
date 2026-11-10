@@ -1,0 +1,14 @@
+{
+  "url": "https://feifeifeiliu.github.io/RAM/",
+  "artifact": "third_party/proposal3_sources/input_screen/6fa0429bd440ef0f.json",
+  "read_status": "not_read",
+  "input_labels": [
+    "**RAM**"
+  ],
+  "http_status": 200,
+  "sha256": "912deaa4f2cdbdb380e6f3e57287d3b453afa8ca718324a1d3da28aea5f09ee6",
+  "title": "RAM | Reconstruction-Anchored Diffusion Model",
+  "abstract": "Abstract Text-to-motion diffusion models must bridge an abstract language representation with\n          continuous, high-dimensional motion, while errors introduced early in denoising can\n          propagate through the rest of the sampling process. RAM addresses both issues. It learns\n          a motion-centric latent space through a reconstruction branch, uses self-regularization\n          and motion-centric latent alignment to map text into that space, and introduces\n          Reconstructive Error Guidance (REG) to expose and amplify improvements during inference.",
+  "preview": "",
+  "status": "acquired_not_read"
+}

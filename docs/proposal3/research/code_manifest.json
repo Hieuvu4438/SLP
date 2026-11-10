@@ -1,0 +1,35 @@
+{
+  "SOKE": {
+    "commit": "5cbc55d84b5a7cbf05a9cf020c468052e8d94d00",
+    "files": {
+      "mGPT/models/mgpt.py": "cfe0c84c4394f37efa72148ac44cb372bee9cf80c34bf444fcc3d422de362648",
+      "mGPT/archs/mgpt_lm.py": "1f71389d405525978b93d0fe9cf4afc87fd668606c63d13ec7226c6f19a70cb0",
+      "mGPT/metrics/t2m.py": "7fd60edf625255edd4f24a7611b02f6415b0cc7bc5cf85012e288bbc58771530",
+      "mGPT/metrics/dtw.py": "ed94cbbb6a44666877a40150758280746efb586175299c4e440f32d7dc6da3fb"
+    }
+  },
+  "SignSparK": {
+    "commit": "916402d0ecd6322fb4a9e5f513229a94a57bf4b6",
+    "files": {
+      "README.md": "54f73cfd3b1a8bc6d3333899863998c42e812957f6aed7e214068051313f8899",
+      "sample.py": "a919f5853c4335a5e0dfa0a62095b59efb6cbdb1c52b2244cf3d2c98420c4514",
+      "signspark/keyframes.py": "7868ebf42fed4a7f7b0bad31160033d6b40430c85bee2f7c045e7293bfe797f6",
+      "signspark/rflow.py": "3b124f9b90f316599843788c18a97ccc128634dc7de4eb5abefc4f9146a96ae5"
+    }
+  },
+  "MaDiS": {
+    "commit": "071828ea1b94530dc7ff0a6c009c0a7c6d1f0784",
+    "files": {
+      "mGPT/archs/madis.py": "23ed31edd0626107deadc4bd09434185f421fca79462b441946c648338250cdd",
+      "mGPT/archs/masked_diffusion.py": "4c7dbc76bfc8213e29d74022fb1b5b6a6cf9d3d12bc156d5bb216ef1101f2e9c",
+      "mGPT/archs/connectors.py": "a43e6b0e6435dc42a08ab33b6d307c31cdf8ecd2b861356ec8b1d4f1c0496dc1"
+    }
+  },
+  "MoMask": {
+    "commit": "94a6636c9c463b7a9414c3401a6f1b67e6c51824",
+    "files": {
+      "models/mask_transformer/transformer.py": "5c9c44b4699fe3660f8a024d70da25e48d661a01e72a3a0e0107a2c00fcb46b0",
+      "models/vq/residual_vq.py": "89c40279b6af3e08f95afbad00721394bf68da60d7d85090b931813fa47f7d15"
+    }
+  }
+}

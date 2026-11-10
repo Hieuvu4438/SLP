@@ -1,0 +1,15 @@
+{
+  "url": "https://openaccess.thecvf.com/content/CVPR2026/html/Yu_Focal-General_Diffusion_Model_with_Semantic_Consistent_Guidance_for_Sign_Language_CVPR_2026_paper.html",
+  "artifact": "third_party/proposal3_sources/input_screen/af3988412428fe5e.json",
+  "read_status": "not_read",
+  "input_labels": [
+    "S14 ○",
+    "[FGDM](https://openaccess.thecvf.com/content/CVPR2026/html/Yu_Focal-General_Diffusion_Model_with_Semantic_Consistent_Guidance_for_Sign_Language_CVPR_2026_paper.html?utm_source=chatgpt.com)"
+  ],
+  "http_status": 200,
+  "sha256": "11b735e71b60a0d220c04ce42e013c64c2ce96d1b343a4ca18d7ba8ef4f9a92b",
+  "title": "CVPR 2026 Open Access Repository",
+  "abstract": "Sign Language Production (SLP) aims to translate spoken language into sign sequences, where the main challenge lies in generating coherent and natural poses from discrete glosses (G2P). Existing G2P methods typically treat each pose as an indivisible unit, limiting their ability to capture fine-grained joint-level dependencies and thus degrading pose quality. To address this, we propose the Focal-General Diffusion Model (FGDM), characterized by a pioneering two-stage denoising framework that harmonizes local joint-level dependencies and global coherence. Specifically, in the Focal stage, a novel Adaptive Sign GCN (ASGCN) adaptively models each pose based on contextual correlations, skeletal topology, and semantic conditions, ensuring precise generation of local details. In the General stage, a Transformer-based module refines the entire pose sequence to enhance global coherence and naturalness. Moreover, we introduce a Semantic Consistent Guidance (SCG) mechanism that seamlessly integrates semantic supervision into diffusion training, enforcing tighter alignment between generated pose sequences and their intended gloss semantics. Extensive experiments on PHOENIX14T and USTC-CSL demonstrate that FGDM achieves SOTA performance. Our project page is available at https://yuyiheng-eu.github.io/fgdm/.",
+  "preview": "",
+  "status": "acquired_not_read"
+}
