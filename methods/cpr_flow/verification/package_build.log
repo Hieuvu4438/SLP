@@ -1,0 +1,9 @@
+Processing ./methods/cpr_flow
+  Preparing metadata (pyproject.toml): started
+  Preparing metadata (pyproject.toml): finished with status 'done'
+Building wheels for collected packages: cprflow
+  Building wheel for cprflow (pyproject.toml): started
+  Building wheel for cprflow (pyproject.toml): finished with status 'done'
+  Created wheel for cprflow: filename=cprflow-0.1.0-py3-none-any.whl size=94362 sha256=f3934dfd3d57078f4d7ae897c3be81580bb5deb7b540d2840c56329eae2515aa
+  Stored in directory: /tmp/pip-ephem-wheel-cache-p4mll1m2/wheels/12/57/89/58af543881e0c9575e8d43462c99fad2cb32c221faf91bb199
+Successfully built cprflow

@@ -1,0 +1,78 @@
+import os
+os.environ.setdefault('CUBLAS_WORKSPACE_CONFIG',':4096:8')
+import json,time,copy
+import torch
+from torch import nn
+from cprflow.models.ae import MotionAE,Residual
+from cprflow.types import PART_DIMS
+
+torch.set_num_threads(2);torch.manual_seed(17);torch.use_deterministic_algorithms(True)
+def fill(x,lengths):
+    idx=torch.minimum(torch.arange(x.shape[-1],device=x.device)[None],lengths[:,None]-1)
+    return x.gather(2,idx[:,None].expand(-1,x.shape[1],-1))
+def layers(net,x,lengths):
+    for layer in net:
+        if isinstance(layer,nn.Conv1d):
+            x=layer(fill(x,lengths))
+            lengths=(lengths+2*layer.padding[0]-layer.dilation[0]*(layer.kernel_size[0]-1)-1)//layer.stride[0]+1
+        elif isinstance(layer,Residual):
+            r,_=layers(layer.net,x,lengths);x=x+r
+        elif isinstance(layer,nn.Upsample):
+            x=layer(x);lengths=lengths*int(layer.scale_factor)
+        else:x=layer(x)
+    return x,lengths
+
+def fast(m,x,lengths):
+    encoded=[]
+    for enc,part in zip(m.encoders,x.split(PART_DIMS,-1)):
+        y,n=layers(enc,part.transpose(1,2),lengths)
+        valid=torch.arange(y.shape[-1],device=x.device)[None]<n[:,None]
+        encoded.append(y.transpose(1,2)*valid[...,None])
+    z=torch.stack(encoded,1)
+    b,_,l,_=z.shape
+    concat=z.permute(0,2,1,3).reshape(b,l,512)
+    mixed=(concat+m.fusion(concat)).reshape(b,l,4,128).permute(0,2,1,3)
+    decoded=[]
+    for p,dec in enumerate(m.decoders):
+        y,_=layers(dec,mixed[:,p].transpose(1,2),(lengths+1)//2)
+        decoded.append(y.transpose(1,2))
+    y=torch.cat(decoded,-1)[:,:x.shape[1]]
+    valid=torch.arange(y.shape[1],device=x.device)[None]<lengths[:,None]
+    return y*valid[...,None],z
+
+model=MotionAE().eval()
+x=torch.randn(3,11,296,requires_grad=True);lengths=torch.tensor([5,8,11])
+a,za=model(x,lengths);ga=torch.autograd.grad(a.square().sum()+za.square().sum(),x)[0]
+b,zb=fast(model,x,lengths);gb=torch.autograd.grad(b.square().sum()+zb.square().sum(),x)[0]
+torch.testing.assert_close(a,b,atol=1e-5,rtol=1e-4)
+torch.testing.assert_close(za,zb,atol=1e-5,rtol=1e-4)
+torch.testing.assert_close(ga,gb,atol=2e-4,rtol=2e-4)
+report={'synthetic':True,'scope':'AE network forward/backward only, excluding FK/data/optimizer; does not alter running training',
+        'cpu_output_padding_and_input_gradient_equivalence_passed':True,
+        'cpu_output_max_abs_error':float((a-b).abs().max().detach()),
+        'cpu_latent_max_abs_error':float((za-zb).abs().max().detach()),
+        'cpu_input_grad_max_abs_error':float((ga-gb).abs().max().detach()),'benchmarks':{}}
+model=model.cuda().train()
+for batch in (1,4,8):
+    frames=256
+    lengths=torch.linspace(128,frames,batch,device='cuda').round().long() if batch>1 else torch.tensor([frames],device='cuda')
+    x=torch.randn(batch,frames,296,device='cuda')
+    valid=torch.arange(frames,device='cuda')[None]<lengths[:,None]
+    def call(use_fast):
+        model.zero_grad(set_to_none=True)
+        with torch.autocast('cuda',dtype=torch.bfloat16):
+            pred,z=fast(model,x,lengths) if use_fast else model(x,lengths)
+            loss=(pred.float().square()*valid[...,None]).sum()/(lengths.sum()*296)
+        loss.backward()
+    measures={}
+    for name,optimized in [('reference',False),('batched',True)]:
+        call(optimized);torch.cuda.synchronize();times=[]
+        for _ in range(3):
+            torch.cuda.synchronize();start=time.perf_counter();call(optimized);torch.cuda.synchronize();times.append(time.perf_counter()-start)
+        measures[name]=sorted(times)[1]
+    measures['network_speedup']=measures['reference']/measures['batched']
+    report['benchmarks'][str(batch)]=measures
+    print(batch,measures,flush=True)
+from pathlib import Path
+Path('/tmp/cpr_batch_probe.json').write_text(json.dumps(report,indent=2))
+print('DONE',flush=True)

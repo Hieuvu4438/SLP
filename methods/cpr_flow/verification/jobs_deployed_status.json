@@ -1,0 +1,1784 @@
+{
+  "scheduler_alive": true,
+  "scheduler_pid": 403126,
+  "plan": "/home/haipd/SLP/methods/cpr_flow/runs/jobs/joint3_standard/plan.json",
+  "max_concurrent": 2,
+  "counts": {
+    "succeeded": 2,
+    "waiting": 109
+  },
+  "running": [],
+  "terminal_needs_reconciliation": [],
+  "waiting": [
+    {
+      "id": "gate.access",
+      "reason": "Missing access record /home/haipd/SLP/methods/cpr_flow/access_record.json; record existing lab authorization for the three corpora"
+    },
+    {
+      "id": "data.download",
+      "reason": "Dependencies: gate.access:waiting"
+    },
+    {
+      "id": "data.import",
+      "reason": "Dependencies: data.download:waiting"
+    },
+    {
+      "id": "gate.timing",
+      "reason": "Dependencies: data.import:waiting"
+    },
+    {
+      "id": "data.canonicalize",
+      "reason": "Dependencies: gate.timing:waiting"
+    },
+    {
+      "id": "data.geometry_audit",
+      "reason": "Dependencies: data.canonicalize:waiting"
+    },
+    {
+      "id": "cache.text",
+      "reason": "Dependencies: data.canonicalize:waiting"
+    },
+    {
+      "id": "gate.geometry",
+      "reason": "Dependencies: data.geometry_audit:waiting"
+    },
+    {
+      "id": "stats.motion_relation",
+      "reason": "Dependencies: gate.geometry:waiting"
+    },
+    {
+      "id": "cache.geometry",
+      "reason": "Dependencies: stats.motion_relation:waiting"
+    },
+    {
+      "id": "train.duration",
+      "reason": "Dependencies: stats.motion_relation:waiting, cache.text:waiting"
+    },
+    {
+      "id": "smoke.ae",
+      "reason": "Dependencies: cache.geometry:waiting"
+    },
+    {
+      "id": "smoke.shared_indexes",
+      "reason": "Dependencies: smoke.ae:waiting, cache.text:waiting"
+    },
+    {
+      "id": "smoke.stats_latent",
+      "reason": "Dependencies: smoke.shared_indexes:waiting"
+    },
+    {
+      "id": "smoke.cache",
+      "reason": "Dependencies: smoke.stats_latent:waiting"
+    },
+    {
+      "id": "smoke.cfm_first500",
+      "reason": "Dependencies: smoke.cache:waiting, train.duration:waiting"
+    },
+    {
+      "id": "smoke.cfm_resume1000",
+      "reason": "Dependencies: smoke.cfm_first500:waiting"
+    },
+    {
+      "id": "smoke.prompts",
+      "reason": "Dependencies: data.canonicalize:waiting"
+    },
+    {
+      "id": "smoke.sample",
+      "reason": "Dependencies: smoke.cfm_resume1000:waiting, smoke.prompts:waiting"
+    },
+    {
+      "id": "smoke.check",
+      "reason": "Dependencies: smoke.sample:waiting"
+    },
+    {
+      "id": "train.ae",
+      "reason": "Dependencies: smoke.check:waiting"
+    },
+    {
+      "id": "stats.latent",
+      "reason": "Dependencies: train.ae:waiting"
+    },
+    {
+      "id": "cache.latent_relation",
+      "reason": "Dependencies: stats.latent:waiting"
+    },
+    {
+      "id": "train.teacher",
+      "reason": "Dependencies: cache.geometry:waiting, cache.text:waiting, smoke.check:waiting"
+    },
+    {
+      "id": "s17.train.parent",
+      "reason": "Dependencies: cache.latent_relation:waiting, train.duration:waiting, s17.profile:waiting"
+    },
+    {
+      "id": "s17.profile",
+      "reason": "Dependencies: cache.latent_relation:waiting, train.duration:waiting"
+    },
+    {
+      "id": "s17.train.b1",
+      "reason": "Dependencies: s17.train.parent:waiting"
+    },
+    {
+      "id": "s17.train.c0",
+      "reason": "Dependencies: s17.train.parent:waiting"
+    },
+    {
+      "id": "s17.gate.calibration",
+      "reason": "Dependencies: train.teacher:waiting"
+    },
+    {
+      "id": "s17.train.full",
+      "reason": "Dependencies: s17.train.c0:waiting, s17.gate.calibration:waiting"
+    },
+    {
+      "id": "s17.train.full_control",
+      "reason": "Dependencies: s17.train.c0:waiting"
+    },
+    {
+      "id": "eval.b1_s17.dev.csl_daily",
+      "reason": "Dependencies: s17.train.b1:waiting"
+    },
+    {
+      "id": "eval.b1_s17.dev.how2sign",
+      "reason": "Dependencies: s17.train.b1:waiting"
+    },
+    {
+      "id": "eval.b1_s17.dev.phoenix2014t",
+      "reason": "Dependencies: s17.train.b1:waiting"
+    },
+    {
+      "id": "aggregate.b1_s17.dev",
+      "reason": "Dependencies: eval.b1_s17.dev.csl_daily:waiting, eval.b1_s17.dev.how2sign:waiting, eval.b1_s17.dev.phoenix2014t:waiting"
+    },
+    {
+      "id": "release.b1_s17",
+      "reason": "Dependencies: aggregate.b1_s17.dev:waiting"
+    },
+    {
+      "id": "eval.b1_s17.test.csl_daily",
+      "reason": "Dependencies: release.b1_s17:waiting"
+    },
+    {
+      "id": "bt.b1_s17.csl_daily",
+      "reason": "Dependencies: eval.b1_s17.test.csl_daily:waiting"
+    },
+    {
+      "id": "eval.b1_s17.test.how2sign",
+      "reason": "Dependencies: release.b1_s17:waiting"
+    },
+    {
+      "id": "bt.b1_s17.how2sign",
+      "reason": "Dependencies: eval.b1_s17.test.how2sign:waiting"
+    },
+    {
+      "id": "eval.b1_s17.test.phoenix2014t",
+      "reason": "Dependencies: release.b1_s17:waiting"
+    },
+    {
+      "id": "bt.b1_s17.phoenix2014t",
+      "reason": "Dependencies: eval.b1_s17.test.phoenix2014t:waiting"
+    },
+    {
+      "id": "aggregate.b1_s17.test",
+      "reason": "Dependencies: eval.b1_s17.test.csl_daily:waiting, eval.b1_s17.test.how2sign:waiting, eval.b1_s17.test.phoenix2014t:waiting"
+    },
+    {
+      "id": "eval.c0_s17.dev.csl_daily",
+      "reason": "Dependencies: s17.train.c0:waiting"
+    },
+    {
+      "id": "eval.c0_s17.dev.how2sign",
+      "reason": "Dependencies: s17.train.c0:waiting"
+    },
+    {
+      "id": "eval.c0_s17.dev.phoenix2014t",
+      "reason": "Dependencies: s17.train.c0:waiting"
+    },
+    {
+      "id": "aggregate.c0_s17.dev",
+      "reason": "Dependencies: eval.c0_s17.dev.csl_daily:waiting, eval.c0_s17.dev.how2sign:waiting, eval.c0_s17.dev.phoenix2014t:waiting"
+    },
+    {
+      "id": "release.c0_s17",
+      "reason": "Dependencies: aggregate.c0_s17.dev:waiting"
+    },
+    {
+      "id": "eval.c0_s17.test.csl_daily",
+      "reason": "Dependencies: release.c0_s17:waiting"
+    },
+    {
+      "id": "bt.c0_s17.csl_daily",
+      "reason": "Dependencies: eval.c0_s17.test.csl_daily:waiting"
+    },
+    {
+      "id": "eval.c0_s17.test.how2sign",
+      "reason": "Dependencies: release.c0_s17:waiting"
+    },
+    {
+      "id": "bt.c0_s17.how2sign",
+      "reason": "Dependencies: eval.c0_s17.test.how2sign:waiting"
+    },
+    {
+      "id": "eval.c0_s17.test.phoenix2014t",
+      "reason": "Dependencies: release.c0_s17:waiting"
+    },
+    {
+      "id": "bt.c0_s17.phoenix2014t",
+      "reason": "Dependencies: eval.c0_s17.test.phoenix2014t:waiting"
+    },
+    {
+      "id": "aggregate.c0_s17.test",
+      "reason": "Dependencies: eval.c0_s17.test.csl_daily:waiting, eval.c0_s17.test.how2sign:waiting, eval.c0_s17.test.phoenix2014t:waiting"
+    },
+    {
+      "id": "eval.full_s17.dev.csl_daily",
+      "reason": "Dependencies: s17.train.full:waiting"
+    },
+    {
+      "id": "eval.full_s17.dev.how2sign",
+      "reason": "Dependencies: s17.train.full:waiting"
+    },
+    {
+      "id": "eval.full_s17.dev.phoenix2014t",
+      "reason": "Dependencies: s17.train.full:waiting"
+    },
+    {
+      "id": "aggregate.full_s17.dev",
+      "reason": "Dependencies: eval.full_s17.dev.csl_daily:waiting, eval.full_s17.dev.how2sign:waiting, eval.full_s17.dev.phoenix2014t:waiting"
+    },
+    {
+      "id": "release.full_s17",
+      "reason": "Dependencies: aggregate.full_s17.dev:waiting"
+    },
+    {
+      "id": "eval.full_s17.test.csl_daily",
+      "reason": "Dependencies: release.full_s17:waiting"
+    },
+    {
+      "id": "bt.full_s17.csl_daily",
+      "reason": "Dependencies: eval.full_s17.test.csl_daily:waiting"
+    },
+    {
+      "id": "eval.full_s17.test.how2sign",
+      "reason": "Dependencies: release.full_s17:waiting"
+    },
+    {
+      "id": "bt.full_s17.how2sign",
+      "reason": "Dependencies: eval.full_s17.test.how2sign:waiting"
+    },
+    {
+      "id": "eval.full_s17.test.phoenix2014t",
+      "reason": "Dependencies: release.full_s17:waiting"
+    },
+    {
+      "id": "bt.full_s17.phoenix2014t",
+      "reason": "Dependencies: eval.full_s17.test.phoenix2014t:waiting"
+    },
+    {
+      "id": "aggregate.full_s17.test",
+      "reason": "Dependencies: eval.full_s17.test.csl_daily:waiting, eval.full_s17.test.how2sign:waiting, eval.full_s17.test.phoenix2014t:waiting"
+    },
+    {
+      "id": "eval.full_control_s17.dev.csl_daily",
+      "reason": "Dependencies: s17.train.full_control:waiting"
+    },
+    {
+      "id": "eval.full_control_s17.dev.how2sign",
+      "reason": "Dependencies: s17.train.full_control:waiting"
+    },
+    {
+      "id": "eval.full_control_s17.dev.phoenix2014t",
+      "reason": "Dependencies: s17.train.full_control:waiting"
+    },
+    {
+      "id": "aggregate.full_control_s17.dev",
+      "reason": "Dependencies: eval.full_control_s17.dev.csl_daily:waiting, eval.full_control_s17.dev.how2sign:waiting, eval.full_control_s17.dev.phoenix2014t:waiting"
+    },
+    {
+      "id": "release.full_control_s17",
+      "reason": "Dependencies: aggregate.full_control_s17.dev:waiting"
+    },
+    {
+      "id": "eval.full_control_s17.test.csl_daily",
+      "reason": "Dependencies: release.full_control_s17:waiting"
+    },
+    {
+      "id": "bt.full_control_s17.csl_daily",
+      "reason": "Dependencies: eval.full_control_s17.test.csl_daily:waiting"
+    },
+    {
+      "id": "eval.full_control_s17.test.how2sign",
+      "reason": "Dependencies: release.full_control_s17:waiting"
+    },
+    {
+      "id": "bt.full_control_s17.how2sign",
+      "reason": "Dependencies: eval.full_control_s17.test.how2sign:waiting"
+    },
+    {
+      "id": "eval.full_control_s17.test.phoenix2014t",
+      "reason": "Dependencies: release.full_control_s17:waiting"
+    },
+    {
+      "id": "bt.full_control_s17.phoenix2014t",
+      "reason": "Dependencies: eval.full_control_s17.test.phoenix2014t:waiting"
+    },
+    {
+      "id": "aggregate.full_control_s17.test",
+      "reason": "Dependencies: eval.full_control_s17.test.csl_daily:waiting, eval.full_control_s17.test.how2sign:waiting, eval.full_control_s17.test.phoenix2014t:waiting"
+    },
+    {
+      "id": "eval.c1_s17.dev.csl_daily",
+      "reason": "Dependencies: s17.train.c0:waiting"
+    },
+    {
+      "id": "eval.c1_s17.dev.how2sign",
+      "reason": "Dependencies: s17.train.c0:waiting"
+    },
+    {
+      "id": "eval.c1_s17.dev.phoenix2014t",
+      "reason": "Dependencies: s17.train.c0:waiting"
+    },
+    {
+      "id": "aggregate.c1_s17.dev",
+      "reason": "Dependencies: eval.c1_s17.dev.csl_daily:waiting, eval.c1_s17.dev.how2sign:waiting, eval.c1_s17.dev.phoenix2014t:waiting"
+    },
+    {
+      "id": "release.c1_s17",
+      "reason": "Dependencies: aggregate.c1_s17.dev:waiting"
+    },
+    {
+      "id": "eval.c1_s17.test.csl_daily",
+      "reason": "Dependencies: release.c1_s17:waiting"
+    },
+    {
+      "id": "bt.c1_s17.csl_daily",
+      "reason": "Dependencies: eval.c1_s17.test.csl_daily:waiting"
+    },
+    {
+      "id": "eval.c1_s17.test.how2sign",
+      "reason": "Dependencies: release.c1_s17:waiting"
+    },
+    {
+      "id": "bt.c1_s17.how2sign",
+      "reason": "Dependencies: eval.c1_s17.test.how2sign:waiting"
+    },
+    {
+      "id": "eval.c1_s17.test.phoenix2014t",
+      "reason": "Dependencies: release.c1_s17:waiting"
+    },
+    {
+      "id": "bt.c1_s17.phoenix2014t",
+      "reason": "Dependencies: eval.c1_s17.test.phoenix2014t:waiting"
+    },
+    {
+      "id": "aggregate.c1_s17.test",
+      "reason": "Dependencies: eval.c1_s17.test.csl_daily:waiting, eval.c1_s17.test.how2sign:waiting, eval.c1_s17.test.phoenix2014t:waiting"
+    },
+    {
+      "id": "eval.c2_s17.dev.csl_daily",
+      "reason": "Dependencies: s17.gate.calibration:waiting, s17.train.c0:waiting"
+    },
+    {
+      "id": "eval.c2_s17.dev.how2sign",
+      "reason": "Dependencies: s17.gate.calibration:waiting, s17.train.c0:waiting"
+    },
+    {
+      "id": "eval.c2_s17.dev.phoenix2014t",
+      "reason": "Dependencies: s17.gate.calibration:waiting, s17.train.c0:waiting"
+    },
+    {
+      "id": "aggregate.c2_s17.dev",
+      "reason": "Dependencies: eval.c2_s17.dev.csl_daily:waiting, eval.c2_s17.dev.how2sign:waiting, eval.c2_s17.dev.phoenix2014t:waiting"
+    },
+    {
+      "id": "release.c2_s17",
+      "reason": "Dependencies: aggregate.c2_s17.dev:waiting"
+    },
+    {
+      "id": "eval.c2_s17.test.csl_daily",
+      "reason": "Dependencies: release.c2_s17:waiting"
+    },
+    {
+      "id": "bt.c2_s17.csl_daily",
+      "reason": "Dependencies: eval.c2_s17.test.csl_daily:waiting"
+    },
+    {
+      "id": "eval.c2_s17.test.how2sign",
+      "reason": "Dependencies: release.c2_s17:waiting"
+    },
+    {
+      "id": "bt.c2_s17.how2sign",
+      "reason": "Dependencies: eval.c2_s17.test.how2sign:waiting"
+    },
+    {
+      "id": "eval.c2_s17.test.phoenix2014t",
+      "reason": "Dependencies: release.c2_s17:waiting"
+    },
+    {
+      "id": "bt.c2_s17.phoenix2014t",
+      "reason": "Dependencies: eval.c2_s17.test.phoenix2014t:waiting"
+    },
+    {
+      "id": "aggregate.c2_s17.test",
+      "reason": "Dependencies: eval.c2_s17.test.csl_daily:waiting, eval.c2_s17.test.how2sign:waiting, eval.c2_s17.test.phoenix2014t:waiting"
+    },
+    {
+      "id": "oracle.s17.duration.csl_daily",
+      "reason": "Dependencies: s17.train.c0:waiting"
+    },
+    {
+      "id": "oracle.s17.duration.how2sign",
+      "reason": "Dependencies: s17.train.c0:waiting"
+    },
+    {
+      "id": "oracle.s17.duration.phoenix2014t",
+      "reason": "Dependencies: s17.train.c0:waiting"
+    },
+    {
+      "id": "oracle.s17.relation.csl_daily",
+      "reason": "Dependencies: s17.train.c0:waiting"
+    },
+    {
+      "id": "oracle.s17.relation.how2sign",
+      "reason": "Dependencies: s17.train.c0:waiting"
+    },
+    {
+      "id": "oracle.s17.relation.phoenix2014t",
+      "reason": "Dependencies: s17.train.c0:waiting"
+    }
+  ],
+  "jobs": [
+    {
+      "id": "environment",
+      "state": "succeeded",
+      "attempt": 1,
+      "failures": 0,
+      "pid": 403165,
+      "pid_start": "1746612",
+      "reason": null,
+      "log": "/home/haipd/SLP/methods/cpr_flow/runs/jobs/joint3_standard/attempts/environment/1/output.log",
+      "result": "/home/haipd/SLP/methods/cpr_flow/runs/jobs/joint3_standard/attempts/environment/1/result.json",
+      "next_retry": 0.0
+    },
+    {
+      "id": "sources.audit",
+      "state": "succeeded",
+      "attempt": 1,
+      "failures": 0,
+      "pid": 403522,
+      "pid_start": "1747686",
+      "reason": null,
+      "log": "/home/haipd/SLP/methods/cpr_flow/runs/jobs/joint3_standard/attempts/sources.audit/1/output.log",
+      "result": "/home/haipd/SLP/methods/cpr_flow/runs/jobs/joint3_standard/attempts/sources.audit/1/result.json",
+      "next_retry": 0.0
+    },
+    {
+      "id": "gate.access",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Missing access record /home/haipd/SLP/methods/cpr_flow/access_record.json; record existing lab authorization for the three corpora",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "data.download",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: gate.access:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "data.import",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: data.download:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "gate.timing",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: data.import:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "data.canonicalize",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: gate.timing:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "data.geometry_audit",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: data.canonicalize:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "cache.text",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: data.canonicalize:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "gate.geometry",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: data.geometry_audit:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "stats.motion_relation",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: gate.geometry:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "cache.geometry",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: stats.motion_relation:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "train.duration",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: stats.motion_relation:waiting, cache.text:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "smoke.ae",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: cache.geometry:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "smoke.shared_indexes",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: smoke.ae:waiting, cache.text:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "smoke.stats_latent",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: smoke.shared_indexes:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "smoke.cache",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: smoke.stats_latent:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "smoke.cfm_first500",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: smoke.cache:waiting, train.duration:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "smoke.cfm_resume1000",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: smoke.cfm_first500:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "smoke.prompts",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: data.canonicalize:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "smoke.sample",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: smoke.cfm_resume1000:waiting, smoke.prompts:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "smoke.check",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: smoke.sample:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "train.ae",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: smoke.check:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "stats.latent",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: train.ae:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "cache.latent_relation",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: stats.latent:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "train.teacher",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: cache.geometry:waiting, cache.text:waiting, smoke.check:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "s17.train.parent",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: cache.latent_relation:waiting, train.duration:waiting, s17.profile:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "s17.profile",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: cache.latent_relation:waiting, train.duration:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "s17.train.b1",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: s17.train.parent:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "s17.train.c0",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: s17.train.parent:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "s17.gate.calibration",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: train.teacher:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "s17.train.full",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: s17.train.c0:waiting, s17.gate.calibration:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "s17.train.full_control",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: s17.train.c0:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "eval.b1_s17.dev.csl_daily",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: s17.train.b1:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "eval.b1_s17.dev.how2sign",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: s17.train.b1:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "eval.b1_s17.dev.phoenix2014t",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: s17.train.b1:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "aggregate.b1_s17.dev",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: eval.b1_s17.dev.csl_daily:waiting, eval.b1_s17.dev.how2sign:waiting, eval.b1_s17.dev.phoenix2014t:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "release.b1_s17",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: aggregate.b1_s17.dev:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "eval.b1_s17.test.csl_daily",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: release.b1_s17:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "bt.b1_s17.csl_daily",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: eval.b1_s17.test.csl_daily:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "eval.b1_s17.test.how2sign",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: release.b1_s17:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "bt.b1_s17.how2sign",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: eval.b1_s17.test.how2sign:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "eval.b1_s17.test.phoenix2014t",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: release.b1_s17:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "bt.b1_s17.phoenix2014t",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: eval.b1_s17.test.phoenix2014t:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "aggregate.b1_s17.test",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: eval.b1_s17.test.csl_daily:waiting, eval.b1_s17.test.how2sign:waiting, eval.b1_s17.test.phoenix2014t:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "eval.c0_s17.dev.csl_daily",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: s17.train.c0:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "eval.c0_s17.dev.how2sign",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: s17.train.c0:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "eval.c0_s17.dev.phoenix2014t",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: s17.train.c0:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "aggregate.c0_s17.dev",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: eval.c0_s17.dev.csl_daily:waiting, eval.c0_s17.dev.how2sign:waiting, eval.c0_s17.dev.phoenix2014t:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "release.c0_s17",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: aggregate.c0_s17.dev:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "eval.c0_s17.test.csl_daily",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: release.c0_s17:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "bt.c0_s17.csl_daily",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: eval.c0_s17.test.csl_daily:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "eval.c0_s17.test.how2sign",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: release.c0_s17:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "bt.c0_s17.how2sign",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: eval.c0_s17.test.how2sign:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "eval.c0_s17.test.phoenix2014t",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: release.c0_s17:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "bt.c0_s17.phoenix2014t",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: eval.c0_s17.test.phoenix2014t:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "aggregate.c0_s17.test",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: eval.c0_s17.test.csl_daily:waiting, eval.c0_s17.test.how2sign:waiting, eval.c0_s17.test.phoenix2014t:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "eval.full_s17.dev.csl_daily",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: s17.train.full:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "eval.full_s17.dev.how2sign",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: s17.train.full:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "eval.full_s17.dev.phoenix2014t",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: s17.train.full:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "aggregate.full_s17.dev",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: eval.full_s17.dev.csl_daily:waiting, eval.full_s17.dev.how2sign:waiting, eval.full_s17.dev.phoenix2014t:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "release.full_s17",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: aggregate.full_s17.dev:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "eval.full_s17.test.csl_daily",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: release.full_s17:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "bt.full_s17.csl_daily",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: eval.full_s17.test.csl_daily:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "eval.full_s17.test.how2sign",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: release.full_s17:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "bt.full_s17.how2sign",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: eval.full_s17.test.how2sign:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "eval.full_s17.test.phoenix2014t",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: release.full_s17:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "bt.full_s17.phoenix2014t",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: eval.full_s17.test.phoenix2014t:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "aggregate.full_s17.test",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: eval.full_s17.test.csl_daily:waiting, eval.full_s17.test.how2sign:waiting, eval.full_s17.test.phoenix2014t:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "eval.full_control_s17.dev.csl_daily",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: s17.train.full_control:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "eval.full_control_s17.dev.how2sign",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: s17.train.full_control:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "eval.full_control_s17.dev.phoenix2014t",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: s17.train.full_control:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "aggregate.full_control_s17.dev",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: eval.full_control_s17.dev.csl_daily:waiting, eval.full_control_s17.dev.how2sign:waiting, eval.full_control_s17.dev.phoenix2014t:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "release.full_control_s17",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: aggregate.full_control_s17.dev:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "eval.full_control_s17.test.csl_daily",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: release.full_control_s17:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "bt.full_control_s17.csl_daily",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: eval.full_control_s17.test.csl_daily:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "eval.full_control_s17.test.how2sign",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: release.full_control_s17:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "bt.full_control_s17.how2sign",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: eval.full_control_s17.test.how2sign:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "eval.full_control_s17.test.phoenix2014t",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: release.full_control_s17:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "bt.full_control_s17.phoenix2014t",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: eval.full_control_s17.test.phoenix2014t:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "aggregate.full_control_s17.test",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: eval.full_control_s17.test.csl_daily:waiting, eval.full_control_s17.test.how2sign:waiting, eval.full_control_s17.test.phoenix2014t:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "eval.c1_s17.dev.csl_daily",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: s17.train.c0:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "eval.c1_s17.dev.how2sign",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: s17.train.c0:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "eval.c1_s17.dev.phoenix2014t",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: s17.train.c0:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "aggregate.c1_s17.dev",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: eval.c1_s17.dev.csl_daily:waiting, eval.c1_s17.dev.how2sign:waiting, eval.c1_s17.dev.phoenix2014t:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "release.c1_s17",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: aggregate.c1_s17.dev:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "eval.c1_s17.test.csl_daily",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: release.c1_s17:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "bt.c1_s17.csl_daily",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: eval.c1_s17.test.csl_daily:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "eval.c1_s17.test.how2sign",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: release.c1_s17:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "bt.c1_s17.how2sign",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: eval.c1_s17.test.how2sign:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "eval.c1_s17.test.phoenix2014t",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: release.c1_s17:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "bt.c1_s17.phoenix2014t",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: eval.c1_s17.test.phoenix2014t:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "aggregate.c1_s17.test",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: eval.c1_s17.test.csl_daily:waiting, eval.c1_s17.test.how2sign:waiting, eval.c1_s17.test.phoenix2014t:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "eval.c2_s17.dev.csl_daily",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: s17.gate.calibration:waiting, s17.train.c0:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "eval.c2_s17.dev.how2sign",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: s17.gate.calibration:waiting, s17.train.c0:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "eval.c2_s17.dev.phoenix2014t",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: s17.gate.calibration:waiting, s17.train.c0:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "aggregate.c2_s17.dev",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: eval.c2_s17.dev.csl_daily:waiting, eval.c2_s17.dev.how2sign:waiting, eval.c2_s17.dev.phoenix2014t:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "release.c2_s17",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: aggregate.c2_s17.dev:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "eval.c2_s17.test.csl_daily",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: release.c2_s17:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "bt.c2_s17.csl_daily",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: eval.c2_s17.test.csl_daily:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "eval.c2_s17.test.how2sign",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: release.c2_s17:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "bt.c2_s17.how2sign",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: eval.c2_s17.test.how2sign:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "eval.c2_s17.test.phoenix2014t",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: release.c2_s17:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "bt.c2_s17.phoenix2014t",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: eval.c2_s17.test.phoenix2014t:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "aggregate.c2_s17.test",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: eval.c2_s17.test.csl_daily:waiting, eval.c2_s17.test.how2sign:waiting, eval.c2_s17.test.phoenix2014t:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "oracle.s17.duration.csl_daily",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: s17.train.c0:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "oracle.s17.duration.how2sign",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: s17.train.c0:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "oracle.s17.duration.phoenix2014t",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: s17.train.c0:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "oracle.s17.relation.csl_daily",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: s17.train.c0:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "oracle.s17.relation.how2sign",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: s17.train.c0:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    },
+    {
+      "id": "oracle.s17.relation.phoenix2014t",
+      "state": "waiting",
+      "attempt": 0,
+      "failures": 0,
+      "pid": null,
+      "pid_start": null,
+      "reason": "Dependencies: s17.train.c0:waiting",
+      "log": null,
+      "result": null,
+      "next_retry": 0.0
+    }
+  ]
+}

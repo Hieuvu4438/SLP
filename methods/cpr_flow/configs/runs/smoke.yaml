@@ -1,0 +1,14 @@
+extends: ../base.yaml
+run:
+  id: smoke_real48
+  task: ae
+  stage: standalone
+train:
+  max_updates: 1000
+  effective_batch: 48
+  accumulate: 48
+  lr: 0.0002
+  warmup_updates: 100
+  dev_loss_every: 100
+  checkpoint_every: 100
+  selection: macro_dev_ae_reconstruction

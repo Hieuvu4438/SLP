@@ -1,0 +1,5 @@
+extends: ../base.yaml
+run:
+  id: diffusion_joint3_parent_s17
+  variant: diffusion
+  stage: parent

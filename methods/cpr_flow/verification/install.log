@@ -1,0 +1,21 @@
+Obtaining file:///home/haipd/SLP/methods/cpr_flow
+  Installing build dependencies: started
+  Installing build dependencies: finished with status 'done'
+  Checking if build backend supports build_editable: started
+  Checking if build backend supports build_editable: finished with status 'done'
+  Getting requirements to build editable: started
+  Getting requirements to build editable: finished with status 'done'
+  Preparing editable metadata (pyproject.toml): started
+  Preparing editable metadata (pyproject.toml): finished with status 'done'
+Building wheels for collected packages: cprflow
+  Building editable for cprflow (pyproject.toml): started
+  Building editable for cprflow (pyproject.toml): finished with status 'done'
+  Created wheel for cprflow: filename=cprflow-0.1.0-0.editable-py3-none-any.whl size=1458 sha256=030fe513d1e4ddb9653b620f5cce683b7019ba30a22f04133600eb9e69d1bc8a
+  Stored in directory: /tmp/pip-ephem-wheel-cache-2wu4wqhj/wheels/12/57/89/58af543881e0c9575e8d43462c99fad2cb32c221faf91bb199
+Successfully built cprflow
+Installing collected packages: cprflow
+  Attempting uninstall: cprflow
+    Found existing installation: cprflow 0.1.0
+    Uninstalling cprflow-0.1.0:
+      Successfully uninstalled cprflow-0.1.0
+Successfully installed cprflow-0.1.0

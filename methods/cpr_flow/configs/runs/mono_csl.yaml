@@ -1,0 +1,11 @@
+extends: ../base.yaml
+run:
+  id: cfm_csl_daily_sharedAE_s17
+  stage: standalone
+data:
+  datasets:
+  - csl_daily
+  q_dataset:
+  - 1.0
+train:
+  max_updates: 300000

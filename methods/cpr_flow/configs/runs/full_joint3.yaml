@@ -1,0 +1,17 @@
+extends: ../base.yaml
+run:
+  id: full_joint3_s17
+  variant: full
+  stage: continuation
+relation:
+  enabled: true
+loss:
+  geom: 0.1
+  cycle: 0.05
+  lag: 0.01
+  semantic: 0.05
+guard:
+  enabled: true
+train:
+  max_updates: 100000
+  warmup_updates: 2000

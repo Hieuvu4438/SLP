@@ -1,0 +1,146 @@
+import os
+os.environ.setdefault('CUBLAS_WORKSPACE_CONFIG',':4096:8')
+import gc,json,time
+from pathlib import Path
+import torch
+from cprflow.models.ae import MotionAE
+from cprflow.models.dit import TypedDiT
+from cprflow.models.duration import DurationModel
+from cprflow.data.stats import Normalizer
+from cprflow.geometry.body_model import BodyModel
+from cprflow.geometry.temporal import pool2
+from cprflow.types import MotionBatch
+from cprflow.objectives.ae import ae_objective
+from cprflow.objectives.flow import linear_path,endpoint,motion_fm
+from cprflow.objectives.reductions import per_clip_mse
+from cprflow.geometry.relations import relation33
+from cprflow.training.tasks import TaskObjective
+from cprflow.config import DEFAULTS
+from cprflow.training.engine import make_optimizer
+from cprflow.training.ema import EMA
+import copy
+
+torch.set_num_threads(2)
+if not torch.cuda.is_available():
+    raise RuntimeError('CUDA not available to this Python process')
+device='cuda'
+torch.manual_seed(17)
+torch.use_deterministic_algorithms(True)
+report={'synthetic':True,'real_corpus':False,'gpu':torch.cuda.get_device_name(0),
+        'precision':'bf16 network, actual repository objective implementation',
+        'strict_deterministic_algorithms':True,
+        'logical_batches':{'ae':128,'flow':64,'duration':256},'buckets':{},
+        'limitations':['single-clip synthetic inputs; no real I/O/text-cache loading',
+                       'no dev validation/checkpoint writing; micro timings extrapolated to logical accumulation',
+                       'model weights are initialized for profiling, not trained checkpoints']}
+body=BodyModel('/home/haipd/SLP/methods/cpr_flow/assets/smplx/SMPLX_NEUTRAL.npz',128).to(device)
+mn=Normalizer(torch.zeros(296),torch.ones(296)).to(device)
+ln=Normalizer(torch.zeros(4,1,128),torch.ones(4,1,128)).to(device)
+rn=Normalizer(torch.zeros(33),torch.ones(33)).to(device)
+scale_names=['body','left','right','left_local','right_local','expression','activity_left','activity_right','activity_head','activity_face']
+scales={name:1. for name in scale_names}
+
+def sync(): torch.cuda.synchronize()
+def measure(fn,warmup=2,repeats=3):
+    for _ in range(warmup): fn()
+    sync(); torch.cuda.reset_peak_memory_stats()
+    values=[]
+    for _ in range(repeats):
+        sync(); start=time.perf_counter(); fn(); sync(); values.append(time.perf_counter()-start)
+    return {'median_s':sorted(values)[len(values)//2],'samples_s':values,
+            'peak_allocated_gib':torch.cuda.max_memory_allocated()/2**30}
+
+def physical(frames):
+    x=torch.zeros(frames,296,device=device)
+    x[:,:246]=torch.tensor([1.,0,0,0,1,0],device=device).repeat(41)
+    ts=torch.arange(frames,device=device)/30
+    for joint,freq in [(3,1.7),(4,1.2),(5,1.4),(10,2.1),(25,2.4)]:
+        angle=.25*torch.sin(2*torch.pi*freq*ts)
+        x[:,joint*6]=angle.cos();x[:,joint*6+1]=-angle.sin()
+        x[:,joint*6+3]=angle.sin();x[:,joint*6+4]=angle.cos()
+    x[:,246:]=.04*torch.sin(2*torch.pi*2.3*ts)[:,None]
+    return x,ts
+
+for frames in (128,256,512):
+    print('Profiling frames',frames,flush=True)
+    x,ts=physical(frames)
+    lengths=torch.tensor([frames],device=device)
+    batch=MotionBatch(x[None],lengths,torch.ones(1,frames,device=device,dtype=torch.bool),ts[None],
+                      torch.tensor([0],device=device),['csl_daily'],['synthetic profile'],['synthetic'])
+    with torch.no_grad(): gt=body(x)
+    ae=MotionAE(mn).to(device)
+    def ae_micro():
+        ae.zero_grad(set_to_none=True)
+        with torch.autocast('cuda',dtype=torch.bfloat16):
+            pred,_=ae(batch.x,lengths)
+            terms,_=ae_objective(pred,batch,mn,body,scales,target_geometry=[gt])
+            loss=terms.sum()/128
+        loss.backward()
+    out={'ae_micro':measure(ae_micro)}
+    opt=make_optimizer(ae,2e-4,.01);ema=EMA(ae)
+    def ae_update():
+        torch.nn.utils.clip_grad_norm_(ae.parameters(),1.)
+        opt.step();ema.update(ae)
+    out['ae_optimizer_ema']=measure(ae_update,1,3)
+    ae.requires_grad_(False).eval()
+    latent_len=(frames+1)//2
+    valid=torch.ones(1,latent_len,device=device,dtype=torch.bool)
+    text=torch.randn(1,32,768,device=device)
+    text_mask=torch.ones(1,32,device=device,dtype=torch.bool)
+    token_times=pool2(ts[None,:,None],lengths)[...,0]
+    z1=torch.randn(1,4,latent_len,128,device=device)
+    noise=torch.randn_like(z1)
+    t=torch.tensor([.7],device=device)
+    zt,zv=linear_path(z1,noise,t)
+    with torch.no_grad():
+        r1=pool2(relation33(gt['joints'],gt['names'])[None],lengths)
+    rt,rv=linear_path(r1,torch.randn_like(r1),t)
+    cfg=copy.deepcopy(DEFAULTS)
+    cfg['loss'].update(geom=.1,cycle=.05,lag=.01,semantic=0.)
+    auxiliary=TaskObjective.__new__(TaskObjective)
+    auxiliary.config=cfg;auxiliary.device=torch.device(device)
+    auxiliary.motion_norm=mn;auxiliary.latent_norm=ln;auxiliary.relation_norm=rn
+    auxiliary.ae=ae;auxiliary.body=body;auxiliary.scales=scales;auxiliary.teacher=None
+    class FixedTargetGeometry:
+        def get(self,row,device): return gt
+    auxiliary.geometry_cache=FixedTargetGeometry()
+    for rel in (False,True):
+        model=TypedDiT(relational=rel).to(device)
+        def micro(with_aux=False):
+            model.zero_grad(set_to_none=True)
+            with torch.autocast('cuda',dtype=torch.bfloat16):
+                pred=model(zt,rt if rel else None,t,text,text_mask,batch.language_id,lengths,valid,token_times,
+                           drop_text=torch.zeros(1,device=device,dtype=torch.bool))
+                loss=motion_fm(pred.z,zv,valid)
+                if rel: loss=loss+.25*per_clip_mse(pred.r,rv,valid)
+                if with_aux:
+                    extras,_=auxiliary.auxiliary(endpoint(zt,pred.z,t),endpoint(rt,pred.r,t),batch,t,
+                        torch.zeros(1,device=device,dtype=torch.bool),torch.ones(1,device=device,dtype=torch.bool),[{}],[{}])
+                    loss=loss+extras
+                loss=loss.sum()/64
+            loss.backward()
+        key='p5_fm_micro' if rel else 'p4_fm_micro'
+        out[key]=measure(micro)
+        if rel: out['p5_eligible_aux_micro']=measure(lambda:micro(True),1,2)
+        optimizer=make_optimizer(model,1e-4,.01);shadow=EMA(model)
+        def optimizer_update():
+            torch.nn.utils.clip_grad_norm_(model.parameters(),1.)
+            optimizer.step();shadow.update(model)
+        out['p5_optimizer_ema' if rel else 'p4_optimizer_ema']=measure(optimizer_update,1,3)
+        del model,optimizer,shadow
+        gc.collect();torch.cuda.empty_cache()
+    out['ae_logical_update_est_s']=128*out['ae_micro']['median_s']+out['ae_optimizer_ema']['median_s']
+    out['p4_logical_update_est_s']=64*out['p4_fm_micro']['median_s']+out['p4_optimizer_ema']['median_s']
+    extra=max(0.,out['p5_eligible_aux_micro']['median_s']-out['p5_fm_micro']['median_s'])
+    # 80% of continuation steps after ramp start, aux evaluated every4 steps, 50% eligible.
+    out['c0_mean_logical_update_est_s']=64*(out['p5_fm_micro']['median_s']+.8*.25*.5*extra)+out['p5_optimizer_ema']['median_s']
+    out['minimal_joint3_training_compute_days_est']=(200000*out['ae_logical_update_est_s']+
+        200000*out['p4_logical_update_est_s']+100000*out['c0_mean_logical_update_est_s'])/86400
+    report['buckets'][str(frames)]=out
+    Path('/tmp/cpr_training_timing.json').write_text(json.dumps(report,indent=2))
+    print(json.dumps({'frames':frames,'ae_s':out['ae_logical_update_est_s'],
+         'p4_s':out['p4_logical_update_est_s'],'c0_s':out['c0_mean_logical_update_est_s'],
+         'days_excluding_duration_io_validation':out['minimal_joint3_training_compute_days_est']}),flush=True)
+    del ae,opt,ema,auxiliary,gt
+    gc.collect();torch.cuda.empty_cache()
+print('DONE',flush=True)

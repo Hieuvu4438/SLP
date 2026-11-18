@@ -1,0 +1,10 @@
+extends: ../base.yaml
+run:
+  id: ae_joint3_s17
+  task: ae
+  stage: standalone
+train:
+  lr: 0.0002
+  effective_batch: 128
+  accumulate: 128
+  selection: macro_dev_ae_reconstruction

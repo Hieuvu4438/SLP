@@ -1,0 +1,68 @@
+{
+  "environment": {
+    "python": "3.13.5 | packaged by Anaconda, Inc. | (main, Jun 12 2025, 16:09:02) [GCC 11.2.0]",
+    "platform": "Linux-5.15.0-187-generic-x86_64-with-glibc2.35",
+    "torch": "2.11.0+cu128",
+    "cuda": "12.8",
+    "cuda_available": true,
+    "bf16": true,
+    "tf32": false,
+    "sdpa": true
+  },
+  "synthetic": true,
+  "device": "cpu",
+  "scope": "Main architecture, B=1 T=16, forward/backward; not dataset throughput",
+  "variants": {
+    "B1": {
+      "warmup": 1,
+      "updates": 3,
+      "median_seconds": 0.10138884000480175,
+      "p95_seconds": 0.1154334660153836,
+      "peak_allocated_bytes": 0,
+      "peak_reserved_bytes": 0,
+      "trainable_parameters": 43066496,
+      "stream_state_elements": 4096,
+      "hidden_state_elements": 12288,
+      "local_context_key_tokens_per_query": 36,
+      "blocks": 8,
+      "hidden": 384,
+      "heads": 6,
+      "profiler_supported_ops_flops": 8165830042,
+      "flops_scope": "supported profiler operations; SDPA kernels may be omitted"
+    },
+    "C0": {
+      "warmup": 1,
+      "updates": 3,
+      "median_seconds": 0.09116064000409096,
+      "p95_seconds": 0.09280500210879836,
+      "peak_allocated_bytes": 0,
+      "peak_reserved_bytes": 0,
+      "trainable_parameters": 43092641,
+      "stream_state_elements": 4360,
+      "hidden_state_elements": 15360,
+      "local_context_key_tokens_per_query": 45,
+      "blocks": 8,
+      "hidden": 384,
+      "heads": 6,
+      "profiler_supported_ops_flops": 10157220036,
+      "flops_scope": "supported profiler operations; SDPA kernels may be omitted"
+    },
+    "B3": {
+      "warmup": 1,
+      "updates": 3,
+      "median_seconds": 0.06516420000116341,
+      "p95_seconds": 0.06517840832239016,
+      "peak_allocated_bytes": 0,
+      "peak_reserved_bytes": 0,
+      "trainable_parameters": 43092641,
+      "stream_state_elements": 4360,
+      "hidden_state_elements": 15360,
+      "local_context_key_tokens_per_query": 45,
+      "blocks": 8,
+      "hidden": 384,
+      "heads": 6,
+      "profiler_supported_ops_flops": 10157220036,
+      "flops_scope": "supported profiler operations; SDPA kernels may be omitted"
+    }
+  }
+}

@@ -1,0 +1,62 @@
+{
+  "observed_at": "2026-11-12T11:11:22.352757+07:00",
+  "live_training_modified": false,
+  "scientific_recipe_modified": false,
+  "prototype_network": {
+    "synthetic": true,
+    "scope": "AE network forward/backward only, excluding FK/data/optimizer; does not alter running training",
+    "cpu_output_padding_and_input_gradient_equivalence_passed": true,
+    "cpu_output_max_abs_error": 2.8312206268310547e-06,
+    "cpu_latent_max_abs_error": 1.7881393432617188e-06,
+    "cpu_input_grad_max_abs_error": 9.253621101379395e-06,
+    "benchmarks": {
+      "1": {
+        "reference": 0.039701909001450986,
+        "batched": 0.05986642400966957,
+        "network_speedup": 0.663174887396621
+      },
+      "4": {
+        "reference": 0.14391546600381844,
+        "batched": 0.07132753697806038,
+        "network_speedup": 2.017670483253689
+      },
+      "8": {
+        "reference": 0.3065234719833825,
+        "batched": 0.07335717100067995,
+        "network_speedup": 4.178507265234387
+      }
+    }
+  },
+  "one_real_logical_batch_compute": {
+    "synthetic": false,
+    "scope": "Compute benchmark using one real logical batch and smoke-AE weights; no checkpoint/optimizer changes to live run",
+    "dataset": "csl_daily",
+    "global_batch": 128,
+    "mean_frames": 161.40625,
+    "batch_step": 4,
+    "precision": "bf16",
+    "cpu_threads": 2,
+    "timings": {
+      "1": {
+        "seconds": 11.957122174993856,
+        "max_allocated_gib": 0.44521093368530273
+      },
+      "8": {
+        "seconds": 6.287807251006598,
+        "max_allocated_gib": 1.18109130859375
+      }
+    },
+    "observed_compute_speedup": 1.9016362457802238
+  },
+  "next_checks_before_activation": [
+    "GPU full loss and parameter-gradient equivalence including odd-length padding",
+    "multiple real batches from all three corpora and length buckets",
+    "save current checkpoint and explicit runtime migration; preserve optimizer/scheduler/EMA/sampler/global batch"
+  ],
+  "additional_opportunities": [
+    "batch valid FK frames across clips",
+    "avoid duplicate ground-truth cache reads",
+    "reduce per-microbatch CUDA synchronizations",
+    "vectorize lag objective for C0"
+  ]
+}

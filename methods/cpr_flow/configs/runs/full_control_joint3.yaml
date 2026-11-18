@@ -1,0 +1,14 @@
+extends: ../base.yaml
+run:
+  id: full_control_joint3_s17
+  variant: relational_cfm
+  stage: continuation
+relation:
+  enabled: true
+loss:
+  geom: 0.1
+  cycle: 0.05
+  lag: 0.01
+train:
+  max_updates: 100000
+  warmup_updates: 2000

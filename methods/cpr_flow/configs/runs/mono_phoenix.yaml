@@ -1,0 +1,11 @@
+extends: ../base.yaml
+run:
+  id: cfm_phoenix2014t_sharedAE_s17
+  stage: standalone
+data:
+  datasets:
+  - phoenix2014t
+  q_dataset:
+  - 1.0
+train:
+  max_updates: 300000

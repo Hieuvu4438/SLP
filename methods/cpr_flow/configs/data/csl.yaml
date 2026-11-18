@@ -1,0 +1,6 @@
+extends: ../base.yaml
+data:
+  datasets:
+  - csl_daily
+  q_dataset:
+  - 1.0

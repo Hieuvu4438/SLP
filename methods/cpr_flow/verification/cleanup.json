@@ -1,0 +1,13 @@
+{
+  "removed_obsolete_own_synthetic_runs": [
+    "/home/haipd/SLP/methods/cpr_flow/runs/synthetic_integration_v1",
+    "/home/haipd/SLP/methods/cpr_flow/runs/synthetic_integration_v2",
+    "/home/haipd/SLP/methods/cpr_flow/runs/synthetic_integration_v3",
+    "/home/haipd/SLP/methods/cpr_flow/runs/synthetic_integration_final",
+    "/home/haipd/SLP/methods/cpr_flow/runs/synthetic_integration_final_v2",
+    "/home/haipd/SLP/methods/cpr_flow/runs/synthetic_integration_final_v3",
+    "/home/haipd/SLP/methods/cpr_flow/runs/engineering_validation"
+  ],
+  "retained": "/home/haipd/SLP/methods/cpr_flow/runs/verified_pipeline",
+  "raw_or_user_data_removed": false
+}

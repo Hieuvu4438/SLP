@@ -1,0 +1,18 @@
+{
+  "reason": "HF/Xet transfers stopped making disk progress and logged retry/failure; switch to standard HTTP",
+  "completed_data_mdb_preserved": true,
+  "removed_only_failed_download_temporaries": [
+    {
+      "path": "methods/cpr_flow/data/raw_pose/9fe7e04ef59204c787cd6094c747f889efff6ba0/.cache/huggingface/download/train/PHOENIX-2014T_reopt_train.lmdb/1o4sG6V0qY5o7t-ajC6wvu1z2dY=.137ecceb15f3dcd24b6d637ec5fccf8980d788397c2a41e4fff12b215fa33a6e.incomplete",
+      "bytes": 670589256
+    },
+    {
+      "path": "methods/cpr_flow/data/raw_pose/9fe7e04ef59204c787cd6094c747f889efff6ba0/.cache/huggingface/download/train/CSL-Daily_reopt_train.lmdb/1o4sG6V0qY5o7t-ajC6wvu1z2dY=.7dbc5dc932c6e34ea1d7d47976e8db8fb90ba4c2aff3eb05a6991c7008366222.incomplete",
+      "bytes": 1552669203
+    },
+    {
+      "path": "methods/cpr_flow/data/raw_pose/9fe7e04ef59204c787cd6094c747f889efff6ba0/.cache/huggingface/download/dev/How2Sign_reopt_dev.lmdb/1o4sG6V0qY5o7t-ajC6wvu1z2dY=.79f37363d0086f998ffe4c4ecbdb3bf24da31778e6628ded8dd8deacd605c23e.incomplete",
+      "bytes": 335465797
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+extends: ../base.yaml
+run:
+  id: auxonly_joint3_s17
+  variant: auxiliary_only
+  stage: continuation
+loss:
+  geom: 0.1
+  lag: 0.01
+train:
+  max_updates: 100000
+  warmup_updates: 2000

@@ -1,0 +1,8 @@
+extends: ../base.yaml
+run:
+  id: teacher_joint3_s17
+  task: teacher
+  stage: standalone
+train:
+  max_updates: 100000
+  selection: macro_dev_retrieval_r1

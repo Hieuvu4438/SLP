@@ -1,0 +1,45 @@
+{
+  "observed_at_utc": "2026-11-10T10:40:43.440250+00:00",
+  "scheduler": {
+    "pid": 533099,
+    "pid_start": "2189691",
+    "plan": "/home/haipd/SLP/methods/cpr_flow/runs/jobs/joint3_train/plan.json"
+  },
+  "active_plan": "/home/haipd/SLP/methods/cpr_flow/runs/jobs/joint3_train/plan.json",
+  "live_payloads": [
+    {
+      "job": "cache.text",
+      "pid": 543849,
+      "log": "/home/haipd/SLP/methods/cpr_flow/runs/jobs/joint3_train/attempts/cache.text/1/output.log"
+    },
+    {
+      "job": "stats.motion_relation",
+      "pid": 543853,
+      "log": "/home/haipd/SLP/methods/cpr_flow/runs/jobs/joint3_train/attempts/stats.motion_relation/1/output.log"
+    }
+  ],
+  "max_concurrent": 2,
+  "real_data": true,
+  "preprocessing_counts": {
+    "csl_daily": {
+      "train": 18201,
+      "dev": 1064,
+      "test": 1162
+    },
+    "how2sign": {
+      "train": 29630,
+      "dev": 1650,
+      "test": 2183
+    },
+    "phoenix2014t": {
+      "train": 7096,
+      "dev": 519,
+      "test": 642
+    }
+  },
+  "quarantined": 0,
+  "manual_review_policy": "operator_waived, not falsely approved",
+  "train_jobs_auto_admitted_after_cache": true,
+  "no_further_access_confirmation_required": true,
+  "latest_tests": "60 passed"
+}

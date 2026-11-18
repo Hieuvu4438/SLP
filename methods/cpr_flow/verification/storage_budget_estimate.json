@@ -1,0 +1,104 @@
+{
+  "size_formula": "model float32 + EMA float32 + AdamW two float32 moments =16 bytes/parameter; metadata excluded",
+  "models": {
+    "ae": {
+      "parameters": 7009832,
+      "inference_weights_gib": 0.026113659143447876,
+      "full_checkpoint_gib": 0.1044546365737915
+    },
+    "duration": {
+      "parameters": 823970,
+      "inference_weights_gib": 0.0030695274472236633,
+      "full_checkpoint_gib": 0.012278109788894653
+    },
+    "cfm": {
+      "parameters": 43066496,
+      "inference_weights_gib": 0.16043519973754883,
+      "full_checkpoint_gib": 0.6417407989501953
+    },
+    "relation": {
+      "parameters": 43092641,
+      "inference_weights_gib": 0.16053259745240211,
+      "full_checkpoint_gib": 0.6421303898096085
+    },
+    "teacher": {
+      "parameters": 8195976,
+      "inference_weights_gib": 0.030532389879226685,
+      "full_checkpoint_gib": 0.12212955951690674
+    }
+  },
+  "minimal_ae_duration_parent_c0_checkpoints_counts": {
+    "ae": 42,
+    "duration": 9,
+    "cfm": 42,
+    "relation": 22
+  },
+  "minimal_checkpoints_gib": 45.577579855918884,
+  "raw_lmdb": {
+    "repo": "LionelLow/SignSparK_data",
+    "revision": "9fe7e04ef59204c787cd6094c747f889efff6ba0",
+    "source": "Hugging Face repository metadata; no corpus bytes downloaded",
+    "files": [
+      {
+        "path": "dev/CSL-Daily_reopt_dev.lmdb/data.mdb",
+        "bytes": 200536064,
+        "gib": 0.18676376342773438
+      },
+      {
+        "path": "dev/How2Sign_reopt_dev.lmdb/data.mdb",
+        "bytes": 451575808,
+        "gib": 0.420562744140625
+      },
+      {
+        "path": "dev/PHOENIX-2014T_reopt_dev.lmdb/data.mdb",
+        "bytes": 86167552,
+        "gib": 0.08024978637695312
+      },
+      {
+        "path": "test/CSL-Daily_reopt_test.lmdb/data.mdb",
+        "bytes": 228511744,
+        "gib": 0.21281814575195312
+      },
+      {
+        "path": "test/How2Sign_reopt_test.lmdb/data.mdb",
+        "bytes": 587984896,
+        "gib": 0.5476036071777344
+      },
+      {
+        "path": "test/PHOENIX-2014T_reopt_test.lmdb/data.mdb",
+        "bytes": 100098048,
+        "gib": 0.09322357177734375
+      },
+      {
+        "path": "train/CSL-Daily_reopt_train.lmdb/data.mdb",
+        "bytes": 3327815680,
+        "gib": 3.0992698669433594
+      },
+      {
+        "path": "train/How2Sign_reopt_train.lmdb/data.mdb",
+        "bytes": 7898869760,
+        "gib": 7.356395721435547
+      },
+      {
+        "path": "train/PHOENIX-2014T_reopt_train.lmdb/data.mdb",
+        "bytes": 1275310080,
+        "gib": 1.1877250671386719
+      }
+    ],
+    "total_bytes": 14156869632,
+    "total_gib": 13.184612274169922
+  },
+  "planning_scope": "One joint3 AE+duration+CFM parent+C0 seed, no original source videos, one derived cache version",
+  "total_workspace_planning_gb": [
+    150,
+    250
+  ],
+  "recommended_free_disk_before_run_gb": [
+    250,
+    300
+  ],
+  "derived_cache_size_measured_on_real_corpus": false,
+  "checkpoint_retention_current": "Every5000 updates; all periodic snapshots retained, plus last/best; no automatic pruning",
+  "raw_lmdb_size_gb": 14.156869632,
+  "current_filesystem_free_gib": 137.26089477539062
+}

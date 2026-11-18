@@ -1,0 +1,4 @@
+method:
+  config: methods/cpr_flow/configs/runs/baseline_joint3.yaml
+  device: cpu
+  overrides: []

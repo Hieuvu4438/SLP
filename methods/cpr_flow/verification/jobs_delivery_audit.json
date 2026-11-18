@@ -1,0 +1,32 @@
+{
+  "jobs": 111,
+  "max_concurrent": 2,
+  "scheduler_pid": 403126,
+  "scheduler_live_verified": true,
+  "source_and_configs_frozen_verified": true,
+  "payload_world_size": "1",
+  "dataloader_workers": 0,
+  "checkpoint_keep_recent": 1,
+  "protected_steps": [
+    50000,
+    100000,
+    200000,
+    300000
+  ],
+  "geometry_cache": "52 unique required joints, float32, groups reconstructed exactly",
+  "workspace_budget_gib": 100,
+  "filesystem_reserve_gib": 15,
+  "unit_tests": "57 passed",
+  "repository_tests": "131 passed,2 skipped",
+  "synthetic_resume_storage_integration": "/home/haipd/SLP/methods/cpr_flow/verification/jobs_storage_integration.log",
+  "real_training_started": false,
+  "waiting_reason": "Missing access record /home/haipd/SLP/methods/cpr_flow/access_record.json; record existing lab authorization for the three corpora",
+  "gates_never_fabricated": [
+    "access",
+    "verified feature FPS",
+    "geometry review",
+    "teacher calibration",
+    "BT validation"
+  ],
+  "plan": "/home/haipd/SLP/methods/cpr_flow/runs/jobs/joint3_standard/plan.json"
+}

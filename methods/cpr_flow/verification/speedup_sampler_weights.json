@@ -1,0 +1,68 @@
+[
+  {
+    "dataset": "csl_daily",
+    "bucket": 128,
+    "clips": 11634,
+    "weight": 0.21306521619691224
+  },
+  {
+    "dataset": "csl_daily",
+    "bucket": 256,
+    "clips": 6327,
+    "weight": 0.11587275424427229
+  },
+  {
+    "dataset": "csl_daily",
+    "bucket": 512,
+    "clips": 240,
+    "weight": 0.004395362892148783
+  },
+  {
+    "dataset": "how2sign",
+    "bucket": 512,
+    "clips": 4728,
+    "weight": 0.05342916228769027
+  },
+  {
+    "dataset": "how2sign",
+    "bucket": 1024,
+    "clips": 942,
+    "weight": 0.010645150354273316
+  },
+  {
+    "dataset": "how2sign",
+    "bucket": 256,
+    "clips": 9910,
+    "weight": 0.11198878982043371
+  },
+  {
+    "dataset": "how2sign",
+    "bucket": 128,
+    "clips": 13917,
+    "weight": 0.15727023087093603
+  },
+  {
+    "dataset": "phoenix2014t",
+    "bucket": 128,
+    "clips": 3284,
+    "weight": 0.1542653137918076
+  },
+  {
+    "dataset": "phoenix2014t",
+    "bucket": 256,
+    "clips": 3511,
+    "weight": 0.16492859827132658
+  },
+  {
+    "dataset": "phoenix2014t",
+    "bucket": 512,
+    "clips": 300,
+    "weight": 0.014092446448703494
+  },
+  {
+    "dataset": "phoenix2014t",
+    "bucket": 1024,
+    "clips": 1,
+    "weight": 4.6974821495678314e-05
+  }
+]

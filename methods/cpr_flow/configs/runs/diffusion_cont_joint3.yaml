@@ -1,0 +1,8 @@
+extends: ../base.yaml
+run:
+  id: diffusion_joint3_s17
+  variant: diffusion
+  stage: continuation
+train:
+  max_updates: 100000
+  warmup_updates: 2000

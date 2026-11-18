@@ -1,0 +1,7 @@
+extends: ../base.yaml
+run:
+  id: cfm_joint3_s17
+  stage: continuation
+train:
+  max_updates: 100000
+  warmup_updates: 2000

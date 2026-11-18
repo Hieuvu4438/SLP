@@ -1,0 +1,241 @@
+spec_version: cprflow-impl-v1
+seed: 17
+run:
+  id: cfm_joint3_parent_s17
+  out_dir: runs
+  task: flow
+  variant: plain_cfm
+  strict_reproducibility: true
+  synthetic: false
+  device: cpu
+  stage: parent
+  manual_gate_policy: required
+  policy_reference: ''
+paths:
+  source_pose: data/raw_pose
+  manifests: data/manifests
+  processed: data/processed
+  cache: data/cache
+  stats: data/stats
+  smplx_model: assets/smplx/SMPLX_NEUTRAL.npz
+  sources_lock: sources.lock.json
+  ae_checkpoint: runs/ae_joint3_s17/checkpoints/best_ema.pt
+  duration_checkpoint: runs/duration_joint3_s17/checkpoints/best.pt
+  teacher_checkpoint: null
+  teacher_calibration: null
+  source_timing: source_timing.json
+  access_record: access_record.json
+  motion_stats: null
+  relation_stats: null
+  latent_stats: null
+  activity_stats: null
+data:
+  datasets:
+  - csl_daily
+  - how2sign
+  - phoenix2014t
+  q_dataset:
+  - 0.3333333333333333
+  - 0.3333333333333333
+  - 0.3333333333333333
+  sign_language_ids:
+    CSL: 0
+    ASL: 1
+    DGS: 2
+  profile: canonical296_nativeleft_row6d_v1
+  dims:
+    body: 60
+    left: 90
+    right: 90
+    face: 56
+  require_verified_feature_fps: true
+  target_fps: 30.0
+  resample_grid: endpoint_linspace_v1
+  max_train_frames: 1024
+  max_generation_frames: 2048
+  bucket_boundaries:
+  - 128
+  - 256
+  - 512
+  - 1024
+  truncate_motion: false
+  mirror_augmentation: false
+  random_time_stretch: false
+  workers_per_rank: 4
+  pin_memory: true
+  source_profile: signspark_body126_hands90_face56
+stats:
+  method: equal_dataset_equal_clip_moments
+  fit_split: train
+  std_floor: 0.01
+geometry:
+  backend: smplx_layer_matrix
+  num_betas: 10
+  num_expression: 50
+  flat_hand_mean: true
+  joint_mapper: null
+  face_contour: false
+  root: identity
+  translation: zero
+  shape: neutral_zero
+  fk_chunk_frames: 128
+  epsilon: 1.0e-06
+ae:
+  latent_dim_per_part: 128
+  stride: 2
+  channels:
+  - 128
+  - 256
+  residual_dilations:
+  - 1
+  - 2
+  norm: channel_layernorm
+  boundary: true_length_replicate
+  decoder_fusion: residual_mlp512_256_512
+  kl_weight: 0.0
+  weights:
+    param: 1.0
+    rotation: 0.5
+    fk: 1.0
+    velocity: 0.1
+  local_hand_fk_weight: 2.0
+  auxiliary_frame_stride: 2
+  execution: per_clip
+text:
+  model_id: google/mt5-base
+  use_encoder_only: true
+  frozen: true
+  hidden_dim: 768
+  max_tokens: 512
+  prefix_by_sign_language: true
+  condition_dropout: 0.1
+  revision: null
+  tokenizer_revision: null
+  local_files_only: false
+duration:
+  distribution: log_normal_frames
+  input_dim: 800
+  hidden_dim: 1024
+  sigma_floor: 0.05
+  sigma_max: 2.0
+  round_frames_to: 2
+model:
+  hidden_dim: 384
+  blocks: 8
+  heads: 6
+  ffn_dim: 1536
+  dropout: 0.0
+  temporal_attention: full_per_stream
+  local_cross_part_radius_latent: 4
+  global_part_context_every: 2
+  modulation: adaln_zero
+relation:
+  enabled: false
+  dim: 33
+  pooling: valid_pair_mean
+  threshold: 0.08
+  softness: 0.02
+  warmup_key_gate_updates: 2000
+  warmup_required: false
+flow:
+  path: linear_noise_to_data
+  t_distribution: uniform
+  fm_motion_weight: 1.0
+  fm_relation_weight: 0.25
+  coupling: independent
+loss:
+  reduction: global_mean_of_per_clip_valid_means
+  geom: 0.0
+  cycle: 0.0
+  lag: 0.0
+  semantic: 0.0
+  auxiliary_every_updates: 4
+  auxiliary_frequency_compensation: 4.0
+  auxiliary_time_min: 0.5
+  auxiliary_ramp_start: 20000
+  auxiliary_ramp_end: 40000
+  lag_window: 32
+  lag_hop: 16
+  lag_max_offset: 15
+  lag_temperature: 0.1
+  lag_variance_floor: 0.0001
+train:
+  max_updates: 200000
+  effective_batch: 64
+  microbatch_per_rank: 1
+  accumulate: 64
+  optimizer: AdamW
+  lr: 0.0001
+  weight_decay: 0.01
+  warmup_updates: 5000
+  lr_floor_ratio: 0.1
+  grad_clip: 1.0
+  precision: bf16_if_supported
+  ema_decay: 0.9999
+  dev_loss_every: 1000
+  dev_generation_every: 5000
+  checkpoint_every: 5000
+  selection: macro_dev_hand_global_dtw_jpe
+  early_stop_patience: 5
+  dev_panel_per_dataset: 64
+  dev_prompts_per_dataset: 20
+  dev_sample_seed: 101
+  keep_steps:
+  - 50000
+  - 100000
+  - 200000
+  - 300000
+  checkpoint_keep_recent: 1
+distributed:
+  backend: nccl
+  find_unused_parameters: false
+  strict_resume_world_size: true
+sample:
+  solver: euler
+  nfe: 16
+  cfg: 1.0
+  duration_source: predicted
+  oracle_inputs: false
+guard:
+  enabled: false
+  max_steps: 2
+  max_backtracking: 3
+  step_size: 0.05
+  max_latent_delta_rms: 0.2
+  energy_improvement_min: 1.0e-06
+  penetration_weight: 0.0
+  mode: semantic
+eval:
+  split: dev
+  per_dataset: true
+  sample_seeds:
+  - 1234
+  - 1235
+  - 1236
+  - 1237
+  - 1238
+  recompute_relations_from_geometry: true
+  best_of_n_with_gt: false
+  backtranslation_checkpoint: null
+  official_metrics_adapter: null
+diffusion:
+  steps: 1000
+  cosine_offset: 0.008
+  beta_min: 1.0e-05
+  beta_max: 0.999
+teacher:
+  hidden_dim: 256
+  blocks_per_part: 2
+  heads: 4
+  ffn_dim: 1024
+  dropout: 0.1
+  embedding_dim: 256
+  temperature: 0.07
+  mask_probability: 0.3
+  span_min: 2
+  span_max: 10
+  reconstruction_weight: 0.1
+logging:
+  jsonl: true
+  tensorboard: false
+  wandb: false

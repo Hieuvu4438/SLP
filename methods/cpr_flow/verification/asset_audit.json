@@ -1,0 +1,102 @@
+{
+  "scope": "real_assets_only; synthetic integration artifacts excluded",
+  "environment": {
+    "python": "3.13.5 | packaged by Anaconda, Inc. | (main, Jun 12 2025, 16:09:02) [GCC 11.2.0]",
+    "platform": "Linux-5.15.0-187-generic-x86_64-with-glibc2.35",
+    "torch": "2.11.0+cu128",
+    "cuda": "12.8",
+    "cuda_available": true,
+    "bf16": true,
+    "tf32": false,
+    "sdpa": true
+  },
+  "dataset_release": {
+    "repo_id": "LionelLow/SignSparK_data",
+    "repo_type": "dataset",
+    "revision": "9fe7e04ef59204c787cd6094c747f889efff6ba0"
+  },
+  "sources": [
+    {
+      "dataset": "csl_daily",
+      "split": "train",
+      "path": "/home/haipd/SLP/methods/cpr_flow/data/raw_pose/9fe7e04ef59204c787cd6094c747f889efff6ba0/train/CSL-Daily_reopt_train.lmdb/data.mdb",
+      "exists": false
+    },
+    {
+      "dataset": "csl_daily",
+      "split": "dev",
+      "path": "/home/haipd/SLP/methods/cpr_flow/data/raw_pose/9fe7e04ef59204c787cd6094c747f889efff6ba0/dev/CSL-Daily_reopt_dev.lmdb/data.mdb",
+      "exists": false
+    },
+    {
+      "dataset": "csl_daily",
+      "split": "test",
+      "path": "/home/haipd/SLP/methods/cpr_flow/data/raw_pose/9fe7e04ef59204c787cd6094c747f889efff6ba0/test/CSL-Daily_reopt_test.lmdb/data.mdb",
+      "exists": false
+    },
+    {
+      "dataset": "how2sign",
+      "split": "train",
+      "path": "/home/haipd/SLP/methods/cpr_flow/data/raw_pose/9fe7e04ef59204c787cd6094c747f889efff6ba0/train/How2Sign_reopt_train.lmdb/data.mdb",
+      "exists": false
+    },
+    {
+      "dataset": "how2sign",
+      "split": "dev",
+      "path": "/home/haipd/SLP/methods/cpr_flow/data/raw_pose/9fe7e04ef59204c787cd6094c747f889efff6ba0/dev/How2Sign_reopt_dev.lmdb/data.mdb",
+      "exists": false
+    },
+    {
+      "dataset": "how2sign",
+      "split": "test",
+      "path": "/home/haipd/SLP/methods/cpr_flow/data/raw_pose/9fe7e04ef59204c787cd6094c747f889efff6ba0/test/How2Sign_reopt_test.lmdb/data.mdb",
+      "exists": false
+    },
+    {
+      "dataset": "phoenix2014t",
+      "split": "train",
+      "path": "/home/haipd/SLP/methods/cpr_flow/data/raw_pose/9fe7e04ef59204c787cd6094c747f889efff6ba0/train/PHOENIX-2014T_reopt_train.lmdb/data.mdb",
+      "exists": false
+    },
+    {
+      "dataset": "phoenix2014t",
+      "split": "dev",
+      "path": "/home/haipd/SLP/methods/cpr_flow/data/raw_pose/9fe7e04ef59204c787cd6094c747f889efff6ba0/dev/PHOENIX-2014T_reopt_dev.lmdb/data.mdb",
+      "exists": false
+    },
+    {
+      "dataset": "phoenix2014t",
+      "split": "test",
+      "path": "/home/haipd/SLP/methods/cpr_flow/data/raw_pose/9fe7e04ef59204c787cd6094c747f889efff6ba0/test/PHOENIX-2014T_reopt_test.lmdb/data.mdb",
+      "exists": false
+    }
+  ],
+  "required_metadata": {
+    "source_timing": {
+      "path": "/home/haipd/SLP/methods/cpr_flow/source_timing.json",
+      "exists": false
+    },
+    "access_record": {
+      "path": "/home/haipd/SLP/methods/cpr_flow/access_record.json",
+      "exists": false
+    }
+  },
+  "smplx": {
+    "path": "/home/haipd/DexAvatar/SMPLer-X/common/utils/human_model_files/smplx/SMPLX_NEUTRAL.npz",
+    "exists": true,
+    "sha256": "376021446ddc86e99acacd795182bbef903e61d33b76b9d8b359c2b0865bd992"
+  },
+  "real_checkpoints": {
+    "ae_checkpoint": {
+      "path": "/home/haipd/SLP/methods/cpr_flow/runs/ae_joint3_s17/checkpoints/best_ema.pt",
+      "exists": false
+    },
+    "duration_checkpoint": {
+      "path": "/home/haipd/SLP/methods/cpr_flow/runs/duration_joint3_s17/checkpoints/best.pt",
+      "exists": false
+    }
+  },
+  "teacher_calibration": null,
+  "real_data_training": false,
+  "real_test_accessed": false
+}

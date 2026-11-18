@@ -1,0 +1,12 @@
+extends: ../base.yaml
+run:
+  id: duration_joint3_s17
+  task: duration
+  stage: standalone
+train:
+  max_updates: 30000
+  effective_batch: 256
+  accumulate: 256
+  selection: macro_dev_absolute_log_length_error
+  warmup_updates: 0
+  lr_floor_ratio: 1.0

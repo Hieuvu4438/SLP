@@ -1,0 +1,12 @@
+/assets/
+/data/
+/runs/
+.venv/
+*.egg-info/
+__pycache__/
+.pytest_cache/
+/source_snapshots/
+/access_record.json
+/source_timing.json
+/teacher_calibration.json
+/integrations/*.json

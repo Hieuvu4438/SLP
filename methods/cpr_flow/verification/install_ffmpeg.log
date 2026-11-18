@@ -1,0 +1,6 @@
+Collecting imageio-ffmpeg
+  Downloading imageio_ffmpeg-0.8.1-py3-none-manylinux_2_28_x86_64.whl.metadata (1.5 kB)
+Downloading imageio_ffmpeg-0.8.1-py3-none-manylinux_2_28_x86_64.whl (68.0 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 68.0/68.0 MB 1.2 MB/s eta 0:00:00
+Installing collected packages: imageio-ffmpeg
+Successfully installed imageio-ffmpeg-0.8.1
