@@ -7,7 +7,8 @@ evaluator do not share failure modes (see docs/proposal1/05_proposed_method.md, 
   --arch qwen  : conv pose encoder -> prefix embeddings for Qwen3-0.6B (MaDiS's pruned LM), LoRA     [B2 evaluator]
 
 Input: SOKE 133-D SMPL-X features (normalised). Trained on the TRAIN split of GT
-poses; dev is used for model selection and for the GT ceiling. Never touches test.
+poses; dev is used for model selection and for the GT ceiling. Test is available
+only in explicit scoring mode via --split test.
 Scoring of generated motion: --score_npz name->[T,133] (normalised features).
 
 Run with the MaDiS venv:
@@ -266,7 +267,7 @@ def bt_retrieval(model, items, dev, k=99, seed=0, chunk=100):
 
 
 def score(a, model, val, dev, out):
-    """Back-translate generated / calibration sequences of the dev split with a trained model."""
+    """Back-translate sequences of the selected split with a trained model."""
     model.load_state_dict(torch.load(out / "best.pt", map_location=dev))
     by_name = {Path(n).name: (n, t, f) for n, t, f in val}
     res = {}
@@ -307,10 +308,14 @@ def main():
     ap.add_argument("--eval_every", type=int, default=5)
     ap.add_argument("--limit", type=int, default=-1, help="debug: subsample train/dev")
     ap.add_argument("--score_name", default=None)
+    ap.add_argument("--split", choices=["val", "test"], default="val",
+                    help="scoring split; test is only allowed with --score")
     ap.add_argument("--retrieval", action="store_true", help="score mode: add BT-retrieval R@k (k=99 distractors)")
     ap.add_argument("--score", nargs="*", default=None,
                     help="score mode: label=<MaDiS pred dir | npz> or @gt @mean_pose @gt_reversed; uses <out>/best.pt")
     a = ap.parse_args()
+    if a.split == "test" and a.score is None:
+        ap.error("--split test requires --score; model selection must use val")
     random.seed(a.seed); np.random.seed(a.seed); torch.manual_seed(a.seed)
     dev = "cuda"
     torch.backends.cuda.enable_cudnn_sdp(False)  # torch 2.5 cuDNN-SDPA fails with padding masks
@@ -323,10 +328,10 @@ def main():
     BLEU_TOK = "zh" if a.source == "csl" else "13a"
     if a.source == "phoenix":
         train = load_phoenix(a.root, "train", mean, std)
-        val = load_phoenix(a.root, "dev", mean, std)
+        val = load_phoenix(a.root, "test" if a.split == "test" else "dev", mean, std)
     else:
         train = load_generic(a.source, "train", mean, std)
-        val = load_generic(a.source, "val", mean, std)
+        val = load_generic(a.source, a.split, mean, std)
     if a.limit > 0:
         train, val = train[: a.limit], val[: max(a.limit // 8, 16)]
     print(f"train {len(train)} dev {len(val)}", flush=True)
