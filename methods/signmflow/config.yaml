@@ -1,0 +1,81 @@
+# SignNMFlow (arXiv:2609.33339) - defaults = the paper's main configuration (Table 6, App. D.1).
+# Ablation / experiment variants override these from configs/experiments/signmflow/*.sh.
+eval:
+  metrics: [soke_dtw_jpe_all, soke_dtw_jpe_body, soke_dtw_jpe_hand,
+            soke_dtw_pa_jpe_all, soke_dtw_pa_jpe_body, soke_dtw_pa_jpe_hand,
+            soke_dtw_pa_jpe_body_ua]
+  primary_metric: soke_dtw_pa_jpe_hand
+  higher_is_better: false
+
+train:
+  deterministic: false        # cuDNN autotuning / atomic adds; seeds are still fixed
+
+method:
+  device: cuda
+  smplx_dir: third_party/SOKE/deps/smpl_models   # licensed SMPL-X (hands_mean for physical rotations)
+  add_hand_mean: true          # SOKE's SMPL-X layer uses flat_hand_mean=False
+  cache_dir: outputs/signmflow/cache
+  cache_workers: 8
+  multilingual: false          # true -> SignNMFlow-M (train on Phoenix + CSL + How2Sign)
+  multilingual_datasets: [phoenix_smplx, csl_smplx, how2sign_smplx_soke]   # SOKE protocol for How2Sign
+  init: {}                     # {prototypes|correction|generator: path} re-use a trained stage
+  export_npz: null             # optional extra copy of the predictions {name: [T,133]}
+  debug_limit: null            # smoke tests only: restrict train/val to the first N sequences
+
+  flow:
+    representation: quat       # quat (MR) | 6d (baseline)
+    path: naturalness          # naturalness (GE+NG) | geodesic (GE) | linear (CFM)
+    prediction: target         # target (Eq. 13) | velocity
+    w_pose: 10.0               # loss weight of the pose term (App. C.5)
+    w_expr: 0.1                # loss weight of the expression term
+    loss_reduction: sum        # ||.||^2 of Alg. 2 = sum over the 164 pose / 10 expression channels
+                               # per frame, mean over valid frames ("mean": per-channel average)
+
+  measure:                     # motion naturalness measure (Sec. 3.2, Table 4)
+    K: 500
+    sigma: 0.5
+    rho: 1.0e-6
+    kmeans_iters: 300
+    kmeans_tol: 1.0e-4         # stop when the relative change of the inertia is below this
+    max_frames: null           # null = all training frames (paper); int = random subsample
+
+  correction:                  # epsilon_theta (Table 6)
+    hidden: 512
+    layers: 3
+    batch_size: 8
+    epochs: 100
+    lr: 2.0e-4                 # AdamW + cosine
+    weight_decay: 0.0
+    workers: 4
+    frame_chunk: 0             # >0: split the energy over frame chunks (same gradient, less memory)
+    resume_from: null          # path to an interrupted run's correction.pt (same config) to continue it
+
+  generator:                   # phi (Table 6)
+    latent: 512
+    layers: 8
+    heads: 8
+    ff: 2048
+    time_dim: 2048
+    dropout: 0.1
+    max_frames: 400            # MaDiS/SOKE crop rule: sequences have 40..400 frames
+    text_model: third_party/SOKE/deps/mbart-h2s-csl-phoenix   # mBART-large-cc25 (SOKE reduced vocab)
+    text_max_len: 128
+    batch_size: 64             # per GPU (Table 6); the loss is normalised per 64-sample batch
+    micro_batch: 16            # memory only: a batch is processed in chunks, gradient unchanged
+    effective_batch: 256       # 64 x 4 A40 in the paper; gradient accumulation on fewer GPUs
+    epochs: 300
+    lr: 2.0e-4                 # AdamW + cosine, fp32
+    text_lr: 2.0e-4            # mBART fine-tuned jointly with phi (same optimiser settings)
+    weight_decay: 0.0
+    warmup_steps: 0
+    grad_clip: null
+    length_loss_weight: 1.0    # length head on detached text features (not in the paper)
+    workers: 4
+    save_every: 50             # generator_ep*.pt snapshots (1.1 GB each); generator.pt is saved every epoch
+    resume_from: null       # path to an interrupted run's generator.pt (same config) to continue it
+
+  sampler:
+    steps: 5                   # explicit Euler / re-planned transport, NFE = 5
+    batch_size: 64
+    min_len: 40
+    max_len: 400
