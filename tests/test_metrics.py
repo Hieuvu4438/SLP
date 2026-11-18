@@ -81,3 +81,89 @@ def test_sibleu4_is_order_sensitive():
     ref = [[1, 2, 3, 4, 5, 6]]
     assert sibleu4([[1, 2, 3, 4, 5, 6]], ref) == pytest.approx(100.0)
     assert sibleu4([[6, 5, 4, 3, 2, 1]], ref) == pytest.approx(0.0)
+
+
+# ------------------------------------------------------ SOKE protocol metrics
+from slp.evaluation.metrics import pairwise_part_cost  # noqa: E402
+
+
+def _soke_rigid_align(A, B):
+    """Verbatim port of SOKE mGPT/utils/human_models.rigid_transform_3D + rigid_align."""
+    n, _ = A.shape
+    ca, cb = A.mean(0), B.mean(0)
+    H = (A - ca).T @ (B - cb) / n
+    U, s, V = np.linalg.svd(H)
+    R = V.T @ U.T
+    if np.linalg.det(R) < 0:
+        s[-1] = -s[-1]
+        V[2] = -V[2]
+        R = V.T @ U.T
+    c = 1 / np.var(A, axis=0).sum() * np.sum(s)
+    t = -(c * R) @ ca + cb
+    return ((c * R) @ A.T).T + t
+
+
+def _soke_l2_dist_align(x, y, wanted=None, align_idx=None):
+    x = _soke_rigid_align(x, y) if align_idx is None else x - x[align_idx:align_idx + 1] + y[align_idx:align_idx + 1]
+    if wanted is not None:
+        x, y = x[wanted], y[wanted]
+    return np.mean(np.sqrt(((x - y) ** 2).sum(axis=1)))
+
+
+@pytest.mark.parametrize("align,idx", [("root", 0), ("procrustes", None)])
+@pytest.mark.parametrize("wanted", [None, [1, 3, 4]])
+def test_pairwise_part_cost_matches_soke(align, idx, wanted):
+    g, r = _seq(5, J=6, seed=1), _seq(7, J=6, seed=2)
+    ref = np.array([[_soke_l2_dist_align(a, b, wanted, idx) for b in r] for a in g])
+    np.testing.assert_allclose(pairwise_part_cost(g, r, wanted, align), ref, rtol=1e-6, atol=1e-9)
+
+
+def test_procrustes_cost_similarity_invariant():
+    from scipy.spatial.transform import Rotation
+
+    x = _seq(4, J=8, seed=3)
+    R = Rotation.from_rotvec([0.3, -1.2, 0.7]).as_matrix()
+    y = 2.5 * x @ R.T + np.array([1.0, -2.0, 0.5])
+    assert np.allclose(np.diag(pairwise_part_cost(x, y, None, "procrustes")), 0, atol=1e-8)
+    assert dtw_cost(pairwise_part_cost(x, y, None, "procrustes"))[0] == pytest.approx(0, abs=1e-7)
+
+
+def _has_smplx():
+    from slp.evaluation.smplx_fk import smplx_dir, stats_dir
+    try:
+        import smplx  # noqa: F401
+        import torch  # noqa: F401
+    except ImportError:
+        return False
+    return (smplx_dir() / "smplx" / "SMPLX_NEUTRAL.npz").exists() and (stats_dir() / "mean.pt").exists()
+
+
+@pytest.mark.skipif(not _has_smplx(), reason="licensed SMPL-X model / SOKE stats not available")
+def test_soke_metrics_end_to_end():
+    from slp.evaluation import evaluate
+    from slp.evaluation.smplx_fk import default_fk
+
+    rng = np.random.default_rng(0)
+    gt = [rng.normal(scale=0.3, size=(12, 133)).astype(np.float32) for _ in range(2)]
+    j, lh, rh = default_fk()(gt[0])
+    assert j.shape == (12, 144, 3) and lh.shape == (12, 21, 3) and rh.shape == (12, 21, 3)
+    names = ["soke_dtw_jpe_all", "soke_dtw_jpe_body", "soke_dtw_jpe_hand",
+             "soke_dtw_pa_jpe_all", "soke_dtw_pa_jpe_body", "soke_dtw_pa_jpe_hand",
+             "soke_dtw_pa_jpe_body_ua"]
+    same = evaluate(gt, gt, names)
+    assert all(v == pytest.approx(0, abs=1e-6) for v in same.values())
+    noisy = [g + rng.normal(scale=0.5, size=g.shape).astype(np.float32) for g in gt]
+    res = evaluate(noisy, gt, names)
+    assert all(v > 0 for v in res.values())
+
+
+@pytest.mark.skipif(not _has_smplx(), reason="licensed SMPL-X model / SOKE stats not available")
+def test_soke_pa_body_upper_aligned_bounded_by_root_aligned():
+    """Similarity fit on the evaluated joints (least squares) should not exceed root alignment here."""
+    from slp.evaluation import evaluate
+
+    rng = np.random.default_rng(1)
+    gt = [rng.normal(scale=0.3, size=(10, 133)).astype(np.float32) for _ in range(2)]
+    noisy = [g + rng.normal(scale=0.5, size=g.shape).astype(np.float32) for g in gt]
+    r = evaluate(noisy, gt, ["soke_dtw_jpe_body", "soke_dtw_pa_jpe_body_ua"])
+    assert 0 < r["soke_dtw_pa_jpe_body_ua"] <= r["soke_dtw_jpe_body"] + 1e-9
