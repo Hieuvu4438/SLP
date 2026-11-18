@@ -1,0 +1,97 @@
+# PMA-Flow (docs/proposal5) - default = the full method (Stage A + cross-fitted anchors + Stage B).
+# Matched baselines / ablations override keys from configs/experiments/pma_flow/*.sh.
+# Backbone, text encoder, optimiser and NFE are matched to the SignNMFlow replication
+# (methods/signmflow/config.yaml) so that differences come from the proposal's components.
+eval:
+  metrics: [soke_dtw_jpe_all, soke_dtw_jpe_body, soke_dtw_jpe_hand,
+            soke_dtw_pa_jpe_all, soke_dtw_pa_jpe_body, soke_dtw_pa_jpe_hand,
+            soke_dtw_pa_jpe_body_ua]
+  primary_metric: soke_dtw_pa_jpe_hand
+  higher_is_better: false
+
+train:
+  deterministic: false
+
+method:
+  pipeline: anchor_flow          # anchor_flow (PMA-Flow) | anchor_only (Stage A, RQ2/RQ3 reference)
+                                 # | uniform_flow (SignNMFlow-GE + same losses/hygiene, RQ2/RQ3 baseline)
+  device: cuda
+  smplx_dir: third_party/SOKE/deps/smpl_models
+  cache_dir: outputs/pma_flow/cache
+  cache_workers: 8
+  init: {}                       # {anchor_dir: <run>/checkpoints, flow: <path>/flow_net.pt}
+  debug_limit: null              # smoke tests only
+
+  arch:                          # = SignNMFlow generator (Table 6)
+    latent: 512
+    layers: 8
+    heads: 8
+    ff: 2048
+    time_dim: 2048
+    dropout: 0.1
+    max_frames: 400
+    text_model: third_party/SOKE/deps/mbart-h2s-csl-phoenix
+    text_max_len: 128
+
+  train:                         # shared by both stages (per-stage overrides in <stage>.train)
+    batch_size: 64
+    micro_batch: 16              # memory only; gradient = the 64-sample batch gradient
+    effective_batch: 256         # = 64 x 4 GPUs of the paper, by gradient accumulation
+    lr: 2.0e-4
+    text_lr: 5.0e-5              # mBART: 4x lower than the decoder ...
+    freeze_text_epochs: 5        # ... and frozen at first (replication: text features collapsed at ep 2-4)
+    weight_decay: 0.0
+    warmup_steps: 200
+    lr_floor: 0.0
+    grad_clip: 1.0
+    ema_decay: 0.999             # ~27 optimiser steps / epoch on Phoenix -> EMA horizon ~37 epochs
+    amp: bf16                    # network in bf16 autocast; FK, geometry and losses in fp32
+    val_every: 10
+    val_items: 256               # val clips for the checkpoint-selection proxy
+    select: best                 # best | last  (proxy = frame-aligned body+hand point error, metres)
+    length_loss_weight: 1.0
+    workers: 4
+
+  anchor:                        # Stage A: mu_psi(c, T)
+    cross_fit_folds: 2           # training anchors predicted out-of-fold (0 = in-sample, not advised)
+    train:
+      epochs: 150
+    loss:                        # magnitudes balanced on Phoenix train (README, "Loss weights")
+      quat: 10.0
+      pos: 100.0
+      vel: 50.0
+      expr: 0.1
+      delta_pos: 0.01
+      delta_vel: 0.002
+
+  flow:                          # Stage B: residual geodesic flow
+    cond_anchor: true            # phi also reads mu per frame
+    align_pairs: true            # x1 taken in the hemisphere of x0 (shortest rotation path)
+    t_sampling: logit_normal     # uniform | logit_normal (SD3)
+    t_mean: 0.0
+    t_std: 1.0
+    t_uniform_mix: 0.2           # 20 % uniform t: the sampler starts at t = 0 (NFE 1 = that call)
+    cfg_drop: 0.1                # text dropout for classifier-free guidance (0 = off)
+    sigma: auto                  # auto = per-joint RMS of the cross-fitted residual Log_mu(x1) | float (rad)
+    sigma_scale: 1.0
+    expr_sigma: auto
+    train:
+      epochs: 300
+    loss:
+      quat: 10.0
+      pos: 100.0
+      vel: 50.0
+      expr: 0.1
+      delta_pos: 0.01
+      delta_vel: 0.002
+
+  sampler:
+    kind: euler                  # euler | replan (SignNMFlow Eq. 53 form)
+    steps: 5                     # NFE (x2 when cfg_w != 1)
+    alpha: 1.0                   # y_alpha = Exp_mu(alpha Log_mu x); choose on dev from the sweep
+    export_alphas: [0.0, 0.25, 0.5, 0.75]   # extra predictions_alpha*.npz for the dev sweep
+    cfg_w: 1.0                   # classifier-free guidance weight (1 = off)
+    cfg_interval: [0.0, 1.0]
+    batch_size: 64
+    min_len: 40
+    max_len: 400
