@@ -14,6 +14,7 @@ DATASETS: dict[str, Callable[[dict], DatasetSplits]] = {
     "phoenix_smplx": load_sign_smplx,
     "csl_smplx": load_sign_smplx,
     "how2sign_smplx": load_sign_smplx,
+    "how2sign_smplx_soke": load_sign_smplx,   # SOKE protocol (data.protocol: soke)
 }
 
 

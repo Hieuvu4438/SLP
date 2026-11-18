@@ -19,3 +19,8 @@ command, preprocessing command, and checksum.
 data above with the **official splits** (val = Phoenix `dev`). Sizes: Phoenix 7,092 / 519 / 642;
 CSL-Daily 18,399 / 1,077 / 1,176; How2Sign 30,965 / 1,724 / 2,318. Targets are normalised
 133-D features (SOKE `deps/stats`) with the MaDiS crop rule; How2Sign is subsampled to 24 fps.
+
+`how2sign_smplx_soke` (`data.protocol: soke`) is How2Sign under SOKE's protocol, for methods that
+follow SOKE (e.g. SignNMFlow): 24-fps indices `floor(i·n/count)` (SOKE `load_data.sample`) instead
+of MaDiS's `linspace`, and SOKE's 31 failed-fit clips (`bad_how2sign_ids`) removed. Sizes:
+30,938 / 1,722 / 2,316. Same files; Phoenix / CSL are identical under both protocols.

@@ -54,3 +54,28 @@ def test_phoenix_smplx_official_splits():
     names = {s: {r[0]["name"] for r in _phoenix(root, s)} for s in ("train", "val", "test")}
     assert len(names["val"]) == 519 and len(names["test"]) == 642
     assert not (names["train"] & names["val"]) and not (names["train"] & names["test"])
+
+
+def test_how2sign_fps24_indices_soke_vs_madis():
+    from slp.data.sign_smplx import fps24_indices
+
+    n, fps = 100, 29.97
+    count = int(24 * n / fps)
+    soke = fps24_indices(n, fps, "soke")
+    assert soke.tolist() == [int(i * n / count) for i in range(count)]  # SOKE load_data.sample
+    madis = fps24_indices(n, fps, "madis")
+    assert len(madis) == len(soke) == count and madis[-1] == n - 1 and soke[0] == 0
+    assert (np.diff(soke) > 0).all() and soke.max() < n
+
+
+def test_soke_bad_how2sign_ids_match_soke_source():
+    from pathlib import Path
+
+    from slp.data.sign_smplx import SOKE_BAD_HOW2SIGN_IDS
+
+    src = Path(__file__).resolve().parents[1] / "third_party/SOKE/mGPT/data/humanml/dataset_t2m_token.py"
+    if not src.exists():
+        pytest.skip("SOKE source not available")
+    lst = src.read_text().split("bad_how2sign_ids = [")[1].split("]")[0]
+    ids = {x.strip().strip("'\"") for x in lst.split(",") if x.strip()}
+    assert ids == SOKE_BAD_HOW2SIGN_IDS and len(ids) == 31

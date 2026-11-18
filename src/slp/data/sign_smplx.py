@@ -53,19 +53,47 @@ def load_stats(stats_dir: str) -> tuple[np.ndarray, np.ndarray]:
     return out[0], out[1]
 
 
+# How2Sign clips whose SMPL-X fitting failed; SOKE drops them from every split
+# (third_party/SOKE/mGPT/data/humanml/dataset_t2m_token.py, ``bad_how2sign_ids``).
+SOKE_BAD_HOW2SIGN_IDS = frozenset("""
+0DU7wWLK-QU_0-8-rgb_front 0ICZi26jdaQ_28-5-rgb_front 0vNfEYst_tQ_11-8-rgb_front 13X0vEMNm7M_8-5-rgb_front
+14weIYQswlE_23-8-rgb_front 1B56XMJ-j1Q_13-8-rgb_front 1P0oKY4FNyI_0-8-rgb_front 1dpRaxOTfZs_0-8-rgb_front
+1ei1kVTw23A_29-8-rgb_front 1spCnuBmWYk_0-8-rgb_front 2-vXO7MMLJc_0-5-rgb_front 21PbS6wnHtY_0-5-rgb_front
+3tyfxL2wO-M_0-8-rgb_front BpYDl3AO4B8_0-1-rgb_front CH7AviIr0-0_14-8-rgb_front CJ8RyW9pzKU_6-8-rgb_front
+D0T7ho08Q3o_25-2-rgb_front Db5SUQvNsHc_18-1-rgb_front Eh697LCFjTw_0-3-rgb_front F-p1IdedNbg_23-8-rgb_front
+aUBQCNegrYc_13-1-rgb_front cvn7htBA8Xc_9-8-rgb_front czBrBQgZIuc_19-5-rgb_front dbSAB8F8GYc_11-9-rgb_front
+doMosV-zfCI_7-2-rgb_front dvBdWGLzayI_10-8-rgb_front eBrlZcccILg_26-3-rgb_front 39FN42e41r0_17-1-rgb_front
+a4Nxq0QV_WA_9-3-rgb_front fzrJBu2qsM8_11-8-rgb_front g3Cc_1-V31U_12-3-rgb_front""".split())
+
+
+def fps24_indices(n: int, fps: float, rule: str = "madis") -> np.ndarray:
+    """Frame indices that resample an n-frame clip recorded at fps (> 24) to 24 fps.
+
+    madis: np.linspace(0, n-1, count) (MaDiS sign_loader); soke: floor(i * n / count)
+    (SOKE load_data.sample). count = int(24 * n / fps) in both."""
+    count = int(24 * n / fps)
+    if rule == "soke":
+        ss = float(n) / count
+        return np.array([int(np.floor(i * ss)) for i in range(count)], dtype=int)
+    if rule != "madis":
+        raise ValueError(rule)
+    return np.linspace(0, n - 1, count, dtype=int)
+
+
 class LazyPoses:
     """Sequence of pose arrays loaded on access (How2Sign does not fit in RAM comfortably)."""
 
-    def __init__(self, files, mean, std, crop=True, fps=None):
+    def __init__(self, files, mean, std, crop=True, fps=None, subsample="madis"):
         self.files, self.mean, self.std, self.crop, self.fps = files, mean, std, crop, fps
+        self.subsample = subsample
 
     def __len__(self):
         return len(self.files)
 
     def __getitem__(self, i):
         f = feats133(pickle.load(open(self.files[i], "rb")))
-        if self.fps is not None and self.fps[i] > 24:  # How2Sign: subsample to 24 fps (MaDiS rule)
-            f = f[np.linspace(0, len(f) - 1, int(24 * len(f) / self.fps[i]), dtype=int)]
+        if self.fps is not None and self.fps[i] > 24:  # How2Sign: subsample to 24 fps
+            f = f[fps24_indices(len(f), self.fps[i], self.subsample)]
         f = (f - self.mean) / self.std
         return madis_crop(f) if self.crop else f
 
@@ -91,14 +119,14 @@ def _csl(root, split):
     return rows
 
 
-def _how2sign(root, split):
+def _how2sign(root, split, exclude=frozenset()):
     rows = []
     fn = root / split / "re_aligned" / f"how2sign_realigned_{split}_preprocessed_fps.csv"
     with open(fn, newline="") as h:
         for r in csv.DictReader(h):
             name = r["SENTENCE_NAME"]
             p = root / "poses_video_level" / split / "poses" / f"{name}.pkl"
-            if p.exists():
+            if p.exists() and name not in exclude:
                 rows.append(({"name": name, "text": r["SENTENCE"], "src": "how2sign", "lang": "en_ASL"},
                              p, float(r["fps"])))
     return rows
@@ -112,10 +140,19 @@ def load_sign_smplx(cfg: dict) -> DatasetSplits:
     root = Path(d["root"])
     mean, std = load_stats(d["stats"])
     splits = {}
+    # protocol: "madis" (default) or "soke" (How2Sign: SOKE's 24-fps subsampling and failed-fit
+    # exclusions; identical to madis for Phoenix / CSL)
+    protocol = d.get("protocol", "madis")
+    if protocol not in ("madis", "soke"):
+        raise ValueError(f"unknown data.protocol {protocol!r}")
     for split in ("train", "val", "test"):
-        rows = LOADERS[d["source"]](root, split)
+        if d["source"] == "how2sign":
+            rows = _how2sign(root, split, SOKE_BAD_HOW2SIGN_IDS if protocol == "soke" else frozenset())
+        else:
+            rows = LOADERS[d["source"]](root, split)
         fps = [r[2] for r in rows] if d["source"] == "how2sign" else None
-        splits[split] = Split([r[0] for r in rows], LazyPoses([r[1] for r in rows], mean, std, fps=fps),
+        splits[split] = Split([r[0] for r in rows],
+                              LazyPoses([r[1] for r in rows], mean, std, fps=fps, subsample=protocol),
                               meta={"source": d["source"], "split": split})
     return DatasetSplits(splits["train"], splits["val"], splits["test"],
                          info={"nfeats": 133, "parts": PARTS, "source": d["source"]})
