@@ -1,0 +1,37 @@
+{
+  "training_executed": false,
+  "optimizer_steps": 0,
+  "device": "cuda",
+  "train_clip": "data/processed/madis/Phoenix_2014T/poses_video_level/train/01April_2010_Thursday_heute-6694.pkl",
+  "frames": 8,
+  "parameters": 244969383,
+  "objectives": {
+    "A": {
+      "loss": 9.248428344726562,
+      "gradient_tensors": 286
+    },
+    "B": {
+      "loss": 7.538748741149902,
+      "gradient_tensors": 104
+    },
+    "C": {
+      "loss": 178.37515258789062,
+      "gradient_tensors": 426
+    }
+  },
+  "generation_seconds": 1.0245151289273053,
+  "generation_metadata": {
+    "length_controlled": true,
+    "stochastic_length": false,
+    "seed": 42,
+    "plan_nfe": 2,
+    "dense_nfe": 3,
+    "total_flow_nfe": 5,
+    "solver": "euler",
+    "manifest_sha256": "bf85134b9b6d9df62c3c4731e2b6a43a3329aa0a31fa52165cfa029f16832bed",
+    "expression_coordinates": "normalized",
+    "fps": 25.0
+  },
+  "peak_cuda_memory_bytes": 1279291904,
+  "status": "passed"
+}

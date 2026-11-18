@@ -1,0 +1,25 @@
+{
+  "python": "3.13.5",
+  "packages": {
+    "torch": "2.11.0+cu128",
+    "transformers": "5.5.4",
+    "tokenizers": "0.22.2",
+    "numpy": "2.2.6",
+    "smplx": "0.1.28",
+    "sentencepiece": "0.2.1",
+    "PyYAML": "6.0.3",
+    "pytest": "9.0.3",
+    "ruff": "0.15.22"
+  },
+  "cuda_runtime": "12.8",
+  "gpu": "NVIDIA RTX 5880 Ada Generation",
+  "proposal_sha256": "ddf82e6481390ebba528579dc1cc4accbd4baa28b159a7558fc2e3e4f87006cd",
+  "text_assets_sha256": {
+    "third_party/SOKE/deps/mbart-h2s-csl-phoenix/config.json": "ee7a46774519748b80065044f38b9353703b1e0717e726fece4c6d8ddf9d2826",
+    "third_party/SOKE/deps/mbart-h2s-csl-phoenix/map_ids.pkl": "e73ecde295cc7c8f84d814a79cdfaf58f14106d0e3173926856d82238361e5aa",
+    "third_party/SOKE/deps/mbart-h2s-csl-phoenix/sentencepiece.bpe.model": "cfc8146abe2a0488e9e2a0c56de7952f7c11ab059eca145a0a727afce0db2865",
+    "third_party/SOKE/deps/mbart-h2s-csl-phoenix/tokenizer.json": "1068d2ae7ebef8ccd516bb54bbbb9537f85b282ce924854a41885cfbee0026b4",
+    "third_party/SOKE/deps/mbart-h2s-csl-phoenix/pytorch_model.bin": "9894f84c379d7830f69fd1a95026869149cd5a2547a4a60b70cff4bd32b102fb"
+  },
+  "training_executed": false
+}

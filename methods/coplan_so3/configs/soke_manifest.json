@@ -1,0 +1,202 @@
+{
+  "joint_names": [
+    "neck",
+    "left_collar",
+    "right_collar",
+    "head",
+    "left_shoulder",
+    "right_shoulder",
+    "left_elbow",
+    "right_elbow",
+    "left_wrist",
+    "right_wrist",
+    "left_index1",
+    "left_index2",
+    "left_index3",
+    "left_middle1",
+    "left_middle2",
+    "left_middle3",
+    "left_pinky1",
+    "left_pinky2",
+    "left_pinky3",
+    "left_ring1",
+    "left_ring2",
+    "left_ring3",
+    "left_thumb1",
+    "left_thumb2",
+    "left_thumb3",
+    "right_index1",
+    "right_index2",
+    "right_index3",
+    "right_middle1",
+    "right_middle2",
+    "right_middle3",
+    "right_pinky1",
+    "right_pinky2",
+    "right_pinky3",
+    "right_ring1",
+    "right_ring2",
+    "right_ring3",
+    "right_thumb1",
+    "right_thumb2",
+    "right_thumb3",
+    "jaw"
+  ],
+  "smplx_joint_indices": [
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    25,
+    26,
+    27,
+    28,
+    29,
+    30,
+    31,
+    32,
+    33,
+    34,
+    35,
+    36,
+    37,
+    38,
+    39,
+    40,
+    41,
+    42,
+    43,
+    44,
+    45,
+    46,
+    47,
+    48,
+    49,
+    50,
+    51,
+    52,
+    53,
+    54,
+    22
+  ],
+  "body": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    40
+  ],
+  "left_hand": [
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24
+  ],
+  "right_hand": [
+    25,
+    26,
+    27,
+    28,
+    29,
+    30,
+    31,
+    32,
+    33,
+    34,
+    35,
+    36,
+    37,
+    38,
+    39
+  ],
+  "fingers_left": [
+    [
+      10,
+      11,
+      12
+    ],
+    [
+      13,
+      14,
+      15
+    ],
+    [
+      16,
+      17,
+      18
+    ],
+    [
+      19,
+      20,
+      21
+    ],
+    [
+      22,
+      23,
+      24
+    ]
+  ],
+  "fingers_right": [
+    [
+      25,
+      26,
+      27
+    ],
+    [
+      28,
+      29,
+      30
+    ],
+    [
+      31,
+      32,
+      33
+    ],
+    [
+      34,
+      35,
+      36
+    ],
+    [
+      37,
+      38,
+      39
+    ]
+  ],
+  "expression_dim": 10,
+  "fps": 25.0,
+  "protocol": "soke_133_shared_evaluator",
+  "extraction_version": "SOKE_133_layout;actual_clip_extraction_record_required",
+  "annotation_version": "official_split;actual_annotation_record_required",
+  "shape_policy": "SOKE_SHAPE:[-0.07284723, 0.1795129, -0.27608207, 0.135155, 0.10748172, 0.16037364, -0.01616933, -0.03450319, 0.01369138, 0.01108842]",
+  "hand_convention": "physical=axis_angle+smplx_hand_mean",
+  "fixed_parameters": "root_lower_body_eyes_identity;no_translation",
+  "asset_checksums": {
+    "third_party/SOKE/deps/smpl_models/smplx/SMPLX_NEUTRAL.npz": "376021446ddc86e99acacd795182bbef903e61d33b76b9d8b359c2b0865bd992",
+    "third_party/SOKE/deps/stats/mean.pt": "38041ea364a5b1e187f7d633edd3ae564e1f8771506b7390fee48e80e3de0c23",
+    "third_party/SOKE/deps/stats/std.pt": "88ed5e7e9f484d35908088a22295fb6a8c05e1ad50f6dcf2018a253aa6bffee4"
+  }
+}

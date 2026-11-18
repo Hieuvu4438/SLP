@@ -1,0 +1,22 @@
+{
+  "status": "passed",
+  "training_executed": false,
+  "fk_max_absolute_error_m": {
+    "body": 8.940696716308594e-08,
+    "left": 1.7881393432617188e-07,
+    "right": 2.384185791015625e-07
+  },
+  "real_smplx_jvp_fd_max_error": 1.193373643651528e-10,
+  "manifest_sha256": "bf85134b9b6d9df62c3c4731e2b6a43a3329aa0a31fa52165cfa029f16832bed",
+  "train_clip_audit": {
+    "clip": "data/processed/madis/Phoenix_2014T/poses_video_level/train/01April_2010_Thursday_heute-6694.pkl",
+    "sha256": "9d8b2c96f122a1603e8e679c9cb2f646061f2f9625b6e7e8b15a278a274f7182",
+    "frames": 8,
+    "fk_max_absolute_error_m": {
+      "body": 5.960464477539063e-08,
+      "left": 2.384185791015625e-07,
+      "right": 1.7881393432617188e-07
+    }
+  },
+  "scope": "physical neutral and articulated poses plus available training clip; full evaluator"
+}

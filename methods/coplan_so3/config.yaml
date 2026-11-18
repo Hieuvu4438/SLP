@@ -1,0 +1,44 @@
+data:
+  name: phoenix_smplx
+eval:
+  metrics: [soke_dtw_jpe_all, soke_dtw_jpe_body, soke_dtw_jpe_hand,
+            soke_dtw_pa_jpe_all, soke_dtw_pa_jpe_body, soke_dtw_pa_jpe_hand]
+  primary_metric: soke_dtw_pa_jpe_hand
+  higher_is_better: false
+method:
+  name: coplan_so3
+  device: cuda
+  manifest: methods/coplan_so3/configs/soke_manifest.json
+  smplx_dir: third_party/SOKE/deps/smpl_models
+  stats: third_party/SOKE/deps/stats
+  text:
+    kind: mbart
+    path: third_party/SOKE/deps/mbart-h2s-csl-phoenix
+    local_files_only: true
+    max_tokens: 128
+  architecture:
+    plan_dim: 256
+    plan_hidden: 256
+    plan_layers: 4
+    dense_hidden: 512
+    dense_layers: 8
+    heads: 8
+    dropout: 0.1
+    stride: 4
+    posterior_sigma: 0.05
+    auxiliary_weight: 0.0
+  source:
+    sigma_body: 0.20
+    sigma_hand: 0.35
+    sigma_expression: 0.50
+    ar1: 0.70
+  physical_weights: [1.0, 0.10, 0.01]
+  training:
+    A: {epochs: 50, batch_size: 16, lr: 0.0002, finetune_text: false}
+    B: {epochs: 100, batch_size: 16, lr: 0.0002, finetune_text: false}
+    C: {epochs: 300, batch_size: 16, lr: 0.0002, finetune_text: false, pullback_warmup_steps: 1000}
+  sampling:
+    total_budget: 10
+    solver: euler
+    length_controlled: false
+    max_frames: 400
