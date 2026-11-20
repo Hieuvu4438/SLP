@@ -136,6 +136,9 @@ Val (dev) split, seed 0, final epoch (300). B-T: repo mBART back-translator (GT 
 
 | Test | JPE body | JPE hand | PA body (code) | PA body (ua) | PA hand | B-T (GT) |
 |---|---|---|---|---|---|---|
+| How2Sign v2 ours (2316; B-T on 2288) | 7.45 | 10.67 | 8.20 | 6.63 | 2.35 | 1.08 (1.51) |
+| How2Sign paper SignNMFlow | 6.76 | 9.72 | 6.01 | 6.01 | 2.07 | 16.88 |
+| How2Sign paper SOKE | 7.75 | 10.08 | 6.82 | 6.82 | 2.35 | 14.48 |
 | Phoenix v2 ours (642) | 4.93 | 6.54 | 5.56 | 4.35 | 1.30 | 12.81 (–) |
 | Phoenix paper SignNMFlow | 4.37 | 5.57 | 3.85 | 3.85 | 1.07 | 16.15 |
 | Phoenix paper SOKE | 6.04 | 7.72 | 4.77 | 4.77 | 1.38 | 11.87 |
