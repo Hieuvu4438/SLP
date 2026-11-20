@@ -1,0 +1,6 @@
+method:
+  pilot: p3
+  variant: D
+  config: null
+  device: cpu
+  overrides: []

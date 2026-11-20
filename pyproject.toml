@@ -31,8 +31,19 @@ race-sign = [
     "scipy>=1.10",
 ]
 
+slp-multirate = [
+    "torch>=2.2",
+    "transformers>=4.45,<6",
+    "sentencepiece>=0.2",
+    "lmdb>=1.4",
+]
+
 [tool.setuptools.packages.find]
-where = ["src"]
+where = ["src", "."]
+include = ["slp", "slp.*", "methods", "methods.slp_multirate", "methods.slp_multirate.*"]
+
+[tool.setuptools.package-data]
+"methods.slp_multirate" = ["configs/*.yaml", "configs/pilots/*.yaml", "configs/variants/*.yaml"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

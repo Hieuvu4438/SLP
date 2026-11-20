@@ -175,11 +175,15 @@ class AnchorAttention(nn.Module):
         valid = anchors.slot & anchors.feature.any(dim=(-1, -2))
         if not valid.any():
             return torch.zeros_like(query)
-        hand = anchors.payload.float().masked_fill(~anchors.feature, 0)
-        features = torch.cat((hand, anchors.feature.float()), -1)
-        content = sum(proj(features[:, :, h]) * anchors.confidence[..., h, None]
+        seen = anchors.feature & valid[..., None, None]
+        hand = anchors.payload.float().masked_fill(~seen, 0)
+        features = torch.cat((hand, seen.float()), -1)
+        confidence = anchors.confidence.masked_fill(~seen.any(-1), 0)
+        content = sum(proj(features[:, :, h]) * confidence[..., h, None]
                       for h, proj in enumerate(self.hand))
-        positions = anchors.time.float() * (frame_mask.sum(-1, keepdim=True) - 1)
+        positions = anchors.time.float().masked_fill(~valid, 0) * (
+            frame_mask.sum(-1, keepdim=True) - 1
+        )
         key = content + self.time(sinusoidal(positions, w))
         zero = content.new_zeros(batch, 1, w)
         key = torch.cat((key, zero), 1)

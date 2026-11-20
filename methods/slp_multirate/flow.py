@@ -30,24 +30,30 @@ class Stats:
 
 class Moments:
     def __init__(self, shape):
-        self.total = torch.zeros(shape)
-        self.square = torch.zeros(shape)
+        self.mean = torch.zeros(shape)
+        self.m2 = torch.zeros(shape)
         self.count = torch.zeros(shape)
 
-    def add(self, x, mask):
-        x = x.detach().float().cpu().reshape(-1, *self.total.shape)
+    def add(self, x, mask, weight=1.):
+        """Merge a batch's centered moments in FP32, with optional mixture weights."""
+        x = x.detach().float().cpu().reshape(-1, *self.mean.shape)
         mask = mask.detach().cpu().reshape_as(x)
         x = x.masked_fill(~mask, 0)
-        self.total += x.sum(0)
-        self.square += x.square().sum(0)
-        self.count += mask.sum(0)
+        n = mask.sum(0)
+        batch_mean = x.sum(0) / n.clamp_min(1)
+        batch_m2 = (x - batch_mean).masked_fill(~mask, 0).square().sum(0)
+        weighted = n * weight
+        count = self.count + weighted
+        divisor = torch.where(count > 0, count, 1.)
+        delta = batch_mean - self.mean
+        self.m2 += weight * batch_m2 + delta.square() * self.count * weighted / divisor
+        self.mean += delta * weighted / divisor
+        self.count = count
 
     def finish(self, floor):
-        divisor = self.count.clamp_min(1)
-        mean = self.total / divisor
-        var = (self.square / divisor - mean.square()).clamp_min(0)
-        std = var.sqrt().clamp_min(floor)
-        return Stats(mean, torch.where(self.count > 0, std, 1.), self.count)
+        divisor = torch.where(self.count > 0, self.count, 1.)
+        std = (self.m2 / divisor).clamp_min(0).sqrt().clamp_min(floor)
+        return Stats(self.mean, torch.where(self.count > 0, std, 1.), self.count)
 
 
 def per_clip_mean(error, mask):

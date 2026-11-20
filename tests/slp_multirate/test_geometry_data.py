@@ -16,7 +16,7 @@ def fixture_data(tmp_path):
     path, rig_path = create_synthetic(tmp_path / "raw")
     rig = Rig.load(rig_path)
     manifest = prepare_data(path, rig_path, "synthetic", tmp_path / "canonical",
-                            resolve("p0")["data"])
+                            dict(resolve("p0")["data"], min_frames=1))
     return manifest, rig
 
 
@@ -118,3 +118,41 @@ def test_split_group_leakage_and_unknown_config():
     assert resolve("p1", "B")["anchors"]["policy"] == "uniform"
     assert resolve("p0", path=Path("methods/slp_multirate/configs/pilots/p0.yaml"))["text"][
         "encoder"] == "mock"
+
+
+def test_lmdb_source_column_order_and_missing_pelvis(tmp_path):
+    import io
+
+    import numpy as np
+    from methods.slp_multirate.data import SMPLX_BODY_21, write_jsonl
+
+    lmdb = pytest.importorskip("lmdb")
+    source, rig_file = create_synthetic(tmp_path)
+    lmdb_dir = tmp_path / "toy.lmdb"
+    stream = io.BytesIO()
+    t = 8
+    columns = identity6(t, 21).clone()
+    target = so3_exp(torch.tensor([0., 0., torch.pi / 2]))
+    columns[:, SMPLX_BODY_21.index("right_wrist")] = matrix_to_rot6d(target.T)
+    np.savez(stream, body_features=columns.numpy().reshape(t, -1),
+             left_features=identity6(t, 15).numpy().reshape(t, -1),
+             right_features=identity6(t, 15).numpy().reshape(t, -1),
+             translation=np.asarray(["fixture"]))
+    with lmdb.open(str(lmdb_dir)) as db:
+        with db.begin(write=True) as txn:
+            txn.put(b"one", stream.getvalue())
+    row = dict(clip_id="one", origin_video_id="one", split="train", target_language="ASL",
+               path=lmdb_dir.name, text="fixture", key="one", fps=25, source_joint_schema=(
+                   "smplx_body21_hand15_v1"), local_axes_id="toy-v1", rotation_convention="columns",
+               unit="m", handedness="right", provenance="synthetic-lmdb-schema")
+    write_jsonl(source, [row])
+    with pytest.raises(ValueError, match="lacks pelvis"):
+        prepare_data(source, rig_file, "signspark_lmdb", tmp_path / "bad", resolve("p0")["data"])
+    write_jsonl(source, [dict(row, pelvis_source="verified_identity")])
+    manifest = prepare_data(source, rig_file, "signspark_lmdb", tmp_path / "canonical",
+                            resolve("p0")["data"])
+    clip = CanonicalDataset(manifest, Rig.load(rig_file), ("train",), fps=25)[0]
+    actual = rot6d_to_matrix(clip["hands_rot6d"][0, 1, 0])
+    torch.testing.assert_close(actual, target)
+    with pytest.raises(ValueError, match="FPS differs"):
+        CanonicalDataset(manifest, Rig.load(rig_file), ("train",), fps=30)

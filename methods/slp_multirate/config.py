@@ -36,22 +36,29 @@ def resolve(pilot=None, variant=None, path=None, overrides=()):
     base = load_yaml(CONFIG_DIR / "base.yaml")
     custom = load_yaml(path) if path else {}
     _check_schema(base, custom)
-    selected_pilot = pilot or custom.get("experiment", {}).get("pilot")
+    declared = custom.get("experiment", {})
+    declared_pilot = declared.get("pilot")
     if path and Path(path).stem in PILOTS:
-        selected_pilot = pilot or Path(path).stem
-    selected_pilot = selected_pilot or "p3"
-    selected_variant = variant or custom.get("experiment", {}).get("variant", "D")
-    selected_variant = {"E": "onset_mid_offset", "F": "no_anchor"}.get(
-        selected_variant, selected_variant
-    )
+        declared_pilot = Path(path).stem
+    aliases = {"E": "onset_mid_offset", "F": "no_anchor"}
+    declared_variant = aliases.get(declared.get("variant"), declared.get("variant"))
+    variant = aliases.get(variant, variant)
+    if (pilot and declared_pilot and pilot != declared_pilot or
+            variant and declared_variant and variant != declared_variant):
+        raise ValueError("Pilot or variant selector conflicts with the supplied config")
+    selected_pilot = pilot or declared_pilot or "p3"
+    selected_variant = variant or declared_variant or "D"
     if selected_pilot not in PILOTS or selected_variant not in VARIANTS:
         raise ValueError("Unknown pilot or variant")
+    cli = parse_overrides(list(overrides))
+    if {"pilot", "variant"} & set(cli.get("experiment", {})):
+        raise ValueError("Select pilot and variant with their explicit CLI arguments")
     cfg = base
     layers = [
         load_yaml(CONFIG_DIR / "pilots" / f"{selected_pilot}.yaml"),
         load_yaml(CONFIG_DIR / "variants" / f"{selected_variant}.yaml"),
         custom,
-        parse_overrides(list(overrides)),
+        cli,
     ]
     for layer in layers:
         _check_schema(base, layer)

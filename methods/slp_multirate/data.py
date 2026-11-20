@@ -97,11 +97,13 @@ def read_npz(data):
 
 
 def _strict_meta(row, rig):
-    for key in ("clip_id", "origin_video_id", "split", "target_language", "text", "path",
+    for key in ("clip_id", "origin_video_id", "split", "target_language", "path",
                 "source_joint_schema", "provenance", "local_axes_id", "rotation_convention",
                 "unit", "handedness"):
         if not isinstance(row.get(key), str) or not row[key].strip():
             raise ValueError(f"Missing or empty {key}")
+    if not isinstance(row.get("text"), str):
+        raise ValueError("Missing or invalid text")
     if row["rotation_convention"] not in ("rows", "columns", "axis_angle_radians"):
         raise ValueError("Unknown source rotation convention")
     if row["unit"] not in ("m", "mm") or row["handedness"] != "right":
@@ -184,7 +186,10 @@ def _timestamps(arrays, row, count):
     if (t.shape != (count,) or not t.isfinite().all() or
             (t.numel() > 1 and (t.diff() <= 0).any())):
         raise ValueError("Source timestamps must be finite and strictly increasing")
-    return (t - t[0]).float()
+    clock = (t - t[0]).float()
+    if not clock.isfinite().all() or (clock.diff() <= 0).any():
+        raise ValueError("Source timestamps are outside FP32 clock resolution")
+    return clock
 
 
 def _segments(labels):
@@ -212,7 +217,7 @@ def _contact(arrays, count):
     return pairs, values, valid
 
 
-def _canonicalize(arrays, row, fps):
+def _canonicalize(arrays, row, fps, min_frames, max_frames):
     x = torch.as_tensor(arrays["rotations"], dtype=torch.float32)
     names = arrays["joint_names"].tolist()
     encoding = row["rotation_convention"]
@@ -220,6 +225,11 @@ def _canonicalize(arrays, row, fps):
     if (x.ndim != 3 or x.shape[1:] != (len(names), dim) or len(x) == 0
             or len(set(names)) != len(names) or not set(JOINTS) <= set(names)):
         raise ValueError("Missing/duplicate canonical joints or invalid pose shape")
+    time = _timestamps(arrays, row, len(x))
+    new_count = max(1, round(float(time[-1]) * fps) + 1)
+    if not min_frames <= new_count <= max_frames:
+        return None, {"reason": "too_short" if new_count < min_frames else "too_long",
+                      "frames": new_count}
     order = [names.index(n) for n in JOINTS]
     obs = torch.as_tensor(arrays.get("observation", np.ones(x.shape[:2])), dtype=torch.bool)
     if obs.shape != x.shape[:2]:
@@ -236,8 +246,6 @@ def _canonicalize(arrays, row, fps):
         degenerate = obs & bad
         obs &= ~bad
     matrix = torch.where(obs[..., None, None], matrix, torch.eye(3))
-    time = _timestamps(arrays, row, len(x))
-    new_count = max(1, round(float(time[-1]) * fps) + 1)
     target = torch.arange(new_count, dtype=torch.float32) / fps
     left, right, w = interpolation_indices(time, target)
     nearest = torch.where(w <= 0.5, left, right)
@@ -251,6 +259,15 @@ def _canonicalize(arrays, row, fps):
     segments = _segments(flags[nearest.numpy()]) if flags is not None else []
     pairs, contact, contact_valid = _contact(arrays, len(x))
     events = row.get("events", [])
+    event_types = row.get("event_types", sorted({e["kind"] for e in events}))
+    if (not isinstance(event_types, list) or
+            any(not isinstance(kind, str) or not kind for kind in event_types) or
+            (events or event_types) and not row.get("event_source")):
+        raise ValueError("Annotated event types/times require a declared source")
+    if not {e["kind"] for e in events} <= set(event_types):
+        raise ValueError("A reference event type is missing from event_types")
+    if contact_valid.any() and not row.get("contact_source"):
+        raise ValueError("Contact labels require a declared contact_source")
     for event in events:
         if (not isinstance(event.get("kind"), str) or
                 type(event.get("time_s")) not in (float, int) or
@@ -259,7 +276,7 @@ def _canonicalize(arrays, row, fps):
     return dict(rot6d=matrix_to_rot6d(matrix).numpy(), observation=obs.numpy(),
                 timestamps_s=target.numpy(), segments=np.asarray(segments, dtype=np.int64).reshape(-1, 2),
                 contact_pairs=pairs, contact=contact[nearest.numpy()], contact_valid=contact_valid[nearest.numpy()]), {
-                    "missing_segments": flags is None, "nonfinite_joint_frames": int(nonfinite.sum()),
+                    "event_types": event_types, "missing_segments": flags is None, "nonfinite_joint_frames": int(nonfinite.sum()),
                     "degenerate_joint_frames": int(degenerate.sum()), "source_frames": len(x),
                     "source_clock": "timestamps" if ("timestamps_s" in arrays or "timestamps_s" in row)
                     else "declared_fps",
@@ -312,13 +329,15 @@ def prepare_data(source, rig_path, adapter, out, cfg, split_seed=17):
         if row["target_language"] != cfg["pilot_language"]:
             excluded.append({"clip_id": row["clip_id"], "reason": "target_language"})
             continue
-        arrays, raw = _read_source(row, source.parent / row["path"], adapter)
-        canonical, quality = _canonicalize(arrays, row, cfg["fps"])
-        count = len(canonical["timestamps_s"])
-        if not cfg["min_frames"] <= count <= cfg["max_frames"]:
-            excluded.append({"clip_id": row["clip_id"], "reason": "too_short" if count < cfg[
-                "min_frames"] else "too_long", "frames": count})
+        if not row["text"].strip():
+            excluded.append({"clip_id": row["clip_id"], "reason": "empty_text"})
             continue
+        arrays, raw = _read_source(row, source.parent / row["path"], adapter)
+        canonical, quality = _canonicalize(arrays, row, cfg["fps"], cfg["min_frames"], cfg["max_frames"])
+        if canonical is None:
+            excluded.append({"clip_id": row["clip_id"], **quality})
+            continue
+        count = len(canonical["timestamps_s"])
         raw_hash = hashlib.sha256(raw).hexdigest()
         rel = Path("clips") / (digest([row["clip_id"], raw_hash, rig.sha256, cfg["fps"],
                                       row["rotation_convention"], row.get("fps"),
@@ -327,11 +346,15 @@ def prepare_data(source, rig_path, adapter, out, cfg, split_seed=17):
         accepted.append({
             "version": SCHEMA, "clip_id": row["clip_id"], "origin_video_id": row["origin_video_id"],
             "split": row["split"], "target_language": row["target_language"], "text": row["text"],
-            "path": str(rel), "frames": count, "rig_sha256": rig.sha256, "raw_sha256": raw_hash,
+            "path": str(rel), "frames": count, "fps": cfg["fps"],
+            "rig_sha256": rig.sha256, "raw_sha256": raw_hash,
             "sha256": file_hash(out / rel), "provenance": row["provenance"],
             "source_joint_schema": row["source_joint_schema"], "quality": quality,
-            "source_quality": row.get("quality", {}), "events": row.get("events", []),
+            "source_quality": {k: value for k, value in row.get("quality", {}).items()
+                               if k in ("fit_quality", "fit_score", "occlusion")},
+            "events": [{k: event[k] for k in ("kind", "time_s")} for event in row.get("events", [])],
             "event_source": row.get("event_source"), "contact_source": row.get("contact_source"),
+            "event_types": quality["event_types"],
             "signer_available": bool(row.get("signer_id")), "adapter": adapter,
             "pelvis_source": row.get("pelvis_source", "source_joint"),
         })
@@ -349,9 +372,10 @@ def prepare_data(source, rig_path, adapter, out, cfg, split_seed=17):
 
 
 class CanonicalDataset(Dataset):
-    def __init__(self, manifest, rig, splits, cohort=None):
+    def __init__(self, manifest, rig, splits, cohort=None, fps=None):
         self.manifest = Path(manifest)
         self.rig = rig
+        self.cohort = Path(cohort).resolve() if cohort is not None else None
         self.rows = read_jsonl(manifest)
         assign_splits(self.rows)
         ids = [r["clip_id"] for r in self.rows]
@@ -372,6 +396,8 @@ class CanonicalDataset(Dataset):
         else:
             selected = set(ids)
         self.rows = [r for r in self.rows if r["split"] in splits and r["clip_id"] in selected]
+        if fps is not None and any(r.get("fps") != fps for r in self.rows):
+            raise ValueError("Canonical FPS differs from run configuration")
 
     def __len__(self):
         return len(self.rows)
@@ -389,6 +415,8 @@ class CanonicalDataset(Dataset):
         if (len(time) != row["frames"] or time.shape != (len(x),) or
                 x.shape != (len(time), 44, 6) or obs.shape != x.shape[:-1] or
                 not time.isfinite().all() or (time.diff() <= 0).any() or
+                ("fps" in row and not torch.allclose(time, torch.arange(len(time)) / row["fps"],
+                                                     rtol=0, atol=1e-6)) or
                 not x.isfinite().all() or time[0] != 0):
             raise ValueError(f"Invalid canonical payload for {row['clip_id']}")
         return dict(row=row, timestamps_s=time, body_rot6d=x[:, :12],
@@ -443,7 +471,12 @@ def audit_manifest(manifest, rig, selection="all"):
     data = CanonicalDataset(manifest, rig, splits)
     clips = [dict(_clip_audit(c, rig), clip_id=c["row"]["clip_id"], split=c["row"]["split"])
              for c in data]
+    review = _stratified([(c["clip_id"], (c["split"], c["frames"] // 32, c["active_hands"],
+                                         min(4, int(c["occlusion"] * 20)))) for c in clips], 32,
+                         stable_seed("rig-review"))
     return {"version": SCHEMA, "manifest_sha256": file_hash(manifest), "rig_sha256": rig.sha256,
+            "stratified_geometry_review_clip_ids": review,
+            "contact_coverage_clips": sum(c["contact_labels"] > 0 for c in clips),
             "splits": {s: {"clips": sum(c["split"] == s for c in clips),
                            "frames_histogram": dict(Counter(str(c["frames"]) for c in clips
                                                             if c["split"] == s)),
@@ -561,3 +594,40 @@ def create_synthetic(out, seed=17):
                      tips_wrist_widths=pose.local_tips.numpy(), contact=contact)
     write_jsonl(out / "raw.jsonl", rows)
     return out / "raw.jsonl", rig_path
+
+
+def make_signer_diagnostic(raw_manifest, manifest, rig, out):
+    """Identify a held-out development slice from private signer metadata."""
+    raw = read_jsonl(raw_manifest)
+    identities = {row["clip_id"]: row.get("signer_id") for row in raw}
+    if len(identities) != len(raw):
+        raise ValueError("Duplicate clip IDs in the private signer manifest")
+    dataset = CanonicalDataset(manifest, rig, ("train", *DEV_SPLITS))
+    if any(row["clip_id"] not in identities for row in dataset.rows):
+        raise ValueError("Signer manifest does not cover the requested canonical manifest")
+    train = {identities[row["clip_id"]] for row in dataset.rows if row["split"] == "train"
+             and identities[row["clip_id"]]}
+    selected, missing = defaultdict(list), Counter()
+    excluded = Counter()
+    for row in dataset.rows:
+        split, name = row["split"], row["clip_id"]
+        identity = identities[name]
+        if not identity:
+            missing[split] += 1
+        elif split != "train":
+            if identity in train:
+                excluded[split] += 1
+            else:
+                selected[split].append(name)
+    if missing["train"]:
+        status = "insufficient_train_identity_coverage"
+        selected.clear()
+    elif not selected:
+        status = "no_held_out_development_signers"
+    else:
+        status = "diagnostic_slice"
+    report = {"version": SCHEMA, "status": status, "manifest_sha256": file_hash(manifest),
+              "rig_sha256": rig.sha256, "clips": dict(selected), "missing_signer_counts": dict(missing),
+              "seen_signer_exclusion_counts": dict(excluded)}
+    write_json(out, report)
+    return report

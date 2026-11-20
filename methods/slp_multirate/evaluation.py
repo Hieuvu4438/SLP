@@ -65,6 +65,12 @@ def _contact_evaluate(clip, p, q, time, rig, enter):
     d, p_valid = _contact_distances(p, pairs, rig.shoulder_width)
     _, q_valid = _contact_distances(q, pairs, rig.shoulder_width)
     known = known & q_valid
+    covered = known.any(0)
+    if not covered.any():
+        return [], [], {}
+    pairs, d, p_valid, labels, known = (
+        pairs[covered], d[:, covered], p_valid[:, covered], labels[:, covered], known[:, covered]
+    )
     count = min(len(time), len(ct))
     # Canonical and inferred clocks are regular at the same validated FPS.
     if not torch.allclose(time[:count], ct[:count], atol=1e-6, rtol=0):
@@ -217,6 +223,18 @@ def fit_evaluator(dataset, rig, scales, cfg, contact_audit=None):
             "turn_min_speed": cfg["anchors"]["turn_min_speed_shoulder_widths"]}
 
 
+def validate_calibration(cascade, manifest, calibration):
+    cfg = cascade.cfg
+    expected = {"rig_sha256": cascade.rig.sha256, "manifest_sha256": file_hash(manifest),
+                "event_scales": cascade.stats.event_scales, "fps": cfg["data"]["fps"],
+                "event_window_radius_frames": cfg["eval"]["event_window_radius_frames"],
+                "timing_match_tolerance_frames": cfg["eval"]["timing_match_tolerance_frames"],
+                "turn_min_speed": cfg["anchors"]["turn_min_speed_shoulder_widths"],
+                "split": "dev_tune"}
+    if any(calibration.get(k) != v for k, v in expected.items()):
+        raise ValueError("Evaluation detector calibration is incompatible with this run")
+
+
 def run_evaluation(cascade, dataset, protocol, out, seed, calibration=None, cohort_hash=None):
     out = Path(out)
     out.mkdir(parents=True, exist_ok=True)
@@ -235,13 +253,7 @@ def run_evaluation(cascade, dataset, protocol, out, seed, calibration=None, coho
                 "units": {"positions": "mm", "rotation_error": "degrees", "timing": "ms",
                           "rates": "fraction"}}
     if calibration is not None:
-        expected = {"rig_sha256": cascade.rig.sha256, "manifest_sha256": metadata["manifest_sha256"],
-                    "event_scales": cascade.stats.event_scales, "fps": cfg["data"]["fps"],
-                    "event_window_radius_frames": cfg["eval"]["event_window_radius_frames"],
-                    "timing_match_tolerance_frames": cfg["eval"]["timing_match_tolerance_frames"],
-                    "turn_min_speed": cfg["anchors"]["turn_min_speed_shoulder_widths"]}
-        if any(calibration[k] != v for k, v in expected.items()):
-            raise ValueError("Evaluation detector calibration is incompatible with this run")
+        validate_calibration(cascade, dataset.manifest, calibration)
     write_json(out / "protocol.json", metadata)
     rows, failures = [], []
     for clip in dataset:
@@ -317,8 +329,16 @@ def compare(baseline, candidate, gate, out, baseline_text=None, candidate_text=N
         if (any(row["config"]["experiment"]["pilot"] != gate for row in ab) or
                 [row["config"]["experiment"]["variant"] for row in ab] != ["B", "D"]):
             raise ValueError(f"{gate} gate compares the predeclared B and D variants")
-        if any(row["config"]["body"]["stride"] != 4 for row in ab):
-            raise ValueError(f"{gate} gate requires stride 4 for both variants")
+        if (any(row["config"]["body"]["stride"] != 4 for row in ab) or
+                [row["config"]["anchors"]["policy"] for row in ab] != ["uniform", "event"]):
+            raise ValueError(f"{gate} gate requires uniform/event policies at stride 4")
+        for section in ("train", "fine", "body"):
+            if ab[0]["config"][section] != ab[1]["config"][section]:
+                raise ValueError(f"{gate} gate requires identical {section} settings")
+        anchor_configs = [{k: value for k, value in row["config"]["anchors"].items()
+                           if k != "policy"} for row in ab]
+        if anchor_configs[0] != anchor_configs[1]:
+            raise ValueError(f"{gate} gate requires matched anchor budget and settings")
     if gate == "p2" and baseline_text and candidate_text:
         text_meta, p2, text_failures = _comparison_pair(baseline_text, candidate_text)
         for a, b in zip(ab, text_meta):
@@ -348,3 +368,46 @@ def compare(baseline, candidate, gate, out, baseline_text=None, candidate_text=N
     ]
     atomic_bytes(out / "report.md", ("\n".join(lines) + "\n").encode())
     return result
+
+
+def p0_readiness(dataset, training, rig, cfg, geometry_review=None):
+    """Check data-side P0 readiness using reference visibility and matched anchor budgets."""
+    from .anchors import build_oracle_anchors, score_scales
+
+    if any(row["split"] != "dev_gate" for row in dataset.rows):
+        raise ValueError("P0 readiness uses only dev_gate as the target split")
+    scales = score_scales(training, rig, cfg["anchors"])
+    valid, no_events, no_hands = 0, 0, 0
+    radius = cfg["eval"]["event_window_radius_frames"] / cfg["data"]["fps"]
+    for clip in dataset:
+        pose, times = clip_pose(clip, rig), clip["timestamps_s"]
+        row = clip["row"]
+        events = row["events"] if row.get("event_source") else kinetic_events(
+            pose, times, scales, cfg)
+        event_window = torch.zeros_like(times, dtype=torch.bool)
+        for event in events:
+            event_window |= (times - event["time_s"]).abs() <= radius + 1e-7
+        if not event_window.any():
+            no_events += 1
+            continue
+        both_have_coverage = all(build_oracle_anchors(
+            clip, rig, dict(cfg["anchors"], policy=policy), scales
+        ).feature.any() for policy in ("uniform", "event"))
+        if not both_have_coverage or not (pose.tip_mask & event_window[:, None, None]).any():
+            no_hands += 1
+        else:
+            valid += 1
+    threshold = cfg["eval"]["min_usable_gate_clips"]
+    checked = bool(geometry_review and geometry_review.get("rig_sha256") == rig.sha256 and
+                   geometry_review.get("axes_verified") is True and
+                   geometry_review.get("handedness_verified") is True and
+                   geometry_review.get("source_overlay_clip_id"))
+    notes = []
+    if valid < threshold:
+        notes.append("insufficient dev_gate clips with event and hand coverage")
+    if not checked:
+        notes.append("verification of source rig axes and handedness is pending")
+    return {"status": "HOLD" if notes else "GO", "scope": "p0_data_readiness", "reasons": notes,
+            "manifest_sha256": file_hash(dataset.manifest), "rig_sha256": rig.sha256,
+            "usable": valid, "minimum": threshold, "excluded_no_events": no_events,
+            "excluded_no_hand_coverage": no_hands}
