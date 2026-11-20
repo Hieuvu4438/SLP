@@ -165,7 +165,8 @@ class Method(BaseMethod):
 
         g_init = self._init_path("generator")
         if g_init is not None:
-            self.gen.load_state_dict(torch.load(g_init, map_location="cpu", weights_only=False)["model"])
+            self.gen.load_state_dict(self._generator_weights(torch.load(g_init, map_location="cpu",
+                                                                        weights_only=False)))
             self.log(f"generator loaded from {g_init}")
             self.gen.to(dev).eval()
         else:
@@ -230,6 +231,13 @@ class Method(BaseMethod):
         self.log(f"fixed lengths from {path} (mean {np.mean(out):.1f} frames)")
         return out
 
+    def _generator_weights(self, st: dict) -> dict:
+        """EMA weights when the run trained with EMA (generator.ema > 0, ema_eval), else raw ones."""
+        g = self.hparams["generator"]
+        if float(g.get("ema") or 0.0) > 0 and g.get("ema_eval", True) and "ema" in st:
+            return st["ema"]
+        return st["model"]
+
     def save(self) -> None:
         pass  # every stage already checkpoints into ctx.ckpt_dir
 
@@ -245,5 +253,6 @@ class Method(BaseMethod):
             self.corr.load_state_dict(torch.load(ck / "correction_final.pt", map_location="cpu",
                                                  weights_only=False)["model"])
             self.corr.eval()
-        self.gen.load_state_dict(torch.load(ck / "generator.pt", map_location="cpu", weights_only=False)["model"])
+        self.gen.load_state_dict(self._generator_weights(torch.load(ck / "generator.pt", map_location="cpu",
+                                                                    weights_only=False)))
         self.gen.to(self.device).eval()

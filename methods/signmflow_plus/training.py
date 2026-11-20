@@ -35,6 +35,40 @@ def dist_info():
     return 0, 1
 
 
+class EMA:
+    """Exponential moving average of the generator weights (docs/proposal7 E3).
+
+    shadow <- decay * shadow + (1 - decay) * param after every optimiser step; buffers are copied.
+    Kept in fp32 on the parameters' device; saved in generator.pt under "ema"."""
+
+    def __init__(self, model: torch.nn.Module, decay: float):
+        if not 0.0 < decay < 1.0:
+            raise ValueError(f"EMA decay must lie in (0, 1), got {decay}")
+        self.decay = float(decay)
+        self.shadow = {k: v.detach().clone().float() for k, v in model.state_dict().items()}
+
+    @torch.no_grad()
+    def update(self, model: torch.nn.Module):
+        params = dict(model.named_parameters())
+        for k, v in model.state_dict().items():
+            if k in params and params[k].requires_grad:
+                self.shadow[k].mul_(self.decay).add_(v.detach().float(), alpha=1.0 - self.decay)
+            else:
+                self.shadow[k].copy_(v.detach())
+
+    def state_dict(self) -> dict:
+        return {k: v.clone() for k, v in self.shadow.items()}
+
+    def load_state_dict(self, sd: dict):
+        for k in self.shadow:
+            self.shadow[k].copy_(sd[k].to(self.shadow[k].device))
+
+    def weights_for(self, model: torch.nn.Module) -> dict:
+        """EMA weights cast to the model's dtypes (for model.load_state_dict)."""
+        ref = model.state_dict()
+        return {k: v.to(ref[k].dtype) for k, v in self.shadow.items()}
+
+
 def cosine_lambda(total_steps: int, warmup: int = 0):
     def f(step):
         if step < warmup:
@@ -158,13 +192,23 @@ def train_generator(gen, corr, spec: FlowSpec, dataset: MotionTextDataset, codec
     total = epochs * steps_per_epoch
     sched = torch.optim.lr_scheduler.LambdaLR(opt, cosine_lambda(total, int(hp.get("warmup_steps", 0))))
     start, step = 0, 0
+    ema_decay = float(hp.get("ema") or 0.0)
+    ema = None
     if ckpt is not None and ckpt.exists():
         st = torch.load(ckpt, map_location="cpu", weights_only=False)
         gen.load_state_dict(st["model"])
         if "opt" in st and st.get("epoch", epochs) < epochs:
             opt.load_state_dict(st["opt"]); sched.load_state_dict(st["sched"])
         start, step = st.get("epoch", epochs), st.get("step", 0)
+        if ema_decay > 0:
+            ema = EMA(gen, ema_decay)
+            if "ema" in st:
+                ema.load_state_dict(st["ema"])
+            else:
+                log("generator: checkpoint has no EMA state; EMA restarts from the current weights")
         log(f"generator: resumed at epoch {start}")
+    elif ema_decay > 0:
+        ema = EMA(gen, ema_decay)
     clip = hp.get("grad_clip")
     w_len = float(hp.get("length_loss_weight", 1.0))
     save_every = int(hp.get("save_every", 10))
@@ -202,6 +246,8 @@ def train_generator(gen, corr, spec: FlowSpec, dataset: MotionTextDataset, codec
                 opt.step()
                 sched.step()
                 opt.zero_grad(set_to_none=True)
+                if ema is not None:
+                    ema.update(gen)
                 step += 1
         msg = {k: v / max(1, nb) for k, v in acc.items()}
         msg["lr"] = sched.get_last_lr()[0]
@@ -215,10 +261,18 @@ def train_generator(gen, corr, spec: FlowSpec, dataset: MotionTextDataset, codec
             if ckpt is not None:
                 st = {"model": gen.state_dict(), "opt": opt.state_dict(), "sched": sched.state_dict(),
                       "epoch": ep + 1, "step": step}
+                if ema is not None:
+                    st["ema"] = ema.state_dict()
                 torch.save(st, ckpt.with_suffix(".tmp"))
                 os.replace(ckpt.with_suffix(".tmp"), ckpt)
                 if (ep + 1) % save_every == 0:
-                    torch.save({"model": gen.state_dict(), "epoch": ep + 1}, ckpt.parent / f"generator_ep{ep + 1}.pt")
+                    snap = {"model": gen.state_dict(), "epoch": ep + 1}
+                    if ema is not None:
+                        snap["ema"] = ema.state_dict()
+                    torch.save(snap, ckpt.parent / f"generator_ep{ep + 1}.pt")
+    if ema is not None and hp.get("ema_eval", True):
+        gen.load_state_dict(ema.weights_for(gen))  # sample with the EMA weights
+        log(f"generator: using EMA weights (decay {ema_decay}) for sampling")
     gen.eval()
     return gen
 

@@ -68,9 +68,11 @@ method:
     effective_batch: 256       # 64 x 4 A40 in the paper; gradient accumulation on fewer GPUs
     epochs: 300
     lr: 2.0e-4                 # AdamW + cosine, fp32
-    text_lr: 2.0e-4            # mBART fine-tuned jointly with phi (same optimiser settings)
+    text_lr: 2.0e-4            # mBART fine-tuned jointly with phi (same optimiser settings); E3: 2.0e-5
     weight_decay: 0.0
-    warmup_steps: 0
+    warmup_steps: 0            # E3: 1000
+    ema: 0.0                   # E3: 0.999 (0 = no EMA, paper); EMA state saved in generator.pt
+    ema_eval: true             # sample with the EMA weights when ema > 0
     grad_clip: null
     length_loss_weight: 1.0    # length head on detached text features (not in the paper)
     workers: 4
