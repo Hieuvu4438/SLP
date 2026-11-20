@@ -1,0 +1,76 @@
+data:
+  name: phoenix_smplx
+
+eval:
+  metrics: [soke_dtw_jpe_body, soke_dtw_jpe_hand, soke_dtw_pa_jpe_body,
+            soke_dtw_pa_jpe_body_ua, soke_dtw_pa_jpe_hand]
+  primary_metric: soke_dtw_jpe_hand
+  higher_is_better: false
+
+method:
+  device: auto
+  precision: bf16                # CUDA only. CPU uses fp32.
+  workers: 4
+  val_limit: 64                  # validation loss / checkpoint selection only
+  debug_limit: null              # limit train and checkpoint-selection validation for smoke runs
+  init_codec: null               # path to codec.pt from a completed run
+  export_predictions: true
+
+  codec:
+    width: 64
+    latent_dim: 32
+    depth: 3
+    stride: 2
+    part_weights: [1, 2, 2, 1]   # body / left hand / right hand / face
+    velocity_weight: 0.5
+    kl_weight: 0.02
+    pool_weight: 0.5
+    pool_min_scale: 0.3
+    calibration_clips: 512
+    batch_size: 64
+    microbatch: 16
+    updates: 20000
+    warmup_updates: 1000
+    eval_every: 1000
+    lr: 2.0e-4
+    min_lr_ratio: 0.05
+    weight_decay: 0.0
+    grad_clip: 1.0
+
+  text:
+    backend: mbart
+    model: third_party/SOKE/deps/mbart-h2s-csl-phoenix
+    max_tokens: 128
+    finetune: false
+    lr: 2.0e-5                   # used when finetune=true
+    byte_dim: 64                 # for text.backend=bytes CPU smoke runs
+
+  flow:
+    scales: [0.3, 0.6, 1.0]
+    gamma: 1.0                   # released schedule correction; null uses the paper boundaries
+    width: 384
+    heads: 6
+    double_blocks: 3
+    single_blocks: 6
+    dropout: 0.1
+    time_patch: 1
+    cond_drop: 0.1
+    duration_weight: 1.0
+    ema_decay: 0.999
+    batch_size: 32
+    microbatch: 4
+    updates: 40000
+    warmup_updates: 1000
+    eval_every: 2000
+    lr: 2.0e-4
+    min_lr_ratio: 0.05
+    weight_decay: 0.0
+    grad_clip: 1.0
+
+  sampler:
+    steps: 12
+    cfg_scale: 2.0
+    min_frames: 40
+    max_frames: 400
+    batch_size: 4
+    lengths_from_npz: null       # use durations of another run's predictions for a matched ablation
