@@ -21,7 +21,7 @@ class Anchors:
 def empty_anchors(batch, k, device=None):
     slot = torch.zeros((batch, k), dtype=torch.bool, device=device)
     payload = torch.zeros((batch, k, 2, 24), device=device)
-    return Anchors(slot.float(), payload, slot, payload.bool(), payload[..., 0])
+    return Anchors(slot.float(), payload, slot, payload.bool(), payload.new_zeros(batch, k, 2))
 
 
 def stack_anchors(items, device=None):
@@ -175,7 +175,7 @@ def jitter_anchors(anchors, lengths, jitter, noise, generator):
     noise = torch.randn(anchors.payload.shape, generator=generator, device=anchors.time.device) * noise
     payload = anchors.payload + noise.masked_fill(~anchors.feature, 0)
     # Keep each time attached to its original hand payload through the stable reorder.
-    order = times.masked_fill(~anchors.slot, 2).argsort(-1, stable=True)
+    order = times.masked_fill(~anchors.slot, 2).argsort(dim=-1, stable=True)
     slot = anchors.slot.gather(1, order)
     return replace(anchors, time=times.gather(1, order).masked_fill(~slot, 0), slot=slot,
                    payload=payload.gather(1, order[..., None, None].expand_as(payload)),
