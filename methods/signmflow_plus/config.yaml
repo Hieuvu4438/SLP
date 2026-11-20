@@ -35,6 +35,10 @@ method:
                                # per frame, mean over valid frames ("mean": per-channel average)
     joint_weights: uniform     # C5 / E4-c: uniform (paper) | lever_arm (levers.py, mean 1)
     joint_weights_floor: 0.1   # lever_arm: minimum weight as a fraction of the mean (jaw)
+    fk_loss:                   # C6 / E4-a, E4-b: FK losses on x^1 in cm^2 (fk.py); all 0 = paper
+      lambda_body: 0.0         # pelvis-aligned 12 upper-body points
+      lambda_hand: 0.0         # wrist-relative 2 x 21 hand points (SOKE hand regressor)
+      lambda_vel: 0.0          # frame-to-frame differences of both (E4-b)
 
   measure:                     # motion naturalness measure (Sec. 3.2, Table 4)
     K: 500

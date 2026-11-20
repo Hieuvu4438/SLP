@@ -91,11 +91,12 @@ def _masked_mse(a, b, mask, reduction="sum", denom=None, joint_weights=None):
 
 
 def flow_loss(gen, corr: CorrectionNet | None, spec: FlowSpec, x1, e1, mask, text, text_pad, denom=None,
-              joint_weights=None):
+              joint_weights=None, position_loss=None):
     """Phase 1 of Alg. 2: 10 |x1 - x^1|^2 + 0.1 |e1 - e^1|^2 (target) or velocity regression.
 
     ``denom``: valid-frame count to normalise by (default: this batch's).
-    ``joint_weights``: optional [J] weights of the pose term (C5, levers.py)."""
+    ``joint_weights``: optional [J] weights of the pose term (C5, levers.py).
+    ``position_loss``: optional fk.PositionLoss on the predicted clean sample (C6, target only)."""
     B, T = x1.shape[:2]
     dev = x1.device
     x0 = sample_source(spec, (B, T, x1.shape[2]), dev)
@@ -116,7 +117,13 @@ def flow_loss(gen, corr: CorrectionNet | None, spec: FlowSpec, x1, e1, mask, tex
         x_hat = G.normalize(pose) if spec.on_manifold else pose
         lp = _masked_mse(x_hat, x1, mask, spec.reduction, denom, joint_weights)
         le = _masked_mse(expr, e1, mask, spec.reduction, denom)
+        if position_loss is not None:
+            lfk, fk_parts = position_loss(x_hat, expr, x1, e1, mask, denom)
+            return (spec.w_pose * lp + spec.w_expr * le + lfk,
+                    {"loss_pose": lp.detach(), "loss_expr": le.detach(), **fk_parts})
     else:
+        if position_loss is not None:
+            raise ValueError("position (FK) losses need the target-prediction parametrisation")
         v = G.project(x_t, pose) if spec.renormalise else pose
         lp = _masked_mse(v, u_t, mask, spec.reduction, denom, joint_weights)
         le = _masked_mse(expr, e1 - e0, mask, spec.reduction, denom)

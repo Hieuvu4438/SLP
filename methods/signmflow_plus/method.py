@@ -178,7 +178,8 @@ class Method(BaseMethod):
                 self.log(f"generator: resuming from {rf}")
             train_generator(self.gen, self.corr, self.spec, train_ds, self.codec, hp["generator"], dev,
                             log=self.log, ckpt=ck / "generator.pt", metrics=self.ctx.log_metrics,
-                            val_dataset=val_ds, joint_weights=self._joint_weights())
+                            val_dataset=val_ds, joint_weights=self._joint_weights(),
+                            position_loss=self._position_loss())
         n = sum(p.numel() for p in self.gen.parameters())
         self.log(f"generator parameters: {n / 1e6:.2f}M")
 
@@ -247,6 +248,23 @@ class Method(BaseMethod):
         torch.save({"weights": w, "smplx_joint": SMPLX_OF_ROT}, self.ctx.ckpt_dir / "joint_weights.pt")
         self.log("lever-arm joint weights: " + " ".join(f"{x:.2f}" for x in w.tolist()))
         return w.to(self.device)
+
+    def _position_loss(self):
+        """C6: FK position / velocity losses on x^1 (E4-a, E4-b); None when all lambdas are 0."""
+        cfg = self.hparams["flow"].get("fk_loss") or {}
+        lam = {k: float(cfg.get(f"lambda_{k}", 0.0)) for k in ("body", "hand", "vel")}
+        if not any(lam.values()):
+            return None
+        if self.spec.prediction != "target" or self.spec.representation != "quat":
+            raise ValueError("flow.fk_loss needs quaternions with target prediction")
+        if not self.hparams.get("add_hand_mean", True):
+            raise ValueError("flow.fk_loss assumes physical rotations (add_hand_mean: true)")
+        from .fk import PositionLoss, SparseSMPLX
+
+        fk = SparseSMPLX(device=self.device, model_dir=_abs(self.hparams["smplx_dir"]))
+        mean, std = self.codec.mean[123:], self.codec.std[123:]
+        self.log(f"FK loss: lambdas {lam}, {fk.n_support} skinned vertices")
+        return PositionLoss(fk, mean, std, lam["body"], lam["hand"], lam["vel"]).to(self.device)
 
     def _generator_weights(self, st: dict) -> dict:
         """EMA weights when the run trained with EMA (generator.ema > 0, ema_eval), else raw ones."""
