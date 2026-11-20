@@ -1,0 +1,68 @@
+{
+ "dataset": "phoenix_smplx",
+ "run": "outputs/runs/signmflow_v2_main_phoenix_smplx/signmflow/seed0_20261116-185137-965824",
+ "n_sequences": 150,
+ "metrics": {
+  "pred": {
+   "jpe_body": 5.043310015375406,
+   "jpe_hand": 6.8687926604325895,
+   "pa_body_ua": 4.474996983712523,
+   "pa_hand": 1.3335701462694873
+  },
+  "mean_pose": {
+   "jpe_body": 5.525350365899865,
+   "jpe_hand": 7.949579119119738,
+   "pa_body_ua": 4.871555524851074,
+   "pa_hand": 1.5418977501043385
+  },
+  "shrink_0.25": {
+   "jpe_body": 4.768311897939002,
+   "jpe_hand": 6.699041769836728,
+   "pa_body_ua": 4.2394745112297105,
+   "pa_hand": 1.289632320010138
+  },
+  "shrink_0.5": {
+   "jpe_body": 4.7708568784142065,
+   "jpe_hand": 6.919325578932679,
+   "pa_body_ua": 4.23970499264709,
+   "pa_hand": 1.3232165779751217
+  },
+  "smooth_1": {
+   "jpe_body": 5.010255793157999,
+   "jpe_hand": 6.858168513098775,
+   "pa_body_ua": 4.450992254296464,
+   "pa_hand": 1.3171237243844254
+  },
+  "smooth_3": {
+   "jpe_body": 4.964632114448894,
+   "jpe_hand": 6.909962524357852,
+   "pa_body_ua": 4.413125015193584,
+   "pa_hand": 1.315449704619352
+  },
+  "gt_shuffled": {
+   "jpe_body": 6.821704384488251,
+   "jpe_hand": 8.814154583438304,
+   "pa_body_ua": 6.113399869818554,
+   "pa_hand": 1.696928367587108
+  }
+ },
+ "speed": {
+  "gt": {
+   "body_speed_mm_per_frame": 4.860846325755119,
+   "finger_speed_mm_per_frame": 26.069900020956993
+  },
+  "pred": {
+   "body_speed_mm_per_frame": 4.448247142136097,
+   "finger_speed_mm_per_frame": 23.475907742977142
+  },
+  "smooth_3": {
+   "body_speed_mm_per_frame": 1.218398567289114,
+   "finger_speed_mm_per_frame": 5.598690360784531
+  }
+ },
+ "length": {
+  "gt_mean": 100.61333333333333,
+  "pred_mean": 99.44,
+  "abs_len_err_mean": 16.2
+ }
+}

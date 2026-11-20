@@ -1,0 +1,66 @@
+{
+ "phoenix_smplx": {
+  "0.1": {
+   "cos_eps_xi_median": -0.9645302295684814,
+   "parallel_energy_share_median": 0.9303185939788818,
+   "c_t_median (eps_par = -c |xi|)": 0.5255529880523682,
+   "implied_kappa = t(1-(1-t)c)": 0.0527002327144146
+  },
+  "0.3": {
+   "cos_eps_xi_median": -0.9552455544471741,
+   "parallel_energy_share_median": 0.9125025868415833,
+   "c_t_median (eps_par = -c |xi|)": 0.6200380325317383,
+   "implied_kappa = t(1-(1-t)c)": 0.1697920262813568
+  },
+  "0.5": {
+   "cos_eps_xi_median": -0.947844922542572,
+   "parallel_energy_share_median": 0.8984457850456238,
+   "c_t_median (eps_par = -c |xi|)": 0.780377984046936,
+   "implied_kappa = t(1-(1-t)c)": 0.304905503988266
+  },
+  "0.7": {
+   "cos_eps_xi_median": -0.9421564936637878,
+   "parallel_energy_share_median": 0.8877105116844177,
+   "c_t_median (eps_par = -c |xi|)": 1.0692155361175537,
+   "implied_kappa = t(1-(1-t)c)": 0.47546473145484924
+  },
+  "0.9": {
+   "cos_eps_xi_median": -0.9535701870918274,
+   "parallel_energy_share_median": 0.9093341827392578,
+   "c_t_median (eps_par = -c |xi|)": 1.8944000005722046,
+   "implied_kappa = t(1-(1-t)c)": 0.7295039892196655
+  }
+ },
+ "csl_smplx": {
+  "0.1": {
+   "cos_eps_xi_median": -0.9648765921592712,
+   "parallel_energy_share_median": 0.9309884905815125,
+   "c_t_median (eps_par = -c |xi|)": 0.5161404013633728,
+   "implied_kappa = t(1-(1-t)c)": 0.053547363728284836
+  },
+  "0.3": {
+   "cos_eps_xi_median": -0.9556809067726135,
+   "parallel_energy_share_median": 0.9133369326591492,
+   "c_t_median (eps_par = -c |xi|)": 0.6093479990959167,
+   "implied_kappa = t(1-(1-t)c)": 0.17203693091869354
+  },
+  "0.5": {
+   "cos_eps_xi_median": -0.9450318813323975,
+   "parallel_energy_share_median": 0.8930984139442444,
+   "c_t_median (eps_par = -c |xi|)": 0.7694047093391418,
+   "implied_kappa = t(1-(1-t)c)": 0.30764883756637573
+  },
+  "0.7": {
+   "cos_eps_xi_median": -0.9336570501327515,
+   "parallel_energy_share_median": 0.8718479871749878,
+   "c_t_median (eps_par = -c |xi|)": 1.0651251077651978,
+   "implied_kappa = t(1-(1-t)c)": 0.4763237237930298
+  },
+  "0.9": {
+   "cos_eps_xi_median": -0.9221310019493103,
+   "parallel_energy_share_median": 0.8505558967590332,
+   "c_t_median (eps_par = -c |xi|)": 1.9248918294906616,
+   "implied_kappa = t(1-(1-t)c)": 0.726759672164917
+  }
+ }
+}

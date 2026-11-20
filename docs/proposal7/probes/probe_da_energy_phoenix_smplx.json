@@ -1,0 +1,12 @@
+{
+ "ds": "phoenix_smplx",
+ "geodesic_energy_mean": 30.528095245361328,
+ "learned_energy_mean(MC t)": 23.756038665771484,
+ "best_shared_reparam_lower_bound_mean": 23.92487144470215,
+ "best_perjoint_reparam_lower_bound_mean": 23.6561336517334,
+ "sd3_shift_1.5_energy_mean": 26.138168334960938,
+ "sd3_shift_2.0_energy_mean": 24.762939453125,
+ "sd3_shift_2.75_energy_mean": 24.75555992126465,
+ "sd3_shift_3.5_energy_mean": 25.80519676208496,
+ "sd3_shift_5.0_energy_mean": 29.172592163085938
+}

@@ -1,0 +1,12 @@
+{
+ "ds": "csl_smplx",
+ "geodesic_energy_mean": 30.83892059326172,
+ "learned_energy_mean(MC t)": 23.74854850769043,
+ "best_shared_reparam_lower_bound_mean": 24.155000686645508,
+ "best_perjoint_reparam_lower_bound_mean": 23.886171340942383,
+ "sd3_shift_1.5_energy_mean": 26.398054122924805,
+ "sd3_shift_2.0_energy_mean": 25.004384994506836,
+ "sd3_shift_2.75_energy_mean": 24.991500854492188,
+ "sd3_shift_3.5_energy_mean": 26.047019958496094,
+ "sd3_shift_5.0_energy_mean": 29.43982696533203
+}

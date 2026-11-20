@@ -1,0 +1,149 @@
+{
+ "ds": "csl_smplx",
+ "split": "val",
+ "per_t": {
+  "0.1": {
+   "kappa_median": 0.05361948534846306,
+   "kappa_p10": 0.045530956238508224,
+   "kappa_p90": 0.06320756673812866,
+   "perp_dev_rad_median": 0.01348939724266529,
+   "same_t_dist_median(P3 metric)": 0.05731787532567978,
+   "dist_to_geodesic_curve_median": 0.013591953553259373,
+   "dist_to_geodesic_curve_p95": 0.037213284522295,
+   "dlogm_same_t_median": -0.22025299072265625,
+   "dlogm_equal_progress_median": -0.0034766197204589844,
+   "dlogm_equal_progress_p5": -0.05312633514404297,
+   "dlogm_equal_progress_p95": 0.01510344073176384,
+   "kappa_median_body": 0.05347384512424469,
+   "kappa_median_lhand": 0.05339941754937172,
+   "kappa_median_rhand": 0.05427877604961395,
+   "kappa_median_jaw": 0.052072685211896896,
+   "kappa_by_|xi|_tercile": [
+    0.051261305809020996,
+    0.052387841045856476,
+    0.05537208169698715
+   ]
+  },
+  "0.3": {
+   "kappa_median": 0.1722850352525711,
+   "kappa_p10": 0.1502019315958023,
+   "kappa_p90": 0.2028958946466446,
+   "perp_dev_rad_median": 0.04151918366551399,
+   "same_t_dist_median(P3 metric)": 0.1585751175880432,
+   "dist_to_geodesic_curve_median": 0.041285865008831024,
+   "dist_to_geodesic_curve_p95": 0.11198623478412628,
+   "dlogm_same_t_median": -0.5044665336608887,
+   "dlogm_equal_progress_median": -0.007432222366333008,
+   "dlogm_equal_progress_p5": -0.1475098580121994,
+   "dlogm_equal_progress_p95": 0.02760450914502144,
+   "kappa_median_body": 0.17148439586162567,
+   "kappa_median_lhand": 0.17179539799690247,
+   "kappa_median_rhand": 0.1745770126581192,
+   "kappa_median_jaw": 0.16673772037029266,
+   "kappa_by_|xi|_tercile": [
+    0.1679106503725052,
+    0.16906164586544037,
+    0.17624729871749878
+   ]
+  },
+  "0.5": {
+   "kappa_median": 0.30816686153411865,
+   "kappa_p10": 0.274817556142807,
+   "kappa_p90": 0.3628298342227936,
+   "perp_dev_rad_median": 0.06902285665273666,
+   "same_t_dist_median(P3 metric)": 0.2387825846672058,
+   "dist_to_geodesic_curve_median": 0.06757240742444992,
+   "dist_to_geodesic_curve_p95": 0.18031218647956848,
+   "dlogm_same_t_median": -0.5962338447570801,
+   "dlogm_equal_progress_median": -0.012047410011291504,
+   "dlogm_equal_progress_p5": -0.2299831658601761,
+   "dlogm_equal_progress_p95": 0.03827480226755142,
+   "kappa_median_body": 0.30607542395591736,
+   "kappa_median_lhand": 0.30778998136520386,
+   "kappa_median_rhand": 0.3122645318508148,
+   "kappa_median_jaw": 0.2970142960548401,
+   "kappa_by_|xi|_tercile": [
+    0.30409756302833557,
+    0.3031823933124542,
+    0.31321901082992554
+   ]
+  },
+  "0.7": {
+   "kappa_median": 0.47753971815109253,
+   "kappa_p10": 0.4370875358581543,
+   "kappa_p90": 0.5545953512191772,
+   "perp_dev_rad_median": 0.08748871088027954,
+   "same_t_dist_median(P3 metric)": 0.2763363718986511,
+   "dist_to_geodesic_curve_median": 0.08305498212575912,
+   "dist_to_geodesic_curve_p95": 0.21697598695755005,
+   "dlogm_same_t_median": -0.4862334728240967,
+   "dlogm_equal_progress_median": -0.01593017578125,
+   "dlogm_equal_progress_p5": -0.26709461212158203,
+   "dlogm_equal_progress_p95": 0.04034125804901123,
+   "kappa_median_body": 0.473066508769989,
+   "kappa_median_lhand": 0.4776538908481598,
+   "kappa_median_rhand": 0.4834376275539398,
+   "kappa_median_jaw": 0.4586356580257416,
+   "kappa_by_|xi|_tercile": [
+    0.4727329909801483,
+    0.47114452719688416,
+    0.48342829942703247
+   ]
+  },
+  "0.9": {
+   "kappa_median": 0.7282115817070007,
+   "kappa_p10": 0.6850380897521973,
+   "kappa_p90": 0.8056297898292542,
+   "perp_dev_rad_median": 0.07167098671197891,
+   "same_t_dist_median(P3 metric)": 0.21275009214878082,
+   "dist_to_geodesic_curve_median": 0.06353961676359177,
+   "dist_to_geodesic_curve_p95": 0.1663239300251007,
+   "dlogm_same_t_median": -0.18425798416137695,
+   "dlogm_equal_progress_median": -0.01247262954711914,
+   "dlogm_equal_progress_p5": -0.17336992919445038,
+   "dlogm_equal_progress_p95": 0.027741938829421997,
+   "kappa_median_body": 0.7173239588737488,
+   "kappa_median_lhand": 0.7285968661308289,
+   "kappa_median_rhand": 0.7361454963684082,
+   "kappa_median_jaw": 0.6903756856918335,
+   "kappa_by_|xi|_tercile": [
+    0.7197998762130737,
+    0.7225889563560486,
+    0.7354938983917236
+   ]
+  }
+ },
+ "shift_fit_all_median_kappa": [
+  2.54,
+  0.02915040200382993
+ ],
+ "shift_fit_body": [
+  2.6100000000000003,
+  0.03250029011131894
+ ],
+ "shift_fit_lhand": [
+  2.54,
+  0.028835258303249
+ ],
+ "shift_fit_rhand": [
+  2.4699999999999998,
+  0.02749066742796024
+ ],
+ "shift_fit_jaw": [
+  2.8200000000000003,
+  0.039333707615950904
+ ],
+ "per_sample_joint_s": {
+  "p10": 1.85,
+  "p50": 2.55,
+  "p90": 3.0500000000000003,
+  "frac_s_at_grid_edge": 0.004597560975609756,
+  "rmse_median": 0.028251843991326728,
+  "rmse_p90": 0.03825240855289436
+ },
+ "global_s2.75_kappa_rmse_per_sample_joint": {
+  "p50": 0.037891082085526315,
+  "p90": 0.0736792174980888
+ },
+ "monotone_kappa_frac": 0.9994146341463415
+}
