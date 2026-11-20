@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 import logging
 
 import numpy as np
@@ -128,3 +129,17 @@ def test_fit_predict_export_and_reload(tmp_path, small_cpu):
     repeated = restored.predict([{**item, "length": 400} for item in inputs])
     for a, b in zip(prediction, repeated):
         np.testing.assert_allclose(a, b, atol=2e-6, rtol=1e-5)
+
+    reference = tmp_path / "predictions.npz"
+    ablation_dir = tmp_path / "single_scale"
+    ablation_dir.mkdir()
+    ablation = copy.deepcopy(cfg)
+    ablation["method"]["init_codec"] = str(ctx.ckpt_dir / "codec.pt")
+    ablation["method"]["flow"]["scales"] = [1.0]
+    ablation["method"]["sampler"]["lengths_from_npz"] = str(reference)
+    single = cls(ablation, RunContext(ablation_dir, 55, ctx.logger))
+    single.fit(split, split)
+    single_prediction = single.predict(inputs)
+    assert [len(x) for x in single_prediction] == [len(x) for x in prediction]
+    for key, state in model.codec.state_dict().items():
+        torch.testing.assert_close(state, single.codec.state_dict()[key])
