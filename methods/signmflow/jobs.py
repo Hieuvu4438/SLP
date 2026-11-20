@@ -120,7 +120,7 @@ def bt_job(run_id, prio=0):
 
 
 # ----------------------------------------------------------------------------- experiment plan
-def build(seeds_extra=(), tables=("1", "2")):
+def build(seeds_extra=(), tables=("1", "2"), multilingual=False):
     """Register the jobs of the selected tables. Tables 1/2 = main runs, SignNMFlow-M and B-T;
     3/5 = ablations, 4 = measure, 7 = benchmark, 8 = NFE (all four on CSL-Daily)."""
     JOBS.clear()
@@ -166,7 +166,7 @@ def build(seeds_extra=(), tables=("1", "2")):
                         deps=[main_csl])
             for K in (250, 750):
                 run_job(f"K{K}_s{s}", p_abl[1], csl, f"{PREFIX}_measure_K{K}", s, over=[f"method.measure.K={K}"])
-    if tables & {"1", "2"}:
+    if multilingual and tables & {"1", "2"}:   # dropped from the default plan (user, 2026-11-18)
         # SignNMFlow-M (seed 0): one model on Phoenix + CSL + How2Sign, evaluated on each
         run_job("M_phoenix_s0", 30, "phoenix_smplx", f"{PREFIX}_M_phoenix_smplx", 0, over=["method.multilingual=true"])
         bt_job("M_phoenix_s0")
@@ -398,9 +398,11 @@ def main(argv=None):
     ap.add_argument("--tick", type=int, default=60)
     ap.add_argument("--extra-seeds", default="", help="seeds after 0 (lower priority), e.g. 1,2")
     ap.add_argument("--tables", default="1,2", help="paper tables to run: any of 1,2,3,4,5,7,8")
+    ap.add_argument("--multilingual", action="store_true", help="also run SignNMFlow-M (Tables 1/2 M rows)")
     a = ap.parse_args(argv)
     os.chdir(ROOT)
-    build(tuple(int(s) for s in a.extra_seeds.split(",") if s), tuple(t for t in a.tables.split(",") if t))
+    build(tuple(int(s) for s in a.extra_seeds.split(",") if s), tuple(t for t in a.tables.split(",") if t),
+          multilingual=a.multilingual)
     {"run": run, "status": status, "plan": plan}[a.action](a)
 
 

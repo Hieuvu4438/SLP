@@ -119,7 +119,7 @@ Smoke test (~15 min incl. evaluation): `python scripts/run.py --method signmflow
 
 ## Results
 
-### v2 (after the 2026-11-16 review) — Phoenix, CSL done; How2Sign running
+### v2 (after the 2026-11-16 review) — Phoenix, CSL-Daily, How2Sign done (SignNMFlow-M dropped)
 
 Changes vs v1: K-means convergence fix, sum-reduced loss (Alg. 2), exact 64-sample batches,
 SOKE How2Sign protocol. Experiment names `signmflow_v2_*`, driven by `jobs.py`.
@@ -144,6 +144,16 @@ Val (dev) split, seed 0, final epoch (300). B-T: repo mBART back-translator (GT 
 | CSL paper SignNMFlow-M | 5.94 | 7.73 | 5.31 | 5.31 | 1.33 | 15.23 |
 
 CSL test was run with `--allow-dirty` (uncommitted code); Phoenix test at commit bec2088 + diff.
+
+| How2Sign (SOKE protocol) | JPE body | JPE hand | PA body (code) | PA body (ua) | PA hand | B-T |
+|---|---|---|---|---|---|---|
+| v2 ours (dev, 1716) | 7.50 | 10.85 | 8.34 | 6.73 | 2.35 | 0.94 (1.64) |
+| paper SignNMFlow (test) | 6.76 | 9.72 | 6.01 | 6.01 | 2.07 | 16.88 (SOKE BT) |
+| paper SOKE (test) | 7.75 | 10.08 | 6.82 | 6.82 | 2.35 | 14.48 (SOKE BT) |
+
+How2Sign: 300 epochs (generator resumed at epochs 32 and 45 after pauses), val flow loss flat at
+8.60 from epoch 200 on (no overfitting). The repo's How2Sign back-translator reaches only
+1.64 BLEU-4 on GT, so its B-T is not informative.
 
 | CSL-Daily | JPE body | JPE hand | PA body (code) | PA body (ua) | PA hand | B-T |
 |---|---|---|---|---|---|---|

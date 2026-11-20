@@ -4,7 +4,7 @@ from methods.signmflow import jobs as J
 
 
 def test_graph_is_consistent_and_acyclic():
-    J.build((1, 2), ("1", "2", "3", "4", "5", "7", "8"))
+    J.build((1, 2), ("1", "2", "3", "4", "5", "7", "8"), multilingual=True)
     for j in J.JOBS.values():
         assert all(d in J.JOBS for d in j.deps), j.id
         assert j.is_run or (j.cmd is not None and j.out is not None)
@@ -51,8 +51,10 @@ def test_resume_overrides_pick_latest_stage_files(tmp_path, monkeypatch):
 def test_default_plan_is_tables_1_2_seed_0():
     J.build()
     runs = sorted(j.id for j in J.JOBS.values() if j.is_run)
-    assert runs == ["M_csl_s0", "M_how2sign_s0", "M_phoenix_s0", "main_csl_s0", "main_how2sign_s0",
-                    "main_phoenix_s0"]
+    assert runs == ["main_csl_s0", "main_how2sign_s0", "main_phoenix_s0"]  # SignNMFlow-M is opt-in
+    J.build(multilingual=True)
+    assert {"M_phoenix_s0", "M_csl_s0", "M_how2sign_s0"} <= set(J.JOBS)
+    J.build()
     assert J.JOBS["main_how2sign_s0"].data == "how2sign_smplx_soke"
     assert all(j.name.startswith(J.PREFIX) for j in J.JOBS.values() if j.is_run)
     assert all(j.seed == 0 for j in J.JOBS.values() if j.is_run)
