@@ -1,0 +1,10 @@
+# Trivial SLP baselines (docs/proposal7 E0.4). Scored with the same SOKE metrics as SignNMFlow.
+eval:
+  metrics: [soke_dtw_jpe_body, soke_dtw_jpe_hand, soke_dtw_pa_jpe_body, soke_dtw_pa_jpe_hand,
+            soke_dtw_pa_jpe_body_ua, soke_speed_ratio_body, soke_speed_ratio_hand]
+  primary_metric: soke_dtw_pa_jpe_hand
+  higher_is_better: false
+
+method:
+  mode: retrieval              # retrieval (nearest training sentence, TF-IDF) | mean_pose
+  lengths_file: null           # optional JSON {name: frames}; same lengths as the compared arms
