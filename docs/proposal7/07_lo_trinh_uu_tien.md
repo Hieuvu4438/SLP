@@ -88,6 +88,13 @@ Chi tiết kỹ thuật nằm ở `04`, bằng chứng ở `01`, `03`, `06`.
 
 Sau mỗi thay đổi, chạy `python -m pytest -q`.
 
+**Trạng thái (2026-11-20):** C1–C10 đã được code và có unit test, chưa chạy thí nghiệm nào.
+- `methods/signmflow_plus/`: mặc định trùng bit với `methods/signmflow`.
+- Metric nằm trong `src/slp/evaluation/metrics.py`.
+- Baseline E0.4 nằm trong `methods/text_retrieval/`.
+- Lệnh chạy từng arm: `python -m methods.signmflow_plus.experiments plan --prio P0,P1`.
+- E9, E10, E11 chưa code (có điều kiện, xem README của method).
+
 ### 1.2 Thủ tục chấm một arm (áp dụng đồng nhất)
 
 1. Sinh dự đoán trên **toàn bộ dev**, dùng độ dài cố định (C1) và 3 seed sampler.
