@@ -63,3 +63,47 @@ def test_sampler_with_guidance_runs_and_w1_is_plain():
     assert all(torch.equal(u, v) for u, v in zip(a, b))
     rot, _, _ = sample(gen, None, spec, text, tpad, [6, 4], steps=3, cfg_w=2.5)
     assert torch.allclose(rot.norm(dim=-1), torch.ones(2, 6, 41), atol=1e-5)
+
+
+# ----------------------------------------------------------------------------- C9 self-conditioning
+def _sc_gen():
+    torch.manual_seed(0)
+    return SignGenerator(rot_dim=4, latent=32, layers=2, heads=4, ff=64, time_dim=64, dropout=0.0,
+                         max_frames=20, text_model=None, text_dim=16, self_cond=True)
+
+
+def test_self_conditioning_training_feeds_detached_first_estimate():
+    from methods.signmflow_plus.flow import flow_loss
+
+    gen = _sc_gen()
+    calls = []
+    orig = gen.forward
+
+    def spy(*a, **k):
+        out = orig(*a, **k)
+        calls.append((k.get("sc"), out))
+        return out
+    gen.forward = spy
+    x1 = G.normalize(torch.randn(2, 5, 41, 4))
+    e1, mask = torch.randn(2, 5, 10), torch.ones(2, 5, dtype=torch.bool)
+    text, tpad = torch.randn(2, 3, 16), torch.zeros(2, 3, dtype=torch.bool)
+    spec = FlowSpec(path="geodesic", self_cond=True, self_cond_p=1.0)
+    loss, _ = flow_loss(gen, None, spec, x1, e1, mask, text, tpad)
+    loss.backward()
+    assert len(calls) == 2 and calls[0][0] is None
+    sc = calls[1][0]
+    assert not sc[0].requires_grad and torch.allclose(sc[0], G.normalize(calls[0][1][0]))
+    calls.clear()
+    flow_loss(gen, None, FlowSpec(path="geodesic", self_cond=True, self_cond_p=0.0), x1, e1, mask, text, tpad)
+    assert len(calls) == 1 and calls[0][0] is None
+
+
+def test_self_conditioning_sampler_and_input_checks():
+    gen = _sc_gen().eval()
+    text, tpad = torch.randn(1, 3, 16), torch.zeros(1, 3, dtype=torch.bool)
+    rot, _, _ = sample(gen, None, FlowSpec(path="geodesic", self_cond=True), text, tpad, [6], steps=3)
+    assert torch.allclose(rot.norm(dim=-1), torch.ones(1, 6, 41), atol=1e-5)
+    plain = _gen(null_text=False)
+    x, e = torch.randn(1, 4, 41, 4), torch.randn(1, 4, 10)
+    with pytest.raises(ValueError):
+        plain(x, e, torch.zeros(1), text, tpad, torch.zeros(1, 4, dtype=torch.bool), sc=(x, e))

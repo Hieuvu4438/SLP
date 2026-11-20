@@ -114,13 +114,17 @@ class SignGenerator(nn.Module):
     def __init__(self, rot_dim: int = 4, n_joints: int = 41, expr_dim: int = 10, latent: int = 512,
                  layers: int = 8, heads: int = 8, ff: int = 2048, time_dim: int = 2048,
                  dropout: float = 0.1, max_frames: int = 400, text_model: str | None = None,
-                 text_max_len: int = 128, text_dim: int = 1024, null_text: bool = False):
+                 text_max_len: int = 128, text_dim: int = 1024, null_text: bool = False,
+                 self_cond: bool = False):
         super().__init__()
         self.pose_dim = n_joints * rot_dim
         self.n_joints, self.rot_dim, self.expr_dim = n_joints, rot_dim, expr_dim
         self.text = TextEncoder(text_model, text_max_len) if text_model else None
         text_dim = self.text.dim if self.text is not None else text_dim
-        self.inp = nn.Linear(self.pose_dim + expr_dim, latent)
+        # C9 / E7 self-conditioning: the previous clean estimate (pose + expression) is appended to
+        # the input; built only when enabled, so the paper's parameter set is unchanged
+        self.self_cond = self_cond
+        self.inp = nn.Linear((self.pose_dim + expr_dim) * (2 if self_cond else 1), latent)
         self.pos = nn.Parameter(torch.zeros(1, max_frames, latent))
         nn.init.normal_(self.pos, std=0.02)
         self.latent = latent
@@ -149,10 +153,20 @@ class SignGenerator(nn.Module):
     def encode_text(self, texts, srcs, device):
         return self.text(texts, srcs, device)
 
-    def forward(self, x_t, e_t, t, text, text_pad, pad):
-        """x_t [B,T,J,D], e_t [B,T,E], t [B], text [B,L,C]; pad/text_pad: True = padding."""
+    def forward(self, x_t, e_t, t, text, text_pad, pad, sc=None):
+        """x_t [B,T,J,D], e_t [B,T,E], t [B], text [B,L,C]; pad/text_pad: True = padding.
+
+        ``sc``: (pose [B,T,J,D], expr [B,T,E]) previous clean estimate (self-conditioning), or None = 0."""
         B, T = x_t.shape[:2]
-        h = self.inp(torch.cat([x_t.flatten(-2), e_t], -1)) + self.pos[:, :T]
+        feats = [x_t.flatten(-2), e_t]
+        if self.self_cond:
+            if sc is None:
+                feats += [torch.zeros_like(x_t).flatten(-2), torch.zeros_like(e_t)]
+            else:
+                feats += [sc[0].flatten(-2), sc[1]]
+        elif sc is not None:
+            raise ValueError("self-conditioning input given to a generator built without self_cond")
+        h = self.inp(torch.cat(feats, -1)) + self.pos[:, :T]
         emb = self.time_mlp(timestep_embedding(t, self.latent))
         for layer in self.layers:
             h = layer(h, emb, pad, text, text_pad)

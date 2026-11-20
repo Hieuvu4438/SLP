@@ -75,7 +75,9 @@ class Method(BaseMethod):
                              float(f["w_pose"]), float(f["w_expr"]), f.get("loss_reduction", "sum"),
                              shift=float(f.get("shift", 1.0)), train_shift=float(f.get("train_shift", 1.0)),
                              source=f.get("source", "hemisphere"),
-                             source_sigma=float(f.get("source_sigma", 0.5)))
+                             source_sigma=float(f.get("source_sigma", 0.5)),
+                             self_cond=bool(f.get("self_cond", False)),
+                             self_cond_p=float(f.get("self_cond_p", 0.5)))
         mean, std = load_stats(str(_abs(self.cfg["data"]["stats"])))
         hand_mean = load_hand_mean(_abs(hp["smplx_dir"])) if hp.get("add_hand_mean", True) else None
         self.codec = MotionCodec(mean, std, hand_mean, self.spec.representation)
@@ -85,7 +87,8 @@ class Method(BaseMethod):
                                  dropout=g["dropout"], max_frames=g["max_frames"],
                                  text_model=str(_abs(g["text_model"])),
                                  text_max_len=g.get("text_max_len", 128),
-                                 null_text=float(g.get("p_uncond") or 0.0) > 0)
+                                 null_text=float(g.get("p_uncond") or 0.0) > 0,
+                                 self_cond=self.spec.self_cond)
         self.corr, self.measure = None, None
         self.source_mean = None  # [41,4] centre of the wrapped-normal source (C8)
         self.log = self.ctx.logger.info

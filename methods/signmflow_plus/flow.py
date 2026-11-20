@@ -32,6 +32,8 @@ class FlowSpec:
     reduction: str = "sum"   # per-frame ||.||^2 summed over channels (Alg. 2) | "mean" over channels
     source: str = "hemisphere"  # p0: hemisphere (paper) | wrapped_normal (E6, around the mean pose)
     source_sigma: float = 0.5   # sigma0 of the wrapped normal (radians in the tangent space)
+    self_cond: bool = False     # C9 / E7: feed the previous clean estimate back to the network
+    self_cond_p: float = 0.5    # training: probability of a self-conditioned batch (Chen et al., 2023)
     shift: float = 1.0       # s of the geoshift path
     train_shift: float = 1.0  # SD3 shift of the training-time distribution (1 = uniform, paper)
 
@@ -121,7 +123,11 @@ def flow_loss(gen, corr: CorrectionNet | None, spec: FlowSpec, x1, e1, mask, tex
         if spec.renormalise:
             x_t = G.normalize(x_t)
     e_t = (1 - t[:, None, None]) * e0 + t[:, None, None] * e1
-    pose, expr = gen(x_t, e_t, t, text, text_pad, ~mask)
+    sc = None
+    if spec.self_cond and float(torch.rand(())) < spec.self_cond_p:
+        with torch.no_grad():  # first pass without self-conditioning, used as a detached input
+            sc = clean_estimate(spec, *gen(x_t, e_t, t, text, text_pad, ~mask))
+    pose, expr = gen(x_t, e_t, t, text, text_pad, ~mask, sc=sc)
     if spec.prediction == "target":
         x_hat = G.normalize(pose) if spec.on_manifold else pose
         lp = _masked_mse(x_hat, x1, mask, spec.reduction, denom, joint_weights)
@@ -140,18 +146,27 @@ def flow_loss(gen, corr: CorrectionNet | None, spec: FlowSpec, x1, e1, mask, tex
 
 
 @torch.no_grad()
-def guided(gen, x, e, tb, text, text_pad, pad, spec: FlowSpec, cfg_w: float):
+def clean_estimate(spec: FlowSpec, pose, expr):
+    """Network output as a self-conditioning input: the normalised x^1 for target prediction on
+    the manifold, the raw output otherwise."""
+    if spec.prediction == "target" and spec.on_manifold:
+        pose = G.normalize(pose)
+    return pose.detach(), expr.detach()
+
+
+def guided(gen, x, e, tb, text, text_pad, pad, spec: FlowSpec, cfg_w: float, sc=None):
     """Network outputs with classifier-free guidance (C7 / E5).
 
     Target prediction on the manifold: x^ = Exp_{x^u}(w Log_{x^u} x^c) per joint (geodesic
     extrapolation from the unconditional towards the conditional clean estimate); Euclidean
     outputs (6D, velocities, expression): u + w (c - u). w = 1 is the plain conditional model."""
-    pose, expr = gen(x, e, tb, text, text_pad, pad)
+    kw = {"sc": sc} if sc is not None else {}
+    pose, expr = gen(x, e, tb, text, text_pad, pad, **kw)
     if cfg_w == 1.0:
         return pose, expr
     B = x.shape[0]
     null, null_pad = gen.drop_text(text, text_pad, torch.ones(B, dtype=torch.bool))
-    pose_u, expr_u = gen(x, e, tb, null, null_pad, pad)
+    pose_u, expr_u = gen(x, e, tb, null, null_pad, pad, **kw)
     if spec.prediction == "target" and spec.on_manifold:
         xc, xu = G.normalize(pose), G.normalize(pose_u)
         pose = G.expmap(xu, cfg_w * G.logmap(xu, xc))
@@ -174,6 +189,7 @@ def sample(gen, corr: CorrectionNet | None, spec: FlowSpec, text, text_pad, leng
     x0 = sample_source(spec, (B, T, n_joints), dev, generator, mean=source_mean)
     e = torch.randn(B, T, expr_dim, device=dev, generator=generator)
     x = x0
+    sc = None  # self-conditioning input (C9): the previous step's clean estimate
     grid = time_grid(steps, grid_power, grid_shift)
     uniform = grid_power == 1.0 and grid_shift == 1.0
     for k in range(steps):
@@ -185,7 +201,9 @@ def sample(gen, corr: CorrectionNet | None, spec: FlowSpec, text, text_pad, leng
             tn = grid[k + 1]
             dt = tn - t
         tb = torch.full((B,), t, device=dev)
-        pose, expr = guided(gen, x, e, tb, text, text_pad, ~mask, spec, cfg_w)
+        pose, expr = guided(gen, x, e, tb, text, text_pad, ~mask, spec, cfg_w, sc)
+        if spec.self_cond:
+            sc = clean_estimate(spec, pose, expr)
         s = torch.full((B, 1, 1, 1), tn, device=dev)
         if spec.prediction == "target":
             x1_hat = G.normalize(pose) if spec.on_manifold else pose
