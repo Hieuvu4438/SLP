@@ -73,7 +73,9 @@ class Method(BaseMethod):
         f = hp["flow"]
         self.spec = FlowSpec(f["representation"], f["path"], f["prediction"],
                              float(f["w_pose"]), float(f["w_expr"]), f.get("loss_reduction", "sum"),
-                             shift=float(f.get("shift", 1.0)), train_shift=float(f.get("train_shift", 1.0)))
+                             shift=float(f.get("shift", 1.0)), train_shift=float(f.get("train_shift", 1.0)),
+                             source=f.get("source", "hemisphere"),
+                             source_sigma=float(f.get("source_sigma", 0.5)))
         mean, std = load_stats(str(_abs(self.cfg["data"]["stats"])))
         hand_mean = load_hand_mean(_abs(hp["smplx_dir"])) if hp.get("add_hand_mean", True) else None
         self.codec = MotionCodec(mean, std, hand_mean, self.spec.representation)
@@ -85,6 +87,7 @@ class Method(BaseMethod):
                                  text_max_len=g.get("text_max_len", 128),
                                  null_text=float(g.get("p_uncond") or 0.0) > 0)
         self.corr, self.measure = None, None
+        self.source_mean = None  # [41,4] centre of the wrapped-normal source (C8)
         self.log = self.ctx.logger.info
 
     def _cache(self, split: Split, tag: str):
@@ -119,6 +122,8 @@ class Method(BaseMethod):
             n = int(hp["debug_limit"])
             train_ds.items, val_ds.items = train_ds.items[:n], val_ds.items[:n]
         self.log(f"SignNMFlow {self.spec} train={len(train_ds)} val={len(val_ds)}")
+        if self.spec.source == "wrapped_normal":
+            self._fit_source_mean(tr_caches)
 
         if self.spec.needs_correction:  # naturalness / ng_parallel: stages 1-2
             m = hp["measure"]
@@ -156,8 +161,10 @@ class Method(BaseMethod):
                     shutil.copy(_abs(rf), ck / "correction.pt")
                     self.log(f"correction: resuming from {rf}")
                 train_correction(self.corr, self.measure, train_ds, self.codec, c, dev, log=self.log,
+                                 sample_x0=self._sample_x0,
                                  ckpt=ck / "correction.pt", metrics=self.ctx.log_metrics)
-                gap = geodesic_energy_gap(self.corr, self.measure, val_ds, self.codec, dev)
+                gap = geodesic_energy_gap(self.corr, self.measure, val_ds, self.codec, dev,
+                                          sample_x0=self._sample_x0)
                 self.log(f"naturalness energy on val: geodesic={gap['geodesic']:.5g} "
                          f"learned={gap['naturalness']:.5g}")
                 self.ctx.log_metrics({f"val_energy_{k}": v for k, v in gap.items()})
@@ -180,7 +187,7 @@ class Method(BaseMethod):
             train_generator(self.gen, self.corr, self.spec, train_ds, self.codec, hp["generator"], dev,
                             log=self.log, ckpt=ck / "generator.pt", metrics=self.ctx.log_metrics,
                             val_dataset=val_ds, joint_weights=self._joint_weights(),
-                            position_loss=self._position_loss())
+                            position_loss=self._position_loss(), source_mean=self.source_mean)
         n = sum(p.numel() for p in self.gen.parameters())
         self.log(f"generator parameters: {n / 1e6:.2f}M")
 
@@ -215,7 +222,7 @@ class Method(BaseMethod):
                                      steps=int(s["steps"]), generator=g,
                                      grid_power=float(s.get("grid_power", 1.0)),
                                      grid_shift=float(s.get("shift", 1.0)),
-                                     cfg_w=float(s.get("cfg_w", 1.0)))
+                                     cfg_w=float(s.get("cfg_w", 1.0)), source_mean=self.source_mean)
             feats = self.codec.decode(rot, expr).float().cpu().numpy()
             for j, i in enumerate(idx):
                 out[i] = feats[j, :L[j]]
@@ -233,6 +240,25 @@ class Method(BaseMethod):
         out = read_lengths(path, [x["name"] for x in inputs], int(self.hparams["generator"]["max_frames"]))
         self.log(f"fixed lengths from {path} (mean {np.mean(out):.1f} frames)")
         return out
+
+    def _fit_source_mean(self, tr_caches):
+        """C8: per-joint mean rotation of all training frames (centre of the wrapped normal)."""
+        frames = all_frames(tr_caches)
+        acc = torch.zeros(41, 4, dtype=torch.float64)
+        for a in range(0, len(frames), CH):
+            q = self.codec.encode(torch.from_numpy(np.asarray(frames[a:a + CH])).to(self.device))[0]
+            acc += q.double().sum(0).cpu()
+        from . import geometry as G
+
+        self.source_mean = G.sign_convention(G.normalize(acc / len(frames))).float().to(self.device)
+        torch.save({"mean": self.source_mean.cpu()}, self.ctx.ckpt_dir / "source_mean.pt")
+        self.log(f"wrapped-normal source: mean pose of {len(frames)} frames, sigma0={self.spec.source_sigma}")
+
+    def _sample_x0(self, shape, device):
+        """Source p0 used by the correction network (Alg. 1) - must match the generator's."""
+        from .flow import sample_source
+
+        return sample_source(self.spec, shape, device, mean=self.source_mean)
 
     def _joint_weights(self):
         """C5: per-joint weights of the pose loss (None = uniform, paper)."""
@@ -290,6 +316,8 @@ class Method(BaseMethod):
             self.corr.load_state_dict(torch.load(ck / "correction_final.pt", map_location="cpu",
                                                  weights_only=False)["model"])
             self.corr.eval()
+        if self.spec.source == "wrapped_normal":
+            self.source_mean = torch.load(ck / "source_mean.pt", map_location="cpu")["mean"].to(self.device)
         self.gen.load_state_dict(self._generator_weights(torch.load(ck / "generator.pt", map_location="cpu",
                                                                     weights_only=False)))
         self.gen.to(self.device).eval()

@@ -158,3 +158,39 @@ def test_fixed_lengths_table_round_trip(tmp_path):
         read_lengths(tmp_path / "l.json", ["dev/c"], cap=400)
     with pytest.raises(ValueError):
         read_lengths(tmp_path / "l.json", ["dev/a"], cap=40)
+
+
+# ----------------------------------------------------------------------------- C8 wrapped-normal source
+def test_wrapped_normal_source():
+    from methods.signmflow_plus.flow import sample_source
+
+    mu = G.sign_convention(G.normalize(torch.tensor([[0.9, 0.1, -0.2, 0.3], [0.7, 0.5, 0.1, -0.4]])))
+    x = G.wrapped_normal(mu, 0.25, (20000, 2), generator=torch.Generator().manual_seed(0))
+    assert torch.allclose(x.norm(dim=-1), torch.ones(20000, 2), atol=1e-12)
+    d2 = (G.geodesic_distance(mu.expand_as(x), x) ** 2).mean(0)
+    assert torch.allclose(d2, torch.full((2,), 3 * 0.25 ** 2), rtol=0.05)  # E|v|^2 = 3 sigma^2
+    tiny = G.wrapped_normal(mu, 1e-6, (10, 2))
+    assert torch.allclose(tiny, mu.expand_as(tiny), atol=1e-5)  # sigma0 -> 0: the mean pose
+    spec = FlowSpec(source="wrapped_normal", source_sigma=0.25)
+    with pytest.raises(ValueError):
+        sample_source(spec, (3, 2), "cpu")
+    assert sample_source(spec, (3, 2), "cpu", mean=mu).shape == (3, 2, 4)
+    with pytest.raises(ValueError):
+        FlowSpec("6d", "linear", source="wrapped_normal")
+
+
+def test_wrapped_normal_source_trains_and_samples():
+    torch.set_default_dtype(torch.float32)
+    try:
+        gen = _tiny_gen()
+        mu = _q(41, seed=3).float()
+        spec = FlowSpec(path="geodesic", source="wrapped_normal", source_sigma=0.25)
+        x1, e1 = _q(2, 5, 41, seed=4).float(), torch.randn(2, 5, 10)
+        mask = torch.ones(2, 5, dtype=torch.bool)
+        text, tpad = torch.randn(2, 4, 16), torch.zeros(2, 4, dtype=torch.bool)
+        loss, _ = flow_loss(gen, None, spec, x1, e1, mask, text, tpad, source_mean=mu)
+        assert torch.isfinite(loss)
+        rot, _, _ = sample(gen, None, spec, text, tpad, [5, 3], steps=3, source_mean=mu)
+        assert torch.allclose(rot.norm(dim=-1), torch.ones(2, 5, 41), atol=1e-5)
+    finally:
+        torch.set_default_dtype(torch.float64)

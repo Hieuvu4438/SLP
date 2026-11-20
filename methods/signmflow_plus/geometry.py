@@ -151,3 +151,14 @@ def uniform_hemisphere(shape, device=None, generator=None) -> torch.Tensor:
     """p0: uniform on S^3 restricted to the sign-convention hemisphere (App. D.1, Table 6)."""
     g = torch.randn(*shape, 4, device=device, generator=generator)
     return sign_convention(normalize(g))
+
+
+# --------------------------------------------------------------------------- source p0 (docs/proposal7 E6)
+def wrapped_normal(mean: torch.Tensor, sigma: float, shape, device=None, generator=None) -> torch.Tensor:
+    """x0 = Exp_mu(v), v ~ N(0, sigma^2 I) on T_mu S^3 (3-D isotropic), mu = mean [J,4]; shape = [..., J].
+
+    Samples are put in the sign convention of the data (same closed hemisphere as p_data)."""
+    mu = mean.to(device=device, dtype=torch.get_default_dtype()).expand(*shape, 4)
+    g = torch.randn(*shape, 4, device=device, generator=generator)
+    v = project(mu, g) * sigma
+    return sign_convention(normalize(expmap(mu, v)))

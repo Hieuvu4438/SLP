@@ -30,6 +30,8 @@ class FlowSpec:
     w_pose: float = 10.0
     w_expr: float = 0.1
     reduction: str = "sum"   # per-frame ||.||^2 summed over channels (Alg. 2) | "mean" over channels
+    source: str = "hemisphere"  # p0: hemisphere (paper) | wrapped_normal (E6, around the mean pose)
+    source_sigma: float = 0.5   # sigma0 of the wrapped normal (radians in the tangent space)
     shift: float = 1.0       # s of the geoshift path
     train_shift: float = 1.0  # SD3 shift of the training-time distribution (1 = uniform, paper)
 
@@ -39,6 +41,9 @@ class FlowSpec:
         assert self.path in PATHS, self.path
         assert self.prediction in ("target", "velocity")
         assert self.shift > 0 and self.train_shift > 0
+        assert self.source in ("hemisphere", "wrapped_normal")
+        if self.source != "hemisphere" and self.representation != "quat":
+            raise ValueError("the wrapped-normal source is defined on (S^3)^J only")
         if self.representation == "6d" and self.path != "linear":
             raise ValueError("6D rotations are Euclidean: only the linear path is defined")
 
@@ -68,9 +73,13 @@ def time_grid(steps: int, grid_power: float = 1.0, shift: float = 1.0) -> list[f
     return out
 
 
-def sample_source(spec: FlowSpec, shape, device, generator=None) -> torch.Tensor:
-    """x0 ~ p0 with shape [..., J] + rotation dim."""
+def sample_source(spec: FlowSpec, shape, device, generator=None, mean=None) -> torch.Tensor:
+    """x0 ~ p0 with shape [..., J] + rotation dim. ``mean`` [J,4]: centre of the wrapped normal (C8)."""
     if spec.representation == "quat":
+        if spec.source == "wrapped_normal":
+            if mean is None:
+                raise ValueError("the wrapped-normal source needs the mean pose (source_mean)")
+            return G.wrapped_normal(mean, spec.source_sigma, shape, device=device, generator=generator)
         return G.uniform_hemisphere(shape, device=device, generator=generator)
     return torch.randn(*shape, 6, device=device, generator=generator)
 
@@ -91,7 +100,7 @@ def _masked_mse(a, b, mask, reduction="sum", denom=None, joint_weights=None):
 
 
 def flow_loss(gen, corr: CorrectionNet | None, spec: FlowSpec, x1, e1, mask, text, text_pad, denom=None,
-              joint_weights=None, position_loss=None):
+              joint_weights=None, position_loss=None, source_mean=None):
     """Phase 1 of Alg. 2: 10 |x1 - x^1|^2 + 0.1 |e1 - e^1|^2 (target) or velocity regression.
 
     ``denom``: valid-frame count to normalise by (default: this batch's).
@@ -99,7 +108,7 @@ def flow_loss(gen, corr: CorrectionNet | None, spec: FlowSpec, x1, e1, mask, tex
     ``position_loss``: optional fk.PositionLoss on the predicted clean sample (C6, target only)."""
     B, T = x1.shape[:2]
     dev = x1.device
-    x0 = sample_source(spec, (B, T, x1.shape[2]), dev)
+    x0 = sample_source(spec, (B, T, x1.shape[2]), dev, mean=source_mean)
     e0 = torch.randn_like(e1)
     t = time_shift(torch.rand(B, device=dev), spec.train_shift)
     tt = t[:, None, None, None]
@@ -153,7 +162,7 @@ def guided(gen, x, e, tb, text, text_pad, pad, spec: FlowSpec, cfg_w: float):
 
 def sample(gen, corr: CorrectionNet | None, spec: FlowSpec, text, text_pad, lengths,
            steps: int = 5, n_joints: int = 41, expr_dim: int = 10, generator=None,
-           grid_power: float = 1.0, grid_shift: float = 1.0, cfg_w: float = 1.0):
+           grid_power: float = 1.0, grid_shift: float = 1.0, cfg_w: float = 1.0, source_mean=None):
     """Phase 2 of Alg. 2 (re-planned path-consistent transport) / Euler for velocity variants.
 
     ``grid_power`` / ``grid_shift`` change the time grid (``time_grid``); defaults = paper.
@@ -162,7 +171,7 @@ def sample(gen, corr: CorrectionNet | None, spec: FlowSpec, text, text_pad, leng
     B, T = len(lengths), int(max(lengths))
     dev = text.device
     mask = torch.arange(T, device=dev)[None] < torch.as_tensor(lengths, device=dev)[:, None]
-    x0 = sample_source(spec, (B, T, n_joints), dev, generator)
+    x0 = sample_source(spec, (B, T, n_joints), dev, generator, mean=source_mean)
     e = torch.randn(B, T, expr_dim, device=dev, generator=generator)
     x = x0
     grid = time_grid(steps, grid_power, grid_shift)

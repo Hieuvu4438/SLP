@@ -29,6 +29,8 @@ method:
     shift: 1.0                 # s of the geoshift path, kappa_s(t) = t / (t + s(1-t))
     train_shift: 1.0           # E2-F: training times t = kappa_s(u), u ~ U[0,1] (1 = paper)
     prediction: target         # target (Eq. 13) | velocity
+    source: hemisphere         # C8 / E6: p0 = hemisphere (paper) | wrapped_normal (around the mean pose)
+    source_sigma: 0.5          # sigma0 of the wrapped normal (E6: 0.25 | 0.5)
     w_pose: 10.0               # loss weight of the pose term (App. C.5)
     w_expr: 0.1                # loss weight of the expression term
     loss_reduction: sum        # ||.||^2 of Alg. 2 = sum over the 164 pose / 10 expression channels

@@ -80,8 +80,12 @@ def cosine_lambda(total_steps: int, warmup: int = 0):
 
 # ----------------------------------------------------------------------------- stage 2
 def train_correction(corr: CorrectionNet, measure: NaturalnessMeasure, dataset: MotionTextDataset,
-                     codec, hp: dict, device, log=print, ckpt: Path | None = None, metrics=None):
-    """Alg. 1: sample x0 ~ p0, x1 ~ p1, t ~ U[0,1]; minimise xdot^T G(x_t)^-1 xdot."""
+                     codec, hp: dict, device, log=print, ckpt: Path | None = None, metrics=None,
+                     sample_x0=None):
+    """Alg. 1: sample x0 ~ p0, x1 ~ p1, t ~ U[0,1]; minimise xdot^T G(x_t)^-1 xdot.
+
+    ``sample_x0(shape, device)``: the generator's source p0 (default: uniform hemisphere, paper)."""
+    sample_x0 = sample_x0 or (lambda shape, device: G.uniform_hemisphere(shape, device=device))
     corr.to(device).train()
     measure.to(device)
     bs, epochs = int(hp["batch_size"]), int(hp["epochs"])
@@ -107,7 +111,7 @@ def train_correction(corr: CorrectionNet, measure: NaturalnessMeasure, dataset: 
             B = feats.shape[0]
             seq_id = torch.arange(B, device=device)[:, None].expand_as(mask)[mask]
             t = torch.rand(B, device=device)[seq_id][:, None, None]  # one t per sequence
-            x0 = G.uniform_hemisphere(x1.shape[:2], device=device)
+            x0 = sample_x0(x1.shape[:2], device)
             if chunk is None:
                 xt, v = path_and_velocity("naturalness", x0, x1, t, corr)
                 loss = measure.quad_form(xt, v).sum(-1).mean()
@@ -140,15 +144,16 @@ def train_correction(corr: CorrectionNet, measure: NaturalnessMeasure, dataset: 
 
 
 @torch.no_grad()
-def geodesic_energy_gap(corr, measure, dataset, codec, device, n_batches=20, bs=8):
+def geodesic_energy_gap(corr, measure, dataset, codec, device, n_batches=20, bs=8, sample_x0=None):
     """Diagnostic: naturalness kinetic energy of the learned path vs. the plain geodesic."""
+    sample_x0 = sample_x0 or (lambda shape, device: G.uniform_hemisphere(shape, device=device))
     loader = DataLoader(dataset, batch_size=bs, shuffle=True, collate_fn=collate)
     tot = {"geodesic": 0.0, "naturalness": 0.0}
     for i, (feats, mask, _, _) in enumerate(loader):
         if i >= n_batches:
             break
         x1 = codec.encode(feats.to(device))[0][mask.to(device)]
-        x0 = G.uniform_hemisphere(x1.shape[:2], device=device)
+        x0 = sample_x0(x1.shape[:2], device)
         t = torch.rand(x1.shape[0], 1, 1, device=device)
         for kind in tot:
             with torch.enable_grad():
@@ -160,7 +165,7 @@ def geodesic_energy_gap(corr, measure, dataset, codec, device, n_batches=20, bs=
 # ----------------------------------------------------------------------------- stage 3
 def train_generator(gen, corr, spec: FlowSpec, dataset: MotionTextDataset, codec, hp: dict, device,
                     log=print, ckpt: Path | None = None, metrics=None, val_dataset=None, joint_weights=None,
-                    position_loss=None):
+                    position_loss=None, source_mean=None):
     rank, world = dist_info()
     gen.to(device).train()
     if corr is not None:
@@ -240,7 +245,8 @@ def train_generator(gen, corr, spec: FlowSpec, dataset: MotionTextDataset, codec
                     text, text_pad = gen.drop_text(text, text_pad, torch.rand(m.shape[0]) < p_uncond)
                 with ctx:
                     loss, parts = flow_loss(model, corr, spec, rot, expr, m, text, text_pad, denom=n_frames,
-                                            joint_weights=joint_weights, position_loss=position_loss)
+                                            joint_weights=joint_weights, position_loss=position_loss,
+                                            source_mean=source_mean)
                     share = m.shape[0] / B   # length loss is a per-sequence mean
                     l_len = gen.length_loss(gen.predict_log_length(l_len_text, l_len_pad), m.sum(1)) * share
                     ((loss + w_len * l_len) / accum).backward()
@@ -261,7 +267,8 @@ def train_generator(gen, corr, spec: FlowSpec, dataset: MotionTextDataset, codec
         msg["lr"] = sched.get_last_lr()[0]
         if val_dataset is not None and rank == 0 and ((ep + 1) % save_every == 0 or ep + 1 == epochs):
             msg.update(validation_loss(gen, corr, spec, val_dataset, codec, device, bs,
-                                       joint_weights=joint_weights, position_loss=position_loss))
+                                       joint_weights=joint_weights, position_loss=position_loss,
+                                       source_mean=source_mean))
         if rank == 0:
             log(f"generator epoch {ep + 1}/{epochs} " + " ".join(f"{k}={v:.4g}" for k, v in msg.items())
                 + f" ({time.time() - t0:.0f}s)")
@@ -288,7 +295,7 @@ def train_generator(gen, corr, spec: FlowSpec, dataset: MotionTextDataset, codec
 
 @torch.no_grad()
 def validation_loss(gen, corr, spec, dataset, codec, device, bs=64, max_batches=50, joint_weights=None,
-                    position_loss=None):
+                    position_loss=None, source_mean=None):
     """Flow loss on the validation split (monitoring only; never the reported metric)."""
     gen.eval()
     loader = DataLoader(dataset, batch_size=bs, shuffle=False, collate_fn=collate)
@@ -302,7 +309,7 @@ def validation_loss(gen, corr, spec, dataset, codec, device, bs=64, max_batches=
         rot, expr = codec.encode(feats)
         text, text_pad = gen.encode_text(texts, srcs, device)
         loss, _ = flow_loss(gen, corr, spec, rot, expr, mask, text, text_pad, joint_weights=joint_weights,
-                            position_loss=position_loss)
+                            position_loss=position_loss, source_mean=source_mean)
         tot += float(loss); n += 1
     torch.random.set_rng_state(g[0])
     if g[1] is not None:
