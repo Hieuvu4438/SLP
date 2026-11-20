@@ -212,6 +212,7 @@ def train_generator(gen, corr, spec: FlowSpec, dataset: MotionTextDataset, codec
         ema = EMA(gen, ema_decay)
     clip = hp.get("grad_clip")
     w_len = float(hp.get("length_loss_weight", 1.0))
+    p_uncond = float(hp.get("p_uncond") or 0.0)
     save_every = int(hp.get("save_every", 10))
     for ep in range(start, epochs):
         if sampler is not None:
@@ -233,11 +234,15 @@ def train_generator(gen, corr, spec: FlowSpec, dataset: MotionTextDataset, codec
                 text, text_pad = gen.encode_text(texts[s0:s0 + micro], srcs[s0:s0 + micro], device)
                 sync = last_of_step and s0 + micro >= B
                 ctx = model.no_sync() if (world > 1 and not sync) else contextlib.nullcontext()
+                # the length head always sees the real text (it is trained on detached features)
+                l_len_text, l_len_pad = text, text_pad
+                if p_uncond > 0:  # C7: text dropout for classifier-free guidance
+                    text, text_pad = gen.drop_text(text, text_pad, torch.rand(m.shape[0]) < p_uncond)
                 with ctx:
                     loss, parts = flow_loss(model, corr, spec, rot, expr, m, text, text_pad, denom=n_frames,
                                             joint_weights=joint_weights, position_loss=position_loss)
                     share = m.shape[0] / B   # length loss is a per-sequence mean
-                    l_len = gen.length_loss(gen.predict_log_length(text, text_pad), m.sum(1)) * share
+                    l_len = gen.length_loss(gen.predict_log_length(l_len_text, l_len_pad), m.sum(1)) * share
                     ((loss + w_len * l_len) / accum).backward()
                 acc["loss"] += float(loss.detach()); acc["loss_len"] += float(l_len.detach())
                 for k, v in parts.items():

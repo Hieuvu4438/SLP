@@ -114,7 +114,7 @@ class SignGenerator(nn.Module):
     def __init__(self, rot_dim: int = 4, n_joints: int = 41, expr_dim: int = 10, latent: int = 512,
                  layers: int = 8, heads: int = 8, ff: int = 2048, time_dim: int = 2048,
                  dropout: float = 0.1, max_frames: int = 400, text_model: str | None = None,
-                 text_max_len: int = 128, text_dim: int = 1024):
+                 text_max_len: int = 128, text_dim: int = 1024, null_text: bool = False):
         super().__init__()
         self.pose_dim = n_joints * rot_dim
         self.n_joints, self.rot_dim, self.expr_dim = n_joints, rot_dim, expr_dim
@@ -131,6 +131,20 @@ class SignGenerator(nn.Module):
         self.out = nn.Linear(latent, self.pose_dim + expr_dim)
         self.len_head = nn.Sequential(nn.Linear(text_dim, 512), nn.SiLU(), nn.Linear(512, 1))
         self.max_frames = max_frames
+        # C7: learned "no text" token for classifier-free guidance (only when trained with text dropout,
+        # so checkpoints of the paper configuration keep their exact parameter set)
+        self.null_text = nn.Parameter(torch.zeros(1, 1, text_dim)) if null_text else None
+
+    def drop_text(self, text, text_pad, drop):
+        """Replace the text of samples with drop[b] = True by the single null token."""
+        if self.null_text is None:
+            raise RuntimeError("the generator was built without a null-text token (generator.p_uncond = 0)")
+        drop = drop.to(text.device)
+        null = self.null_text.to(text.dtype).expand(text.shape[0], text.shape[1], -1)
+        text = torch.where(drop[:, None, None], null, text)
+        null_pad = torch.ones_like(text_pad)
+        null_pad[:, 0] = False  # one valid key: the null token
+        return text, torch.where(drop[:, None], null_pad, text_pad)
 
     def encode_text(self, texts, srcs, device):
         return self.text(texts, srcs, device)

@@ -82,7 +82,8 @@ class Method(BaseMethod):
                                  heads=g["heads"], ff=g["ff"], time_dim=g["time_dim"],
                                  dropout=g["dropout"], max_frames=g["max_frames"],
                                  text_model=str(_abs(g["text_model"])),
-                                 text_max_len=g.get("text_max_len", 128))
+                                 text_max_len=g.get("text_max_len", 128),
+                                 null_text=float(g.get("p_uncond") or 0.0) > 0)
         self.corr, self.measure = None, None
         self.log = self.ctx.logger.info
 
@@ -213,7 +214,8 @@ class Method(BaseMethod):
             rot, expr, mask = sample(self.gen, self.corr, self.spec, text, pad, L,
                                      steps=int(s["steps"]), generator=g,
                                      grid_power=float(s.get("grid_power", 1.0)),
-                                     grid_shift=float(s.get("shift", 1.0)))
+                                     grid_shift=float(s.get("shift", 1.0)),
+                                     cfg_w=float(s.get("cfg_w", 1.0)))
             feats = self.codec.decode(rot, expr).float().cpu().numpy()
             for j, i in enumerate(idx):
                 out[i] = feats[j, :L[j]]

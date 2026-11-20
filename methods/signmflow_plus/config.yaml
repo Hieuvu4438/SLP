@@ -79,6 +79,7 @@ method:
     warmup_steps: 0            # E3: 1000
     ema: 0.0                   # E3: 0.999 (0 = no EMA, paper); EMA state saved in generator.pt
     ema_eval: true             # sample with the EMA weights when ema > 0
+    p_uncond: 0.0              # C7 / E5: text dropout to a learned null token (0 = paper; E5: 0.1)
     grad_clip: null
     length_loss_weight: 1.0    # length head on detached text features (not in the paper)
     workers: 4
@@ -89,6 +90,7 @@ method:
     steps: 5                   # explicit Euler / re-planned transport, NFE = 5
     grid_power: 1.0            # E2-F inference axis: t_k = kappa_shift((k/N)^grid_power)
     shift: 1.0                 # SD3 shift of the sampler grid (1 = uniform grid, paper)
+    cfg_w: 1.0                 # C7 / E5: guidance weight (needs generator.p_uncond > 0); 1 = none
     batch_size: 64
     min_len: 40
     max_len: 400

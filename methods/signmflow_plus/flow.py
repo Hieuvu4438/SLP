@@ -131,12 +131,33 @@ def flow_loss(gen, corr: CorrectionNet | None, spec: FlowSpec, x1, e1, mask, tex
 
 
 @torch.no_grad()
+def guided(gen, x, e, tb, text, text_pad, pad, spec: FlowSpec, cfg_w: float):
+    """Network outputs with classifier-free guidance (C7 / E5).
+
+    Target prediction on the manifold: x^ = Exp_{x^u}(w Log_{x^u} x^c) per joint (geodesic
+    extrapolation from the unconditional towards the conditional clean estimate); Euclidean
+    outputs (6D, velocities, expression): u + w (c - u). w = 1 is the plain conditional model."""
+    pose, expr = gen(x, e, tb, text, text_pad, pad)
+    if cfg_w == 1.0:
+        return pose, expr
+    B = x.shape[0]
+    null, null_pad = gen.drop_text(text, text_pad, torch.ones(B, dtype=torch.bool))
+    pose_u, expr_u = gen(x, e, tb, null, null_pad, pad)
+    if spec.prediction == "target" and spec.on_manifold:
+        xc, xu = G.normalize(pose), G.normalize(pose_u)
+        pose = G.expmap(xu, cfg_w * G.logmap(xu, xc))
+    else:
+        pose = pose_u + cfg_w * (pose - pose_u)
+    return pose, expr_u + cfg_w * (expr - expr_u)
+
+
 def sample(gen, corr: CorrectionNet | None, spec: FlowSpec, text, text_pad, lengths,
            steps: int = 5, n_joints: int = 41, expr_dim: int = 10, generator=None,
-           grid_power: float = 1.0, grid_shift: float = 1.0):
+           grid_power: float = 1.0, grid_shift: float = 1.0, cfg_w: float = 1.0):
     """Phase 2 of Alg. 2 (re-planned path-consistent transport) / Euler for velocity variants.
 
     ``grid_power`` / ``grid_shift`` change the time grid (``time_grid``); defaults = paper.
+    ``cfg_w``: classifier-free guidance weight (1 = none; > 1 doubles the network calls).
     Returns rotations [B,T,J,D] and expressions [B,T,E] padded to max(lengths)."""
     B, T = len(lengths), int(max(lengths))
     dev = text.device
@@ -155,7 +176,7 @@ def sample(gen, corr: CorrectionNet | None, spec: FlowSpec, text, text_pad, leng
             tn = grid[k + 1]
             dt = tn - t
         tb = torch.full((B,), t, device=dev)
-        pose, expr = gen(x, e, tb, text, text_pad, ~mask)
+        pose, expr = guided(gen, x, e, tb, text, text_pad, ~mask, spec, cfg_w)
         s = torch.full((B, 1, 1, 1), tn, device=dev)
         if spec.prediction == "target":
             x1_hat = G.normalize(pose) if spec.on_manifold else pose
