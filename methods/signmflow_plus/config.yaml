@@ -25,6 +25,9 @@ method:
   flow:
     representation: quat       # quat (MR) | 6d (baseline)
     path: naturalness          # naturalness (GE+NG) | geodesic (GE) | linear (CFM)
+                               # | geoshift | ng_parallel | linear_renorm   (docs/proposal7 E1, E1-lin)
+    shift: 1.0                 # s of the geoshift path, kappa_s(t) = t / (t + s(1-t))
+    train_shift: 1.0           # E2-F: training times t = kappa_s(u), u ~ U[0,1] (1 = paper)
     prediction: target         # target (Eq. 13) | velocity
     w_pose: 10.0               # loss weight of the pose term (App. C.5)
     w_expr: 0.1                # loss weight of the expression term
@@ -76,6 +79,8 @@ method:
 
   sampler:
     steps: 5                   # explicit Euler / re-planned transport, NFE = 5
+    grid_power: 1.0            # E2-F inference axis: t_k = kappa_shift((k/N)^grid_power)
+    shift: 1.0                 # SD3 shift of the sampler grid (1 = uniform grid, paper)
     batch_size: 64
     min_len: 40
     max_len: 400

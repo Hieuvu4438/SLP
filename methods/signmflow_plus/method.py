@@ -2,7 +2,7 @@
 
 fit(train, val):
     1. cache the training motions; MotionCodec -> sign-aligned quaternions on (S^3)^41
-    2. prototypes  : per-joint K-means, K=500 (App. C.2)          [path == naturalness]
+    2. prototypes  : per-joint K-means, K=500 (App. C.2)   [path in naturalness, ng_parallel]
     3. correction  : eps_theta by the naturalness kinetic energy (Alg. 1)
     4. generator   : phi with the target-prediction objective along the frozen path (Alg. 2)
 predict(inputs):
@@ -52,7 +52,8 @@ class Method(BaseMethod):
             self.device = torch.device("cuda", int(os.environ.get("LOCAL_RANK", 0)))
         f = hp["flow"]
         self.spec = FlowSpec(f["representation"], f["path"], f["prediction"],
-                             float(f["w_pose"]), float(f["w_expr"]), f.get("loss_reduction", "sum"))
+                             float(f["w_pose"]), float(f["w_expr"]), f.get("loss_reduction", "sum"),
+                             shift=float(f.get("shift", 1.0)), train_shift=float(f.get("train_shift", 1.0)))
         mean, std = load_stats(str(_abs(self.cfg["data"]["stats"])))
         hand_mean = load_hand_mean(_abs(hp["smplx_dir"])) if hp.get("add_hand_mean", True) else None
         self.codec = MotionCodec(mean, std, hand_mean, self.spec.representation)
@@ -98,7 +99,7 @@ class Method(BaseMethod):
             train_ds.items, val_ds.items = train_ds.items[:n], val_ds.items[:n]
         self.log(f"SignNMFlow {self.spec} train={len(train_ds)} val={len(val_ds)}")
 
-        if self.spec.path == "naturalness":
+        if self.spec.needs_correction:  # naturalness / ng_parallel: stages 1-2
             m = hp["measure"]
             p_init = self._init_path("prototypes")
             if p_init is not None:
@@ -184,7 +185,9 @@ class Method(BaseMethod):
             text, pad = self.gen.encode_text([texts[i] for i in idx], [srcs[i] for i in idx], dev)
             L = [lengths[i] for i in idx]
             rot, expr, mask = sample(self.gen, self.corr, self.spec, text, pad, L,
-                                     steps=int(s["steps"]), generator=g)
+                                     steps=int(s["steps"]), generator=g,
+                                     grid_power=float(s.get("grid_power", 1.0)),
+                                     grid_shift=float(s.get("shift", 1.0)))
             feats = self.codec.decode(rot, expr).float().cpu().numpy()
             for j, i in enumerate(idx):
                 out[i] = feats[j, :L[j]]
@@ -203,7 +206,7 @@ class Method(BaseMethod):
     def load(self, ckpt_dir) -> None:
         self._setup()
         ck = Path(ckpt_dir)
-        if (ck / "prototypes.pt").exists() and self.spec.path == "naturalness":
+        if (ck / "prototypes.pt").exists() and self.spec.needs_correction:
             st = torch.load(ck / "prototypes.pt", map_location="cpu", weights_only=False)
             m = self.hparams["measure"]
             self.measure = NaturalnessMeasure(st["protos"], st["weights"], m["sigma"], m["rho"]).to(self.device)
