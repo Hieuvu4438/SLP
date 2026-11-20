@@ -238,6 +238,149 @@ soke_dtw_pa_jpe_hand = _soke("pa", "hand")
 soke_dtw_pa_jpe_body_ua = _soke("pa", "body_ua")
 
 
+# ---------------------------------------------------------------------------
+# Calibration metrics for DTW-based SLP evaluation (docs/proposal7, M1-M2 + statistics)
+#
+# DTW-JPE rewards regression to the mean pose (shrinking a prediction towards the mean improves
+# it), so every DTW comparison is reported with:
+#   M2  kinematic ratios: predicted / reference low-pass speed and acceleration of the evaluated
+#       points (body: 12 upper-body points relative to the pelvis; hands: 2 x 21 wrist-relative
+#       points), after a Gaussian temporal low-pass that removes the fitting jitter of the GT;
+#   M1  text-motion retrieval (R-precision in batches of 32, Frechet distance) on the embeddings
+#       of an evaluator trained on the train split;
+#   a matched-speed comparison against the "shrink-to-mean" frontier of a reference model, with
+#       paired bootstrap confidence intervals over sequences.
+# ---------------------------------------------------------------------------
+
+
+def lowpass_kinematics(points, sigma: float = 2.0) -> tuple[float, float]:
+    """Mean speed |dp| and acceleration |d^2 p| per frame of points [T,P,3] after a Gaussian
+    temporal low-pass (std ``sigma`` frames, 'nearest' borders). Units of the input per frame."""
+    from scipy.ndimage import gaussian_filter1d
+
+    x = np.asarray(points, dtype=np.float64)
+    if sigma > 0 and len(x) > 1:
+        x = gaussian_filter1d(x, sigma, axis=0, mode="nearest")
+    v = np.diff(x, axis=0)
+    speed = float(np.linalg.norm(v, axis=-1).mean()) if len(v) else 0.0
+    a = np.diff(v, axis=0)
+    accel = float(np.linalg.norm(a, axis=-1).mean()) if len(a) else 0.0
+    return speed, accel
+
+
+_KIN_CACHE: dict = {}
+
+
+def soke_kinematics(seqs, sigma: float = 2.0) -> dict[str, np.ndarray]:
+    """Per-sequence low-pass speed / acceleration (metres per frame) of normalised 133-D sequences:
+    {body,hand}_{speed,accel}. Body: UPPER_BODY_IDX relative to the pelvis; hand: both hands
+    relative to their wrists (SOKE hand regressor). Cached for the last sequence list."""
+    key = (id(seqs), float(sigma))
+    hit = _KIN_CACHE.get(key)
+    if hit is not None and hit[0] is seqs:
+        return hit[1]
+    from slp.evaluation.smplx_fk import UPPER_BODY_IDX, default_fk
+
+    fk = default_fk()
+    out = {k: [] for k in ("body_speed", "body_accel", "hand_speed", "hand_accel")}
+    for x in seqs:
+        j, l, r = (a.cpu().numpy() for a in fk(np.asarray(x)))
+        body = j[:, UPPER_BODY_IDX] - j[:, :1]
+        hand = np.concatenate([l - l[:, :1], r - r[:, :1]], 1)
+        for part, pts in (("body", body), ("hand", hand)):
+            sp, ac = lowpass_kinematics(pts, sigma)
+            out[f"{part}_speed"].append(sp)
+            out[f"{part}_accel"].append(ac)
+    res = {k: np.asarray(v) for k, v in out.items()}
+    if len(_KIN_CACHE) > 4:
+        _KIN_CACHE.clear()
+    _KIN_CACHE[key] = (seqs, res)
+    return res
+
+
+def _kin_ratio(stat: str) -> Callable:
+    def fn(preds, targets) -> float:
+        """Predicted / reference mean (M2); 1 = reference dynamics, < 1 = damped (mean regression)."""
+        return float(soke_kinematics(preds)[stat].mean() / max(soke_kinematics(targets)[stat].mean(), 1e-12))
+    fn.__name__ = f"soke_{stat.split('_')[1]}_ratio_{stat.split('_')[0]}"
+    return fn
+
+
+soke_speed_ratio_body = _kin_ratio("body_speed")
+soke_speed_ratio_hand = _kin_ratio("hand_speed")
+soke_accel_ratio_body = _kin_ratio("body_accel")
+soke_accel_ratio_hand = _kin_ratio("hand_accel")
+
+
+def r_precision(text_emb, motion_emb, top_k=(1, 2, 3), batch: int = 32, seed: int = 0) -> dict[str, float]:
+    """Text-to-motion R-precision (T2M protocol): pairs are shuffled into batches of ``batch``;
+    within a batch every text ranks the batch's motions by Euclidean distance between L2-normalised
+    embeddings; R@k = fraction whose own motion is in the top k. The last incomplete batch is dropped."""
+    t = np.asarray(text_emb, dtype=np.float64)
+    m = np.asarray(motion_emb, dtype=np.float64)
+    if t.shape != m.shape or len(t) < batch:
+        raise ValueError(f"need paired embeddings with at least {batch} rows, got {t.shape} / {m.shape}")
+    t = t / np.linalg.norm(t, axis=1, keepdims=True).clip(1e-12)
+    m = m / np.linalg.norm(m, axis=1, keepdims=True).clip(1e-12)
+    idx = np.random.default_rng(seed).permutation(len(t))
+    hits = {k: 0 for k in top_k}
+    n = 0
+    for s in range(0, len(idx) - batch + 1, batch):
+        b = idx[s:s + batch]
+        d = np.linalg.norm(t[b][:, None] - m[b][None], axis=-1)
+        rank = (d < np.diag(d)[:, None]).sum(1)  # motions strictly closer than the paired one
+        for k in top_k:
+            hits[k] += int((rank < k).sum())
+        n += batch
+    return {f"R@{k}": hits[k] / n for k in top_k}
+
+
+def frechet_distance(feats_a, feats_b) -> float:
+    """Frechet distance between Gaussians fitted to two embedding sets [N,D] (FID formula)."""
+    from scipy import linalg
+
+    a, b = np.asarray(feats_a, np.float64), np.asarray(feats_b, np.float64)
+    mu_a, mu_b = a.mean(0), b.mean(0)
+    ca, cb = np.cov(a, rowvar=False), np.cov(b, rowvar=False)
+    covmean, _ = linalg.sqrtm(ca @ cb, disp=False)
+    if not np.isfinite(covmean).all():
+        off = np.eye(len(ca)) * 1e-6
+        covmean = linalg.sqrtm((ca + off) @ (cb + off))
+    covmean = covmean.real
+    return float(((mu_a - mu_b) ** 2).sum() + np.trace(ca) + np.trace(cb) - 2 * np.trace(covmean))
+
+
+def paired_bootstrap_ci(diff, n_boot: int = 4000, alpha: float = 0.05, seed: int = 0) -> tuple[float, float, float]:
+    """Mean of per-sequence paired differences and its percentile bootstrap (1 - alpha) interval."""
+    d = np.asarray(diff, dtype=np.float64)
+    rng = np.random.default_rng(seed)
+    boots = d[rng.integers(0, len(d), (n_boot, len(d)))].mean(1)
+    return float(d.mean()), float(np.percentile(boots, 100 * alpha / 2)), float(np.percentile(boots, 100 * (1 - alpha / 2)))
+
+
+def frontier_effect(arm_scores, arm_speed: float, frontier_scores, frontier_speeds) -> tuple[np.ndarray, bool]:
+    """Matched-speed effect of an arm against a reference "shrink-to-mean" frontier.
+
+    frontier_scores [A,N]: per-sequence DTW scores of the reference shrunk by a_1 < ... < a_A;
+    frontier_speeds [A]: their dataset speeds (decreasing). The frontier is interpolated linearly at
+    the arm's speed (same weights for every sequence) and the per-sequence effect
+    arm - frontier(arm_speed) is returned (< 0: better than mere shrinkage). An arm faster than the
+    unshrunk reference is compared with the reference itself (conservative) and slower than the
+    most-shrunk point with that point; the flag says whether such clamping happened."""
+    F = np.asarray(frontier_scores, dtype=np.float64)
+    v = np.asarray(frontier_speeds, dtype=np.float64)
+    if F.ndim != 2 or F.shape[0] != len(v) or len(v) < 2:
+        raise ValueError("frontier_scores must be [A,N] with A = len(frontier_speeds) >= 2")
+    order = np.argsort(v)  # increasing speed
+    v, F = v[order], F[order]
+    clamped = not (v[0] <= arm_speed <= v[-1])
+    s = float(np.clip(arm_speed, v[0], v[-1]))
+    i = int(np.clip(np.searchsorted(v, s, side="right") - 1, 0, len(v) - 2))
+    lam = 0.0 if v[i + 1] == v[i] else (s - v[i]) / (v[i + 1] - v[i])
+    front = (1 - lam) * F[i] + lam * F[i + 1]
+    return np.asarray(arm_scores, dtype=np.float64) - front, clamped
+
+
 METRICS: dict[str, Callable] = {
     "accuracy": accuracy,
     "macro_f1": macro_f1,
@@ -252,4 +395,8 @@ METRICS: dict[str, Callable] = {
     "soke_dtw_pa_jpe_body": soke_dtw_pa_jpe_body,
     "soke_dtw_pa_jpe_hand": soke_dtw_pa_jpe_hand,
     "soke_dtw_pa_jpe_body_ua": soke_dtw_pa_jpe_body_ua,
+    "soke_speed_ratio_body": soke_speed_ratio_body,
+    "soke_speed_ratio_hand": soke_speed_ratio_hand,
+    "soke_accel_ratio_body": soke_accel_ratio_body,
+    "soke_accel_ratio_hand": soke_accel_ratio_hand,
 }

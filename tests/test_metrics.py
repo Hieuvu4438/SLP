@@ -167,3 +167,74 @@ def test_soke_pa_body_upper_aligned_bounded_by_root_aligned():
     noisy = [g + rng.normal(scale=0.5, size=g.shape).astype(np.float32) for g in gt]
     r = evaluate(noisy, gt, ["soke_dtw_jpe_body", "soke_dtw_pa_jpe_body_ua"])
     assert 0 < r["soke_dtw_pa_jpe_body_ua"] <= r["soke_dtw_jpe_body"] + 1e-9
+
+
+# ------------------------------------------------ calibration metrics (docs/proposal7 M1/M2)
+from slp.evaluation.metrics import (  # noqa: E402
+    frechet_distance, frontier_effect, lowpass_kinematics, paired_bootstrap_ci, r_precision)
+
+
+def test_lowpass_kinematics_constant_velocity_and_static():
+    T = 300
+    v = np.array([0.01, -0.02, 0.005])
+    pts = (np.arange(T)[:, None, None] * v[None, None]).repeat(4, 1)  # [T,4,3]
+    sp, ac = lowpass_kinematics(pts, sigma=2.0)
+    assert sp == pytest.approx(np.linalg.norm(v), rel=0.02)  # borders flatten only a few frames
+    assert ac < 0.05 * np.linalg.norm(v)
+    assert lowpass_kinematics(np.ones((50, 3, 3)), 2.0) == (0.0, 0.0)
+    # the low-pass removes frame-level jitter: raw speed of white noise >> filtered speed
+    noise = np.random.default_rng(0).normal(scale=0.01, size=(400, 5, 3))
+    assert lowpass_kinematics(noise, 2.0)[0] < 0.3 * lowpass_kinematics(noise, 0.0)[0]
+
+
+def test_r_precision_perfect_and_chance():
+    rng = np.random.default_rng(0)
+    e = rng.normal(size=(320, 16))
+    r = r_precision(e, e)
+    assert r["R@1"] == 1.0 and r["R@3"] == 1.0
+    chance = r_precision(e, rng.normal(size=(320, 16)))
+    assert chance["R@1"] < 0.12 and chance["R@3"] < 0.25  # 1/32 and 3/32 in expectation
+    with pytest.raises(ValueError):
+        r_precision(e[:10], e[:10])
+
+
+def test_frechet_distance_known_values():
+    rng = np.random.default_rng(0)
+    a = rng.normal(size=(5000, 4))
+    assert frechet_distance(a, a) == pytest.approx(0.0, abs=1e-6)
+    shift = np.array([1.0, 0, 0, 0])
+    assert frechet_distance(a, a + shift) == pytest.approx(1.0, abs=1e-6)  # covariance unchanged
+    assert frechet_distance(a, 2 * a) == pytest.approx(4 * 1.0, rel=0.05)  # tr(C) + tr(4C) - 2 tr(2C) = tr(C)
+
+
+def test_paired_bootstrap_ci():
+    m, lo, hi = paired_bootstrap_ci(np.full(100, -0.2))
+    assert m == lo == hi == pytest.approx(-0.2)
+    d = np.random.default_rng(1).normal(loc=0.5, scale=1.0, size=400)
+    m, lo, hi = paired_bootstrap_ci(d)
+    assert lo < m < hi and lo > 0.3 and hi < 0.7
+
+
+def test_frontier_effect_interpolates_at_matched_speed():
+    # reference shrunk by a = 0, 0.1, 0.2: speeds 3, 2, 1 ; per-sequence scores (2 sequences)
+    F = np.array([[10.0, 20.0], [9.0, 18.0], [8.5, 17.0]])
+    speeds = np.array([3.0, 2.0, 1.0])
+    eff, clamped = frontier_effect([8.0, 18.0], 1.5, F, speeds)  # halfway between a=0.1 and a=0.2
+    assert not clamped and np.allclose(eff, [8.0 - 8.75, 18.0 - 17.5])
+    eff, clamped = frontier_effect([9.0, 21.0], 3.5, F, speeds)  # faster than the reference
+    assert clamped and np.allclose(eff, [-1.0, 1.0])
+    with pytest.raises(ValueError):
+        frontier_effect([1.0], 1.0, F[:1], speeds[:1])
+
+
+@pytest.mark.skipif(not _has_smplx(), reason="licensed SMPL-X model / SOKE stats not available")
+def test_kinematic_ratio_metrics():
+    from slp.evaluation import evaluate
+
+    rng = np.random.default_rng(2)
+    base = np.cumsum(rng.normal(scale=0.05, size=(2, 60, 133)), 1).astype(np.float32)
+    gt = [b for b in base]
+    names = ["soke_speed_ratio_body", "soke_speed_ratio_hand", "soke_accel_ratio_body", "soke_accel_ratio_hand"]
+    assert all(v == pytest.approx(1.0) for v in evaluate(gt, gt, names).values())
+    still = [np.repeat(g[:1], len(g), 0) for g in gt]  # frozen pose: no motion at all
+    assert all(v == pytest.approx(0.0, abs=1e-9) for v in evaluate(still, gt, names).values())
