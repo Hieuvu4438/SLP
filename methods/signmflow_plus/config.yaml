@@ -33,6 +33,8 @@ method:
     w_expr: 0.1                # loss weight of the expression term
     loss_reduction: sum        # ||.||^2 of Alg. 2 = sum over the 164 pose / 10 expression channels
                                # per frame, mean over valid frames ("mean": per-channel average)
+    joint_weights: uniform     # C5 / E4-c: uniform (paper) | lever_arm (levers.py, mean 1)
+    joint_weights_floor: 0.1   # lever_arm: minimum weight as a fraction of the mean (jaw)
 
   measure:                     # motion naturalness measure (Sec. 3.2, Table 4)
     K: 500

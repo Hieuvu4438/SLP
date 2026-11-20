@@ -75,21 +75,27 @@ def sample_source(spec: FlowSpec, shape, device, generator=None) -> torch.Tensor
     return torch.randn(*shape, 6, device=device, generator=generator)
 
 
-def _masked_mse(a, b, mask, reduction="sum", denom=None):
+def _masked_mse(a, b, mask, reduction="sum", denom=None, joint_weights=None):
     """Per-frame squared error (summed or averaged over channels), averaged over valid frames.
 
     mask [B,T] True = valid. ``denom`` (number of valid frames) defaults to mask.sum(); passing the
-    frame count of a larger batch makes micro-batch losses add up to that batch's loss exactly."""
-    d = ((a - b) ** 2).flatten(2)
+    frame count of a larger batch makes micro-batch losses add up to that batch's loss exactly.
+    ``joint_weights`` [J] (mean 1, C5) multiplies each joint's squared error (a, b: [B,T,J,D])."""
+    d = (a - b) ** 2
+    if joint_weights is not None:
+        d = d * joint_weights.to(d)[:, None]
+    d = d.flatten(2)
     se = d.sum(-1) if reduction == "sum" else d.mean(-1)
     n = mask.sum().clamp_min(1) if denom is None else denom
     return (se * mask).sum() / n
 
 
-def flow_loss(gen, corr: CorrectionNet | None, spec: FlowSpec, x1, e1, mask, text, text_pad, denom=None):
+def flow_loss(gen, corr: CorrectionNet | None, spec: FlowSpec, x1, e1, mask, text, text_pad, denom=None,
+              joint_weights=None):
     """Phase 1 of Alg. 2: 10 |x1 - x^1|^2 + 0.1 |e1 - e^1|^2 (target) or velocity regression.
 
-    ``denom``: valid-frame count to normalise by (default: this batch's)."""
+    ``denom``: valid-frame count to normalise by (default: this batch's).
+    ``joint_weights``: optional [J] weights of the pose term (C5, levers.py)."""
     B, T = x1.shape[:2]
     dev = x1.device
     x0 = sample_source(spec, (B, T, x1.shape[2]), dev)
@@ -108,11 +114,11 @@ def flow_loss(gen, corr: CorrectionNet | None, spec: FlowSpec, x1, e1, mask, tex
     pose, expr = gen(x_t, e_t, t, text, text_pad, ~mask)
     if spec.prediction == "target":
         x_hat = G.normalize(pose) if spec.on_manifold else pose
-        lp = _masked_mse(x_hat, x1, mask, spec.reduction, denom)
+        lp = _masked_mse(x_hat, x1, mask, spec.reduction, denom, joint_weights)
         le = _masked_mse(expr, e1, mask, spec.reduction, denom)
     else:
         v = G.project(x_t, pose) if spec.renormalise else pose
-        lp = _masked_mse(v, u_t, mask, spec.reduction, denom)
+        lp = _masked_mse(v, u_t, mask, spec.reduction, denom, joint_weights)
         le = _masked_mse(expr, e1 - e0, mask, spec.reduction, denom)
     return spec.w_pose * lp + spec.w_expr * le, {"loss_pose": lp.detach(), "loss_expr": le.detach()}
 

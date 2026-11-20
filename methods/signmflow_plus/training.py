@@ -159,7 +159,7 @@ def geodesic_energy_gap(corr, measure, dataset, codec, device, n_batches=20, bs=
 
 # ----------------------------------------------------------------------------- stage 3
 def train_generator(gen, corr, spec: FlowSpec, dataset: MotionTextDataset, codec, hp: dict, device,
-                    log=print, ckpt: Path | None = None, metrics=None, val_dataset=None):
+                    log=print, ckpt: Path | None = None, metrics=None, val_dataset=None, joint_weights=None):
     rank, world = dist_info()
     gen.to(device).train()
     if corr is not None:
@@ -233,7 +233,8 @@ def train_generator(gen, corr, spec: FlowSpec, dataset: MotionTextDataset, codec
                 sync = last_of_step and s0 + micro >= B
                 ctx = model.no_sync() if (world > 1 and not sync) else contextlib.nullcontext()
                 with ctx:
-                    loss, parts = flow_loss(model, corr, spec, rot, expr, m, text, text_pad, denom=n_frames)
+                    loss, parts = flow_loss(model, corr, spec, rot, expr, m, text, text_pad, denom=n_frames,
+                                            joint_weights=joint_weights)
                     share = m.shape[0] / B   # length loss is a per-sequence mean
                     l_len = gen.length_loss(gen.predict_log_length(text, text_pad), m.sum(1)) * share
                     ((loss + w_len * l_len) / accum).backward()
@@ -252,7 +253,8 @@ def train_generator(gen, corr, spec: FlowSpec, dataset: MotionTextDataset, codec
         msg = {k: v / max(1, nb) for k, v in acc.items()}
         msg["lr"] = sched.get_last_lr()[0]
         if val_dataset is not None and rank == 0 and ((ep + 1) % save_every == 0 or ep + 1 == epochs):
-            msg.update(validation_loss(gen, corr, spec, val_dataset, codec, device, bs))
+            msg.update(validation_loss(gen, corr, spec, val_dataset, codec, device, bs,
+                                       joint_weights=joint_weights))
         if rank == 0:
             log(f"generator epoch {ep + 1}/{epochs} " + " ".join(f"{k}={v:.4g}" for k, v in msg.items())
                 + f" ({time.time() - t0:.0f}s)")
@@ -278,7 +280,7 @@ def train_generator(gen, corr, spec: FlowSpec, dataset: MotionTextDataset, codec
 
 
 @torch.no_grad()
-def validation_loss(gen, corr, spec, dataset, codec, device, bs=64, max_batches=50):
+def validation_loss(gen, corr, spec, dataset, codec, device, bs=64, max_batches=50, joint_weights=None):
     """Flow loss on the validation split (monitoring only; never the reported metric)."""
     gen.eval()
     loader = DataLoader(dataset, batch_size=bs, shuffle=False, collate_fn=collate)
@@ -291,7 +293,7 @@ def validation_loss(gen, corr, spec, dataset, codec, device, bs=64, max_batches=
         feats, mask = feats.to(device), mask.to(device)
         rot, expr = codec.encode(feats)
         text, text_pad = gen.encode_text(texts, srcs, device)
-        loss, _ = flow_loss(gen, corr, spec, rot, expr, mask, text, text_pad)
+        loss, _ = flow_loss(gen, corr, spec, rot, expr, mask, text, text_pad, joint_weights=joint_weights)
         tot += float(loss); n += 1
     torch.random.set_rng_state(g[0])
     if g[1] is not None:

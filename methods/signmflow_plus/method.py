@@ -178,7 +178,7 @@ class Method(BaseMethod):
                 self.log(f"generator: resuming from {rf}")
             train_generator(self.gen, self.corr, self.spec, train_ds, self.codec, hp["generator"], dev,
                             log=self.log, ckpt=ck / "generator.pt", metrics=self.ctx.log_metrics,
-                            val_dataset=val_ds)
+                            val_dataset=val_ds, joint_weights=self._joint_weights())
         n = sum(p.numel() for p in self.gen.parameters())
         self.log(f"generator parameters: {n / 1e6:.2f}M")
 
@@ -230,6 +230,23 @@ class Method(BaseMethod):
         out = read_lengths(path, [x["name"] for x in inputs], int(self.hparams["generator"]["max_frames"]))
         self.log(f"fixed lengths from {path} (mean {np.mean(out):.1f} frames)")
         return out
+
+    def _joint_weights(self):
+        """C5: per-joint weights of the pose loss (None = uniform, paper)."""
+        f = self.hparams["flow"]
+        kind = f.get("joint_weights")
+        if not kind or kind == "uniform":
+            return None
+        if kind != "lever_arm":
+            raise ValueError(f"flow.joint_weights={kind!r}: expected uniform | lever_arm")
+        if not self.hparams.get("add_hand_mean", True):
+            raise ValueError("lever_arm weights assume physical rotations (add_hand_mean: true)")
+        from .levers import SMPLX_OF_ROT, soke_lever_arm_weights
+
+        w = torch.from_numpy(soke_lever_arm_weights(float(f.get("joint_weights_floor", 0.1))))
+        torch.save({"weights": w, "smplx_joint": SMPLX_OF_ROT}, self.ctx.ckpt_dir / "joint_weights.pt")
+        self.log("lever-arm joint weights: " + " ".join(f"{x:.2f}" for x in w.tolist()))
+        return w.to(self.device)
 
     def _generator_weights(self, st: dict) -> dict:
         """EMA weights when the run trained with EMA (generator.ema > 0, ema_eval), else raw ones."""
