@@ -1,0 +1,120 @@
+# Controlled experiments around SignNMFlow v2. Defaults form the B0 control.
+data:
+  name: csl_smplx
+
+eval:
+  metrics: [soke_dtw_jpe_body, soke_dtw_jpe_hand, soke_dtw_pa_jpe_body,
+            soke_dtw_pa_jpe_hand, soke_dtw_pa_jpe_body_ua]
+  primary_metric: soke_dtw_pa_jpe_hand
+  higher_is_better: false
+
+train:
+  deterministic: false
+
+method:
+  device: cuda
+  smplx_dir: third_party/SOKE/deps/smpl_models
+  add_hand_mean: true
+  cache_dir: outputs/signmflow_kinematic/cache
+  cache_workers: 4
+  debug_limit: null
+  fps: {phoenix: 25.0, csl: 30.0, how2sign: 24.0}
+
+  init:
+    legacy_signmflow: false
+    prototypes: null
+    correction: null
+    generator: null
+    warm_start: null
+
+  flow:
+    representation: quat
+    path: naturalness
+    prediction: target
+    w_pose: 10.0
+    w_expr: 0.1
+    loss_reduction: sum
+    endpoint_loss: lift
+    input_rotation: raw
+    source_ar: 0.0
+    coupling: independent
+    position_weight: 0.0
+    velocity_weight: 0.0
+    aux_min_t: 0.0
+    huber_delta: 1.0
+    w_jaw: 0.0
+
+  supervision:
+    groups: {body: 1.0, wrist: 1.0, fingers: 1.0, palm: 0.0}
+
+  measure:
+    kind: legacy_ng
+    K: 500
+    sigma: 0.5
+    rho: 1.0e-6
+    kmeans_iters: 300
+    kmeans_tol: 1.0e-4
+    max_frames: null
+    density_sigma_rad: 1.0
+    density_power: 1.0
+    density_bounds: [0.5, 2.0]
+    fk_groups: {body: 1.0, wrist: 1.0, fingers: 1.0, palm: 1.0}
+    fk_base: 0.1
+    fk_strength: 1.0
+    jacobian_chunk: 8
+
+  correction:
+    hidden: 512
+    layers: 3
+    batch_size: 8
+    epochs: 100
+    lr: 2.0e-4
+    weight_decay: 0.0
+    workers: 4
+    frame_chunk: 64
+    max_angle: null
+    grad_clip: null
+    diagnostic_frames: 32
+    resume_from: null
+
+  generator:
+    latent: 512
+    layers: 8
+    heads: 8
+    ff: 2048
+    time_dim: 2048
+    dropout: 0.1
+    max_frames: 400
+    text_model: third_party/SOKE/deps/mbart-h2s-csl-phoenix
+    text_max_len: 128
+    batch_size: 64
+    micro_batch: 16
+    effective_batch: 256
+    epochs: 300
+    lr: 2.0e-4
+    text_lr: 2.0e-4
+    freeze_text: false
+    weight_decay: 0.0
+    warmup_steps: 0
+    grad_clip: null
+    length_loss_weight: 1.0
+    coarse_stride: 0
+    coarse_loss_weight: 0.1
+    probe_gradients: false
+    length_mode: baseline
+    length_quantiles: [0.1, 0.5, 0.9]
+    workers: 4
+    save_every: 50
+    validation_batches: 50
+    resume_from: null
+
+  sampler:
+    steps: 5
+    time_grid: null
+    expression_update: current
+    noise: clip
+    diagnostics: true
+    seed: null
+    batch_size: 64
+    min_len: 40
+    max_len: 400
