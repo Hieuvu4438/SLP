@@ -142,3 +142,23 @@ def test_sampler_exact_nfe_and_stage_seeds(nfe):
     assert len(calls) == nfe
     torch.testing.assert_close(torch.stack(calls)[:, 0], torch.arange(nfe) / nfe)
     assert (clean[mask] == 1).all() and (clean[~mask] == 0).all()
+
+
+def test_fine_endpoint_keeps_equal_wrist_and_finger_weights_under_missingness():
+    from methods.slp_multirate.flow import fine_objective
+
+    cfg = resolve("p0")
+    weights = cfg["loss"] | {name: 0. for name in (
+        "fingertip_fk", "wrist_fk", "palm_chordal", "velocity_fk", "contact")}
+    pred = torch.zeros(2, 1, 204)
+    obs = torch.zeros_like(pred, dtype=torch.bool)
+    pred[:, :, :6] = 2
+    pred[0, :, 6:12] = 4
+    obs[:, :, :6] = True
+    obs[0, :, 6:12] = True
+    loss, report = fine_objective(pred, torch.zeros_like(pred), obs,
+                                  {"frame_mask": torch.ones(2, 1, dtype=torch.bool)},
+                                  None, None, None, None, torch.zeros(2), weights, cfg["fine"])
+    assert loss == 10.
+    assert report["wrist_endpoint"] == 4 and report["wrist_endpoint_n"] == 2
+    assert report["finger_endpoint"] == 16 and report["finger_endpoint_n"] == 1

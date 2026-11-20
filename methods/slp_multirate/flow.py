@@ -92,9 +92,11 @@ def anchor_loss(pred, target, lengths):
                                      slots[:, 1:] & slots[:, :-1])
     difference = smooth(pred.payload - target.payload)
     groups = ((0, 3), (3, 9), (9, 24))
-    scores, present = zip(*(per_clip_mean(difference[..., p:q], target.feature[..., p:q] &
-                                         slots[..., None, None]) for p, q in groups))
-    payload, payload_n = masked_mean(torch.stack(scores, -1), torch.stack(present, -1))
+    scores, counts = zip(*(masked_mean(difference[..., p:q], target.feature[..., p:q] &
+                                        slots[..., None, None]) for p, q in groups))
+    groups_seen = torch.stack(counts) > 0
+    payload = torch.stack(scores).sum() / groups_seen.sum().clamp_min(1)
+    payload_n = (target.feature & slots[..., None, None]).flatten(1).any(-1).sum()
     return time + payload + .05 * spacing, {
         "time": time.detach(), "spacing": spacing.detach(), "payload": payload.detach(),
         "time_n": time_n, "spacing_n": spacing_n, "payload_n": payload_n,
@@ -192,18 +194,21 @@ def fine_objective(pred, endpoint, observation, batch, body, condition_obs, stat
     err = _mse(pred, endpoint, observation, weights)
     hand_error = err[..., :192].unflatten(-1, (2, 16, 6))
     hand_obs = observation[..., :192].unflatten(-1, (2, 16, 6))
-    values, seen = zip(*(per_clip_mean(hand_error[..., idx, :], hand_obs[..., idx, :])
-                         for idx in (0, slice(1, None))))
-    hand = masked_mean(torch.stack(values, -1), torch.stack(seen, -1))
+    wrist, wrist_n = masked_mean(hand_error[..., 0, :], hand_obs[..., 0, :])
+    fingers, fingers_n = masked_mean(hand_error[..., 1:, :], hand_obs[..., 1:, :])
+    hand_n = hand_obs.flatten(1).any(-1).sum()
     terms = {
-        "hand_endpoint": hand,
+        "hand_endpoint": (.5 * (wrist + fingers), hand_n),
         "correction": masked_mean(err[..., 192:], observation[..., 192:]),
     }
+    endpoint_detail = {"wrist_endpoint": wrist.detach(), "wrist_endpoint_n": wrist_n,
+                       "finger_endpoint": fingers.detach(), "finger_endpoint_n": fingers_n}
     geometry = ("fingertip_fk", "wrist_fk", "palm_chordal", "velocity_fk", "contact")
     if not any(cfg[k] for k in geometry):
         zero = pred.float().masked_fill(~batch["frame_mask"][..., None], 0).sum() * 0
         terms.update({k: (zero, zero.detach()) for k in geometry})
-        return _total(terms, cfg)
+        loss, report = _total(terms, cfg)
+        return loss, dict(report, **endpoint_detail)
     with torch.autocast(device_type=pred.device.type, enabled=False):
         seen = torch.cat((batch["body_obs"], batch["hands_obs"].flatten(-2)), -1)
         cond_seen = torch.cat((condition_obs, batch["hands_obs"].flatten(-2)), -1)
@@ -231,4 +236,5 @@ def fine_objective(pred, endpoint, observation, batch, body, condition_obs, stat
         else:
             zero = pred.float().masked_fill(~batch["frame_mask"][..., None], 0).sum() * 0
             terms["contact"] = zero, zero.detach()
-    return _total(terms, cfg)
+    loss, report = _total(terms, cfg)
+    return loss, dict(report, **endpoint_detail)
