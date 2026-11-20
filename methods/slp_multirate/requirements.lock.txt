@@ -1,0 +1,13 @@
+# Review runtime on Linux x86-64, Python 3.13.5.
+# PyTorch build cu128, CUDA runtime 12.8. CLI records CUDA/cuDNN/driver-facing hardware per run.
+# Install via pip install -r methods/slp_multirate/requirements.lock.txt
+--extra-index-url https://download.pytorch.org/whl/cu128
+torch==2.11.0+cu128
+numpy==2.2.6
+PyYAML==6.0.3
+transformers==5.5.4
+huggingface-hub==1.14.0
+sentencepiece==0.2.1
+lmdb==3.0.0
+pytest==9.0.3
+ruff==0.15.22
