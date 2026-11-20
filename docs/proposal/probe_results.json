@@ -1,0 +1,223 @@
+{
+  "torch": "2.11.0+cu128",
+  "rotation": {
+    "lift_path_degrees": 356.0,
+    "shortest_so3_degrees": 4.0000000000000195,
+    "so3_midpoint_gap_degrees": 179.9999999999999,
+    "mse_sum_to_equivalent_lift": 4.0,
+    "antipodal_endpoint_lift_error_l2": 2.0
+  },
+  "naturalness": {
+    "kernel_mass": [
+      0.9231163148138533,
+      0.1670860231004649
+    ],
+    "energy_unit_tangent": [
+      0.04000108240333526,
+      5.984941058766619e-06
+    ],
+    "constant_joint_kmeans_error": "invalid multinomial distribution (sum of probabilities <= 0)"
+  },
+  "fk": {
+    "regularized_pullback": [
+      [
+        4.1,
+        2.0
+      ],
+      [
+        2.0,
+        1.1
+      ]
+    ],
+    "single_joint_energy": [
+      4.1,
+      1.1
+    ],
+    "paired_energy": [
+      9.2,
+      1.1999999999999997
+    ],
+    "paired_diagonal_energy": [
+      5.199999999999999,
+      5.199999999999999
+    ]
+  },
+  "expression": {
+    "current_state_recurrence": 0.5,
+    "retained_source_update": 0.75
+  },
+  "seed": 20261118,
+  "val_cache": {
+    "phoenix_smplx": {
+      "cache": "phoenix_smplx_val_c1960d5d74fd.json",
+      "sampled_clips": 256,
+      "frames": 26948,
+      "adjacent_pairs": 26692,
+      "parts": {
+        "body": {
+          "sampled_source_target_negative_dot_rate": 0.1311785727739334,
+          "rotation_cut_locus_abs_dot_lt_0.01_rate": 0.012969422154128551,
+          "mean_excess_projected_path_degrees": 6.451322555541992,
+          "canonical_adjacent_negative_dot_rate": 9.36610231292434e-05,
+          "target_abs_w_lt_0.05_rate": 1.1132551662740298e-05
+        },
+        "hands": {
+          "sampled_source_target_negative_dot_rate": 0.09977487474679947,
+          "rotation_cut_locus_abs_dot_lt_0.01_rate": 0.012670081108808517,
+          "mean_excess_projected_path_degrees": 3.180384397506714,
+          "canonical_adjacent_negative_dot_rate": 2.4976272925414378e-06,
+          "target_abs_w_lt_0.05_rate": 0.0
+        },
+        "jaw": {
+          "sampled_source_target_negative_dot_rate": 0.034548018127679825,
+          "rotation_cut_locus_abs_dot_lt_0.01_rate": 0.013247736729681492,
+          "mean_excess_projected_path_degrees": 0.3258470892906189,
+          "canonical_adjacent_negative_dot_rate": 0.0,
+          "target_abs_w_lt_0.05_rate": 0.0
+        }
+      },
+      "v2_predictions": {
+        "artifact": "outputs/runs/signmflow_v2_main_phoenix_smplx/signmflow/seed0_20261116-185137-965824/predictions.npz",
+        "length_mae_frames": 16.7109375,
+        "length_std_frames_target_then_prediction": [
+          45.11330949242557,
+          38.803362325117845
+        ],
+        "at_min_length_40_target_then_prediction": [
+          0.08984375,
+          0.02734375
+        ],
+        "pooled_speed_degrees_per_frame_target_then_prediction": {
+          "target": {
+            "body": {
+              "mean": 6.396440029144287,
+              "p95": 23.5607852935791
+            },
+            "hands": {
+              "mean": 10.681452751159668,
+              "p95": 37.37646484375
+            },
+            "jaw": {
+              "mean": 1.595154047012329,
+              "p95": 4.560534477233887
+            }
+          },
+          "prediction": {
+            "body": {
+              "mean": 4.910557270050049,
+              "p95": 17.522010803222656
+            },
+            "hands": {
+              "mean": 9.361395835876465,
+              "p95": 32.31300735473633
+            },
+            "jaw": {
+              "mean": 2.066734552383423,
+              "p95": 4.919654846191406
+            }
+          }
+        }
+      }
+    },
+    "csl_smplx": {
+      "cache": "csl_smplx_val_f677cad20392.json",
+      "sampled_clips": 256,
+      "frames": 30656,
+      "adjacent_pairs": 30400,
+      "parts": {
+        "body": {
+          "sampled_source_target_negative_dot_rate": 0.12457594275474548,
+          "rotation_cut_locus_abs_dot_lt_0.01_rate": 0.013109995052218437,
+          "mean_excess_projected_path_degrees": 5.7630414962768555,
+          "canonical_adjacent_negative_dot_rate": 4.934210664941929e-05,
+          "target_abs_w_lt_0.05_rate": 9.786012924450915e-06
+        },
+        "hands": {
+          "sampled_source_target_negative_dot_rate": 0.10946198552846909,
+          "rotation_cut_locus_abs_dot_lt_0.01_rate": 0.012677235528826714,
+          "mean_excess_projected_path_degrees": 3.7862701416015625,
+          "canonical_adjacent_negative_dot_rate": 0.0,
+          "target_abs_w_lt_0.05_rate": 0.0
+        },
+        "jaw": {
+          "sampled_source_target_negative_dot_rate": 0.01598381996154785,
+          "rotation_cut_locus_abs_dot_lt_0.01_rate": 0.012069415301084518,
+          "mean_excess_projected_path_degrees": 0.08995696157217026,
+          "canonical_adjacent_negative_dot_rate": 0.0,
+          "target_abs_w_lt_0.05_rate": 0.000130480169900693
+        }
+      },
+      "v2_predictions": {
+        "artifact": "outputs/runs/signmflow_v2_main_csl_smplx/signmflow/seed0_20261116-185337-969580/predictions.npz",
+        "length_mae_frames": 26.1796875,
+        "length_std_frames_target_then_prediction": [
+          44.142524848495015,
+          33.4566971761634
+        ],
+        "at_min_length_40_target_then_prediction": [
+          0.0078125,
+          0.00390625
+        ],
+        "pooled_speed_degrees_per_frame_target_then_prediction": {
+          "target": {
+            "body": {
+              "mean": 4.725115776062012,
+              "p95": 16.39851951599121
+            },
+            "hands": {
+              "mean": 6.877536296844482,
+              "p95": 24.3543758392334
+            },
+            "jaw": {
+              "mean": 0.982093870639801,
+              "p95": 2.4615607261657715
+            }
+          },
+          "prediction": {
+            "body": {
+              "mean": 3.063203811645508,
+              "p95": 10.522981643676758
+            },
+            "hands": {
+              "mean": 4.636394023895264,
+              "p95": 17.029470443725586
+            },
+            "jaw": {
+              "mean": 0.8811693787574768,
+              "p95": 1.9637088775634766
+            }
+          }
+        }
+      }
+    },
+    "how2sign_smplx_soke": {
+      "cache": "how2sign_smplx_soke_val_c83d86e23f22.json",
+      "sampled_clips": 256,
+      "frames": 39788,
+      "adjacent_pairs": 39532,
+      "parts": {
+        "body": {
+          "sampled_source_target_negative_dot_rate": 0.13229617476463318,
+          "rotation_cut_locus_abs_dot_lt_0.01_rate": 0.013046647422015667,
+          "mean_excess_projected_path_degrees": 6.320073127746582,
+          "canonical_adjacent_negative_dot_rate": 2.0236770069459453e-05,
+          "target_abs_w_lt_0.05_rate": 0.0
+        },
+        "hands": {
+          "sampled_source_target_negative_dot_rate": 0.12365369498729706,
+          "rotation_cut_locus_abs_dot_lt_0.01_rate": 0.012636138126254082,
+          "mean_excess_projected_path_degrees": 4.601755619049072,
+          "canonical_adjacent_negative_dot_rate": 0.0,
+          "target_abs_w_lt_0.05_rate": 0.0
+        },
+        "jaw": {
+          "sampled_source_target_negative_dot_rate": 0.021564289927482605,
+          "rotation_cut_locus_abs_dot_lt_0.01_rate": 0.012591736391186714,
+          "mean_excess_projected_path_degrees": 0.1293780654668808,
+          "canonical_adjacent_negative_dot_rate": 0.0,
+          "target_abs_w_lt_0.05_rate": 7.539962098235264e-05
+        }
+      }
+    }
+  }
+}
