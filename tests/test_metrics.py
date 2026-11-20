@@ -235,6 +235,8 @@ def test_kinematic_ratio_metrics():
     base = np.cumsum(rng.normal(scale=0.05, size=(2, 60, 133)), 1).astype(np.float32)
     gt = [b for b in base]
     names = ["soke_speed_ratio_body", "soke_speed_ratio_hand", "soke_accel_ratio_body", "soke_accel_ratio_hand"]
-    assert all(v == pytest.approx(1.0) for v in evaluate(gt, gt, names).values())
+    same = evaluate(gt, gt, names)
+    assert all(v == pytest.approx(1.0) for v in same.values()), same
     still = [np.repeat(g[:1], len(g), 0) for g in gt]  # frozen pose: no motion at all
-    assert all(v == pytest.approx(0.0, abs=1e-9) for v in evaluate(still, gt, names).values())
+    frozen = evaluate(still, gt, names)
+    assert all(v == pytest.approx(0.0, abs=1e-5) for v in frozen.values()), frozen  # FK float noise
