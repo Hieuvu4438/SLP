@@ -139,3 +139,22 @@ def test_defaults_reproduce_the_signmflow_replica_exactly():
             assert all(torch.equal(u, v) for u, v in zip(ra, rb)), path
     finally:
         torch.set_default_dtype(torch.float64)
+
+
+# ----------------------------------------------------------------------------- C1 fixed lengths
+def test_fixed_lengths_table_round_trip(tmp_path):
+    import json
+
+    import numpy as np
+
+    from methods.signmflow_plus.method import read_lengths
+    from methods.signmflow_plus.tools.lengths import lengths_from_npz
+
+    np.savez(tmp_path / "p.npz", **{"dev__a": np.zeros((50, 133)), "dev__b": np.zeros((73, 133))})
+    table = lengths_from_npz(tmp_path / "p.npz")
+    json.dump(table, open(tmp_path / "l.json", "w"))
+    assert read_lengths(tmp_path / "l.json", ["dev/b", "dev/a"], cap=400) == [73, 50]
+    with pytest.raises(KeyError):
+        read_lengths(tmp_path / "l.json", ["dev/c"], cap=400)
+    with pytest.raises(ValueError):
+        read_lengths(tmp_path / "l.json", ["dev/a"], cap=40)

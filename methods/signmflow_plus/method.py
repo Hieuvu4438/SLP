@@ -43,6 +43,26 @@ def _abs(p):
     return p if p.is_absolute() else ROOT / p
 
 
+def read_lengths(path, names, cap: int) -> list[int]:
+    """Fixed lengths (C1) from a JSON table {name: frames}; keys may also use the
+    predictions.npz spelling (``/`` -> ``__``)."""
+    import json
+
+    table = json.load(open(path))
+    out, missing = [], []
+    for n in names:
+        v = table.get(n, table.get(n.replace("/", "__")))
+        if v is None:
+            missing.append(n)
+        else:
+            out.append(int(v))
+    if missing:
+        raise KeyError(f"{len(missing)} sequences missing from {path}, e.g. {missing[:3]}")
+    if out and (min(out) < 1 or max(out) > cap):
+        raise ValueError(f"lengths in {path} must lie in [1, {cap}] (positional table size)")
+    return out
+
+
 class Method(BaseMethod):
     # ------------------------------------------------------------------ setup
     def _setup(self):
@@ -173,12 +193,16 @@ class Method(BaseMethod):
         texts = [x["text"] for x in inputs]
         srcs = [x["src"] for x in inputs]
         out = [None] * len(inputs)
-        # predicted lengths first, then batch by length (less padding)
-        lengths = []
-        for a in range(0, len(inputs), bs):
-            text, pad = self.gen.encode_text(texts[a:a + bs], srcs[a:a + bs], dev)
-            ll = self.gen.predict_log_length(text, pad).exp().round().clamp(lo, hi).long()
-            lengths += ll.tolist()
+        # lengths: fixed per sequence from sampler.lengths_file (C1, same lengths for every arm), or
+        # predicted by the length head; then batch by length (less padding)
+        if s.get("lengths_file"):
+            lengths = self._fixed_lengths(inputs)
+        else:
+            lengths = []
+            for a in range(0, len(inputs), bs):
+                text, pad = self.gen.encode_text(texts[a:a + bs], srcs[a:a + bs], dev)
+                ll = self.gen.predict_log_length(text, pad).exp().round().clamp(lo, hi).long()
+                lengths += ll.tolist()
         order = np.argsort(lengths)
         for a in range(0, len(order), bs):
             idx = order[a:a + bs].tolist()
@@ -198,6 +222,12 @@ class Method(BaseMethod):
             np.savez_compressed(p, **{x["name"].replace("/", "__"): o for x, o in zip(inputs, out)})
         np.savez_compressed(self.ctx.run_dir / "predictions.npz",
                             **{x["name"].replace("/", "__"): o for x, o in zip(inputs, out)})
+        return out
+
+    def _fixed_lengths(self, inputs) -> list[int]:
+        path = _abs(self.hparams["sampler"]["lengths_file"])
+        out = read_lengths(path, [x["name"] for x in inputs], int(self.hparams["generator"]["max_frames"]))
+        self.log(f"fixed lengths from {path} (mean {np.mean(out):.1f} frames)")
         return out
 
     def save(self) -> None:

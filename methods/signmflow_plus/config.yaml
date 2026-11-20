@@ -84,3 +84,5 @@ method:
     batch_size: 64
     min_len: 40
     max_len: 400
+    lengths_file: null         # C1: JSON {name: frames}; fixes output lengths for every arm
+                               # (python -m methods.signmflow_plus.tools.lengths); null = length head
