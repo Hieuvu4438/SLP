@@ -1,0 +1,100 @@
+experiment:
+  seed: 17
+  run_dir: "runs/slp_multirate"
+  pilot: p3
+  variant: D
+  protocol_version: "1.0"
+data:
+  manifest: "data/canonical/manifest.jsonl"
+  rig: "data/canonical/rig.json"
+  pilot_language: "ASL"
+  fps: 25
+  min_frames: 8
+  max_frames: 320
+  bucket_boundaries: [64, 96, 128, 192, 256, 320]
+  normalize_std_floor: 0.001
+  num_workers: 4
+text:
+  encoder: "facebook/mbart-large-cc25"
+  revision: null  # khóa snapshot hash trước real-data cache
+  freeze: true
+  source_lang: en_XX
+  mock_width: 32
+  max_tokens: 128
+  cache_hidden: true
+body:
+  stride: 4
+  width: 256
+  blocks: 4
+  heads: 8
+  dropout: 0.10
+anchors:
+  count: 8
+  policy: "event"
+  width: 256
+  blocks: 2
+  heads: 8
+  use_time_bias: true
+  sigma_frames: 3.0
+  nms_min_gap_frames: 2
+  turn_min_speed_shoulder_widths: 0.005
+  score_weights: [1.0, 0.5, 1.0] # shape, turn, contact
+  contact_mining: false
+  confidence: "uniform"
+fine:
+  width: 256
+  blocks: 6
+  heads: 8
+  dropout: 0.10
+  local_radius: 8
+  state_dim: 204
+  correction_enabled: true
+  correction_max_rad: 0.35
+loss:
+  body_endpoint: 1.0
+  body_chordal: 0.10
+  hand_endpoint: 1.0
+  correction: 0.25
+  fingertip_fk: 0.25
+  wrist_fk: 0.15
+  palm_chordal: 0.10
+  velocity_fk: 0.10
+  contact: 0.0
+  endpoint_time_weight: "uniform"
+train:
+  optimizer: "adamw"
+  betas: [0.9, 0.95]
+  weight_decay: 0.01
+  max_grad_norm: 1.0
+  precision: "bf16"
+  gradient_accumulation: 4
+  microbatch: 4
+  schedule: "warmup_cosine"
+  warmup_ratio: 0.05
+  min_lr_ratio: 0.10
+  ema_decay: 0.999
+  val_every_updates: 500
+  checkpoint_every_updates: 500
+  keep_last: 2
+  stages:
+    length:  {lr: 0.0003, total_updates: 6000}
+    anchors: {lr: 0.0003, total_updates: 10000}
+    body:    {lr: 0.0002, total_updates: 20000}
+    fine:    {lr: 0.00015, total_updates: 35000}
+  condition_prob: {predicted: 0.60, oracle_jitter: 0.30, no_anchor: 0.10}
+  anchor_jitter_frames: 3
+  anchor_payload_noise_std: 0.05
+sample:
+  solver: "euler"
+  body_nfe: 4
+  fine_nfe: 8
+  cfg: false
+  samples_per_text: 1
+eval:
+  event_threshold: 0.5
+  primary_metric: event_tip_mm
+  bootstrap_resamples: 2000
+  event_window_radius_frames: 3
+  timing_match_tolerance_frames: 3
+  min_usable_gate_clips: 100
+  gate_epsilon: 0.000001

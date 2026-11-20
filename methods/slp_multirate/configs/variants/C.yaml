@@ -1,0 +1,3 @@
+experiment: {variant: C}
+body: {stride: 1}
+anchors: {policy: event}

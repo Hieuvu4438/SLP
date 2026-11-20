@@ -1,0 +1,7 @@
+experiment: {pilot: p2}
+train:
+  stages:
+    length: {total_updates: 1500}
+    body: {total_updates: 6000}
+    anchors: {total_updates: 3000}
+    fine: {total_updates: 6000}

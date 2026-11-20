@@ -1,0 +1,16 @@
+experiment: {pilot: p0}
+data: {min_frames: 1, max_frames: 24, bucket_boundaries: [8, 16, 24], num_workers: 0}
+text: {encoder: mock}
+body: {width: 32, blocks: 1, heads: 4, dropout: 0.0}
+anchors: {width: 32, blocks: 1, heads: 4}
+fine: {width: 32, blocks: 1, heads: 4, dropout: 0.0}
+train:
+  precision: fp32
+  microbatch: 2
+  gradient_accumulation: 1
+  stages:
+    length: {total_updates: 20}
+    body: {total_updates: 20}
+    anchors: {total_updates: 20}
+    fine: {total_updates: 20}
+sample: {body_nfe: 2, fine_nfe: 2}

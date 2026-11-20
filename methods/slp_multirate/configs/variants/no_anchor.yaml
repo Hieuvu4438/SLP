@@ -1,0 +1,3 @@
+experiment: {variant: no_anchor}
+body: {stride: 4}
+anchors: {policy: none}

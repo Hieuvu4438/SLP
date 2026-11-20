@@ -1,0 +1,3 @@
+experiment: {variant: onset_mid_offset}
+body: {stride: 4}
+anchors: {policy: onset_mid_offset}
