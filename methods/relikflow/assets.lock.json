@@ -1,0 +1,47 @@
+[
+  {
+    "name": "SMPL-X neutral",
+    "source_url": "https://smpl-x.is.tue.mpg.de/",
+    "revision": null,
+    "sha256": null,
+    "local_path": null,
+    "consumers": ["FK", "IK", "geometry"],
+    "availability": "pending"
+  },
+  {
+    "name": "SOKE reference",
+    "source_url": "https://github.com/2000ZRL/SOKE",
+    "revision": "5cbc55d84b5a7cbf05a9cf020c468052e8d94d00",
+    "sha256": null,
+    "local_path": "third_party/SOKE",
+    "consumers": ["codec parity", "geometry"],
+    "availability": "resolve_at_prepare"
+  },
+  {
+    "name": "mBART-large-cc25",
+    "source_url": "https://huggingface.co/facebook/mbart-large-cc25",
+    "revision": null,
+    "sha256": null,
+    "local_path": null,
+    "consumers": ["planner", "generator"],
+    "availability": "pending"
+  },
+  {
+    "name": "SignNMFlow backtranslation protocol and checkpoint",
+    "source_url": "https://arxiv.org/html/2609.33339v1",
+    "revision": null,
+    "sha256": null,
+    "local_path": null,
+    "consumers": ["BT-BLEU-4"],
+    "availability": "unavailable"
+  },
+  {
+    "name": "MaDiS SiCLIP release",
+    "source_url": "https://github.com/2000ZRL/MaDiS",
+    "revision": null,
+    "sha256": null,
+    "local_path": null,
+    "consumers": ["SiCLIP"],
+    "availability": "pending"
+  }
+]

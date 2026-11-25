@@ -1,0 +1,19 @@
+track: phoenix_2014t_mono_pilot
+arm: C
+seeds: [17]
+data:
+  corpus: phoenix_2014t
+  source_lang: de_DE
+  sign_lang: DGS
+  fps: {phoenix_2014t: 25.0}
+text:
+  revision: f417e5563320b2cc8aabe4329d986b238809067f
+runtime:
+  device: cuda:0
+  output: outputs/relikflow/phoenix_pilot_seed17
+  checkpoint_every_steps: 100
+assets:
+  smplx: third_party/SOKE/deps/smpl_models
+protocol:
+  status: exploratory_dev
+  shared_broadcasts_across_official_splits: true

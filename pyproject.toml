@@ -31,6 +31,15 @@ race-sign = [
     "scipy>=1.10",
 ]
 
+relikflow = [
+    "torch>=2.2",
+    "transformers>=4.45,<6",
+    "sentencepiece>=0.2",
+    "smplx>=0.1.28",
+    "pyarrow>=12",
+    "matplotlib>=3.7",
+]
+
 slp-multirate = [
     "torch>=2.2",
     "transformers>=4.45,<6",
@@ -40,9 +49,10 @@ slp-multirate = [
 
 [tool.setuptools.packages.find]
 where = ["src", "."]
-include = ["slp", "slp.*", "methods", "methods.slp_multirate", "methods.slp_multirate.*"]
+include = ["slp", "slp.*", "methods", "methods.slp_multirate", "methods.slp_multirate.*", "methods.relikflow", "methods.relikflow.*"]
 
 [tool.setuptools.package-data]
+"methods.relikflow" = ["config.yaml", "assets.lock.json"]
 "methods.slp_multirate" = ["configs/*.yaml", "configs/pilots/*.yaml", "configs/variants/*.yaml"]
 
 [tool.pytest.ini_options]
