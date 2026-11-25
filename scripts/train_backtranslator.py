@@ -101,7 +101,7 @@ class MBartBT(nn.Module):
         super().__init__()
         from transformers import MBartForConditionalGeneration, MBartTokenizer
         import pickle as pk
-        self.tok = MBartTokenizer.from_pretrained(MBART, legacy=True)
+        self.tok = MBartTokenizer.from_pretrained(MBART, legacy=True, fix_mistral_regex=False)
         self.map = pk.load(open(f"{MBART}/map_ids.pkl", "rb"))  # tokenizer id -> pruned emb id
         self.inv = {v: k for k, v in self.map.items()}
         self.lm = MBartForConditionalGeneration.from_pretrained(MBART)
