@@ -4,8 +4,7 @@ status: exploring
 
 Implementation of the **method in §§6–7, A–C in §9** of
 [the proposal](../../docs/proposal6/CoPlan_SO3_Research_Proposal.md).
-Code and numerical execution have been checked; no model has been trained and
-no benchmark improvement is claimed.
+Code and numerical execution have been checked. Benchmark quality remains to be evaluated.
 
 ## Implemented
 
@@ -61,6 +60,36 @@ passes and sampling with a short **training** clip, with no optimizer steps:
 ```bash
 PYTHONPATH=src:. OMP_NUM_THREADS=2 python -m methods.coplan_so3.smoke --device cuda
 ```
+
+## CSL-Daily A/B pilot
+
+From the repository root:
+
+```bash
+bash configs/experiments/coplan_so3/pilot_ab.sh RUN_DIR SIGNMFLOW_DEV_PREDICTIONS.npz
+```
+
+The launcher holds one local CoPlan lock per GPU. It checks for at least 16 GiB free and
+at most 5% utilization three times, 30 seconds apart, before starting the Python job.
+Set `COPLAN_WAIT_PID` to wait for a particular training process. In this mode the
+launcher checks its process identity every 30 seconds and starts after that process
+exits and at least 16 GiB is free, regardless of GPU utilization from other jobs.
+Use `COPLAN_GPU_INDEX` and `COPLAN_PYTHON` to select the device index and interpreter.
+`RUN_DIR/status` and `RUN_DIR/job.log` show the queue and training state.
+
+The job trains A for 20 epochs and B for 30 epochs on fixed CSL-Daily subsets
+(2,000 train and 256 dev, seed 0). It retains the original indices from the MaDiS crop,
+drops repeated indices, and uses the dataset's native 30 fps. The dev diagnostic
+holds reference duration and latent noise fixed for each paired text swap across
+three sampling seeds. The wrong sentences are selected by character overlap and
+clip length, with different text and gloss. A frozen CSL back-translator scores
+the reference transcript's mean token log probability. The named SignMFlow dev
+archive supplies the local baseline on the same dev IDs.
+
+The output includes the ID and configuration manifest, stage checkpoints, paired
+motion archives, individual clip scores, and `report.json` with paired bootstrap
+intervals. Interpret the prior gap alongside the ground-truth text matching control
+and the oracle reconstruction. Stage C is a separate experiment.
 
 ## API and data contract
 
