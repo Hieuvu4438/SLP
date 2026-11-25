@@ -42,3 +42,7 @@ third_party/proposal3_sources/code/
 
 # Downloaded author model assets; provenance is recorded in methods/race_sign/.
 data/pretrained/
+
+# Independent upstream checkouts used for method research.
+third_party/MoGeFlow/
+third_party/MoRAE/
