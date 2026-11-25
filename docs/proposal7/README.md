@@ -53,6 +53,8 @@
 | [05_phan_bien_noi_bo.md](05_phan_bien_noi_bo.md) | Devil's advocate: 24 phát hiện, phản hồi, thay đổi v1 → v2, rủi ro, điều kiện bác bỏ. |
 | [07_lo_trinh_uu_tien.md](07_lo_trinh_uu_tien.md) | **Bản bàn giao để chạy:** kiểm tra độ đầy đủ (điểm yếu → thí nghiệm), việc cần code C1–C10, thứ tự ưu tiên P0–P6 với lý do nên và không nên chạy, điều kiện dừng, lịch, mẫu báo cáo. |
 | [06_ket_qua_thuc_nghiem.md](06_ket_qua_thuc_nghiem.md) | Kết quả vòng 1: 20 biến thể suy diễn (bootstrap cặp, rào chắn tốc độ, đối chứng co về trung bình) và phép thử σ. |
+| [08_thiet_ke_lai_signtaf.md](08_thiet_ke_lai_signtaf.md) | **Thiết kế lại có novelty (v2, 22/11/2026):** bốn nguồn phương sai và cách DTW đối xử với từng nguồn; hướng R (kết quả: truy hồi δ, vệ sinh, τ-loss) và hướng S (phân tích pha–biên độ; EPA-Flow); cổng không cần huấn luyện P0.S; **đã đo trên CSL dev (chỉ GT + dự đoán v2 đã lưu): body của v2 ngang người, tay kém người 14–18%; căn thời gian phi tuyến xoá 1/3 khác biệt giữa người ký ở tay (null ≈ 0), nên khoảng trống thật nằm ở tay và có thành phần nhịp điệu**; SOTA giao thức SOKE; kế hoạch G0–G4. |
+| [09_phan_bien_08.md](09_phan_bien_08.md) | Phản biện độc lập của 08 v1 (25 điểm, không điểm nào bị bác) và phản hồi; phát hiện mới: sampler re-planned của paper thiên lệch trên manifold. |
 | `probes/` | Script CPU và JSON có thể chạy lại. |
 | `sources/` | Sổ nguồn: 37 (flow matching) + 33 (chuyển động) + 47 (SLP và đánh giá) tài liệu đã xác minh, cùng bản phản biện tiếng Anh đầy đủ. |
 

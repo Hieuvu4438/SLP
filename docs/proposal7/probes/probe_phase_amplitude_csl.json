@@ -1,0 +1,51 @@
+{
+ "n_pairs": 280,
+ "body": {
+  "f_timing_median": 0.148,
+  "f_null_median": 0.0,
+  "f_minus_null_mean": 0.157,
+  "f_minus_null_ci95": [
+   0.146,
+   0.168
+  ],
+  "frac_pairs_f_gt_null": 0.993,
+  "f_timing_mean": 0.158,
+  "f_null_mean": 0.001,
+  "f_null_frac_exact_diagonal": 0.914,
+  "f_null_p90": 0.0,
+  "d_lock_median_m": 0.0489,
+  "d_dtw_per_step_median_m": 0.0414
+ },
+ "lhand": {
+  "f_timing_median": 0.338,
+  "f_null_median": 0.0,
+  "f_minus_null_mean": 0.333,
+  "f_minus_null_ci95": [
+   0.317,
+   0.35
+  ],
+  "frac_pairs_f_gt_null": 1.0,
+  "f_timing_mean": 0.334,
+  "f_null_mean": 0.001,
+  "f_null_frac_exact_diagonal": 0.964,
+  "f_null_p90": 0.0,
+  "d_lock_median_m": 0.0667,
+  "d_dtw_per_step_median_m": 0.0431
+ },
+ "rhand": {
+  "f_timing_median": 0.341,
+  "f_null_median": 0.0,
+  "f_minus_null_mean": 0.349,
+  "f_minus_null_ci95": [
+   0.337,
+   0.36
+  ],
+  "frac_pairs_f_gt_null": 1.0,
+  "f_timing_mean": 0.349,
+  "f_null_mean": 0.0,
+  "f_null_frac_exact_diagonal": 1.0,
+  "f_null_p90": 0.0,
+  "d_lock_median_m": 0.0662,
+  "d_dtw_per_step_median_m": 0.0414
+ }
+}

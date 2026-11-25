@@ -1,0 +1,58 @@
+{
+ "n_texts": 280,
+ "columns": [
+  "jpe_body",
+  "jpe_hand",
+  "pa_body_ua",
+  "pa_hand"
+ ],
+ "human_A_vs_B": [
+  5.5801,
+  6.2859,
+  4.7559,
+  1.1196
+ ],
+ "v2_replica": [
+  5.5353,
+  7.1751,
+  4.8895,
+  1.316
+ ],
+ "static_mean_pose_gt_length": [
+  6.7522,
+  9.4045,
+  5.9432,
+  1.7462
+ ],
+ "v2_minus_human": [
+  -0.0448,
+  0.8892,
+  0.1337,
+  0.1964
+ ],
+ "v2_minus_human_ci95": [
+  [
+   -0.2085,
+   0.696,
+   -0.0143,
+   0.1566
+  ],
+  [
+   0.1147,
+   1.0957,
+   0.2803,
+   0.2372
+  ]
+ ],
+ "frac_texts_v2_better_than_human": [
+  0.514,
+  0.239,
+  0.457,
+  0.268
+ ],
+ "length_ratio_between_signers_median_p90": [
+  1.123,
+  1.408
+ ],
+ "pred_file": "outputs/runs/signmflow_v2_main_csl_smplx/signmflow/seed0_20261116-185337-969580/predictions.npz"
+}
