@@ -240,3 +240,39 @@ def test_kinematic_ratio_metrics():
     still = [np.repeat(g[:1], len(g), 0) for g in gt]  # frozen pose: no motion at all
     frozen = evaluate(still, gt, names)
     assert all(v == pytest.approx(0.0, abs=1e-5) for v in frozen.values()), frozen  # FK float noise
+
+
+from slp.evaluation.metrics import (  # noqa: E402
+    directional_loadings, latent_spectrum, multilabel_average_precision)
+
+
+def test_latent_spectrum_condition_number_and_tail():
+    rng = np.random.default_rng(0)
+    z = rng.normal(size=(20000, 3)) * np.array([10.0, 1.0, 0.01])
+    out = latent_spectrum(z)
+    np.testing.assert_allclose(out["eigenvalues"], [100.0, 1.0, 1e-4], rtol=0.05)
+    assert 0.8e6 < out["kappa"] < 1.2e6 and out["n_below"] == 1
+
+
+def test_directional_loadings_single_direction_and_sum_to_r2():
+    rng = np.random.default_rng(1)
+    z = rng.normal(size=(5000, 3)) * np.array([3.0, 2.0, 1.0])
+    y = z[:, [1]] * 2.0  # explained entirely by the second principal direction
+    lam, load = directional_loadings(z, y)
+    assert lam[0] > lam[1] > lam[2]
+    np.testing.assert_allclose(load, [0.0, 1.0, 0.0], atol=0.02)
+    noisy = np.c_[z[:, 0] + rng.normal(size=5000), z[:, 2]]
+    _, load2 = directional_loadings(z, noisy)
+    r2 = 1 - (np.var(noisy[:, 0] - z[:, 0]) + 0) / (np.var(noisy[:, 0]) + np.var(noisy[:, 1]))
+    np.testing.assert_allclose(load2.sum(), r2, atol=0.02)
+
+
+def test_multilabel_average_precision_known_values():
+    labels = np.array([[1, 0], [0, 1], [1, 0], [0, 0]])
+    perfect = np.array([[0.9, 0.1], [0.2, 0.8], [0.8, 0.3], [0.1, 0.2]])
+    assert multilabel_average_precision(perfect, labels) == 1.0
+    scores = np.array([[0.1, 0.9], [0.2, 0.8], [0.9, 0.3], [0.5, 0.2]])
+    # label 0: positives ranked 1 and 4 -> (1 + 2/4) / 2; label 1: positive ranked 2 -> 1/2
+    np.testing.assert_allclose(multilabel_average_precision(scores, labels), (0.75 + 0.5) / 2)
+    with pytest.raises(ValueError):
+        multilabel_average_precision(scores, np.zeros_like(labels))

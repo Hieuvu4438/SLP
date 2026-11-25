@@ -49,6 +49,24 @@ def _pairwise_jpe(gen: np.ndarray, ref: np.ndarray, align_idx: int = 0) -> np.nd
 
 def dtw_cost(cost: np.ndarray) -> tuple[float, int]:
     """Exact DTW on a cost matrix. Returns (accumulated cost, warping-path length)."""
+    value, length, _ = _dtw(cost, trace=False)
+    return value, length
+
+
+def dtw_path(cost: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    """Indices of the minimum-cost DTW path, with the same tie breaks as dtw_cost."""
+    _, length, parents = _dtw(cost, trace=True)
+    gen, ref = np.empty(length, dtype=int), np.empty(length, dtype=int)
+    i, j = parents.shape
+    for k in range(length - 1, -1, -1):
+        gen[k], ref[k] = i - 1, j - 1
+        step = parents[i - 1, j - 1]
+        i -= step != 2
+        j -= step != 1
+    return gen, ref
+
+
+def _dtw(cost: np.ndarray, trace: bool):
     cost = np.asarray(cost, dtype=np.float64)
     r, c = cost.shape
     if r == 0 or c == 0:
@@ -56,6 +74,7 @@ def dtw_cost(cost: np.ndarray) -> tuple[float, int]:
     acc = np.full((r + 1, c + 1), np.inf)
     ln = np.zeros((r + 1, c + 1))
     acc[0, 0] = 0.0
+    parents = np.empty((r, c), dtype=np.uint8) if trace else None
     for d in range(2, r + c + 1):
         i = np.arange(max(1, d - c), min(r, d - 1) + 1)
         j = d - i
@@ -64,7 +83,45 @@ def dtw_cost(cost: np.ndarray) -> tuple[float, int]:
         best = cand.argmin(0)
         acc[i, j] = cost[i - 1, j - 1] + cand[best, np.arange(len(i))]
         ln[i, j] = lens[best, np.arange(len(i))] + 1
-    return float(acc[r, c]), int(ln[r, c])
+        if parents is not None:
+            parents[i - 1, j - 1] = best
+    return float(acc[r, c]), int(ln[r, c]), parents
+
+
+def articulatory_geometry_scores(pred: np.ndarray, target: np.ndarray,
+                                 train_std: np.ndarray) -> dict[str, float]:
+    """Shared-path and normalized-progress errors on the 96-D signing descriptor."""
+    from scipy.spatial.distance import cdist
+
+    pred, target, train_std = map(np.asarray, (pred, target, train_std))
+    if any(x.ndim != 2 or x.shape[1] != 96 or len(x) == 0 for x in (pred, target)):
+        raise ValueError("Expected non-empty 96-D frame descriptors")
+    if train_std.shape != (96,) or np.any(train_std <= 0):
+        raise ValueError("Expected positive train scales for the 96-D descriptor")
+    groups = (slice(0, 6), slice(6, 18), slice(18, 48))
+    cost = np.mean([cdist(pred[:, g] / train_std[g], target[:, g] / train_std[g])
+                    / np.sqrt(len(train_std[g])) for g in groups], axis=0)
+    pi, ti = dtw_path(cost)
+    time = np.rint(np.linspace(0, len(pred) - 1, len(target))).astype(int)
+
+    def errors(a, b):
+        origin, delta = (a - b)[:, :3], (a - b)[:, 3:6] / 2
+        wrists = np.stack((origin - delta, origin + delta), axis=1)
+        na, nb = a[:, [9, 10, 11, 15, 16, 17]], b[:, [9, 10, 11, 15, 16, 17]]
+        na, nb = na.reshape(-1, 2, 3), nb.reshape(-1, 2, 3)
+        norm = np.linalg.norm(na, axis=-1) * np.linalg.norm(nb, axis=-1)
+        cosine = (na * nb).sum(-1) / np.maximum(norm, 1e-8)
+        return {
+            "wrist_cm": float(100 * np.linalg.norm(wrists, axis=-1).mean()),
+            "finger_cm": float(100 * np.linalg.norm((a - b)[:, 18:48].reshape(-1, 3), axis=-1).mean()),
+            "palm_deg": float(np.degrees(np.arccos(cosine.clip(-1, 1))).mean()),
+            "bimanual_cm": float(100 * np.abs(a[:, 48:73] - b[:, 48:73]).mean()),
+            "face_mae": float((np.abs(a[:, 83:] - b[:, 83:]) / train_std[83:]).mean()),
+        }
+
+    return {**{f"dtw_{k}": v for k, v in errors(pred[pi], target[ti]).items()},
+            **{f"progress_{k}": v for k, v in errors(pred[time], target).items()}}
+
 
 
 def dtw_jpe(preds, targets) -> float:
@@ -380,6 +437,68 @@ def frontier_effect(arm_scores, arm_speed: float, frontier_scores, frontier_spee
     front = (1 - lam) * F[i] + lam * F[i + 1]
     return np.asarray(arm_scores, dtype=np.float64) - front, clamped
 
+
+
+# ---------------------------------------------------------------------------
+# Representation diagnostics for generative latent spaces (methods/morae_slp, MoRAE Sec. 4 / C).
+# Analysis helpers, not benchmark metrics: they take feature matrices, not predictions/targets.
+# ---------------------------------------------------------------------------
+
+
+def latent_spectrum(z, floor: float = 1e-3) -> dict:
+    """PCA spectrum of vectors z [N, d] (centred, float64 covariance, no eigenvalue floor).
+
+    Returns eigenvalues (descending), kappa = lambda_1 / lambda_d and the number of directions
+    below ``floor * lambda_1`` (MoRAE Table S8 protocol)."""
+    x = np.asarray(z, dtype=np.float64)
+    if x.ndim != 2 or len(x) < 2:
+        raise ValueError(f"need [N, d] vectors with N >= 2, got {x.shape}")
+    lam = np.linalg.eigvalsh(np.cov(x, rowvar=False).reshape(x.shape[1], x.shape[1]))[::-1]
+    kappa = float(lam[0] / lam[-1]) if lam[-1] > 0 else float("inf")
+    return {"eigenvalues": lam, "kappa": kappa, "n_below": int((lam < floor * lam[0]).sum())}
+
+
+def directional_loadings(z, y) -> tuple[np.ndarray, np.ndarray]:
+    """MoRAE Eq. (S1): with q_i the centred PCA projections of z [N, d] (variance lambda_i),
+    L_Y(i) = ||Cov(q_i, Y)||^2 / (lambda_i tr Cov(Y)) is the fraction of the variance of the
+    target Y [N, k] explained by a linear readout from direction i alone. Returns
+    (eigenvalues descending, loadings); the loadings sum to the R^2 of the full linear readout."""
+    x = np.asarray(z, dtype=np.float64)
+    t = np.asarray(y, dtype=np.float64)
+    if x.ndim != 2 or t.ndim != 2 or len(x) != len(t) or len(x) < 2:
+        raise ValueError("need paired [N, d] and [N, k] arrays")
+    x = x - x.mean(0)
+    t = t - t.mean(0)
+    lam, vec = np.linalg.eigh(np.cov(x, rowvar=False).reshape(x.shape[1], x.shape[1]))
+    order = np.argsort(lam)[::-1]
+    lam, vec = lam[order], vec[:, order]
+    q = x @ vec
+    cov = q.T @ t / (len(x) - 1)                     # [d, k] Cov(q_i, Y)
+    total = np.trace(np.cov(t, rowvar=False).reshape(t.shape[1], t.shape[1]))
+    load = (cov ** 2).sum(1) / (np.clip(lam, 1e-300, None) * max(total, 1e-300))
+    return lam, load
+
+
+def multilabel_average_precision(scores, labels) -> float:
+    """Macro average precision over the labels that have at least one positive.
+
+    scores, labels: [N, L]; AP of a label = mean precision at the rank of each positive."""
+    s = np.asarray(scores, dtype=np.float64)
+    y = np.asarray(labels).astype(bool)
+    if s.shape != y.shape or s.ndim != 2:
+        raise ValueError("scores and labels must both be [N, L]")
+    aps = []
+    for j in range(y.shape[1]):
+        pos = y[:, j]
+        if not pos.any():
+            continue
+        order = np.argsort(-s[:, j], kind="stable")
+        hits = pos[order]
+        precision = np.cumsum(hits) / np.arange(1, len(hits) + 1)
+        aps.append(precision[hits].mean())
+    if not aps:
+        raise ValueError("no label has a positive example")
+    return float(np.mean(aps))
 
 METRICS: dict[str, Callable] = {
     "accuracy": accuracy,

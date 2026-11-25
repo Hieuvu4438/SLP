@@ -80,7 +80,7 @@ class SMPLXJoints:
     """Batched FK: normalised [T,133] -> (joints [T,144,3], lhand [T,21,3], rhand [T,21,3])."""
 
     def __init__(self, device: str | None = None, model_dir: str | Path | None = None,
-                 stats: str | Path | None = None):
+                 stats: str | Path | None = None, *, load_stats: bool = True):
         import smplx
         import torch
 
@@ -90,24 +90,36 @@ class SMPLXJoints:
                                    "create_left_hand_pose", "create_right_hand_pose",
                                    "create_jaw_pose", "create_leye_pose", "create_reye_pose",
                                    "create_betas", "create_expression", "create_transl")}
-        self.layer = smplx.create(str(model_dir or smplx_dir()), "smplx", gender="NEUTRAL",
+        path = Path(model_dir or smplx_dir())
+        ext = path.suffix[1:] if path.is_file() else "npz"
+        if path.is_dir() and not (path / "smplx/SMPLX_NEUTRAL.npz").is_file():
+            ext = "pkl"
+        self.layer = smplx.create(str(path), "smplx", gender="NEUTRAL",
                                   use_pca=False, use_face_contour=True, num_betas=10,
-                                  num_expression_coeffs=10, **args).to(self.device)
+                                  num_expression_coeffs=10, ext=ext, **args).to(self.device)
         self.layer.eval()
         J = self.layer.J_regressor.detach().cpu().numpy()
         nv = J.shape[1]
         self.lreg = torch.from_numpy(_hand_regressor(J, _LHAND, nv)).float().to(self.device)
         self.rreg = torch.from_numpy(_hand_regressor(J, _RHAND, nv)).float().to(self.device)
-        mean, std = soke_stats(str(stats) if stats else None)
-        self.mean = torch.from_numpy(mean).to(self.device)
-        self.std = torch.from_numpy(std).to(self.device)
+        self.stats_path = str(stats) if stats else None
+        self.mean = self.std = None
+        if load_stats:
+            self._load_stats()
         self.shape = torch.tensor(SOKE_SHAPE, device=self.device)
+
+    def _load_stats(self):
+        mean, std = soke_stats(self.stats_path)
+        self.mean = self.torch.from_numpy(mean).to(self.device)
+        self.std = self.torch.from_numpy(std).to(self.device)
 
     def __call__(self, feats_norm, chunk: int = 512, normalised: bool = True):
         torch = self.torch
         with torch.no_grad():
             f = torch.as_tensor(np.asarray(feats_norm), dtype=torch.float32, device=self.device)
             if normalised:
+                if self.mean is None:
+                    self._load_stats()
                 f = f * self.std + self.mean
             outs = ([], [], [])
             for s in range(0, f.shape[0], chunk):
