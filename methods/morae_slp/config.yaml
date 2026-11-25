@@ -1,0 +1,125 @@
+# SignRAE (MoRAE -> SLP). Paper values: MoRAE Table S14; [ours] marks SLP adaptations (PLAN.md).
+data:
+  name: phoenix_smplx
+
+eval:
+  metrics: [soke_dtw_jpe_body, soke_dtw_jpe_hand, soke_dtw_pa_jpe_body,
+            soke_dtw_pa_jpe_body_ua, soke_dtw_pa_jpe_hand,
+            soke_speed_ratio_body, soke_speed_ratio_hand,
+            soke_accel_ratio_body, soke_accel_ratio_hand]
+  primary_metric: soke_dtw_jpe_hand
+  higher_is_better: false
+
+method:
+  device: auto
+  precision: bf16              # CUDA only; CPU runs in fp32
+  workers: 4
+  debug_limit: null            # limit train (and val) clips for smoke runs
+  val_limit: 256               # validation clips for checkpoint selection / loss curves
+  init_jepa: null              # jepa.pt from pretrain.py (skips stage 1)
+  init_ae: null                # ae.pt from pretrain.py or a run (skips stages 1-2)
+  init_flow: null              # model.pt of pretrain.py --stage flow (warm start; needs init_ae and
+                               # latent.recalibrate=false, i.e. the same standardisation)
+  export_predictions: true
+
+  latent:
+    kind: jepa                 # jepa | ae | vae | raw (controls of paper Table 3 / Tab. S1)
+    dim: 64                    # [ours] 133 true DoF; paper 32 (64 equivalent on HumanML3D)
+    min_std: 0.01              # floor of the per-channel flow standardisation
+    recalibrate: true          # with init_ae: recompute flow statistics on this train split
+
+  jepa:                        # Sign-JEPA, paper Sec. 3.1
+    width: 768
+    depth: 8
+    heads: 12
+    pred_width: 384
+    pred_depth: 6
+    pred_heads: 6
+    mlp_ratio: 4.0
+    input_velocity: true       # [ours] per-group first differences as a redundant view
+    feature_layers: 4          # H = LN(sum of the last four teacher blocks)
+    mask:
+      ratio: 0.3               # round(0.3 * 42) = 13 groups
+      unit_probs: {joint: 0.4, chain: 0.4, hand: 0.2}   # [ours]; paper = {joint: 1.0}
+    momentum: 0.996            # linear 0.996 -> 1
+    crop_min: 32
+    crop_max: 400
+    batch_size: 128
+    microbatch: 32
+    updates: 60000
+    warmup_updates: 3000
+    eval_every: 2000
+    lr: 2.0e-4
+    min_lr_ratio: 0.05         # 2e-4 -> 1e-5
+    betas: [0.9, 0.95]
+    weight_decay: 0.05
+    grad_clip: 1.0
+
+  ae:                          # compact latent, paper Sec. 3.2
+    compressor: {attn_width: 3072, heads: 24, rope: true}
+    decoder: {width: 512, depth: 4, heads: 8}
+    kl_weight: 1.0e-4          # used by kind jepa / vae
+    part_weights: [1, 1, 1, 1] # body / lhand / rhand / face
+    velocity_weight: 0.0
+    fk_weight: 0.0             # [ours] ablation A2: SOKE joint positions (cm) via exact SMPL-X FK
+    fk_frames: 16
+    crop_min: 32
+    crop_max: 400
+    batch_size: 128
+    microbatch: 32
+    updates: 30000
+    warmup_updates: 1000
+    eval_every: 1000
+    lr: 2.0e-4
+    min_lr_ratio: 0.05
+    betas: [0.9, 0.95]
+    weight_decay: 0.01
+    grad_clip: 1.0
+
+  text:
+    backend: mbart             # bytes = learned byte embedding for CPU smoke tests
+    model: third_party/SOKE/deps/mbart-h2s-csl-phoenix
+    max_tokens: 128
+    byte_dim: 64
+    finetune: false            # [ours, v2] fine-tune the mBART encoder with the generator (SOKE /
+                               # SignNMFlow fine-tune it at the full lr)
+    lr_scale: 0.1              # mBART lr = lr_scale * flow.lr when finetune
+
+  flow:                        # DiT-M, paper Sec. 3.3
+    width: 512
+    depth: 12
+    heads: 8
+    ff: 2048
+    dropout: 0.1
+    text_mode: xattn           # [ours]; adaln = paper (pooled sentence only)
+    max_frames: 1024
+    cond_drop: 0.1
+    token_drop: 0.0            # [ours, v2] drop each text token with this probability in training
+    time_sampling: uniform
+    duration_weight: 1.0
+    ema_decay: 0.9999
+    select: last               # last EMA (paper) | flow (lowest validation flow loss)
+    snapshot_steps: []
+    batch_size: 64
+    microbatch: 32
+    updates: 60000             # Phoenix; CSL 100k, How2Sign 150k (configs/experiments/morae_slp)
+    warmup_updates: 2000
+    eval_every: 2000
+    lr: 2.0e-4
+    min_lr_ratio: 0.01
+    betas: [0.9, 0.99]
+    weight_decay: 1.0e-5
+    grad_clip: 1.0
+
+  sampler:
+    solver: rk4                # rk4 | heun | euler
+    steps: 5                   # intervals (RK4: 4 guided evaluations each)
+    cfg_scale: 4.5             # paper HumanML3D; sweep on dev with sweep.py
+    temperature: 1.0           # initial-noise scale
+    min_frames: 40
+    max_frames: 400
+    batch_size: 32
+    lengths_from_npz: null     # reuse another run's durations for a matched ablation
+    ensemble: 1                # [ours, v2] K > 1: mean of K samples in pose space, a point
+                               # estimate of E[pose | text] (DTW-optimal operating point; report it
+                               # with the kinematic ratios, it is smoother than single samples)
