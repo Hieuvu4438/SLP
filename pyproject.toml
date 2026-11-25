@@ -40,6 +40,14 @@ relikflow = [
     "matplotlib>=3.7",
 ]
 
+articulatory-hierarchical-flow-matching = [
+    "torch>=2.6",
+    "transformers>=4.45,<6",
+    "sentencepiece>=0.2",
+    "smplx>=0.1.28",
+    "scipy>=1.10",
+]
+
 slp-multirate = [
     "torch>=2.2",
     "transformers>=4.45,<6",
@@ -49,9 +57,10 @@ slp-multirate = [
 
 [tool.setuptools.packages.find]
 where = ["src", "."]
-include = ["slp", "slp.*", "methods", "methods.slp_multirate", "methods.slp_multirate.*", "methods.relikflow", "methods.relikflow.*"]
+include = ["slp", "slp.*", "methods", "methods.slp_multirate", "methods.slp_multirate.*", "methods.relikflow", "methods.relikflow.*", "methods.articulatory_hierarchical_flow_matching"]
 
 [tool.setuptools.package-data]
+"methods.articulatory_hierarchical_flow_matching" = ["config.yaml", "*.md"]
 "methods.relikflow" = ["config.yaml", "assets.lock.json"]
 "methods.slp_multirate" = ["configs/*.yaml", "configs/pilots/*.yaml", "configs/variants/*.yaml"]
 

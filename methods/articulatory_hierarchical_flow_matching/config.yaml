@@ -1,0 +1,65 @@
+data:
+  name: phoenix_smplx
+
+eval:
+  metrics: [soke_dtw_jpe_body, soke_dtw_jpe_hand, soke_dtw_pa_jpe_body,
+            soke_dtw_pa_jpe_body_ua, soke_dtw_pa_jpe_hand,
+            soke_speed_ratio_hand, soke_accel_ratio_hand]
+  primary_metric: soke_dtw_jpe_hand
+  higher_is_better: false
+
+method:
+  device: auto
+  precision: bf16
+  workers: 4
+  debug_limit: null
+  val_limit: 64
+  export_predictions: true
+
+  subspace:
+    mode: articulatory
+    rank: 16
+    stride: 8
+    weights: [1, 1, 1, 1, 0.5]
+    random_seed: 23264
+    unconstrained: false
+    fk_device: auto
+    fk_chunk: 128
+
+  text:
+    backend: mbart
+    model: third_party/SOKE/deps/mbart-h2s-csl-phoenix
+    max_tokens: 128
+    finetune: false
+    byte_dim: 64
+    lr: 2.0e-5
+
+  flow:
+    width: 384
+    heads: 6
+    depth: 9
+    dropout: 0.1
+    cond_drop: 0.1
+    duration_weight: 1.0
+    energy_weight: 0.0
+    endpoint_fk_weight: 0.0
+    endpoint_fk_frames: 12
+    batch_size: 32
+    microbatch: 4
+    updates: 24000
+    warmup_updates: 1000
+    eval_every: 2000
+    snapshot_steps: [8000, 16000, 24000]
+    lr: 2.0e-4
+    min_lr_ratio: 0.05
+    weight_decay: 0.0
+    grad_clip: 1.0
+    ema_decay: 0.999
+
+  sampler:
+    steps: [6, 6]
+    cfg_scale: 2.0
+    min_frames: 40
+    max_frames: 400
+    batch_size: 8
+    lengths_from_npz: null
