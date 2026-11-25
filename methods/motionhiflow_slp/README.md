@@ -68,6 +68,14 @@ With a trained checkpoint held fixed, tune guidance and step count on dev. The s
 exactly `sampler.steps` Euler evaluations, with both conditional and unconditional predictions
 at each step when guidance is active.
 
+The [Phoenix recipe](../../configs/experiments/motionhiflow_slp/phoenix.sh) trains the one- and
+three-scale variants with the same codec, durations, seed, and update budget. Its `finish` phase
+chooses from snapshots at 8k, 16k, and 24k updates using hand DTW-JPE on fixed tuning broadcasts,
+then scores the selected models on all dev clips and on the remaining broadcasts. It trains an
+otherwise matched run with auxiliary fingertip and wrist supervision on the selected scale schedule.
+`method.flow.endpoint_fk_weight` enables that loss, which uses the clean endpoint estimate at
+scale 1.0. The SMPL-X statistics and rig match the shared SOKE evaluator.
+
 ## Outputs
 
 - `checkpoints/codec.pt` contains the selected codec and train-only latent normalization.

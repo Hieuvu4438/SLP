@@ -57,6 +57,9 @@ method:
     cond_drop: 0.1
     duration_weight: 1.0
     ema_decay: 0.999
+    snapshot_steps: []           # optional EMA checkpoints, selected externally on generated poses
+    endpoint_fk_weight: 0.0      # auxiliary position loss in centimetres on the clean final-stage estimate
+    endpoint_fk_frames: 12
     batch_size: 32
     microbatch: 4
     updates: 40000

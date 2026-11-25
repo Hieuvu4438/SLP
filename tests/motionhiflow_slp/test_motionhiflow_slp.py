@@ -97,6 +97,7 @@ def test_fit_predict_export_and_reload(tmp_path, small_cpu):
         "method.codec.microbatch=2", "method.flow.width=16", "method.flow.heads=2",
         "method.flow.double_blocks=1", "method.flow.single_blocks=1",
         "method.flow.time_patch=2", "method.flow.updates=2", "method.flow.batch_size=3",
+        "method.flow.snapshot_steps=[1,2]",
         "method.flow.microbatch=2", "method.sampler.steps=4", "method.sampler.min_frames=3",
         "method.sampler.max_frames=14", "method.sampler.batch_size=2",
     ])
@@ -114,6 +115,10 @@ def test_fit_predict_export_and_reload(tmp_path, small_cpu):
     model = cls(cfg, ctx)
     model.fit(split, split)
     model.save()
+    for step in (1, 2):
+        snapshot = ctx.ckpt_dir / f"model_step{step:06d}.pt"
+        state = torch.load(snapshot, map_location="cpu", weights_only=True)
+        assert state["step"] == step
 
     prediction = model.predict(inputs)
     assert all(3 <= len(p) <= 14 and p.shape[1] == 133 and np.isfinite(p).all()
@@ -126,6 +131,7 @@ def test_fit_predict_export_and_reload(tmp_path, small_cpu):
     restored.load(ctx.ckpt_dir)
     # Inputs can contain unrelated metadata. Reference duration has no effect.
     restored.sampler["batch_size"] = 1
+    restored.sampler.pop("lengths_from_npz")
     repeated = restored.predict([{**item, "length": 400} for item in inputs])
     for a, b in zip(prediction, repeated):
         np.testing.assert_allclose(a, b, atol=2e-6, rtol=1e-5)
@@ -143,3 +149,26 @@ def test_fit_predict_export_and_reload(tmp_path, small_cpu):
     assert [len(x) for x in single_prediction] == [len(x) for x in prediction]
     for key, state in model.codec.state_dict().items():
         torch.testing.assert_close(state, single.codec.state_dict()[key])
+
+
+def test_endpoint_fk_matches_soke_wrist_and_tip_geometry(small_cpu):
+    from slp.evaluation.smplx_fk import SMPLXJoints, smplx_dir, stats_dir
+
+    from methods.motionhiflow_slp.endpoint import SigningEndpointLoss
+
+    if not (smplx_dir() / "smplx" / "SMPLX_NEUTRAL.npz").is_file():
+        pytest.skip("SMPL-X rig is unavailable")
+    ref = SMPLXJoints(device="cpu")
+    fk = SigningEndpointLoss(stats_dir())
+    pose = torch.randn(2, 3, 133).requires_grad_()
+    world, left, right = ref(pose.detach().view(-1, 133).numpy())
+    wrists = world[:, 20:22]
+    tips = torch.stack((left[:, 4::4], right[:, 4::4]), dim=1)
+    wr, fingers = fk.positions(pose)
+    torch.testing.assert_close(wr, 100 * (wrists - world[:, :1]), atol=2e-4, rtol=1e-5)
+    torch.testing.assert_close(fingers, 100 * (tips - wrists.unsqueeze(-2)), atol=2e-4, rtol=1e-5)
+    a, b = fk(pose, torch.zeros_like(pose), torch.tensor([1, 3]), samples=2)
+    (a + b).backward()
+    assert torch.isfinite(pose.grad).all()
+    assert pose.grad[0, 1:].count_nonzero().item() == 0
+    assert pose.grad[:, :, 30:120].abs().sum().item() > 0

@@ -63,6 +63,7 @@ class Method(BaseMethod):
         self.dit_args = {k: self.flow_cfg[k] for k in DIT_KEYS}
         self.pyramid = PyramidFlow(self.flow_cfg["scales"], self.flow_cfg["gamma"])
         self._validate_config()
+        self.endpoint_loss = None
         self.ready = False
 
     def _validate_config(self) -> None:
@@ -74,6 +75,9 @@ class Method(BaseMethod):
             raise ValueError("sampler.cfg_scale must be finite and nonnegative")
         if not 0 <= self.flow_cfg["cond_drop"] < 1 or not 0 <= self.flow_cfg["ema_decay"] < 1:
             raise ValueError("Invalid conditioning dropout or EMA decay")
+        fk_weight = self.flow_cfg.get("endpoint_fk_weight", 0.0)
+        if not math.isfinite(fk_weight) or fk_weight < 0 or self.flow_cfg.get("endpoint_fk_frames", 12) < 1:
+            raise ValueError("Invalid endpoint FK loss weight or frame count")
         weights = self.codec_cfg["part_weights"]
         if len(weights) != len(PART_DIMS) or any(w <= 0 for w in weights):
             raise ValueError("codec.part_weights must contain four positive weights")
@@ -165,6 +169,7 @@ class Method(BaseMethod):
             stages = [(i, stage.time_width) for i, stage in enumerate(self.pyramid.stages)]
 
         flow_loss = clean.new_zeros(())
+        wrist_loss = hand_loss = clean.new_zeros(())
         for i, weight in stages:
             scale = self.pyramid.stages[i].scale
             x, velocity, time, stage_lengths = self.pyramid.training_pair(
@@ -174,8 +179,21 @@ class Method(BaseMethod):
             flow_loss = flow_loss + weight * sequence_mean(
                 (predicted.float() - velocity).square(), stage_lengths
             )
-        return {"loss": flow_loss + self.flow_cfg["duration_weight"] * duration_loss,
-                "flow": flow_loss, "log_duration": duration_loss, "length_mae": frame_error}
+            if self.endpoint_loss is not None and validation_rng is None and scale == 1.0:
+                # Only the last stage has sigma_end=0, so this estimates a clean latent.
+                endpoint = x + (1 - progress[:, None, None, None]) * predicted.float()
+                poses = self.codec.decode_flow(endpoint, batch.lengths, batch.poses.shape[1])
+                wrist_loss, hand_loss = self.endpoint_loss(
+                    poses, batch.poses, batch.lengths, self.flow_cfg["endpoint_fk_frames"]
+                )
+        losses = {"loss": flow_loss + self.flow_cfg["duration_weight"] * duration_loss,
+                  "flow": flow_loss, "log_duration": duration_loss, "length_mae": frame_error}
+        if self.endpoint_loss is not None and validation_rng is None:
+            losses["loss"] = losses["loss"] + self.flow_cfg["endpoint_fk_weight"] * (
+                wrist_loss + hand_loss
+            )
+            losses.update(fk_wrist=wrist_loss, fk_hand=hand_loss)
+        return losses
 
     def _signature(self) -> dict:
         return {
@@ -220,6 +238,11 @@ class Method(BaseMethod):
         torch.nn.init.constant_(self.dit.duration[-1].bias, prior)
 
         cfg = self.flow_cfg
+        if cfg.get("endpoint_fk_weight", 0.0):
+            from .endpoint import SigningEndpointLoss
+
+            self.endpoint_loss = SigningEndpointLoss(PROJECT_ROOT / self.cfg["data"]["stats"])
+            self.endpoint_loss.to(self.device)
         groups = [{"params": self.dit.parameters(), "lr": cfg["lr"]}]
         if self.text.trained:
             groups.append({"params": self.text.parameters(),
@@ -236,6 +259,12 @@ class Method(BaseMethod):
             return lambda batch: self._flow_losses(batch, evaluation_model, rng)
 
         checkpoint = self.ctx.ckpt_dir / "model.pt"
+
+        def save_snapshot(step: int) -> None:
+            path = checkpoint.with_name(f"model_step{step:06d}.pt")
+            state = {**self._model_state(evaluation_model), "step": step}
+            atomic_write(path, lambda f: torch.save(state, f))
+
         train_stage(
             "flow", self._loader(train, cfg, limit=train_limit, shuffle=True),
             self._loader(val, cfg, limit=val_limit, shuffle=False), cfg, optimizer,
@@ -245,6 +274,7 @@ class Method(BaseMethod):
                                  lambda f: torch.save(self._model_state(evaluation_model), f)),
             self.device, self.precision, self.ctx,
             after_step=None if ema is None else lambda: ema.update_parameters(self.dit),
+            save_snapshot=save_snapshot,
         )
         self._restore_model(checkpoint)
 
@@ -255,10 +285,13 @@ class Method(BaseMethod):
             atomic_write(path, lambda f: torch.save(self._model_state(self.dit), f))
 
     def load(self, ckpt_dir) -> None:
+        self.load_checkpoint(Path(ckpt_dir) / "model.pt")
+
+    def load_checkpoint(self, path: str | Path) -> None:
         self.ready = False
         self.codec = self._codec()
         self._flow()
-        self._restore_model(Path(ckpt_dir) / "model.pt")
+        self._restore_model(Path(path))
 
     def _noise(self, keys: list[str], lengths: Tensor) -> Tensor:
         """Give each utterance the same starting noise across batch sizes and scale ablations."""
@@ -272,7 +305,7 @@ class Method(BaseMethod):
         return torch.nn.utils.rnn.pad_sequence(rows, batch_first=True)
 
     def _fixed_lengths(self, keys: list[str]) -> list[int] | None:
-        path = self.sampler["lengths_from_npz"]
+        path = self.sampler.get("lengths_from_npz")
         if path is None:
             return None
         lengths = []
