@@ -294,7 +294,7 @@ def stages_v3(workers: int) -> list[tuple[str, callable]]:
     # and content supervision follow; CPU-only / other-dataset diagnostics run last.
     order = ["p0_smoke_phoenix", "p0_smoke_how2sign", "p0_frontier_csl", "p0_decoders_tune",
              "p0_decoders_confirm", "p0_frontier_decoders", "p0_length", "p1a_sampler_only",
-             "p1a_target", "p1a_target_sweep", "csl_euler_dev", "h2s_euler_dev", "p0_gloss_phoenix",
+             "p1a_target", "p1a_target_sweep", "csl_euler_dev", "h2s_euler_dev", "phoenix_euler_dev", "p0_gloss_phoenix",
              "p0_gloss_gate_phoenix", "p1b_fk_velocity", "p1b_fk_velocity_sweep",
              "csl_fk", "csl_fk_sweep", "csl_fk_euler_dev", "p0_seed1", "p0_seed1_sweep",
              "p1b_fk_target", "p1b_fk_target_sweep", "p1c_lr03", "p1c_lr03_sweep",
@@ -332,6 +332,12 @@ def stages_v3(workers: int) -> list[tuple[str, callable]]:
                 [PY, "-u", "-m", "methods.morae_slp.sweep", "--run",
                  str(latest_run("morae_v3_csl_fk")), "--solver", "euler", "--steps", "5",
                  "--cfg", "1", "--temperature", "0.7"], None))]
+
+    # Phoenix: Euler 5 steps without guidance (NFE 5) on the whole dev split, two temperatures.
+    out.append(("phoenix_euler_dev", lambda: (
+        [PY, "-u", "-m", "methods.morae_slp.sweep", "--run",
+         str(latest_run("morae_v2ctrl_phoenix_only")), "--solver", "euler", "--steps", "5",
+         "--cfg", "1", "--temperature", "0.7,1.0"], None)))
 
     # How2Sign: Euler 5 steps without guidance on the whole dev split (tau = 1: tau 0.7 freezes it).
     out.append(("h2s_euler_dev", lambda: (
