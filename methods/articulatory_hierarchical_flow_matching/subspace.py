@@ -14,6 +14,7 @@ from torch.nn import functional as F
 
 from slp.evaluation.smplx_fk import SMPLXJoints, smplx_dir, stats_dir
 
+from .chart import RotationChart
 from .data import POSE_DIM
 
 GROUP_DIMS = (6, 12, 30, 35, 13)
@@ -109,7 +110,7 @@ class Projector:
 
 
 class Representation(nn.Module):
-    def __init__(self, mode: str, rank: int, stride: int):
+    def __init__(self, mode: str, rank: int, stride: int, tangent: bool = False):
         super().__init__()
         self.mode, self.rank, self.stride = mode, rank, stride
         dims = HAND_DIM if mode == "parts" else (0 if mode in ("single", "temporal") else rank)
@@ -121,13 +122,18 @@ class Representation(nn.Module):
         self.register_buffer("observation_std", torch.ones(sum(GROUP_DIMS)))
         self.register_buffer("energy_axes", torch.zeros(POSE_DIM, rank))
         self.register_buffer("energy_std", torch.ones(4, rank))
+        self.chart = RotationChart() if tangent else None
 
     def encode(self, poses: Tensor) -> Tensor:
         with torch.autocast(device_type=poses.device.type, enabled=False):
-            return (poses.to(self.white.dtype) - self.mean) @ self.white
+            poses = poses.to(self.white.dtype)
+            if self.chart is not None:
+                poses = self.chart.to_tangent(poses)
+            return (poses - self.mean) @ self.white
 
     def decode(self, state: Tensor) -> Tensor:
-        return state @ self.unwhite + self.mean
+        coordinates = state @ self.unwhite + self.mean
+        return self.chart.from_tangent(coordinates) if self.chart is not None else coordinates
 
     def projector(self, lengths: Tensor, size: int) -> Projector:
         return Projector(self, lengths, size)
@@ -199,13 +205,8 @@ def checksum(path: Path) -> str:
 
 class DescriptorExtractor:
     def __init__(self, stats: str | None, device: torch.device, chunk: int):
-        model = smplx_dir()
-        if model.is_dir():
-            npz = model / "smplx/SMPLX_NEUTRAL.npz"
-            model = npz if npz.is_file() else model / "smplx/SMPLX_NEUTRAL.pkl"
-        directory = Path(stats) if stats else stats_dir()
-        self.provenance = {"smplx": checksum(model),
-                           **{name: checksum(directory / name) for name in ("mean.pt", "std.pt")}}
+        model, directory = rig_assets(stats)
+        self.provenance = rig_checksums(model, directory)
         self.fk = SMPLXJoints(device=str(device), model_dir=model, stats=directory)
         self.chunk = chunk
 
@@ -215,6 +216,19 @@ class DescriptorExtractor:
         return articulatory_observations(flat.to(body.device), body, left, right).view(
             *poses.shape[:2], -1,
         )
+
+
+def rig_assets(stats=None):
+    model = smplx_dir()
+    if model.is_dir():
+        npz = model / "smplx/SMPLX_NEUTRAL.npz"
+        model = npz if npz.is_file() else model / "smplx/SMPLX_NEUTRAL.pkl"
+    return model, Path(stats) if stats else stats_dir()
+
+
+def rig_checksums(model, directory):
+    return {"smplx": checksum(model),
+            **{name: checksum(directory / name) for name in ("mean.pt", "std.pt")}}
 
 
 @torch.no_grad()
@@ -235,7 +249,12 @@ def calibrate(representation: Representation, batches: Iterable, settings: dict,
                 values = descriptor(batch.poses[mask][None]).squeeze(0).to("cpu", torch.float64)
                 obs = values.new_zeros(len(lengths), size, values.shape[-1])
                 obs[mask] = values
-            poses = batch.poses.double()
+            poses = batch.poses
+            if representation.chart is not None:
+                chart = representation.chart
+                poses = chart.to_tangent(poses.to(chart.reference)).cpu()
+                poses = poses.masked_fill(~mask[..., None], 0)
+            poses = poses.double()
             # Every ablation shares whitening learned using the same base cutoff.
             base = (lengths + stride - 1) // stride
             columns = dct_columns(lengths, size, base, int(base.max()), poses.dtype)

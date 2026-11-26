@@ -63,7 +63,7 @@ def integrate(start, constrain, velocity, steps):
 
 def sample(velocity, noise: Tensor, projector: Projector, representation: Representation,
            steps: tuple[int, int], unconstrained: bool, *, coarse_override: Tensor | None = None,
-           residual_override: Tensor | None = None) -> Tensor:
+           residual_override: Tensor | None = None, coarse_only: bool = False) -> Tensor:
     """An override supplies a projected whitened component for an oracle diagnostic."""
     coarse_scale, detail_scale = representation.scales
     if coarse_override is None:
@@ -74,6 +74,8 @@ def sample(velocity, noise: Tensor, projector: Projector, representation: Repres
         coarse = projector.coarse(coarse_override) / coarse_scale
     coarse_state = coarse * coarse_scale
 
+    if coarse_only:
+        return coarse_state
     if residual_override is not None:
         return coarse_state + projector.detail(residual_override)
     if projector.mode == "single" or (not unconstrained and not bool(projector.detail_rank.any())):

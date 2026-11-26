@@ -47,7 +47,7 @@ class Block(nn.Module):
 
 class MotionTransformer(nn.Module):
     def __init__(self, text_dim: int, width: int, heads: int, depth: int, dropout: float,
-                 energy_rank: int | None):
+                 energy_rank: int | None, plan_dim: int | None = None, retrieval=False):
         super().__init__()
         self.text_projection = nn.Linear(text_dim, width)
         self.language = nn.Embedding(len(LANGUAGES), width)
@@ -62,6 +62,8 @@ class MotionTransformer(nn.Module):
         self.clock = nn.Sequential(nn.Linear(width, width), nn.SiLU(), nn.Linear(width, width))
         self.blocks = nn.ModuleList(Block(width, heads, dropout) for _ in range(depth))
         self.out_norm = nn.LayerNorm(width)
+        self.plan_projection = nn.Linear(plan_dim, width) if plan_dim is not None else None
+        self.retrieve_projection = nn.Linear(POSE_DIM, width) if retrieval else None
         self.register_buffer("frequencies", 10000 ** (-torch.arange(0, width, 2).float() / width))
         if energy_rank is not None:
             self.energy_queries = nn.Parameter(torch.randn(4, width) * 0.02)
@@ -87,7 +89,8 @@ class MotionTransformer(nn.Module):
 
     def forward(self, state: Tensor, time: Tensor, stage: int, condition: Condition,
                 lengths: Tensor, motion_mask: Tensor, dropped: Tensor,
-                coarse: Tensor | None = None) -> Tensor:
+                coarse: Tensor | None = None, plan: Tensor | None = None,
+                retrieval: Tensor | None = None) -> Tensor:
         tokens = torch.cat((condition.tokens, self.null.to(condition.tokens).expand(
             len(state), -1, -1,
         )), dim=1)
@@ -100,6 +103,12 @@ class MotionTransformer(nn.Module):
                    + self.stage.weight[stage])
         if coarse is not None:
             x = x + self.coarse(coarse)
+        if stage == 0 and plan is not None:
+            local = self.plan_projection(plan)
+            x = x + local.masked_fill(dropped[:, None, None] | ~motion_mask[..., None], 0)
+        if stage == 0 and retrieval is not None:
+            hint = self.retrieve_projection(retrieval)
+            x = x + hint.masked_fill(dropped[:, None, None] | ~motion_mask[..., None], 0)
         if stage == 0 and condition.energy is not None:
             intervals = frame_intervals(lengths, state.shape[1])
             energy = condition.energy.gather(1, intervals[..., None].expand(

@@ -4,6 +4,18 @@ status: exploring
 
 Gloss-free text-to-pose generation in the normalized 133-D SMPL-X representation. The first flow generates low temporal frequencies and fast directions estimated from signing geometry. The second flow fills the orthogonal complement. Both stages attend to the sentence on the output frame grid. See the derivation and PHOENIX evidence in [the design document](THIET_KE_FLOW_CAU_AM.md).
 
+The [PHOENIX research roadmap](HUONG_CAI_TIEN_SAU_BASELINE_PHOENIX.md) reports the seed-0 results, coarse and residual interventions, back-translation checks, and follow-up experiments.
+
+Use the roadmap recipe for new PHOENIX runs. It uses one process per method, a
+broadcast-held train monitor for the pose-to-text teacher, and a sealed checkpoint
+selection before scoring held-out dev. The sentence and word–segment losses are
+optional and act on the decoded coarse endpoint. The roadmap also describes
+planner, geometry, refinement, rotation-chart, and train-only retrieval controls.
+
+```bash
+bash configs/experiments/articulatory_hierarchical_flow_matching/phoenix.sh roadmap --help
+```
+
 ## Run
 
 Use the project's SOKE SMPL-X rig, pose statistics and local mBART assets. The default run is PHOENIX-2014T dev.

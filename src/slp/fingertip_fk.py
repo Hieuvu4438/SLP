@@ -17,15 +17,17 @@ class SigningEndpointLoss(nn.Module):
         ref = SMPLXJoints(device="cpu", stats=stats)
         layer = ref.layer
         tips = torch.cat((ref.lreg[4::4], ref.rreg[4::4])).argmax(1)
+        # The first extra SMPL-X joint (55) is the nose in the SOKE evaluator.
+        vertices = torch.cat((tips, layer.vertex_joint_selector.extra_joints_idxs[:1]))
         neutral = layer.v_template + torch.einsum(
             "vcb,b->vc", layer.shapedirs, torch.as_tensor(SOKE_SHAPE)
         )
-        self.register_buffer("point_base", neutral[tips].contiguous())
-        self.register_buffer("point_expression", layer.expr_dirs[tips].contiguous())
+        self.register_buffer("point_base", neutral[vertices].contiguous())
+        self.register_buffer("point_expression", layer.expr_dirs[vertices].contiguous())
         self.register_buffer("point_pose", layer.posedirs.reshape(
             layer.posedirs.shape[0], -1, 3
-        )[:, tips].flatten(1).contiguous())
-        self.register_buffer("point_skinning", layer.lbs_weights[tips].contiguous())
+        )[:, vertices].flatten(1).contiguous())
+        self.register_buffer("point_skinning", layer.lbs_weights[vertices].contiguous())
         self.register_buffer("joints", layer.J_regressor @ neutral)
         self.register_buffer("joint_expression", torch.einsum(
             "jv,vce->jce", layer.J_regressor, layer.expr_dirs
@@ -51,8 +53,8 @@ class SigningEndpointLoss(nn.Module):
             order.extend(children)
         self.register_buffer("restore_order", torch.argsort(torch.tensor(order)))
 
-    def positions(self, features: Tensor) -> tuple[Tensor, Tensor]:
-        """Return wrist-to-pelvis and fingertip-to-wrist positions in centimetres."""
+    def landmarks(self, features: Tensor) -> tuple[Tensor, Tensor, Tensor]:
+        """World-space joints, ten fingertips and nose in metres, flattened over frames."""
         from smplx.lbs import batch_rodrigues
 
         raw = features.float().reshape(-1, features.shape[-1]) * self.std + self.mean
@@ -88,12 +90,19 @@ class SigningEndpointLoss(nn.Module):
         offsets = world_t - (world_r @ rest.unsqueeze(-1)).squeeze(-1)
         tip_r = torch.einsum("vj,njxy->nvxy", self.point_skinning, world_r)
         tip_t = torch.einsum("vj,njx->nvx", self.point_skinning, offsets)
-        tips = ((tip_r @ tip_v.unsqueeze(-1)).squeeze(-1) + tip_t).reshape(n, 2, 5, 3)
+        points = (tip_r @ tip_v.unsqueeze(-1)).squeeze(-1) + tip_t
+        return world_t, points[:, :10].reshape(n, 2, 5, 3), points[:, 10]
+
+    def positions(self, features: Tensor, *, shoulder_relative=False) -> tuple[Tensor, Tensor]:
+        """Return wrist and fingertip positions relative to their anchors in centimetres."""
+        world_t, tips, _ = self.landmarks(features)
         wrists = world_t[:, 20:22]
-        return 100 * (wrists - world_t[:, :1]), 100 * (tips - wrists.unsqueeze(-2))
+        anchor = world_t[:, 16:18] if shoulder_relative else world_t[:, :1]
+        return 100 * (wrists - anchor), 100 * (tips - wrists.unsqueeze(-2))
 
     def forward(
-        self, predicted: Tensor, target: Tensor, lengths: Tensor, samples: int,
+        self, predicted: Tensor, target: Tensor, lengths: Tensor, samples: int, *,
+        shoulder_relative=False,
     ) -> tuple[Tensor, Tensor]:
         # Uniform midpoint sampling per clip keeps this auxiliary loss bounded for long sequences.
         samples = min(samples, predicted.shape[1])
@@ -101,9 +110,10 @@ class SigningEndpointLoss(nn.Module):
         frames = grid[None] * lengths[:, None] // (2 * samples)
         items = torch.arange(len(predicted), device=predicted.device)[:, None]
         with torch.autocast(predicted.device.type, enabled=False):
-            wrist, hand = self.positions(predicted[items, frames])
+            wrist, hand = self.positions(predicted[items, frames], shoulder_relative=shoulder_relative)
             with torch.no_grad():
-                ref_wrist, ref_hand = self.positions(target[items, frames])
+                ref_wrist, ref_hand = self.positions(target[items, frames],
+                                                    shoulder_relative=shoulder_relative)
             return (
                 F.smooth_l1_loss(wrist, ref_wrist, beta=2.0),
                 F.smooth_l1_loss(hand, ref_hand, beta=2.0),

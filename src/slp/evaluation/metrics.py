@@ -244,9 +244,9 @@ def pairwise_part_cost(gen, ref, wanted=None, align: str = "root", chunk: int = 
 _SOKE_CACHE: dict = {}
 
 
-def soke_protocol_scores(preds, targets) -> dict[str, np.ndarray]:
+def soke_protocol_scores(preds, targets, *, path_normalized=False) -> dict[str, np.ndarray]:
     """Per-sequence SOKE DTW scores for normalised 133-D preds/targets (cached per call set)."""
-    key = (id(preds), id(targets))
+    key = (id(preds), id(targets), path_normalized)
     hit = _SOKE_CACHE.get(key)
     if hit is not None and hit[0] is preds and hit[1] is targets:
         return hit[2]
@@ -255,6 +255,15 @@ def soke_protocol_scores(preds, targets) -> dict[str, np.ndarray]:
     fk = default_fk()
     out = {f"{m}_{p}": [] for m in ("jpe", "pa") for p in ("all", "body", "lhand", "rhand")}
     out["pa_body_ua"] = []
+    if path_normalized:
+        out.update({f"{k}_per_step": [] for k in tuple(out)})
+
+    def add(name, cost):
+        total, steps = dtw_cost(cost)
+        out[name].append(total)
+        if path_normalized:
+            out[f"{name}_per_step"].append(total / steps)
+
     for p, t in zip(preds, targets):
         p, t = np.asarray(p), np.asarray(t)
         if p.ndim != 2 or p.shape[-1] != 133 or len(p) == 0:
@@ -262,14 +271,14 @@ def soke_protocol_scores(preds, targets) -> dict[str, np.ndarray]:
         gj, gl, gr = fk(p)
         rj, rl, rr = fk(t)
         for m, align in (("jpe", "root"), ("pa", "procrustes")):
-            out[f"{m}_all"].append(dtw_cost(pairwise_part_cost(gj, rj, None, align))[0])
-            out[f"{m}_body"].append(dtw_cost(pairwise_part_cost(gj, rj, UPPER_BODY_IDX, align))[0])
-            out[f"{m}_lhand"].append(dtw_cost(pairwise_part_cost(gl, rl, None, align))[0])
-            out[f"{m}_rhand"].append(dtw_cost(pairwise_part_cost(gr, rr, None, align))[0])
+            add(f"{m}_all", pairwise_part_cost(gj, rj, None, align))
+            add(f"{m}_body", pairwise_part_cost(gj, rj, UPPER_BODY_IDX, align))
+            add(f"{m}_lhand", pairwise_part_cost(gl, rl, None, align))
+            add(f"{m}_rhand", pairwise_part_cost(gr, rr, None, align))
         # Variant: Procrustes fitted on the 12 upper-body joints themselves (SOKE's released code
         # fits it on all joints, which gives PA > JPE for body, unlike every published table).
         ub = list(UPPER_BODY_IDX)
-        out["pa_body_ua"].append(dtw_cost(pairwise_part_cost(gj[:, ub], rj[:, ub], None, "procrustes"))[0])
+        add("pa_body_ua", pairwise_part_cost(gj[:, ub], rj[:, ub], None, "procrustes"))
     res = {k: np.asarray(v) for k, v in out.items()}
     _SOKE_CACHE.clear()
     _SOKE_CACHE[key] = (preds, targets, res)
@@ -413,6 +422,30 @@ def paired_bootstrap_ci(diff, n_boot: int = 4000, alpha: float = 0.05, seed: int
     rng = np.random.default_rng(seed)
     boots = d[rng.integers(0, len(d), (n_boot, len(d)))].mean(1)
     return float(d.mean()), float(np.percentile(boots, 100 * alpha / 2)), float(np.percentile(boots, 100 * (1 - alpha / 2)))
+
+
+def cluster_bootstrap_ci(diff, clusters=None, n_boot: int = 4000, alpha: float = 0.05,
+                         seed: int = 0) -> tuple[float, float, float, float]:
+    """Mean of per-sequence differences with a cluster bootstrap: whole clusters (e.g. all clips
+    of one sentence, CSL-Daily repeats sentences) are resampled together; ``clusters=None`` gives
+    the per-sequence bootstrap. Returns (mean, lo, hi, p) with the percentile (1 - alpha)
+    interval and the two-sided bootstrap p-value 2 * min(P(mean* <= 0), P(mean* >= 0)) of the
+    sign of the mean (clipped to [1 / n_boot, 1])."""
+    d = np.asarray(diff, dtype=np.float64)
+    if d.ndim != 1 or len(d) == 0:
+        raise ValueError("diff must be a non-empty 1-D array")
+    labels = np.arange(len(d)) if clusters is None else np.asarray(clusters)
+    if len(labels) != len(d):
+        raise ValueError("clusters must have one label per sequence")
+    _, inverse = np.unique(labels, return_inverse=True)
+    sums = np.bincount(inverse, weights=d)
+    counts = np.bincount(inverse).astype(np.float64)
+    rng = np.random.default_rng(seed)
+    pick = rng.integers(0, len(sums), (n_boot, len(sums)))
+    boots = sums[pick].sum(1) / counts[pick].sum(1)
+    lo, hi = np.percentile(boots, [100 * alpha / 2, 100 * (1 - alpha / 2)])
+    p = 2 * min(float((boots <= 0).mean()), float((boots >= 0).mean()))
+    return float(d.mean()), float(lo), float(hi), float(min(1.0, max(p, 1.0 / n_boot)))
 
 
 def frontier_effect(arm_scores, arm_speed: float, frontier_scores, frontier_speeds) -> tuple[np.ndarray, bool]:

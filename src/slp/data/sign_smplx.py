@@ -135,24 +135,31 @@ def _how2sign(root, split, exclude=frozenset()):
 LOADERS = {"phoenix": _phoenix, "csl": _csl, "how2sign": _how2sign}
 
 
-def load_sign_smplx(cfg: dict) -> DatasetSplits:
-    d = cfg["data"]
-    root = Path(d["root"])
-    mean, std = load_stats(d["stats"])
-    splits = {}
-    # protocol: "madis" (default) or "soke" (How2Sign: SOKE's 24-fps subsampling and failed-fit
-    # exclusions; identical to madis for Phoenix / CSL)
-    protocol = d.get("protocol", "madis")
+def load_sign_smplx_split(cfg: dict, split: str) -> Split:
+    """Open one official split without reading another partition's metadata."""
+    return _sign_split(cfg["data"], split, *load_stats(cfg["data"]["stats"]))
+
+
+def _sign_split(data, split, mean, std):
+    root = Path(data["root"])
+    protocol = data.get("protocol", "madis")
     if protocol not in ("madis", "soke"):
         raise ValueError(f"unknown data.protocol {protocol!r}")
-    for split in ("train", "val", "test"):
-        if d["source"] == "how2sign":
-            rows = _how2sign(root, split, SOKE_BAD_HOW2SIGN_IDS if protocol == "soke" else frozenset())
-        else:
-            rows = LOADERS[d["source"]](root, split)
-        fps = [r[2] for r in rows] if d["source"] == "how2sign" else None
-        splits[split] = Split([r[0] for r in rows],
-                              LazyPoses([r[1] for r in rows], mean, std, fps=fps, subsample=protocol),
-                              meta={"source": d["source"], "split": split})
+    source = data["source"]
+    if source == "how2sign":
+        exclude = SOKE_BAD_HOW2SIGN_IDS if protocol == "soke" else frozenset()
+        rows = _how2sign(root, split, exclude)
+    else:
+        rows = LOADERS[source](root, split)
+    fps = [row[2] for row in rows] if source == "how2sign" else None
+    return Split([row[0] for row in rows],
+                 LazyPoses([row[1] for row in rows], mean, std, fps=fps, subsample=protocol),
+                 meta={"source": source, "split": split})
+
+
+def load_sign_smplx(cfg: dict) -> DatasetSplits:
+    d = cfg["data"]
+    mean, std = load_stats(d["stats"])
+    splits = {split: _sign_split(d, split, mean, std) for split in ("train", "val", "test")}
     return DatasetSplits(splits["train"], splits["val"], splits["test"],
                          info={"nfeats": 133, "parts": PARTS, "source": d["source"]})

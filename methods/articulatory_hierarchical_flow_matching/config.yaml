@@ -18,6 +18,7 @@ method:
 
   subspace:
     mode: articulatory
+    rotation_chart: axis_angle
     rank: 16
     stride: 8
     weights: [1, 1, 1, 1, 0.5]
@@ -44,6 +45,12 @@ method:
     energy_weight: 0.0
     endpoint_fk_weight: 0.0
     endpoint_fk_frames: 12
+    coarse_fk_weight: 0.0
+    coarse_rotation_weight: 0.0
+    coarse_palm_weight: 0.0
+    coarse_face_weight: 0.0
+    coarse_contact_weight: 0.0
+    coarse_velocity_weight: 0.0
     batch_size: 32
     microbatch: 4
     updates: 24000
@@ -55,6 +62,58 @@ method:
     weight_decay: 0.0
     grad_clip: 1.0
     ema_decay: 0.999
+
+  semantic:
+    mode: "off"
+    window: 8
+    width: 128
+    max_words: 24
+    max_df: 0.45
+    negatives: 12
+    reviewed_negatives: null
+    temperature: 0.10
+    alignment_temperature: 0.08
+    null_similarity: 0.20
+    monitor_fraction: 0.10
+    min_retrieval_gain: 0.02
+    text_batch: 32
+    updates: 3000
+    warmup_updates: 150
+    eval_every: 500
+    lr: 3.0e-4
+    min_lr_ratio: 0.10
+    grad_clip: 1.0
+    gradient_ratio: 0.075
+    calibration_microbatches: 8
+
+  planner:
+    mode: "off"
+    duration_source: flow
+    frame_stride: 4
+    target_frames: 24
+    min_frames: 8
+    max_frames: 48
+    max_units: 64
+    width: 128
+    heads: 4
+    depth: 2
+    updates: 3000
+    warmup_updates: 150
+    eval_every: 500
+    lr: 3.0e-4
+    min_lr_ratio: 0.10
+    grad_clip: 1.0
+
+  refinement:
+    reference_train_only: false
+    jitter_scale: 0.0
+    reference_run: null
+    reference_checkpoint: null
+    calibration_clips: 64
+
+  retrieval:
+    mode: "off"
+    anchors: 8
 
   sampler:
     steps: [6, 6]

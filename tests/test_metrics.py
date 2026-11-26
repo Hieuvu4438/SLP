@@ -171,7 +171,8 @@ def test_soke_pa_body_upper_aligned_bounded_by_root_aligned():
 
 # ------------------------------------------------ calibration metrics (docs/proposal7 M1/M2)
 from slp.evaluation.metrics import (  # noqa: E402
-    frechet_distance, frontier_effect, lowpass_kinematics, paired_bootstrap_ci, r_precision)
+    frechet_distance, frontier_effect, lowpass_kinematics, paired_bootstrap_ci, r_precision,
+    cluster_bootstrap_ci)
 
 
 def test_lowpass_kinematics_constant_velocity_and_static():
@@ -276,3 +277,24 @@ def test_multilabel_average_precision_known_values():
     np.testing.assert_allclose(multilabel_average_precision(scores, labels), (0.75 + 0.5) / 2)
     with pytest.raises(ValueError):
         multilabel_average_precision(scores, np.zeros_like(labels))
+
+
+def test_cluster_bootstrap_ci():
+    rng = np.random.default_rng(0)
+    m, lo, hi, p = cluster_bootstrap_ci(np.full(60, -0.3))
+    assert m == pytest.approx(-0.3) and lo == pytest.approx(-0.3) and hi == pytest.approx(-0.3)
+    assert p == pytest.approx(1 / 4000)
+    # Without clusters it matches the per-sequence bootstrap interval in spirit (same mean).
+    d = rng.normal(0.0, 1.0, 200)
+    m1, lo1, hi1, p1 = cluster_bootstrap_ci(d)
+    assert lo1 < m1 < hi1 and 0 < p1 <= 1
+    # Perfectly duplicated sequences (3 clips per sentence): clustering widens the interval
+    # by about sqrt(3) relative to treating the copies as independent.
+    base = rng.normal(0.1, 1.0, 100)
+    dup = np.repeat(base, 3)
+    clusters = np.repeat(np.arange(100), 3)
+    _, lo_n, hi_n, _ = cluster_bootstrap_ci(dup)
+    _, lo_c, hi_c, _ = cluster_bootstrap_ci(dup, clusters)
+    assert (hi_c - lo_c) / (hi_n - lo_n) == pytest.approx(np.sqrt(3), rel=0.2)
+    with pytest.raises(ValueError):
+        cluster_bootstrap_ci(np.zeros(3), [0, 1])
