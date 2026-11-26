@@ -76,7 +76,7 @@ CANDIDATES: tuple[Candidate, ...] = (
                         "method.sampler.cfg_scale=1", "method.sampler.temperature=1.0"),
               {"solver": "euler", "cfg_scale": 1.0, "temperature": 1.0}),
 )
-DEV_SIZE = {"phoenix_smplx": 519, "csl_smplx": 1077, "how2sign_smplx_soke": 1716}
+DEV_SIZE = {"phoenix_smplx": 519, "csl_smplx": 1077, "how2sign_smplx_soke": 1722}
 
 
 def latest_run(experiment: str, need: str | None = "metrics.json") -> Path | None:
