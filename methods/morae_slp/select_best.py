@@ -163,27 +163,36 @@ def choose(dataset: str, candidates=CANDIDATES) -> Candidate:
 
 def test_argv(command: str, name: str, sampler: tuple[str, ...], dirty: bool,
               python: str = sys.executable) -> list[str]:
-    """The chosen run's recorded command, switched to the test split."""
+    """The chosen run's recorded command, switched to the test split.
+
+    ``scripts/run.py`` takes its ``--options`` first and the ``key=value`` overrides last (the
+    overrides are a trailing positional list), so the command is rebuilt in that order."""
     tokens = shlex.split(command)
     if tokens[0].endswith("run.py"):
         tokens = tokens[1:]
-    out, skip = [], False
-    for i, t in enumerate(tokens):
-        if skip:
-            skip = False
-            continue
-        if t in ("--split", "--name"):
-            skip = True
-            continue
-        if t == "--allow-dirty" or t.startswith("method.sampler.") and any(
-                t.split("=")[0] == s.split("=")[0] for s in sampler):
-            continue
-        out.append(t)
-    argv = [python, "-u", "scripts/run.py", *out, "--split", "test", "--name", f"{name}_test",
-            *sampler]
+    options: dict[str, str] = {}
+    overrides: list[str] = []
+    i = 0
+    while i < len(tokens):
+        t = tokens[i]
+        if t == "--allow-dirty":
+            i += 1
+        elif t.startswith("--"):
+            options[t] = tokens[i + 1]
+            i += 2
+        else:
+            overrides.append(t)
+            i += 1
+    options["--split"] = "test"
+    options["--name"] = f"{name}_test"
+    replaced = {s.split("=")[0] for s in sampler}
+    overrides = [o for o in overrides if o.split("=")[0] not in replaced] + list(sampler)
+    argv = [python, "-u", "scripts/run.py"]
+    for key, value in options.items():
+        argv += [key, value]
     if dirty:
         argv.append("--allow-dirty")
-    return argv
+    return argv + overrides
 
 
 def git_dirty() -> bool:

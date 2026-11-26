@@ -1055,13 +1055,23 @@ def test_select_best_test_command_switches_split_name_and_sampler():
     sampler = ("method.sampler.solver=euler", "method.sampler.cfg_scale=1")
     argv = sb.test_argv(cmd, "run_a", sampler, dirty=False, python="py")
     assert argv[:3] == ["py", "-u", "scripts/run.py"]
+    # run.py's own parser must accept it: options first, then the trailing overrides.
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("slp_run_script", "scripts/run.py")
+    run_script = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(run_script)
+    parsed = run_script.parse_args(argv[3:])
+    assert parsed.split == "test" and parsed.name == "run_a_test" and parsed.seeds == "1"
+    assert parsed.method == "morae_slp" and parsed.data == "csl_smplx" and not parsed.allow_dirty
+    assert "method.sampler.cfg_scale=1" in parsed.overrides and "method.workers=6" in parsed.overrides
     assert argv.count("--split") == 1 and argv[argv.index("--split") + 1] == "test"
     assert argv[argv.index("--name") + 1] == "run_a_test" and "val" not in argv
     assert argv[argv.index("--seeds") + 1] == "1"
     assert "method.sampler.cfg_scale=1.5" not in argv and "method.sampler.cfg_scale=1" in argv
     assert "method.sampler.temperature=0.7" in argv and "method.flow.snapshot_steps=[20000]" in argv
     assert "--allow-dirty" not in argv
-    assert sb.test_argv(cmd, "run_a", sampler, dirty=True, python="py")[-1] == "--allow-dirty"
+    dirty_argv = sb.test_argv(cmd, "run_a", sampler, dirty=True, python="py")
+    assert "--allow-dirty" in dirty_argv and run_script.parse_args(dirty_argv[3:]).allow_dirty
 
 
 def test_select_best_registry_covers_every_dataset_and_is_gloss_free():
