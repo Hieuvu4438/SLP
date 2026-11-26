@@ -448,7 +448,8 @@ PLANS = {"v1": ("job", "stages"), "v2": ("job_v2", "stages_v2"), "v3": ("job_v3"
 
 
 def latest_run(name: str) -> Path | None:
-    runs = sorted((PROJECT_ROOT / "outputs" / "runs" / name / "morae_slp").glob("seed0_*"))
+    runs = sorted((PROJECT_ROOT / "outputs" / "runs" / name / "morae_slp").glob("seed*_*"),
+                  key=lambda r: r.name.split("_", 1)[1])  # newest timestamp, whatever the seed
     done = [r for r in runs if (r / "metrics.json").is_file()]
     return done[-1] if done else None
 
