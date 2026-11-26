@@ -60,7 +60,7 @@ CANDIDATES: tuple[Candidate, ...] = (
               ("method.sampler.solver=euler", "method.sampler.steps=5",
                "method.sampler.cfg_scale=1", "method.sampler.temperature=1.0"),
               {"solver": "euler", "cfg_scale": 1.0, "temperature": 1.0}),
-    Candidate("phoenix_smplx", "baseline seed1", "morae_v3_phoenix_base_seed1", "metrics"),
+    # (seed 1 of the baseline is run only to measure seed noise, never as a candidate)
     Candidate("phoenix_smplx", "C1 target", "morae_v3_phoenix_target", "metrics"),
     Candidate("phoenix_smplx", "C2 fk velocity", "morae_v3_phoenix_fk_velocity", "metrics"),
     Candidate("phoenix_smplx", "C2 fk target", "morae_v3_phoenix_fk_target", "metrics"),

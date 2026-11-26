@@ -171,6 +171,9 @@ REPLICA = {
                            "seed0_20261118-125753-011324/predictions.npz",
 }
 EXCLUDED_V3 = {"p1b_fk_target", "p1b_fk_target_sweep",  # C1 was neutral on Phoenix (2026-11-27)
+               "csl_fk", "csl_fk_sweep", "csl_fk_euler_dev",  # C2 did not help Phoenix
+               "p1c_lr03", "p1c_lr03_sweep",
+
                "p0_gloss_phoenix", "p0_gloss_gate_phoenix", "p2_gloss_phoenix",
                "p2_gloss_phoenix_sweep", "p2_retrieval_phoenix", "p2_retrieval_phoenix_sweep",
                "p0_gloss_csl", "p0_gloss_gate_csl"}
@@ -253,8 +256,9 @@ def stages_v3(workers: int) -> list[tuple[str, callable]]:
                                         "--out", str(DIAG / "p0_gloss_gate_csl.json")], None)),
         # P0.5 seed noise of the baseline.
         ("p0_seed1", run("morae_v3_phoenix_base_seed1", "phoenix_smplx", seed=1)),
-        ("p0_seed1_sweep", sweep("morae_v3_phoenix_base_seed1", "--cfg", "1.5", "--temperature",
-                                 "0.7", *conf)),
+        # Seed noise of the chosen sampler (Euler 5 steps, no guidance) on the whole dev split.
+        ("p0_seed1_sweep", sweep("morae_v3_phoenix_base_seed1", "--solver", "euler", "--steps", "5",
+                                 "--cfg", "1", "--temperature", "1.0,0.7")),
         # P1.A C1: sampler alone (velocity model, 5 steps: Euler == replan_implied for a velocity
         # model, so only Euler and the re-anchored rule), then the x1 target.
         ("p1a_sampler_only", sweep(ctrl, "--solver", "euler,replan_anchored",
