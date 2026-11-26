@@ -211,19 +211,41 @@ class PoseDataset(Dataset):
 
 
 class LatentDataset(Dataset):
-    """Cached flow targets (standardised latents) with their text."""
+    """Cached flow targets (standardised latents) with their text.
 
-    def __init__(self, latents: list[Tensor], items: list[dict]):
+    Optional per-clip extras (PLAN_V3): ``poses`` (GT [T, 133] for the metric-frame FK loss),
+    ``glosses`` (LongTensor gloss ids for the gloss-consistency loss) and ``memory`` (LongTensor
+    [k] indices of retrieved train clips, -1 = empty slot). Without extras an item is the
+    3-tuple of v1/v2."""
+
+    def __init__(self, latents: list[Tensor], items: list[dict], poses: list[Tensor] | None = None,
+                 glosses: list[Tensor] | None = None, memory: Tensor | None = None):
         if len(latents) != len(items) or not latents:
             raise ValueError("LatentDataset needs one latent per text item")
+        for name, extra in (("poses", poses), ("glosses", glosses), ("memory", memory)):
+            if extra is not None and len(extra) != len(latents):
+                raise ValueError(f"LatentDataset: {name} needs one entry per latent")
+        if poses is not None and any(len(p) != len(z) for p, z in zip(poses, latents)):
+            raise ValueError("LatentDataset: pose and latent lengths differ")
         self.latents = latents
         self.texts = [text_input(item) for item in items]
+        self.poses, self.glosses, self.memory = poses, glosses, memory
 
     def __len__(self) -> int:
         return len(self.latents)
 
     def __getitem__(self, i: int):
-        return (self.latents[i].float(), *self.texts[i])
+        base = (self.latents[i].float(), *self.texts[i])
+        if self.poses is None and self.glosses is None and self.memory is None:
+            return base
+        extra = {"index": i}
+        if self.poses is not None:
+            extra["pose"] = self.poses[i]
+        if self.glosses is not None:
+            extra["gloss"] = self.glosses[i]
+        if self.memory is not None:
+            extra["memory"] = self.memory[i]
+        return (*base, extra)
 
 
 class Batch(NamedTuple):
@@ -231,11 +253,17 @@ class Batch(NamedTuple):
     lengths: Tensor     # [B]
     texts: list[str]
     languages: Tensor   # [B]
+    poses: Tensor | None = None          # [B, T, 133] GT poses (FK loss), zero-padded
+    glosses: list[Tensor] | None = None  # gloss id sequences (gloss-consistency loss)
+    memory: Tensor | None = None         # [B, k] retrieved train-clip indices (-1 = none)
 
     def to(self, device: torch.device) -> Batch:
+        move = (lambda x: None if x is None else x.to(device, non_blocking=True))
         return Batch(self.values.to(device, non_blocking=True),
                      self.lengths.to(device, non_blocking=True), self.texts,
-                     self.languages.to(device, non_blocking=True))
+                     self.languages.to(device, non_blocking=True), move(self.poses),
+                     None if self.glosses is None else [g.to(device) for g in self.glosses],
+                     move(self.memory))
 
 
 def collate_microbatches(items: list, microbatch: int) -> list[Batch]:
@@ -245,8 +273,17 @@ def collate_microbatches(items: list, microbatch: int) -> list[Batch]:
     items = sorted(items, key=lambda item: len(item[0]))
     out = []
     for start in range(0, len(items), microbatch):
-        values, texts, languages = zip(*items[start:start + microbatch])
+        chunk = items[start:start + microbatch]
+        values, texts, languages = zip(*(item[:3] for item in chunk))
+        extras = [item[3] if len(item) > 3 else {} for item in chunk]
+        poses = glosses = memory = None
+        if all("pose" in e for e in extras) and extras:
+            poses = pad_sequence([e["pose"].float() for e in extras], batch_first=True)
+        if all("gloss" in e for e in extras) and extras:
+            glosses = [e["gloss"].long() for e in extras]
+        if all("memory" in e for e in extras) and extras:
+            memory = torch.stack([e["memory"].long() for e in extras])
         out.append(Batch(pad_sequence(values, batch_first=True),
                          torch.tensor([len(v) for v in values]), list(texts),
-                         torch.tensor(languages)))
+                         torch.tensor(languages), poses, glosses, memory))
     return out

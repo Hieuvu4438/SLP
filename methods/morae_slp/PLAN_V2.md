@@ -190,3 +190,41 @@ Relikflow tự khởi động lại khi v2 xong (`relikflow-after-morae-v2.servi
   ép nhánh text mang nội dung ký hiệu. Inference vẫn chỉ dùng text.
 - **D. Ước lượng điểm tốt hơn.** Thử K = 16 hoặc 32, trung bình trong latent thay vì pose, hoặc
   dùng Euler 1 bước sau khi dừng sớm (v1 20k cho 5.05 / 6.93 ở tốc độ 0.39).
+
+---
+
+## 8. Kết quả thực nghiệm v2 (dev, cập nhật 2026-11-26) và bước tiếp theo
+
+Số dev, seed 0, bộ chấm SOKE dùng chung. "Một mẫu" là một chuỗi cho mỗi câu (protocol của các paper).
+
+### 8.1 Điều đã học được
+
+| # | Phát hiện | Bằng chứng |
+|---|---|---|
+| 1 | Pretrain flow trên union **không** cải thiện DTW một mẫu, dù val flow loss tốt hơn | Phoenix: union→fine-tune 5.53 / 7.19, flow chỉ-Phoenix 5.32 / 6.97 (w = 2). Val flow 0.921 so với 0.973 |
+| 2 | Công thức v2 (mBART fine-tune lr 0.1×, bỏ 10% token, chọn checkpoint theo val) giúp Phoenix | 5.55 / 7.35 (v1) → 5.32 / 6.97 (w = 2). Chưa ablate từng thành phần, mới chỉ so cả gói với v1 |
+| 3 | Hạ nhiệt độ nhiễu τ đưa một mẫu về ngang replica | Phoenix, w = 1.5, τ = 0.7: 5.196 / 6.941 · 4.576 / 1.367 (519 clip), tốc độ 0.66 / 0.68. Tại cùng tốc độ: body +0.02 (n.s.), hand +0.12, PA-body −0.02 (n.s.) |
+| 4 | Guidance thấp tốt hơn cao ở mọi bộ | w = 1–1.5 tốt hơn w = 3.5 cho cả một mẫu và K = 8 |
+| 5 | Trung bình K = 8 mẫu thắng đường biên của replica ở Phoenix với w = 1.5, không thắng với w = 3.5 | body −0.18, hand −0.29 (w = 1.5) so với +0.13 / −0.08 (w = 3.5) |
+| 6 | **CSL kém replica ở cả hai công thức** | union→fine-tune 6.28 / 7.99; chỉ-CSL 6.20 / 8.02 (replica 5.72 / 7.38). Sweep τ = 0.7: 6.00 / 7.85 |
+| 7 | How2Sign kém replica ở bản union | 7.90 / 10.97 (replica 7.50 / 10.85); bản chỉ-How2Sign chưa xong |
+
+Nhãn "chỉ Phoenix / CSL / How2Sign" chỉ nói về flow và text. Sign-JEPA và latent d = 64 đều huấn luyện trên chuyển động của
+cả ba dataset (không có text).
+
+### 8.2 Cây quyết định cho CSL và How2Sign (chờ `diag_recon_*` và `sweep_gtlen_*`)
+
+| Kết quả chẩn đoán | Hướng tiếp theo |
+|---|---|
+| Trần tái tạo của latent ở CSL hoặc How2Sign cao hơn rõ rệt so với Phoenix (1.45 / 1.77) | Nút thắt là dung lượng latent: huấn luyện lại AE với d = 128 trên union (khoảng 1.5 giờ, teacher đóng băng), rồi chạy lại flow |
+| Dùng độ dài thật cải thiện nhiều (> 0.2 JPE) | Cải thiện head độ dài: tăng `duration_weight`, thêm đặc trưng độ dài câu |
+| Cả hai đều nhỏ | Nút thắt nằm ở nhánh text: thử `text.lr_scale` 0.3 hoặc 1.0 (replica fine-tune mBART ở lr đầy đủ), hoặc đổi cách che token |
+
+Mỗi thí nghiệm chạy một mình (một tiến trình), chấm trên dev bằng cùng bộ sweep (w, τ), và chỉ khi tốt hơn mới chuyển sang so cùng tốc độ.
+
+### 8.3 Đánh giá trên test (chưa chạy)
+
+Chỉ chạy khi người dùng yêu cầu rõ, một lần, với cấu hình đã chọn trên dev (Phoenix: công thức chỉ-Phoenix, w = 1.5, τ = 0.7).
+`run.py --split test` huấn luyện lại rồi chấm test: Phoenix khoảng 1.6 giờ, CSL khoảng 1.7 giờ, How2Sign khoảng 2.5 giờ. Cần git tree sạch,
+hoặc `--allow-dirty` (số không dùng làm số báo cáo). Báo cáo phải ghi: SSL trên union chuyển động, một seed, cấu hình chọn trên dev,
+và tốc độ chuyển động.

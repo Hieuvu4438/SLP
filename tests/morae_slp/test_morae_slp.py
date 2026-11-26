@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import copy
 import logging
+import json
 import math
 
 import numpy as np
@@ -15,7 +16,8 @@ from slp.tracking.run import RunContext
 
 from methods.morae_slp.autoencoder import LatentSpace, autoencoder_losses
 from methods.morae_slp.data import (GROUPS, N_GROUPS, POSE_DIM, UNITS, ConcatSplit,
-                                    group_channel_matrix, sample_group_mask, with_velocity)
+                                    group_channel_matrix, sample_group_mask, text_input,
+                                    with_velocity)
 from methods.morae_slp.dit import LatentDiT
 from methods.morae_slp.flow import cfg_combine, integrate, training_pair
 from methods.morae_slp.jepa import SignJEPA, teacher_momentum
@@ -524,3 +526,582 @@ def test_optimizer_trains_an_extra_group_at_a_scaled_rate():
     assert lrs == pytest.approx([1e-4, 1e-3])
     ids = [id(p) for g in opt.param_groups for p in g["params"]]
     assert len(ids) == len(set(ids)) == 4
+
+
+# ============================================================================================
+# v3 (PLAN_V3.md): C1 target prediction / re-planned samplers, C2 FK loss, C3 gloss loss,
+# C4 retrieval memory, C5 decoders, C6 duration options, tools.
+
+def _smplx_available() -> bool:
+    try:
+        from methods.morae_slp.autoencoder import PoseFKLoss
+
+        PoseFKLoss(None)
+        return True
+    except Exception:
+        return False
+
+
+needs_smplx = pytest.mark.skipif(not _smplx_available(), reason="SMPL-X model files missing")
+
+
+def test_target_and_velocity_parameterisations_are_consistent():
+    from methods.morae_slp.flow import target_weight, to_target, to_velocity
+
+    torch.manual_seed(0)
+    x0, x1, v_hat = torch.randn(4, 6, 3), torch.randn(4, 6, 3), torch.randn(4, 6, 3)
+    t = torch.tensor([0.0, 0.3, 0.6, 0.85])
+    x_t, v = training_pair(x1, x0, t)
+    x1_hat = to_target(v_hat, x_t, t, "velocity")
+    torch.testing.assert_close(to_velocity(x1_hat, x_t, t, "target", min_gap=1e-9), v_hat)
+    # ||x1 - x1_hat||^2 / (1 - t)^2 is exactly the velocity loss (weight not capped here).
+    w = target_weight(t, "velocity")[:, None, None]
+    torch.testing.assert_close(w * (x1_hat - x1).square(), (v_hat - v).square())
+    assert torch.equal(target_weight(t, "uniform"), torch.ones(4))
+    with pytest.raises(ValueError):
+        to_target(v_hat, x_t, t, "noise")
+
+
+@pytest.mark.parametrize("mode", ["replan_implied", "replan_anchored"])
+def test_replan_samplers_follow_the_signmflow_updates(mode):
+    from methods.morae_slp.flow import replan
+
+    torch.manual_seed(1)
+    x0, target = torch.randn(2, 5, 3), torch.randn(2, 5, 3)
+    for steps in (1, 3, 5):  # a perfect x1 predictor lands exactly on the target
+        torch.testing.assert_close(replan(lambda x, t: target, x0, steps, mode), target)
+    # One step of a 4-step grid from t = 0: both rules give (1 - 1/4) x0 + 1/4 x1_hat.
+    seen = []
+
+    def predictor(x, t):
+        seen.append(float(t[0]))
+        return target if len(seen) == 1 else x
+    replan(predictor, x0, 4, mode)
+    assert seen[:2] == [0.0, 0.25]
+    # The first step of both rules is identical and the last step returns the last x1
+    # estimate, so with 2 steps they coincide; a state-dependent predictor separates them
+    # from 3 steps on.
+    f = (lambda x, t: 0.5 * x + target)
+    torch.testing.assert_close(replan(f, x0, 2, "replan_implied"),
+                               replan(f, x0, 2, "replan_anchored"))
+    assert not torch.allclose(replan(f, x0, 3, "replan_implied"),
+                              replan(f, x0, 3, "replan_anchored"))
+    valid = torch.tensor([[True] * 5, [True] * 3 + [False] * 2])
+    out = replan(lambda x, t: target, x0, 3, mode, valid)
+    assert torch.all(out[1, 3:] == 0)
+
+
+def test_latent_dataset_extras_and_collate():
+    from methods.morae_slp.data import Batch, LatentDataset, collate_microbatches
+
+    items = [{"text": "a b", "lang": "de_DGS"}, {"text": "c", "lang": "de_DGS"}]
+    latents = [torch.randn(4, 2), torch.randn(6, 2)]
+    plain = LatentDataset(latents, items)
+    assert len(plain[0]) == 3
+    batch = collate_microbatches([plain[0], plain[1]], 2)[0]
+    assert batch.poses is None and batch.glosses is None and batch.memory is None
+    rich = LatentDataset(latents, items, poses=[torch.randn(4, POSE_DIM), torch.randn(6, POSE_DIM)],
+                         glosses=[torch.tensor([2, 3]), torch.tensor([4])],
+                         memory=torch.tensor([[1, -1], [0, 1]]))
+    batch = collate_microbatches([rich[1], rich[0]], 2)[0]  # sorted by length inside
+    assert batch.poses.shape == (2, 6, POSE_DIM) and batch.lengths.tolist() == [4, 6]
+    assert [g.tolist() for g in batch.glosses] == [[2, 3], [4]]
+    assert batch.memory.tolist() == [[1, -1], [0, 1]]
+    assert isinstance(batch.to(torch.device("cpu")), Batch)
+    with pytest.raises(ValueError):
+        LatentDataset(latents, items, poses=[torch.randn(5, POSE_DIM), torch.randn(6, POSE_DIM)])
+
+
+def test_text_index_excludes_own_sentence_and_round_trips():
+    from methods.morae_slp.retrieval import TextIndex, gather_memory, normalise
+
+    texts = ["Morgen Regen im Norden.", "morgen regen im norden", "heute sonne im süden",
+             "今天天气很好", "明天下雨", "wind aus westen"]
+    assert normalise(texts[0]) == normalise(texts[1])
+    index = TextIndex(texts)
+    train = index.query(texts, 2, exclude_groups=True, query_ids=list(range(len(texts))))
+    for q, row in enumerate(train):
+        assert all(index.group[j] != index.group[q] for j in row if j >= 0)
+    assert index.query(["morgen regen im osten"], 1)[0, 0] in (0, 1)
+    assert index.query(["明天天气很好"], 1)[0, 0] == 3
+    again = TextIndex.from_state(index.state())
+    np.testing.assert_allclose(again.scores(["wind im westen"]), index.scores(["wind im westen"]))
+    assert index.duplicate_of_train(["morgen, regen im norden", "neu"]).tolist() == [True, False]
+    with pytest.raises(ValueError):
+        index.query(texts, 2, exclude_groups=True)
+    bank = [torch.randn(n, 3) for n in (5, 7, 2)]
+    mem, valid = gather_memory(bank, torch.tensor([[0, -1], [2, 1]]), 6, torch.device("cpu"))
+    assert mem.shape == (2, 2, 6, 3) and valid.sum(-1).tolist() == [[5, 0], [2, 6]]
+    torch.testing.assert_close(mem[1, 1, :6], bank[1][:6])
+
+
+def test_memory_tokens_join_the_text_context_and_follow_text_dropout(small_cpu):
+    dit = LatentDiT(4, 8, width=16, depth=2, heads=2, ff=32,
+                    memory={"slots": 2, "layers": 1, "heads": 2, "stride": 2})
+    tokens, mask = torch.randn(3, 5, 8), torch.ones(3, 5, dtype=torch.bool)
+    lang, drop = torch.zeros(3, dtype=torch.long), torch.tensor([False, True, False])
+    mem, valid = torch.randn(3, 2, 7, 4), torch.ones(3, 2, 7, dtype=torch.bool)
+    valid[2] = False  # sample 2 lost its memory (retrieval dropout)
+    c = dit.condition(tokens, mask, lang, drop, mem, valid)
+    assert c["context"].shape == (3, 1 + 5 + 2 * 4, 16)
+    assert c["context_valid"].sum(1).tolist() == [5 + 8, 1, 5]
+    out = dit(torch.randn(3, 6, 4), torch.rand(3), torch.ones(3, 6, dtype=torch.bool), c)
+    assert torch.all(out == 0)  # adaLN-zero / zero cross-attention output at initialisation
+    plain = LatentDiT(4, 8, width=16, depth=2, heads=2, ff=32)
+    with pytest.raises(ValueError):
+        plain.condition(tokens, mask, lang, drop, mem, valid)
+    with pytest.raises(ValueError):
+        LatentDiT(4, 8, width=16, depth=2, heads=2, ff=32, text_mode="adaln", memory={"slots": 1})
+
+
+def test_decoding_dtw_matches_the_shared_dtw_and_medoid_dba():
+    from methods.morae_slp.decode import dba, dtw, frame_costs, medoid
+    from slp.evaluation.metrics import dtw_cost
+
+    rng = np.random.default_rng(0)
+    for _ in range(10):
+        cost = rng.random((int(rng.integers(1, 20)), int(rng.integers(1, 20))))
+        value, path = dtw(cost, path=True)
+        assert value == pytest.approx(dtw_cost(cost)[0])
+        assert value == pytest.approx(sum(cost[i, j] for i, j in path))
+        assert path[0] == (0, 0) and path[-1] == (cost.shape[0] - 1, cost.shape[1] - 1)
+    a = rng.normal(size=(9, 4, 3))
+    assert medoid([a + 5, a, a + 0.01])[0] in (1, 2)
+    assert frame_costs(a, a).diagonal().max() == 0
+    seq = rng.normal(size=(9, 6))
+    np.testing.assert_allclose(dba([seq, seq], [a, a], lambda c: a, 0), seq, rtol=1e-6)
+    # DBA of a time-shifted copy keeps the medoid's length.
+    out = dba([seq, np.concatenate([seq[:1], seq])], [a, np.concatenate([a[:1], a])],
+              lambda c: a, 0)
+    assert out.shape == seq.shape
+
+
+def test_gloss_recognizer_learns_ctc_and_corruption_keeps_padding(small_cpu):
+    from methods.morae_slp.gloss import (GlossRecognizer, GlossVocab, corrupt, ctc, greedy,
+                                         word_error_rate)
+
+    vocab = GlossVocab.from_items([{"gloss": "A B C"}, {"gloss": "B D"}, {}])
+    assert vocab.tokens[:2] == ["<blank>", "<unk>"] and vocab.encode("A X").tolist() == [2, 1]
+    torch.manual_seed(0)
+    model = GlossRecognizer(4, len(vocab), width=32, depth=1, heads=2)
+    z, lengths = torch.randn(3, 12, 4), torch.tensor([12, 9, 7])
+    valid = torch.arange(12)[None] < lengths[:, None]
+    targets = [vocab.encode("A B"), vocab.encode(""), vocab.encode("C D B")]
+    opt = torch.optim.Adam(model.parameters(), 1e-2)
+    first = None
+    for _ in range(150):
+        loss = ctc(model(z, valid), lengths, targets)
+        first = float(loss.detach()) if first is None else first
+        opt.zero_grad()
+        loss.backward()
+        opt.step()
+    assert float(loss.detach()) < 0.1 * first
+    hyps = greedy(model(z, valid), lengths)
+    assert hyps[0] == [2, 3] and hyps[2] == [4, 5, 3]
+    assert word_error_rate([[1, 2]], [[1, 3]]) == 0.5
+    noisy = corrupt(z, valid, torch.Generator().manual_seed(0))
+    assert noisy.shape == z.shape and noisy[1, 9:].abs().sum() == 0
+    x = z.clone().requires_grad_(True)
+    ctc(model(x, valid), lengths, targets).backward()
+    assert x.grad.abs().sum() > 0  # the frozen recognizer passes gradients to its input
+
+
+def _v3_model(tmp_path, *extra, split=None):
+    cfg = _tiny_cfg("method.flow.updates=1", "method.export_predictions=false", *extra)
+    model = get_method("morae_slp")(cfg, RunContext(tmp_path, 0, logging.getLogger(__name__)))
+    inputs, toy = _toy_split()
+    model.fit(split or toy, split or toy)
+    torch.manual_seed(5)
+    with torch.no_grad():  # move away from the zero-output initialisation
+        for p in model.gen.dit.parameters():
+            p.add_(0.1 * torch.randn_like(p))
+    return model, inputs, cfg
+
+
+def test_target_prediction_fit_predict_reload(tmp_path, small_cpu):
+    model, inputs, cfg = _v3_model(tmp_path, "method.flow.prediction=target",
+                                   "method.sampler.solver=replan_anchored")
+    state = torch.load(model.ctx.ckpt_dir / "model.pt", weights_only=True)
+    assert state["flow_prediction"] == "target"
+    preds = model.predict(inputs)
+    assert all(np.isfinite(p).all() and p.shape[1] == POSE_DIM for p in preds)
+    for solver in ("replan_implied", "rk4", "euler"):
+        model.sampler["solver"] = solver
+        assert all(np.isfinite(p).all() for p in model.predict(inputs))
+    model.sampler["solver"] = "replan_anchored"
+    restored = get_method("morae_slp")(_tiny_cfg("method.export_predictions=false",
+                                                 "method.sampler.solver=replan_anchored"),
+                                       model.ctx)
+    restored.load(model.ctx.ckpt_dir)  # the config says velocity: the checkpoint wins
+    assert restored.prediction == "target"
+    restored.gen.load_state_dict(model.gen.state_dict())
+    for a, b in zip(preds, restored.predict(inputs)):
+        np.testing.assert_allclose(a, b, atol=1e-5)
+
+
+def test_checkpoints_without_v3_keys_load_as_v2(tmp_path, small_cpu):
+    model, inputs, cfg = _v3_model(tmp_path)
+    path = model.ctx.ckpt_dir / "model.pt"
+    state = torch.load(path, weights_only=True)
+    for key in ("flow_prediction", "memory_args", "duration_args", "duration_bias"):
+        state.pop(key)
+    state["generator"] = model.gen.state_dict()
+    torch.save(state, tmp_path / "old.pt")
+    before = model.predict(inputs)
+    old = get_method("morae_slp")(cfg, model.ctx)
+    old.load_checkpoint(tmp_path / "old.pt")
+    assert old.prediction == "velocity" and old.memory_args is None and old.duration_bias == 0
+    for a, b in zip(before, old.predict(inputs)):
+        np.testing.assert_allclose(a, b, atol=1e-5)
+
+
+@needs_smplx
+def test_fk_loss_reaches_the_generator_but_not_the_frozen_decoder(tmp_path, small_cpu):
+    from methods.morae_slp.data import collate_microbatches
+
+    model, inputs, cfg = _v3_model(tmp_path, "method.flow.fk_weight_hand=1.0",
+                                   "method.flow.fk_weight_body=0.5", "method.flow.fk_t_min=0.0",
+                                   "method.flow.fk_frames=4")
+    _, split = _toy_split()
+    from methods.morae_slp.data import LatentDataset
+
+    q = [model.space.encode_flow(torch.from_numpy(t)[None], torch.tensor([len(t)]))[0]
+         for t in split.targets]
+    ds = LatentDataset(q, inputs, poses=[torch.from_numpy(t) for t in split.targets])
+    batch = collate_microbatches([ds[i] for i in range(3)], 3)[0]
+    model.gen.train().requires_grad_(True)
+    losses = model._flow_losses(batch, model.gen)
+    assert {"fk_body", "fk_hand"} <= set(losses) and torch.isfinite(losses["loss"])
+    losses["loss"].backward()
+    assert any(p.grad is not None and p.grad.abs().sum() > 0 for p in model.gen.dit.parameters())
+    assert all(p.grad is None for p in model.space.parameters())
+
+
+def test_gloss_loss_with_a_matching_recognizer(tmp_path, small_cpu):
+    from methods.morae_slp.gloss import GlossRecognizer, GlossVocab, save_recognizer
+
+    inputs, toy = _toy_split()
+    glossed = [{**item, "gloss": g} for item, g in zip(inputs, ["SONNE", "REGEN", "WIND MORGEN"])]
+    split = Split(glossed, toy.targets)
+    (tmp_path / "a").mkdir()
+    first, _, cfg = _v3_model(tmp_path / "a", split=split)
+    ckpt = first.ctx.ckpt_dir
+    vocab = GlossVocab.from_items(glossed)
+    arch = {"latent_dim": first.space.latent_dim, "vocab_size": len(vocab), "width": 16,
+            "depth": 1, "heads": 2}
+    save_recognizer(tmp_path / "r.pt", GlossRecognizer(**arch), vocab, arch,
+                    first.space.latent_mean, first.space.latent_std, {})
+    gl = (f"method.gloss.recognizer={tmp_path / 'r.pt'}", "method.flow.gloss_weight=0.5",
+          "method.flow.gloss_start=0", "method.flow.gloss_t_min=0.0",
+          f"method.init_ae={ckpt / 'ae.pt'}", "method.latent.recalibrate=false")
+    (tmp_path / "b").mkdir()
+    second, _, _ = _v3_model(tmp_path / "b", *gl, split=split)
+    history = (tmp_path / "b" / "metrics_history.jsonl").read_text()
+    assert "flow/train_gloss" in history and "flow/val_gloss" in history
+    # A recognizer from another standardisation is refused.
+    save_recognizer(tmp_path / "bad.pt", GlossRecognizer(**arch), vocab, arch,
+                    first.space.latent_mean + 1, first.space.latent_std, {})
+    (tmp_path / "c").mkdir()
+    with pytest.raises(ValueError, match="standardisation"):
+        _v3_model(tmp_path / "c", *gl[1:], f"method.gloss.recognizer={tmp_path / 'bad.pt'}",
+                  split=split)
+
+
+def test_retrieval_memory_fit_predict_reload(tmp_path, small_cpu):
+    model, inputs, cfg = _v3_model(tmp_path, "method.retrieval.enabled=true",
+                                   "method.retrieval.k=2", "method.retrieval.memory.stride=1",
+                                   "method.retrieval.memory.layers=1",
+                                   "method.retrieval.memory.heads=2")
+    assert (model.ctx.ckpt_dir / "retrieval.pt").is_file()
+    assert model.memory_args == {"slots": 2, "layers": 1, "heads": 2, "stride": 1}
+    assert model.gen.dit.memory is not None
+    preds = model.predict(inputs)
+    assert all(np.isfinite(p).all() for p in preds)
+    restored = get_method("morae_slp")(_tiny_cfg("method.export_predictions=false"), model.ctx)
+    restored.load(model.ctx.ckpt_dir)
+    assert restored.memory_args == model.memory_args and len(restored.bank) == 3
+    restored.gen.load_state_dict(model.gen.state_dict())
+    for a, b in zip(preds, restored.predict(inputs)):
+        np.testing.assert_allclose(a, b, atol=1e-5)
+    # Training queries never retrieve their own sentence.
+    own = model._retrieve([text_input(i)[0] for i in inputs], [0, 1, 2])
+    assert all(int(j) != q for q, row in enumerate(own) for j in row)
+
+
+@needs_smplx
+def test_medoid_and_dba_decoders(tmp_path, small_cpu):
+    model, inputs, cfg = _v3_model(tmp_path)
+    members = [torch.randn(2, 6, POSE_DIM) * 0.1 for _ in range(3)]
+    model.sampler["decoder"] = "medoid"
+    picked = model._combine(members, [6, 4])
+    for i, (p, n) in enumerate(zip(picked, [6, 4])):
+        assert p.shape == (n, POSE_DIM)
+        assert any(np.allclose(p, m[i, :n].numpy()) for m in members)
+    model.sampler["decoder"] = "dba"
+    same = [members[0]] * 3
+    np.testing.assert_allclose(model._combine(same, [6, 4])[0], members[0][0].numpy(), atol=1e-6)
+    model.sampler.update(ensemble=2, decoder="medoid")
+    assert [len(p) for p in model.predict(inputs)] == [len(p) for p in model.predict(inputs)]
+
+
+def test_duration_options_and_calibration(tmp_path, small_cpu):
+    model, inputs, cfg = _v3_model(tmp_path, "method.duration.token_count=true",
+                                   "method.duration.loss=l2", "method.duration.calibrate=true")
+    state = torch.load(model.ctx.ckpt_dir / "model.pt", weights_only=True)
+    assert state["duration_args"] == {"token_count": True}
+    assert state["duration_bias"] == pytest.approx(model.duration_bias)
+    assert model.gen.duration.mlp[0].in_features == model.gen.duration.language.embedding_dim + 1
+    restored = get_method("morae_slp")(_tiny_cfg("method.export_predictions=false"), model.ctx)
+    restored.load(model.ctx.ckpt_dir)
+    assert restored.duration_bias == pytest.approx(model.duration_bias)
+    base = [len(p) for p in model.predict(inputs)]
+    model.sampler["length_scale"] = 2.0
+    longer = [len(p) for p in model.predict(inputs)]
+    assert all(b2 >= b1 for b1, b2 in zip(base, longer)) and longer != base
+
+
+@pytest.mark.parametrize("override", [
+    "method.flow.prediction=noise", "method.flow.target_weighting=x",
+    "method.sampler.decoder=medoid", "method.sampler.solver=replan", "method.flow.gloss_weight=1",
+    "method.duration.loss=l3", "method.sampler.length_scale=0", "method.flow.fk_t_min=1.0"])
+def test_v3_config_validation(override, tmp_path):
+    with pytest.raises(ValueError):
+        get_method("morae_slp")(_tiny_cfg(override), RunContext(tmp_path, 0,
+                                                                logging.getLogger(__name__)))
+    with pytest.raises(ValueError):
+        get_method("morae_slp")(_tiny_cfg("method.retrieval.enabled=true",
+                                          "method.flow.text_mode=adaln"),
+                                RunContext(tmp_path, 0, logging.getLogger(__name__)))
+
+
+def test_frontier_tools_holm_and_clip_sets():
+    from methods.morae_slp.frontier import clip_indices, holm
+
+    assert holm([0.01, 0.04, 0.03]) == pytest.approx([0.03, 0.06, 0.06])
+    assert holm([0.5]) == [0.5]
+    tune = clip_indices(10, "tune", 4)
+    confirm = clip_indices(10, "confirm", 4)
+    assert sorted(tune + confirm) == list(range(10)) and not set(tune) & set(confirm)
+    assert tune == np.linspace(0, 9, 4, dtype=int).tolist()
+    with pytest.raises(ValueError):
+        clip_indices(10, "confirm", None)
+
+
+@needs_smplx
+def test_all_v3_options_together(tmp_path, small_cpu):
+    """The smoke.py configuration on toy data: every v3 option at once, fit -> decoders ->
+    reload; checks that the options compose (shapes, logged losses, checkpoint keys)."""
+    from methods.morae_slp.gloss import GlossRecognizer, GlossVocab, save_recognizer
+
+    inputs, toy = _toy_split()
+    glossed = [{**item, "gloss": g} for item, g in zip(inputs, ["SONNE", "REGEN", "WIND MORGEN"])]
+    split = Split(glossed, toy.targets)
+    (tmp_path / "a").mkdir()
+    first, _, _ = _v3_model(tmp_path / "a", split=split)
+    vocab = GlossVocab.from_items(glossed)
+    arch = {"latent_dim": first.space.latent_dim, "vocab_size": len(vocab), "width": 16,
+            "depth": 1, "heads": 2}
+    save_recognizer(tmp_path / "r.pt", GlossRecognizer(**arch), vocab, arch,
+                    first.space.latent_mean, first.space.latent_std, {})
+    (tmp_path / "b").mkdir()
+    model, _, cfg = _v3_model(
+        tmp_path / "b", f"method.init_ae={first.ctx.ckpt_dir / 'ae.pt'}",
+        "method.latent.recalibrate=false", "method.flow.prediction=target",
+        "method.sampler.solver=replan_anchored", "method.flow.fk_weight_hand=1.0",
+        "method.flow.fk_weight_body=0.25", "method.flow.fk_t_min=0.0", "method.flow.fk_frames=4",
+        f"method.gloss.recognizer={tmp_path / 'r.pt'}", "method.flow.gloss_weight=0.1",
+        "method.flow.gloss_start=0", "method.flow.gloss_t_min=0.0",
+        "method.retrieval.enabled=true", "method.retrieval.k=2",
+        "method.retrieval.memory.layers=1", "method.retrieval.memory.heads=2",
+        "method.duration.token_count=true", "method.duration.calibrate=true", split=split)
+    history = (tmp_path / "b" / "metrics_history.jsonl").read_text()
+    for key in ("flow/train_fk_hand", "flow/train_gloss", "flow/val_fk_body", "flow/val_gloss"):
+        assert key in history
+    for decoder, members in (("mean", 1), ("medoid", 3), ("dba", 3)):
+        model.sampler.update(ensemble=members, decoder=decoder)
+        preds = model.predict(glossed)
+        assert all(np.isfinite(p).all() and p.shape[1] == POSE_DIM for p in preds)
+    model.sampler.update(ensemble=1, decoder="mean")
+    before = model.predict(glossed)
+    again = get_method("morae_slp")(cfg, model.ctx)
+    again.load(model.ctx.ckpt_dir)
+    again.gen.load_state_dict(model.gen.state_dict())
+    again.sampler.update(ensemble=1, decoder="mean")
+    for a, b in zip(before, again.predict(glossed)):
+        np.testing.assert_allclose(a, b, atol=1e-5)
+
+
+def test_review_fixes_retrieval_never_returns_the_query_itself():
+    from methods.morae_slp.retrieval import TextIndex
+
+    index = TextIndex(["guten morgen", "heute regen", "guten morgen", "morgen sonne"])
+    rows = index.query(["guten morgen", "heute regen"], 2, query_ids=[0, 1])
+    assert 0 not in rows[0].tolist() and 1 not in rows[1].tolist()
+    assert rows[0, 0] == 2  # the verbatim repeat is allowed without exclude_groups
+    rows = index.query(["guten morgen"], 2, exclude_groups=True, query_ids=[0])
+    assert 2 not in rows[0].tolist()
+
+
+def test_review_fixes_duration_token_count_sees_the_undropped_mask(tmp_path, small_cpu):
+    from methods.morae_slp.data import LatentDataset, collate_microbatches
+
+    model, inputs, _ = _v3_model(tmp_path, "method.duration.token_count=true",
+                                 "method.flow.token_drop=0.9")
+    _, split = _toy_split()
+    q = [model.space.encode_flow(torch.from_numpy(t)[None], torch.tensor([len(t)]))[0]
+         for t in split.targets]
+    batch = collate_microbatches([LatentDataset(q, inputs)[i] for i in range(3)], 3)[0]
+    seen = []
+    forward = model.gen.duration.forward
+    model.gen.duration.forward = lambda tokens, mask, lang: (seen.append(mask.clone()),
+                                                             forward(tokens, mask, lang))[1]
+    full, _ = model.gen.text(batch.texts, batch.languages)
+    torch.manual_seed(0)
+    model._flow_losses(batch, model.gen)
+    assert torch.equal(seen[0], model.gen.text(batch.texts, batch.languages)[1])
+
+
+def test_review_fixes_target_prediction_refuses_solvers_that_evaluate_t1(tmp_path, small_cpu):
+    with pytest.raises(ValueError, match="evaluates t = 1"):
+        get_method("morae_slp")(_tiny_cfg("method.flow.prediction=target",
+                                          "method.sampler.solver=rk4"),
+                                RunContext(tmp_path, 0, logging.getLogger(__name__)))
+    model, _, _ = _v3_model(tmp_path, "method.flow.prediction=target",
+                            "method.sampler.solver=euler")
+    sweep_like = get_method("morae_slp")(_tiny_cfg("method.sampler.solver=heun"), model.ctx)
+    with pytest.raises(ValueError, match="evaluates t = 1"):
+        sweep_like.load(model.ctx.ckpt_dir)
+
+
+def test_review_fixes_frame_costs_chunking_is_exact():
+    from methods.morae_slp.decode import frame_costs
+
+    rng = np.random.default_rng(3)
+    a, b = rng.normal(size=(70, 5, 3)), rng.normal(size=(40, 5, 3))
+    np.testing.assert_allclose(frame_costs(a, b, chunk=7), frame_costs(a, b, chunk=1000),
+                               rtol=1e-6)
+    ref = np.sqrt(((a[:, None] - b[None]) ** 2).sum(-1)).mean(-1)
+    np.testing.assert_allclose(frame_costs(a, b), ref, rtol=1e-5)
+
+
+# ---------------------------------------------------------------- select_best (TEST command)
+def _fake_run(root, experiment, metrics, command, sweep=None, seed="seed0_x"):
+    run = root / experiment / "morae_slp" / seed
+    run.mkdir(parents=True)
+    (run / "metrics.json").write_text(json.dumps(metrics))
+    (run / "meta.json").write_text(json.dumps({"command": command}))
+    if sweep:
+        (run / "sweep.jsonl").write_text("\n".join(json.dumps(r) for r in sweep))
+    return run
+
+
+def _m(hand, body=5.0, speed=0.8):
+    return {"soke_dtw_jpe_hand": hand, "soke_dtw_jpe_body": body, "soke_dtw_pa_jpe_body_ua": 4.0,
+            "soke_dtw_pa_jpe_hand": 1.3, "soke_speed_ratio_body": speed,
+            "soke_speed_ratio_hand": speed}
+
+
+def test_select_best_picks_the_lowest_dev_jpe_hand_and_rejects_static_outputs(tmp_path, monkeypatch):
+    from methods.morae_slp import select_best as sb
+
+    monkeypatch.setattr(sb, "RUNS", tmp_path)
+    cmd = ("scripts/run.py --method morae_slp --data phoenix_smplx --name X --seeds 0 --split val "
+           "method.workers=6 method.sampler.cfg_scale=1.5 method.sampler.temperature=0.7")
+    _fake_run(tmp_path, "morae_v2ctrl_phoenix_only", _m(7.0), cmd)
+    _fake_run(tmp_path, "morae_v3_phoenix_target", _m(6.8), cmd)
+    _fake_run(tmp_path, "morae_v3_phoenix_fk_target", _m(6.0, speed=0.2), cmd)  # near static
+    candidates = (
+        sb.Candidate("phoenix_smplx", "base", "morae_v2ctrl_phoenix_only", "metrics"),
+        sb.Candidate("phoenix_smplx", "target", "morae_v3_phoenix_target", "metrics"),
+        sb.Candidate("phoenix_smplx", "fk", "morae_v3_phoenix_fk_target", "metrics"),
+        sb.Candidate("phoenix_smplx", "missing", "morae_v3_phoenix_lr03", "metrics"))
+    rows = sb.rank("phoenix_smplx", candidates)
+    assert [(c.label, v) for c, _, v in rows] == [
+        ("target", "valid"), ("base", "valid"), ("fk", "rejected: speed ratio < 0.5"),
+        ("missing", "not available")]
+    assert sb.choose("phoenix_smplx", candidates).label == "target"
+    # Tie on JPE-hand: the lower JPE-body wins.
+    _fake_run(tmp_path, "morae_v3_phoenix_lr03", _m(6.8, body=4.9), cmd)
+    assert sb.choose("phoenix_smplx", candidates).label == "missing"
+    with pytest.raises(RuntimeError):
+        sb.choose("csl_smplx", candidates)
+
+
+def test_select_best_uses_only_whole_dev_sweep_rows(tmp_path, monkeypatch):
+    from methods.morae_slp import select_best as sb
+
+    monkeypatch.setattr(sb, "RUNS", tmp_path)
+    row = {**_m(7.6), "clips": 1077, "ensemble": 1, "decoder": "mean", "lengths": "head",
+           "length_scale": 1.0, "subset": "val", "solver": "euler", "cfg_scale": 1.0,
+           "temperature": 0.7}
+    cmd = "scripts/run.py --method morae_slp --data csl_smplx --name X --seeds 0 --split val"
+    _fake_run(tmp_path, "morae_v2ctrl_csl_60k_cont", _m(7.9), cmd,
+              sweep=[{**row, "clips": 256, **_m(5.0)},            # tuning subset: ignored
+                     {**row, "ensemble": 8, **_m(5.0)},           # K > 1: ignored
+                     {**row, "lengths": "gt", **_m(5.0)},         # oracle durations: ignored
+                     {**row, "temperature": 1.0, **_m(5.0)},      # other setting: ignored
+                     row])
+    cand = sb.Candidate("csl_smplx", "euler", "morae_v2ctrl_csl_60k_cont", "sweep", (),
+                        {"solver": "euler", "cfg_scale": 1.0, "temperature": 0.7})
+    assert sb.dev_metrics(cand)["soke_dtw_jpe_hand"] == 7.6
+
+
+def test_select_best_test_command_switches_split_name_and_sampler():
+    from methods.morae_slp import select_best as sb
+
+    cmd = ("scripts/run.py --method morae_slp --data csl_smplx --name run_a --seeds 1 --split val "
+           "method.workers=6 method.sampler.cfg_scale=1.5 method.flow.snapshot_steps=[20000] "
+           "method.sampler.temperature=0.7 --allow-dirty")
+    sampler = ("method.sampler.solver=euler", "method.sampler.cfg_scale=1")
+    argv = sb.test_argv(cmd, "run_a", sampler, dirty=False, python="py")
+    assert argv[:3] == ["py", "-u", "scripts/run.py"]
+    assert argv.count("--split") == 1 and argv[argv.index("--split") + 1] == "test"
+    assert argv[argv.index("--name") + 1] == "run_a_test" and "val" not in argv
+    assert argv[argv.index("--seeds") + 1] == "1"
+    assert "method.sampler.cfg_scale=1.5" not in argv and "method.sampler.cfg_scale=1" in argv
+    assert "method.sampler.temperature=0.7" in argv and "method.flow.snapshot_steps=[20000]" in argv
+    assert "--allow-dirty" not in argv
+    assert sb.test_argv(cmd, "run_a", sampler, dirty=True, python="py")[-1] == "--allow-dirty"
+
+
+def test_select_best_registry_covers_every_dataset_and_is_gloss_free():
+    from methods.morae_slp import select_best as sb
+
+    assert {c.dataset for c in sb.CANDIDATES} == set(sb.DEV_SIZE)
+    assert all("gloss" not in c.label and "retrieval" not in c.label for c in sb.CANDIDATES)
+
+
+def test_settle_test_log_commits_only_the_test_log(tmp_path):
+    import subprocess
+
+    from methods.morae_slp import select_best as sb
+
+    def git(*a):
+        return subprocess.run(["git", "-c", "user.name=t", "-c", "user.email=t@t", *a],
+                              cwd=tmp_path, capture_output=True, text=True, check=True).stdout
+
+    git("init", "-q")
+    (tmp_path / "results").mkdir()
+    (tmp_path / "results" / "test_access_log.jsonl").write_text("{}\n")
+    (tmp_path / "a.txt").write_text("a")
+    git("add", ".")
+    git("commit", "-q", "-m", "init")
+    assert sb.settle_test_log(tmp_path) is False                     # clean tree: nothing to do
+    (tmp_path / "results" / "test_access_log.jsonl").write_text("{}\n{}\n")
+    (tmp_path / "a.txt").write_text("changed")                       # another change pending
+    assert sb.settle_test_log(tmp_path) is False and git("status", "--porcelain").count("\n") == 2
+    git("checkout", "a.txt")
+    import os
+    env_backup = {k: os.environ.get(k) for k in ("GIT_AUTHOR_NAME", "GIT_AUTHOR_EMAIL",
+                                                 "GIT_COMMITTER_NAME", "GIT_COMMITTER_EMAIL")}
+    os.environ.update(GIT_AUTHOR_NAME="t", GIT_AUTHOR_EMAIL="t@t", GIT_COMMITTER_NAME="t",
+                      GIT_COMMITTER_EMAIL="t@t")
+    try:
+        assert sb.settle_test_log(tmp_path) is True
+    finally:
+        for k, v in env_backup.items():
+            if v is None:
+                os.environ.pop(k, None)
+            else:
+                os.environ[k] = v
+    assert git("status", "--porcelain") == "" and "Record test access log" in git("log", "-1")

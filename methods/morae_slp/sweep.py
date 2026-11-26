@@ -60,6 +60,14 @@ def parse_args(argv=None):
                    help="train = fit diagnostic on training clips (never test)")
     p.add_argument("--tag", default="", help="suffix of the setting name")
     p.add_argument("--ensemble", default="1", help="pose-space mean of K samples, e.g. 1,8")
+    p.add_argument("--length-scale", default="1.0",
+                   help="P0.2 analysis: multiply predicted durations, e.g. 0.85,0.9,1,1.1")
+    p.add_argument("--decoder", default="mean",
+                   help="combination of the K samples: mean,medoid,dba (PLAN_V3 C5)")
+    p.add_argument("--confirm", action="store_true",
+                   help="score the dev clips NOT in the --limit tuning subset (PLAN_V3 §4 rule 1)")
+    p.add_argument("--drop-train-duplicates", action="store_true",
+                   help="drop dev clips whose normalised sentence occurs verbatim in train")
     p.add_argument("--data", default=None,
                    help="score on this dataset's dev split instead of the run's (e.g. a union "
                         "flow from pretrain.py --stage flow)")
@@ -80,8 +88,26 @@ def main(argv=None) -> None:
     splits = load_dataset(cfg)
     data = splits.val if args.subset == "val" else splits.train  # never the test split
     idx = list(range(len(data)))
+    if args.confirm:
+        if args.limit is None or args.limit >= len(idx):
+            raise SystemExit("--confirm needs --limit smaller than the dev size")
+        # The tuning subset must be the run's own validation subset (best-checkpoint selection
+        # and duration calibration used it), otherwise "confirm" clips were seen in tuning.
+        run_limit = cfg["method"].get("val_limit")
+        if args.subset == "val" and run_limit is not None and run_limit != args.limit:
+            raise SystemExit(f"--confirm with --limit {args.limit} but the run selected on "
+                             f"val_limit={run_limit} clips")
+    clip_set = "all"
     if args.limit is not None and args.limit < len(idx):
-        idx = np.linspace(0, len(idx) - 1, args.limit, dtype=int).tolist()
+        tune = np.linspace(0, len(idx) - 1, args.limit, dtype=int).tolist()
+        idx = sorted(set(idx) - set(tune)) if args.confirm else tune
+        clip_set = "confirm" if args.confirm else "tune"
+    if args.drop_train_duplicates:
+        from .retrieval import normalise
+
+        seen = {normalise(item["text"]) for item in splits.train.inputs}
+        idx = [i for i in idx if normalise(data.inputs[i]["text"]) not in seen]
+        clip_set += "-nodup"
     inputs = [data.inputs[i] for i in idx]
     targets = [data.targets[i] for i in idx]
     lengths_npz = args.lengths
@@ -94,11 +120,18 @@ def main(argv=None) -> None:
     metrics = cfg["eval"]["metrics"]
     logger = logging.getLogger("morae_sweep")
     logging.basicConfig(level=logging.INFO, format="%(message)s")
+    decoders = [d.strip() for d in args.decoder.split(",") if d.strip()]
     grid = itertools.product([s.strip() for s in args.solver.split(",")], _ints(args.steps),
-                             _floats(args.cfg), _floats(args.temperature), _ints(args.ensemble))
-    for solver, steps, scale, temperature, members in grid:
+                             _floats(args.cfg), _floats(args.temperature), _ints(args.ensemble),
+                             decoders, _floats(args.length_scale))
+    for solver, steps, scale, temperature, members, decoder, length_scale in grid:
+        if decoder != "mean" and members < 2:
+            continue  # medoid / dba need K >= 2 samples
         tag = f"{solver}{steps}_w{scale:g}_tau{temperature:g}"
         tag += f"_ens{members}" if members > 1 else ""
+        tag += f"_{decoder}" if decoder != "mean" else ""
+        tag += f"_len{length_scale:g}" if length_scale != 1.0 else ""
+        tag += f"_{clip_set}" if clip_set not in ("all", "tune") else ""
         tag += f"_{args.data}" if args.data else ""
         tag += (f"_{Path(args.checkpoint).stem}" if args.checkpoint != "model.pt" else "")
         tag += (f"_len-{'gt' if args.lengths == 'gt' else 'npz'}" if args.lengths else "")
@@ -109,6 +142,7 @@ def main(argv=None) -> None:
         setting["method"]["export_predictions"] = bool(args.export)
         setting["method"]["sampler"].update(solver=solver, steps=steps, cfg_scale=scale,
                                             temperature=temperature, ensemble=members,
+                                            decoder=decoder, length_scale=length_scale,
                                             lengths_from_npz=str(lengths_npz) if lengths_npz
                                             else None)
         if args.device:
@@ -120,6 +154,8 @@ def main(argv=None) -> None:
         row = {"setting": tag, "solver": solver, "steps": steps, "cfg_scale": scale,
                "temperature": temperature, "checkpoint": args.checkpoint, "clips": len(idx),
                "subset": args.subset, "lengths": args.lengths or "head", "ensemble": members,
+               "decoder": decoder, "clip_set": clip_set, "length_scale": length_scale,
+               "duration_bias": float(getattr(model, "duration_bias", 0.0)),
                "data": cfg["data"]["name"],
                "sample_seconds": round(time.time() - start, 1),
                "mean_frames": float(np.mean([len(p) for p in preds])),

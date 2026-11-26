@@ -205,6 +205,13 @@ def encode_split(space: LatentSpace, split, indices: list[int], device: torch.de
     return out
 
 
+def latent_stats(raw: dict[int, Tensor], indices: list[int], min_std: float
+                 ) -> tuple[Tensor, Tensor]:
+    """Per-channel mean / std (floored) of un-standardised train latents (flow coordinates)."""
+    values = torch.cat([raw[i] for i in indices]).double()
+    return values.mean(0).float(), values.std(0).clamp_min(min_std).float()
+
+
 @torch.no_grad()
 def calibrate(space: LatentSpace, split, hp: dict, device: torch.device,
               limit: int | None = None) -> dict:

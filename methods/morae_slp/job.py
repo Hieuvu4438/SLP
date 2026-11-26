@@ -93,6 +93,21 @@ def stages_v2(workers: int) -> list[tuple[str, callable]]:
         out.append((f"sweep_{short}", lambda name=name: (
             [PY, "-u", "-m", "methods.morae_slp.sweep", "--run", str(latest_run(name)),
              "--cfg", "1,1.5,2.5,3.5", "--ensemble", "1,8", "--limit", "256"], None)))
+    out.insert(4, ("export_phoenix", lambda: (
+        [PY, "-u", "-m", "methods.morae_slp.sweep", "--run", str(latest_run("morae_v2_phoenix")),
+         "--cfg", "1.5,3.5", "--ensemble", "8", "--export"], None)))  # all dev clips, K = 8
+    out.insert(5, ("frontier_phoenix", lambda: (
+        # Matched-speed comparison with the replica's shrink-to-mean frontier (dev, CPU).
+        [PY, "-u", "-m", "methods.signmflow_plus.analysis.score", "--data", "phoenix_smplx",
+         "--reference", str(PROJECT_ROOT / "outputs/runs/signmflow_v2_main_phoenix_smplx/"
+                            "signmflow/seed0_20261116-185137-965824/predictions.npz"),
+         "--arm", f"v2_single_w2={latest_run('morae_v2_phoenix') / 'predictions.npz'}",
+         "--arm", f"v2_ens8_w1.5={latest_run('morae_v2_phoenix') / 'sweep/rk45_w1.5_tau1_ens8/predictions.npz'}",
+         "--arm", f"v2_ens8_w3.5={latest_run('morae_v2_phoenix') / 'sweep/rk45_w3.5_tau1_ens8/predictions.npz'}",
+         "--shrink", "0,0.1,0.2,0.3,0.4,0.5,0.6,0.7",
+         "--cache-dir", str(PROJECT_ROOT / "outputs/morae_slp/score_cache"),
+         "--out", str(PROJECT_ROOT / "outputs/morae_slp/diagnostics/frontier_v2_phoenix_dev519.json")],
+        None)))
     # Control: the same v2 recipe on Phoenix alone (no union pre-training of the flow).
     out.append(("ctrl_phoenix_only", lambda: (
         [PY, "-u", "scripts/run.py", "--method", "morae_slp", "--data", "phoenix_smplx", "--name",
@@ -103,10 +118,300 @@ def stages_v2(workers: int) -> list[tuple[str, callable]]:
         [PY, "-u", "-m", "methods.morae_slp.sweep", "--run",
          str(latest_run("morae_v2ctrl_phoenix_only")), "--cfg", "1,1.5,2.5", "--ensemble", "1,8",
          "--limit", "256"], None)))
+    # The Phoenix-only recipe beat the union-pretrained flow (DTW), so the follow-up queue uses it.
+    ctrl = "morae_v2ctrl_phoenix_only"
+    out.append(("sweep_tau_phoenix", lambda: (
+        [PY, "-u", "-m", "methods.morae_slp.sweep", "--run", str(latest_run(ctrl)),
+         "--cfg", "1,1.5,2.5", "--temperature", "0.3,0.5,0.7", "--ensemble", "1", "--limit", "256"],
+        None)))
+    out.append(("export_ctrl", lambda: (
+        [PY, "-u", "-m", "methods.morae_slp.sweep", "--run", str(latest_run(ctrl)),
+         "--cfg", "1.5", "--temperature", "0.7", "--ensemble", "1", "--export"], None)))  # all dev
+    out.append(("frontier_ctrl", lambda: (
+        [PY, "-u", "-m", "methods.signmflow_plus.analysis.score", "--data", "phoenix_smplx",
+         "--reference", str(PROJECT_ROOT / "outputs/runs/signmflow_v2_main_phoenix_smplx/"
+                            "signmflow/seed0_20261116-185137-965824/predictions.npz"),
+         "--arm", f"ctrl_w1.5_t0.7={latest_run(ctrl) / 'sweep/rk45_w1.5_tau0.7/predictions.npz'}",
+         "--shrink", "0,0.1,0.2,0.3,0.4,0.5,0.6,0.7",
+         "--cache-dir", str(PROJECT_ROOT / "outputs/morae_slp/score_cache"),
+         "--out", str(PROJECT_ROOT / "outputs/morae_slp/diagnostics/frontier_ctrl_phoenix_dev519.json")],
+        None)))
+    for data, short, updates in (("csl_smplx", "csl", 30000), ("how2sign_smplx_soke", "how2sign", 40000)):
+        name = f"morae_v2ctrl_{short}_only"
+        out.append((f"ctrl_{short}_only", lambda data=data, name=name, updates=updates: (
+            [PY, "-u", "scripts/run.py", "--method", "morae_slp", "--data", data, "--name", name,
+             "--seeds", "0", "--split", "val", w, *V2_COMMON, *V2_FT, f"method.init_ae={ae}",
+             f"method.flow.updates={updates}", "method.sampler.cfg_scale=2.0"], None)))
+        out.append((f"sweep_ctrl_{short}", lambda name=name: (
+            [PY, "-u", "-m", "methods.morae_slp.sweep", "--run", str(latest_run(name)),
+             "--cfg", "1.5,2.5", "--temperature", "0.5,0.7,1", "--ensemble", "1,8",
+             "--limit", "256"], None)))
+    # Why is CSL / How2Sign weaker than Phoenix? (cheap, dev only): reconstruction ceiling of the
+    # shared latent per dataset, and the effect of the predicted durations (oracle lengths).
+    for data, short in (("csl_smplx", "csl"), ("how2sign_smplx_soke", "how2sign")):
+        out.append((f"diag_recon_{short}", lambda data=data, short=short: (
+            [PY, "-u", "-m", "methods.morae_slp.diagnostics", "--data", data, "--ae", str(ae),
+             "--recon", "400", "--out", str(DIAG / f"recon_{short}_dev400.json")], None)))
+        out.append((f"sweep_gtlen_{short}", lambda short=short: (
+            [PY, "-u", "-m", "methods.morae_slp.sweep", "--run",
+             str(latest_run(f"morae_v2ctrl_{short}_only")), "--cfg", "1.5", "--temperature", "0.7",
+             "--ensemble", "1", "--lengths", "gt", "--limit", "256"], None)))
     return out
 
 
-PLANS = {"v1": ("job", "stages"), "v2": ("job_v2", "stages_v2")}
+# ------------------------------------------------------------------------------------------------
+# Plan v3 (PLAN_V3.md §4): defined here, started only on request (`--plan v3`). Phoenix first.
+# Baseline = v2 Phoenix-only recipe (morae_v2ctrl_phoenix_only), sampler w = 1.5, tau = 0.7.
+REPLICA = {
+    "phoenix_smplx": "outputs/runs/signmflow_v2_main_phoenix_smplx/signmflow/"
+                     "seed0_20261116-185137-965824/predictions.npz",
+    "csl_smplx": "outputs/runs/signmflow_v2_main_csl_smplx/signmflow/"
+                 "seed0_20261116-185337-969580/predictions.npz",
+    "how2sign_smplx_soke": "outputs/runs/signmflow_v2_main_how2sign_smplx_soke/signmflow/"
+                           "seed0_20261118-125753-011324/predictions.npz",
+}
+EXCLUDED_V3 = {"p0_gloss_phoenix", "p0_gloss_gate_phoenix", "p2_gloss_phoenix",
+               "p2_gloss_phoenix_sweep", "p2_retrieval_phoenix", "p2_retrieval_phoenix_sweep",
+               "p0_gloss_csl", "p0_gloss_gate_csl"}
+V3_SAMPLER = ["method.sampler.cfg_scale=1.5", "method.sampler.temperature=0.7"]
+
+
+def stages_v3(workers: int) -> list[tuple[str, callable]]:
+    ae = PRE / "ae_union_jepa_d64" / "ae.pt"
+    w = f"method.workers={workers}"
+    base = [w, *V2_COMMON, *V2_FT, f"method.init_ae={ae}", "method.flow.updates=30000",
+            *V3_SAMPLER]
+    gloss_dir = PROJECT_ROOT / "outputs" / "morae_slp" / "gloss"
+    ctrl = "morae_v2ctrl_phoenix_only"
+
+    def run(name, data, *extra, seed=0):
+        return lambda: ([PY, "-u", "scripts/run.py", "--method", "morae_slp", "--data", data,
+                         "--name", name, "--seeds", str(seed), "--split", "val", *base, *extra],
+                        None)
+
+    def sweep(name, *args):
+        return lambda: ([PY, "-u", "-m", "methods.morae_slp.sweep", "--run",
+                         str(latest_run(name)), *args], None)
+
+    def frontier(data, out, *arms, extra=(), clips="confirm"):
+        subset = ["--limit", "256"] if clips != "all" else []
+        return lambda: ([PY, "-u", "-m", "methods.morae_slp.frontier", "--data", data,
+                         "--reference", str(PROJECT_ROOT / REPLICA[data]), "--clips", clips,
+                         *subset, *extra,
+                         *[x for name, path in arms for x in ("--arm", f"{name}={path()}")],
+                         "--out", str(DIAG / out)], None)
+
+    tune = ["--limit", "256"]
+    conf = ["--limit", "256", "--confirm", "--export"]
+    out = [
+        # Real-data smoke test of every v3 option (tiny sizes, CPU) before anything is trained.
+        ("p0_smoke_phoenix", lambda: ([PY, "-u", "-m", "methods.morae_slp.smoke", "--data",
+                                       "phoenix_smplx", "--ae", str(ae), "--device", "cpu",
+                                       "--out", str(JOB / "smoke_phoenix")], None)),
+        ("p0_smoke_how2sign", lambda: ([PY, "-u", "-m", "methods.morae_slp.smoke", "--data",
+                                        "how2sign_smplx_soke", "--ae", str(ae), "--device", "cpu",
+                                        "--out", str(JOB / "smoke_how2sign")], None)),
+        # P0.0 replica vs the dataset-only v2 runs on the SAME confirmation clips (+ frontier).
+        ("p0_frontier_csl", frontier("csl_smplx", "p0_frontier_csl_confirm.json",
+                                     ("v2_csl_only", lambda: latest_run("morae_v2ctrl_csl_only")
+                                      / "predictions.npz"), extra=("--cluster-sentences",))),
+        ("p0_frontier_how2sign", frontier("how2sign_smplx_soke", "p0_frontier_h2s_confirm.json",
+                                          ("v2_h2s_only",
+                                           lambda: latest_run("morae_v2ctrl_how2sign_only")
+                                           / "predictions.npz"))),
+        # P0.1 decoders (C5) on the Phoenix baseline: tune grid, then confirmation exports.
+        ("p0_decoders_tune", sweep(ctrl, "--cfg", "1.5", "--temperature", "0.7",
+                                   "--ensemble", "8,16", "--decoder", "mean,medoid,dba", *tune)),
+        ("p0_decoders_confirm", sweep(ctrl, "--cfg", "1.5", "--temperature", "0.7",
+                                      "--ensemble", "8", "--decoder", "medoid,dba", *conf)),
+        ("p0_frontier_decoders", frontier(
+            "phoenix_smplx", "p0_frontier_phoenix_decoders.json",
+            ("medoid8", lambda: latest_run(ctrl) / "sweep/rk45_w1.5_tau0.7_ens8_medoid_confirm/predictions.npz"),
+            ("dba8", lambda: latest_run(ctrl) / "sweep/rk45_w1.5_tau0.7_ens8_dba_confirm/predictions.npz"))),
+        # P0.2 duration sensitivity (analysis only).
+        ("p0_length", sweep(ctrl, "--cfg", "1.5", "--temperature", "0.7",
+                            "--length-scale", "0.85,0.9,1.1", *tune)),
+        # P0.3 gloss recognizers (train hold-out selection) and their usefulness gate on replica
+        # predictions (own vs length-matched swapped sentence).
+        ("p0_gloss_phoenix", lambda: ([PY, "-u", "-m", "methods.morae_slp.gloss", "train",
+                                       "--data", "phoenix_smplx", "--ae", str(ae),
+                                       "--out", str(gloss_dir / "phoenix")], None)),
+        ("p0_gloss_gate_phoenix", lambda: ([PY, "-u", "-m", "methods.morae_slp.gloss", "check",
+                                            "--data", "phoenix_smplx", "--ae", str(ae),
+                                            "--recognizer", str(gloss_dir / "phoenix/recognizer.pt"),
+                                            "--predictions", str(PROJECT_ROOT / REPLICA["phoenix_smplx"]),
+                                            "--out", str(DIAG / "p0_gloss_gate_phoenix.json")], None)),
+        ("p0_gloss_csl", lambda: ([PY, "-u", "-m", "methods.morae_slp.gloss", "train",
+                                   "--data", "csl_smplx", "--ae", str(ae),
+                                   "--out", str(gloss_dir / "csl")], None)),
+        ("p0_gloss_gate_csl", lambda: ([PY, "-u", "-m", "methods.morae_slp.gloss", "check",
+                                        "--data", "csl_smplx", "--ae", str(ae),
+                                        "--recognizer", str(gloss_dir / "csl/recognizer.pt"),
+                                        "--predictions", str(PROJECT_ROOT / REPLICA["csl_smplx"]),
+                                        "--out", str(DIAG / "p0_gloss_gate_csl.json")], None)),
+        # P0.5 seed noise of the baseline.
+        ("p0_seed1", run("morae_v3_phoenix_base_seed1", "phoenix_smplx", seed=1)),
+        ("p0_seed1_sweep", sweep("morae_v3_phoenix_base_seed1", "--cfg", "1.5", "--temperature",
+                                 "0.7", *conf)),
+        # P1.A C1: sampler alone (velocity model, 5 steps: Euler == replan_implied for a velocity
+        # model, so only Euler and the re-anchored rule), then the x1 target.
+        ("p1a_sampler_only", sweep(ctrl, "--solver", "euler,replan_anchored",
+                                   "--cfg", "1.5", "--temperature", "0.7,1", *tune)),
+        ("p1a_target", run("morae_v3_phoenix_target", "phoenix_smplx",
+                           "method.flow.prediction=target", "method.sampler.solver=replan_implied",
+                           "method.sampler.steps=5")),
+        ("p1a_target_sweep", sweep("morae_v3_phoenix_target", "--solver",
+                                   "replan_implied,replan_anchored", "--cfg", "1,1.5,2.5",
+                                   "--temperature", "0.7,1", *tune)),
+        # P1.B C2: metric-frame FK loss (2 x 2 with the parameterisation; hands weighted).
+        ("p1b_fk_velocity", run("morae_v3_phoenix_fk_velocity", "phoenix_smplx",
+                                "method.flow.fk_weight_hand=1.0", "method.flow.fk_weight_body=0.25")),
+        ("p1b_fk_target", run("morae_v3_phoenix_fk_target", "phoenix_smplx",
+                              "method.flow.prediction=target", "method.sampler.solver=replan_implied",
+                              "method.flow.fk_weight_hand=1.0", "method.flow.fk_weight_body=0.25")),
+        ("p1b_fk_velocity_sweep", sweep("morae_v3_phoenix_fk_velocity", "--cfg", "1.5",
+                                        "--temperature", "0.7,1", *tune)),
+        ("p1b_fk_target_sweep", sweep("morae_v3_phoenix_fk_target", "--solver", "replan_implied",
+                                      "--cfg", "1,1.5,2.5", "--temperature", "0.7,1", *tune)),
+        # P1.C mBART learning rate.
+        ("p1c_lr03", run("morae_v3_phoenix_lr03", "phoenix_smplx", "method.text.lr_scale=0.3")),
+        ("p1c_lr03_sweep", sweep("morae_v3_phoenix_lr03", "--cfg", "1.5", "--temperature",
+                                 "0.7,1", *tune)),
+        # P2 content supervision (separate comparison classes): gloss consistency, retrieval.
+        ("p2_gloss_phoenix", run("morae_v3_phoenix_gloss", "phoenix_smplx",
+                                 f"method.gloss.recognizer={gloss_dir / 'phoenix/recognizer.pt'}",
+                                 "method.flow.gloss_weight=0.1")),
+        ("p2_gloss_phoenix_sweep", sweep("morae_v3_phoenix_gloss", "--cfg", "1.5",
+                                         "--temperature", "0.7,1", *tune)),
+        ("p2_retrieval_phoenix", run("morae_v3_phoenix_retrieval", "phoenix_smplx",
+                                     "method.retrieval.enabled=true")),
+        ("p2_retrieval_phoenix_sweep", sweep("morae_v3_phoenix_retrieval", "--cfg", "1.5",
+                                             "--temperature", "0.7,1", *tune)),
+    ]
+    # Order: the primary Phoenix question (C1) comes as early as possible; seed noise, FK, mBART lr
+    # and content supervision follow; CPU-only / other-dataset diagnostics run last.
+    order = ["p0_smoke_phoenix", "p0_smoke_how2sign", "p0_frontier_csl", "p0_decoders_tune",
+             "p0_decoders_confirm", "p0_frontier_decoders", "p0_length", "p1a_sampler_only",
+             "p1a_target", "p1a_target_sweep", "csl_euler_dev", "h2s_euler_dev", "p0_gloss_phoenix",
+             "p0_gloss_gate_phoenix",
+             "p0_seed1", "p0_seed1_sweep", "p1b_fk_velocity", "p1b_fk_velocity_sweep",
+             "p1b_fk_target", "p1b_fk_target_sweep", "p1c_lr03", "p1c_lr03_sweep",
+             "p2_gloss_phoenix", "p2_gloss_phoenix_sweep", "p2_retrieval_phoenix",
+             "p2_retrieval_phoenix_sweep", "p0_gloss_csl", "p0_gloss_gate_csl",
+             "test_phoenix", "test_csl", "test_how2sign", "csl_euler_frontier",
+             "p0_frontier_how2sign"]
+    # CSL-Daily (refined ~50k flow, boost plan): Euler 5 steps without CFG (NFE 5) on the whole dev
+    # split, then the matched-speed comparison with the replica frontier.
+    csl = "morae_v2ctrl_csl_60k_cont"
+    out += [("csl_euler_dev", lambda: (
+        [PY, "-u", "-m", "methods.morae_slp.sweep", "--run", str(latest_run(csl)), "--solver",
+         "euler", "--steps", "5", "--cfg", "1", "--temperature", "0.7", "--export"], None)),
+        ("csl_euler_frontier", frontier(
+            "csl_smplx", "csl_euler_frontier_dev.json",
+            ("csl_euler_w1_t0.7", lambda: latest_run(csl) / "sweep/euler5_w1_tau0.7/predictions.npz"),
+            extra=("--cluster-sentences",), clips="all"))]
+    # How2Sign: Euler 5 steps without guidance on the whole dev split (tau = 1: tau 0.7 freezes it).
+    out.append(("h2s_euler_dev", lambda: (
+        [PY, "-u", "-m", "methods.morae_slp.sweep", "--run",
+         str(latest_run("morae_v2ctrl_how2sign_only")), "--solver", "euler", "--steps", "5",
+         "--cfg", "1", "--temperature", "1.0"], None)))
+
+    # TEST evaluation, one run per dataset: the configuration with the best whole-dev result
+    # (select_best.py: single-sample, gloss-free; JPE-hand primary; rejects near-static outputs).
+    # run.py retrains the chosen recipe and evaluates on test; --allow-dirty is added only when
+    # the git tree is dirty (then the number is not reportable). Plan JSON in diagnostics/.
+    def test_stage(data):
+        def make():
+            from . import select_best
+
+            if select_best.settle_test_log():
+                log("committed the test access log of the previous test run")
+            chosen = select_best.plan(data)
+            (DIAG / f"test_plan_{data}.json").write_text(json.dumps(chosen, indent=1))
+            log(f"test {data}: {chosen['chosen']} (dirty tree: {chosen['dirty_tree']})")
+            return chosen["argv"], None
+        return make
+
+    for data, short in (("phoenix_smplx", "phoenix"), ("csl_smplx", "csl"),
+                        ("how2sign_smplx_soke", "how2sign")):
+        out.append((f"test_{short}", test_stage(data)))
+    by_name = dict(out)
+    if sorted(order) != sorted(by_name):
+        raise RuntimeError(f"v3 stage order out of sync: {set(order) ^ set(by_name)}")
+    # C3 (gloss supervision) and C4 (retrieval) belong to other comparison classes (PLAN_V3 §6):
+    # implemented and tested, but not part of the default queue. Remove a name from EXCLUDED to
+    # run it again.
+    return [(name, by_name[name]) for name in order if name not in EXCLUDED_V3]
+
+
+# ------------------------------------------------------------------------------------------------
+# Plan "boost" (CSL-Daily and How2Sign): the dataset-only flows were trained for only 104 / 83 epochs
+# (Phoenix 271, replica 300) and their validation loss was still falling at the last step. Run the
+# cheap diagnostics (latent reconstruction ceiling, oracle durations), then the same recipe with
+# 2x the updates, each followed by a compact single-sample sweep. Runs BEFORE the rest of plan v3.
+def stages_boost(workers: int) -> list[tuple[str, callable]]:
+    ae = PRE / "ae_union_jepa_d64" / "ae.pt"
+    common = [f"method.workers={workers}", *V2_COMMON, *V2_FT, f"method.init_ae={ae}",
+              *V3_SAMPLER, "method.flow.eval_every=2000"]
+
+    def train(name, data, updates):
+        # EMA snapshots every 20k updates: a killed run can be warm-started from the last one.
+        snaps = ",".join(str(k) for k in range(20000, updates, 20000))
+        return lambda: ([PY, "-u", "scripts/run.py", "--method", "morae_slp", "--data", data,
+                         "--name", name, "--seeds", "0", "--split", "val", *common,
+                         f"method.flow.updates={updates}", f"method.flow.snapshot_steps=[{snaps}]"],
+                        None)
+
+    def warm_start(name, data, updates, source):
+        """Continue a killed run from its best EMA checkpoint (same latent calibration, fresh
+        optimiser and a short warm-up; ``updates`` further updates)."""
+        def make():
+            runs = sorted((PROJECT_ROOT / "outputs" / "runs" / source / "morae_slp")
+                          .glob("seed0_*"))
+            runs = [r for r in runs if (r / "checkpoints" / "model.pt").is_file()]
+            ck = runs[-1] / "checkpoints"
+            snaps = ",".join(str(k) for k in range(20000, updates, 20000))
+            base = [a for a in common if not a.startswith("method.init_ae=")]
+            return ([PY, "-u", "scripts/run.py", "--method", "morae_slp", "--data", data,
+                     "--name", name, "--seeds", "0", "--split", "val", *base,
+                     f"method.init_ae={ck / 'ae.pt'}", "method.latent.recalibrate=false",
+                     f"method.init_flow={ck / 'model.pt'}", f"method.flow.updates={updates}",
+                     "method.flow.lr=1.5e-4", "method.flow.warmup_updates=500",
+                     f"method.flow.snapshot_steps=[{snaps}]"], None)
+        return make
+
+    def sweep(name, *args):
+        return lambda: ([PY, "-u", "-m", "methods.morae_slp.sweep", "--run",
+                         str(latest_run(name)), "--limit", "256", *args], None)
+
+    def recon(data, short):
+        return lambda: ([PY, "-u", "-m", "methods.morae_slp.diagnostics", "--data", data,
+                         "--ae", str(ae), "--recon", "400",
+                         "--out", str(DIAG / f"recon_{short}_dev400.json")], None)
+
+    out = []
+    for data, short, updates in (("csl_smplx", "csl", 60000), ("how2sign_smplx_soke", "how2sign", 80000)):
+        out += [(f"boost_recon_{short}", recon(data, short)),
+                (f"boost_gtlen_{short}", sweep(f"morae_v2ctrl_{short}_only", "--cfg", "1.5",
+                                               "--temperature", "0.7", "--lengths", "gt"))]
+    for data, short, updates in (("csl_smplx", "csl", 60000), ("how2sign_smplx_soke", "how2sign", 80000)):
+        name = f"morae_v2ctrl_{short}_{updates // 1000}k"
+        first = (f"boost_{short}_{updates // 1000}k", train(name, data, updates))
+        if short == "csl":
+            # The 60k run was SIGKILLed at update 20k (cause unknown, not an OOM): continue with 40k
+            # more updates from its EMA checkpoint (effective 60k, restarted lr schedule).
+            name = f"{name}_cont"
+            first = ("boost_csl_cont", warm_start(name, data, 40000, "morae_v2ctrl_csl_60k"))
+        out += [first,
+                (f"boost_{short}_sweep", sweep(name, "--cfg", "1,1.5,2.5", "--temperature",
+                                               "0.5,0.7,1", "--ensemble", "1")),
+                (f"boost_{short}_euler", sweep(name, "--solver", "euler", "--cfg", "1",
+                                               "--temperature", "0.7,1"))]
+    return out
+
+
+PLANS = {"v1": ("job", "stages"), "v2": ("job_v2", "stages_v2"), "v3": ("job_v3", "stages_v3"),
+         "boost": ("job_boost", "stages_boost")}
 
 
 def latest_run(name: str) -> Path | None:
@@ -209,7 +514,9 @@ def status(build) -> None:
     for name, _ in build(0):
         print(f"{name:6s} {state.get(name, {}).get('status', 'pending')}  "
               f"{state.get(name, {}).get('finished', '')}")
-    for exp in [EXPERIMENT] if build is stages else [n for n, _ in V2.values()]:
+    experiments = ([EXPERIMENT] if build is stages else [n for n, _ in V2.values()]
+                   if build is stages_v2 else [])
+    for exp in experiments:
         run = latest_run(exp)
         if run:
             print("flow run:", run)

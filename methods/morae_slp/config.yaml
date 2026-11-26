@@ -95,6 +95,16 @@ method:
     max_frames: 1024
     cond_drop: 0.1
     token_drop: 0.0            # [ours, v2] drop each text token with this probability in training
+    # --- v3 (PLAN_V3.md); every default reproduces v2
+    prediction: velocity       # C1: velocity | target (x1 prediction, SignNMFlow Eq. 13)
+    target_weighting: uniform  # C1: uniform (paper) | velocity (1/(1-t)^2, = velocity loss)
+    fk_weight_body: 0.0        # C2: SOKE-frame joint-position loss (cm, smooth-L1) on decode(x1)
+    fk_weight_hand: 0.0        #     hands relative to the wrists, body relative to the pelvis
+    fk_t_min: 0.3              #     only for t >= fk_t_min (x1 estimate meaningful)
+    fk_frames: 16              #     evenly spaced frames per clip
+    gloss_weight: 0.0          # C3: CTC of the frozen gloss recognizer on x1 (needs gloss.recognizer)
+    gloss_t_min: 0.5
+    gloss_start: 5000          #     updates before the gloss loss is switched on
     time_sampling: uniform
     duration_weight: 1.0
     ema_decay: 0.9999
@@ -111,8 +121,25 @@ method:
     weight_decay: 1.0e-5
     grad_clip: 1.0
 
+  gloss:
+    recognizer: null           # C3: recognizer.pt from `python -m methods.morae_slp.gloss train`
+
+  retrieval:                   # C4: train-only text retrieval memory (cross-attention)
+    enabled: false
+    k: 3                       # retrieved train clips per sentence (memory slots)
+    dropout: 0.25              # drop the whole memory of a training sample
+    exclude_duplicates: true   # train queries never retrieve their own (verbatim) sentence
+    ngram: [2, 4]              # character n-grams of the TF-IDF key
+    length_weight: 0.1         # score = cosine - w * |log(1+chars_q) - log(1+chars_c)|
+    memory: {layers: 2, heads: 4, stride: 4}
+
+  duration:                    # C6
+    token_count: false         # add log(#text tokens) to the duration head input
+    loss: l1                   # l1 (median of log T) | l2 (mean of log T)
+    calibrate: false           # median log-length residual on the fit's val subset (tune clips)
+
   sampler:
-    solver: rk4                # rk4 | heun | euler
+    solver: rk4                # rk4 | heun | euler | replan_implied | replan_anchored (C1)
     steps: 5                   # intervals (RK4: 4 guided evaluations each)
     cfg_scale: 4.5             # paper HumanML3D; sweep on dev with sweep.py
     temperature: 1.0           # initial-noise scale
@@ -120,6 +147,9 @@ method:
     max_frames: 400
     batch_size: 32
     lengths_from_npz: null     # reuse another run's durations for a matched ablation
+    length_scale: 1.0          # P0.2 sensitivity analysis only: multiply predicted durations
+    decoder: mean              # C5: mean | medoid | dba over the `ensemble` samples (K >= 2)
+    dba_iterations: 5
     ensemble: 1                # [ours, v2] K > 1: mean of K samples in pose space, a point
                                # estimate of E[pose | text] (DTW-optimal operating point; report it
                                # with the kinematic ratios, it is smoother than single samples)
