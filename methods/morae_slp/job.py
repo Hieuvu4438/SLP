@@ -170,7 +170,8 @@ REPLICA = {
     "how2sign_smplx_soke": "outputs/runs/signmflow_v2_main_how2sign_smplx_soke/signmflow/"
                            "seed0_20261118-125753-011324/predictions.npz",
 }
-EXCLUDED_V3 = {"p0_gloss_phoenix", "p0_gloss_gate_phoenix", "p2_gloss_phoenix",
+EXCLUDED_V3 = {"p1b_fk_target", "p1b_fk_target_sweep",  # C1 was neutral on Phoenix (2026-11-27)
+               "p0_gloss_phoenix", "p0_gloss_gate_phoenix", "p2_gloss_phoenix",
                "p2_gloss_phoenix_sweep", "p2_retrieval_phoenix", "p2_retrieval_phoenix_sweep",
                "p0_gloss_csl", "p0_gloss_gate_csl"}
 V3_SAMPLER = ["method.sampler.cfg_scale=1.5", "method.sampler.temperature=0.7"]
@@ -181,6 +182,7 @@ def stages_v3(workers: int) -> list[tuple[str, callable]]:
     w = f"method.workers={workers}"
     base = [w, *V2_COMMON, *V2_FT, f"method.init_ae={ae}", "method.flow.updates=30000",
             *V3_SAMPLER]
+    common_v3 = [w, *V2_COMMON, *V2_FT, f"method.init_ae={ae}", *V3_SAMPLER]
     gloss_dir = PROJECT_ROOT / "outputs" / "morae_slp" / "gloss"
     ctrl = "morae_v2ctrl_phoenix_only"
 
@@ -293,8 +295,8 @@ def stages_v3(workers: int) -> list[tuple[str, callable]]:
     order = ["p0_smoke_phoenix", "p0_smoke_how2sign", "p0_frontier_csl", "p0_decoders_tune",
              "p0_decoders_confirm", "p0_frontier_decoders", "p0_length", "p1a_sampler_only",
              "p1a_target", "p1a_target_sweep", "csl_euler_dev", "h2s_euler_dev", "p0_gloss_phoenix",
-             "p0_gloss_gate_phoenix",
-             "p0_seed1", "p0_seed1_sweep", "p1b_fk_velocity", "p1b_fk_velocity_sweep",
+             "p0_gloss_gate_phoenix", "p1b_fk_velocity", "p1b_fk_velocity_sweep",
+             "csl_fk", "csl_fk_sweep", "csl_fk_euler_dev", "p0_seed1", "p0_seed1_sweep",
              "p1b_fk_target", "p1b_fk_target_sweep", "p1c_lr03", "p1c_lr03_sweep",
              "p2_gloss_phoenix", "p2_gloss_phoenix_sweep", "p2_retrieval_phoenix",
              "p2_retrieval_phoenix_sweep", "p0_gloss_csl", "p0_gloss_gate_csl",
@@ -310,6 +312,27 @@ def stages_v3(workers: int) -> list[tuple[str, callable]]:
             "csl_smplx", "csl_euler_frontier_dev.json",
             ("csl_euler_w1_t0.7", lambda: latest_run(csl) / "sweep/euler5_w1_tau0.7/predictions.npz"),
             extra=("--cluster-sentences",), clips="all"))]
+    # CSL-Daily C2: continue the refined flow (velocity parameterisation) with the metric-frame FK
+    # loss, hands weighted; 20k updates warm-started from its best EMA checkpoint.
+    def csl_fk():
+        run = latest_run("morae_v2ctrl_csl_60k_cont")
+        ck = run / "checkpoints"
+        base = [a for a in common_v3 if not a.startswith("method.init_ae=")]
+        return ([PY, "-u", "scripts/run.py", "--method", "morae_slp", "--data", "csl_smplx",
+                 "--name", "morae_v3_csl_fk", "--seeds", "0", "--split", "val", *base,
+                 f"method.init_ae={ck / 'ae.pt'}", "method.latent.recalibrate=false",
+                 f"method.init_flow={ck / 'model.pt'}", "method.flow.updates=20000",
+                 "method.flow.lr=1.0e-4", "method.flow.warmup_updates=500",
+                 "method.flow.fk_weight_hand=1.0", "method.flow.fk_weight_body=0.25",
+                 "method.flow.snapshot_steps=[10000]"], None)
+    out += [("csl_fk", csl_fk),
+            ("csl_fk_sweep", sweep("morae_v3_csl_fk", "--cfg", "1,1.5", "--temperature", "0.7,1",
+                                   *tune)),
+            ("csl_fk_euler_dev", lambda: (
+                [PY, "-u", "-m", "methods.morae_slp.sweep", "--run",
+                 str(latest_run("morae_v3_csl_fk")), "--solver", "euler", "--steps", "5",
+                 "--cfg", "1", "--temperature", "0.7"], None))]
+
     # How2Sign: Euler 5 steps without guidance on the whole dev split (tau = 1: tau 0.7 freezes it).
     out.append(("h2s_euler_dev", lambda: (
         [PY, "-u", "-m", "methods.morae_slp.sweep", "--run",

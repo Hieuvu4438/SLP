@@ -63,6 +63,12 @@ CANDIDATES: tuple[Candidate, ...] = (
               ("method.sampler.solver=euler", "method.sampler.steps=5",
                "method.sampler.cfg_scale=1", "method.sampler.temperature=0.7"),
               {"solver": "euler", "cfg_scale": 1.0, "temperature": 0.7}),
+    # C2 on CSL-Daily: refined flow + metric-frame FK loss (warm-started fine-tune).
+    Candidate("csl_smplx", "C2 fk rk4 w1.5 t0.7", "morae_v3_csl_fk", "metrics"),
+    Candidate("csl_smplx", "C2 fk euler w1 t0.7", "morae_v3_csl_fk", "sweep",
+              ("method.sampler.solver=euler", "method.sampler.steps=5",
+               "method.sampler.cfg_scale=1", "method.sampler.temperature=0.7"),
+              {"solver": "euler", "cfg_scale": 1.0, "temperature": 0.7}),
     # How2Sign (SOKE protocol): dataset-only flow at its own sampler, plus Euler-5 without guidance.
     Candidate("how2sign_smplx_soke", "dataset-only w2 t1", "morae_v2ctrl_how2sign_only", "metrics"),
     Candidate("how2sign_smplx_soke", "dataset-only euler w1 t1", "morae_v2ctrl_how2sign_only",
