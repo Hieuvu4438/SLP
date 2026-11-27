@@ -1,0 +1,170 @@
+% Compile twice with LuaLaTeX or pdfLaTeX (with vntex) from this directory.
+\documentclass[aspectratio=169,10pt]{beamer}
+\usetheme{Madrid}
+\usefonttheme{professionalfonts}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T5]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{vntex}
+  \input{glyphtounicode}
+  \pdfgentounicode=1
+\else
+  \usepackage{fontspec}
+  \IfFontExistsTF{Lato}{\setsansfont{Lato}}{\setsansfont{Latin Modern Sans}}
+\fi
+\usepackage{amsmath,array,booktabs,graphicx,colortbl,tikz}
+\usetikzlibrary{arrows.meta,positioning,calc}
+
+\definecolor{MyOrange}{RGB}{230,85,10}
+\definecolor{MyOrangeLight}{RGB}{254,243,237}
+\definecolor{DeepOrange}{RGB}{164,58,8}
+\definecolor{Ink}{RGB}{42,40,38}
+\definecolor{Muted}{RGB}{88,81,76}
+\definecolor{Rule}{RGB}{224,215,210}
+\usecolortheme[named=MyOrange]{structure}
+\setbeamercolor{normal text}{fg=Ink,bg=white}
+\setbeamercolor{palette primary}{bg=MyOrange,fg=white}
+\setbeamercolor{palette secondary}{bg=MyOrange!80!black,fg=white}
+\setbeamercolor{palette tertiary}{bg=MyOrange!60!black,fg=white}
+\setbeamercolor{frametitle}{bg=MyOrangeLight,fg=DeepOrange}
+\setbeamercolor{block title}{bg=MyOrangeLight,fg=DeepOrange}
+\setbeamercolor{block body}{bg=MyOrangeLight!45!white,fg=Ink}
+\setbeamercolor{item projected}{bg=DeepOrange,fg=white}
+\setbeamerfont{frametitle}{size=\Large,series=\bfseries}
+\setbeamersize{text margin left=0.65cm,text margin right=0.65cm}
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{items}[circle]
+\setbeamertemplate{blocks}[rounded][shadow=false]
+\setbeamertemplate{headline}{}
+\setbeamertemplate{frametitle}{%
+  \nointerlineskip
+  \begin{beamercolorbox}[wd=\paperwidth,leftskip=.65cm,rightskip=.65cm]{frametitle}%
+    \vbox to 1.05cm{\vfil\hbox to \dimexpr\paperwidth-1.30cm\relax{%
+      \parbox[c]{10.9cm}{\usebeamerfont{frametitle}\insertframetitle}\hfill
+      \raisebox{-.5\height}{\includegraphics[width=3.15cm]{yirlodt-logo.png}}}\vfil}%
+  \end{beamercolorbox}%
+  \nointerlineskip{\color{MyOrange}\hrule height .9pt}%
+}
+\setbeamertemplate{footline}{%
+  \leavevmode\hbox{%
+    \begin{beamercolorbox}[wd=.26\paperwidth,ht=2.6ex,dp=1.15ex,leftskip=.65cm]{palette tertiary}%
+      \fontsize{7}{8}\selectfont Vũ Đình Hiếu \enspace $\cdot$ \enspace YIRLoDT
+    \end{beamercolorbox}%
+    \begin{beamercolorbox}[wd=.59\paperwidth,ht=2.6ex,dp=1.15ex,center]{palette secondary}%
+      \fontsize{7}{8}\selectfont\insertsectionhead
+    \end{beamercolorbox}%
+    \begin{beamercolorbox}[wd=.15\paperwidth,ht=2.6ex,dp=1.15ex,right,rightskip=.65cm]{palette tertiary}%
+      \fontsize{7}{8}\selectfont\insertframenumber\,/\,\inserttotalframenumber
+    \end{beamercolorbox}}%
+}
+
+\title{Sign Language Production}
+\subtitle{SignRAE}
+\author{Vũ Đình Hiếu}
+\institute{Young Innovation Research Laboratory on Digital Technology (YIRLoDT) -- PTIT}
+\date{28/11/2026}
+\newcommand{\coverbranding}{%
+  \begin{tikzpicture}[remember picture,overlay]
+    \node[anchor=north east,inner sep=0pt] at ([xshift=-.65cm,yshift=-.54cm]current page.north east)
+      {\includegraphics[width=4.55cm]{yirlodt-logo.png}};
+    \draw[MyOrange,line width=.7pt] ([xshift=.72cm,yshift=1.04cm]current page.south west)
+      -- ([xshift=-.72cm,yshift=1.04cm]current page.south east);
+    \node[anchor=south west,inner sep=0pt,DeepOrange,font=\fontsize{8}{10}\selectfont\bfseries]
+      at ([xshift=.72cm,yshift=.51cm]current page.south west)
+      {YOUNG INNOVATION RESEARCH LABORATORY ON DIGITAL TECHNOLOGY (YIRLoDT) -- PTIT};
+  \end{tikzpicture}%
+}
+
+\newcommand{\lead}[1]{{\large\bfseries\color{DeepOrange}#1\par}\smallskip}
+\newcommand{\hint}[1]{{\footnotesize\color{Muted}#1\par}}
+\newcommand{\tier}[1]{{\small\bfseries\color{DeepOrange}#1}}
+\newcommand{\validavg}[1]{\left\langle #1\right\rangle_{\mathrm{valid}}}
+\tikzset{
+  stagebox/.style={draw=Rule,rounded corners=2pt,fill=white,minimum height=1.13cm,align=center,inner sep=4pt,font=\small},
+  orangebox/.style={stagebox,draw=MyOrange!80,fill=MyOrangeLight},
+  stagearrow/.style={-{Latex[length=2mm]},semithick,draw=DeepOrange},
+  tensor/.style={text=Muted,font=\scriptsize,align=center}
+}
+
+\begin{document}
+
+{\setbeamertemplate{background}{\coverbranding}
+\begin{frame}[plain]
+  \vspace*{.72cm}
+  \hspace*{.07cm}\begin{minipage}{14cm}
+    {\fontsize{29}{34}\selectfont\bfseries\inserttitle\par}
+    \vspace{.26cm}
+    {\Large\bfseries\color{DeepOrange}\insertsubtitle\par}
+    \vspace{.78cm}
+    {\normalsize Người trình bày\quad\textbf{\insertauthor}\par}
+    \vspace{.18cm}
+    {\normalsize Ngày\quad\insertdate\par}
+  \end{minipage}
+\end{frame}
+}
+
+\section{SignRAE}
+\begin{frame}{Nội dung}
+  \large
+  \begin{enumerate}\setlength{\itemsep}{.27cm}
+    \item Bài toán và động lực
+    \item SignRAE học và sinh chuyển động thế nào?
+    \item Kết quả trên ba bộ dữ liệu
+  \end{enumerate}
+\end{frame}
+
+\begin{frame}{Sinh ký hiệu 3D từ văn bản}
+  \centering
+  \begin{tikzpicture}
+    \node[stagebox,text width=3.40cm] (src) at (0,0) {Câu văn bản\\Ngôn ngữ ký hiệu đích};
+    \node[orangebox,text width=2.5cm] (model) at (4.10,0) {\bfseries SignRAE};
+    \node[stagebox,text width=4.22cm] (out) at (8.71,0) {Chuỗi pose SMPL-X\\Thân, tay và mặt};
+    \draw[stagearrow] (src.east) -- (model.west);
+    \draw[stagearrow] (model.east) -- (out.west);
+  \end{tikzpicture}
+  \par\vspace{.42cm}\raggedright
+  \begin{itemize}\setlength{\itemsep}{.15cm}
+    \item \textbf{Đầu vào} là câu nguồn và ngôn ngữ ký hiệu đích, chẳng hạn ASL.
+    \item \textbf{Đầu ra} là một chuỗi chuyển động 3D. Mỗi frame dùng 133 tham số SMPL-X để biểu diễn thân, hai bàn tay và mặt.
+    \item Độ dài được dự đoán từ câu và ngôn ngữ đích.
+  \end{itemize}
+\end{frame}
+
+\input{method.tex}
+
+\section{Thực nghiệm}
+\newcommand{\resulttitle}[2]{Kết quả #1\enspace\textnormal{\small Bảng #2 $\cdot$ Test}}
+\newcommand{\resultset}{%
+  \vspace*{-.09cm}%
+  \centering\fontsize{7.5}{7.8}\selectfont
+  \renewcommand{\arraystretch}{.93}%
+  \setlength{\tabcolsep}{4pt}%
+  \setlength{\aboverulesep}{.6pt}%
+  \setlength{\belowrulesep}{1pt}%
+  \setlength{\cmidrulesep}{1pt}%
+}
+\newcolumntype{R}{>{\raggedleft\arraybackslash}p{1.45cm}}
+\newcolumntype{V}{>{\raggedright\arraybackslash}p{2.85cm}}
+\newcommand{\resultnotes}[1]{%
+  \par\vspace{.11cm}
+  {\centering\fontsize{7}{8}\selectfont\color{Muted}%
+    $\downarrow$\ Càng thấp càng tốt. Pseudo-GT SOKE: \textbf{tốt nhất}, \underline{thứ hai}.\par
+    $\dagger$\ #1\enspace $*$\ Pseudo-GT riêng (tham khảo).\par}%
+}
+\newcommand{\glossorretrieval}{Gloss (huấn luyện hoặc suy luận) hoặc từ điển truy hồi.}
+\newcommand{\dictionaryonly}{Từ điển truy hồi.}
+\input{results.tex}
+
+{\setbeamertemplate{background}{\coverbranding}
+\begin{frame}[plain]
+  \centering
+  {\Huge\bfseries\color{DeepOrange} Cảm ơn\par}
+  \vspace{.40cm}
+  {\large Vũ Đình Hiếu\par}
+  \medskip
+  \href{mailto:yirlodt@ptit.edu.vn}{yirlodt@ptit.edu.vn}
+\end{frame}
+}
+
+\end{document}

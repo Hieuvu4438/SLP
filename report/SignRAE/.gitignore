@@ -1,0 +1,10 @@
+# Intermediate LaTeX and Beamer build files
+*.aux
+*.fdb_latexmk
+*.fls
+*.log
+*.nav
+*.out
+*.snm
+*.synctex.gz
+*.toc

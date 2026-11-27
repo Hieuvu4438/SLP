@@ -1,0 +1,114 @@
+% Original method papers and venue records, checked 27/11/2026.
+\newcommand{\paperProg}[1]{\href{https://link.springer.com/chapter/10.1007/978-3-030-58621-8_40}{#1}}
+\newcommand{\paperMesh}[1]{\href{https://openresearch.surrey.ac.uk/esploro/outputs/conferenceProceeding/There-and-Back-Again-3D-Sign/99783722402346}{#1}}
+\newcommand{\paperTsgpt}[1]{\href{https://aclanthology.org/2024.acl-long.183/}{#1}}
+\newcommand{\paperMotiongpt}[1]{\href{https://proceedings.neurips.cc/paper_files/paper/2023/hash/3fbf0c1ea0716c03dea93bb6be78dd6f-Abstract-Conference.html}{#1}}
+\newcommand{\paperMomask}[1]{\href{https://proceedings.nips.cc/paper_files/paper/2025/hash/9028b8a3ca98f58e373f0c1497a17448-Abstract-Conference.html}{#1}}
+\newcommand{\paperNsa}[1]{\href{https://openaccess.thecvf.com/content/CVPR2024/papers/Baltatzis_Neural_Sign_Actors_A_Diffusion_Model_for_3D_Sign_Language_CVPR_2024_paper.pdf}{#1}}
+\newcommand{\paperGard}[1]{\href{https://arxiv.org/html/2606.21234}{#1}}
+\newcommand{\paperSoke}[1]{\href{https://openaccess.thecvf.com/content/ICCV2025/papers/Zuo_Signs_as_Tokens_A_Retrieval-Enhanced_Multilingual_Sign_Language_Generator_ICCV_2025_paper.pdf}{#1}}
+\newcommand{\paperSignflow}[1]{\href{https://doi.org/10.1145/3716553.3750765}{#1}}
+\newcommand{\venueSrvq}[1]{\href{https://wacv.thecvf.com/Conferences/2027/AcceptedPapers}{#1}}
+\newcommand{\paperMadis}[1]{\href{https://arxiv.org/html/2601.19577v2\#S4}{#1}}
+\newcommand{\paperNmflow}[1]{\href{https://arxiv.org/html/2609.33339\#S4}{#1}}
+\newcommand{\venueSpark}[1]{\href{https://openresearch.surrey.ac.uk/esploro/outputs/991146794302346}{#1}}
+\newcommand{\venueMthree}[1]{\href{https://cogvis-cvssp.github.io/papers/m3t/}{#1}}
+\newcommand{\paperServ}[1]{\href{https://arxiv.org/pdf/2609.05742v2}{#1}}
+\newcommand{\paperBlanc}[1]{\href{https://arxiv.org/html/2610.24109v1}{#1}}
+
+\begin{frame}[t]{\resulttitle{PHOENIX-2014T}{1}}
+  \resultset
+  \begin{tabular}{@{}p{4.45cm}VRRRR@{}}
+    \toprule
+    & & \multicolumn{2}{c}{\textbf{DTW-JPE} $\downarrow$} & \multicolumn{2}{c}{\textbf{DTW-PA-JPE} $\downarrow$} \\
+    \cmidrule(lr){3-4}\cmidrule(lr){5-6}
+    \textbf{Phương pháp} & \textbf{Hội nghị / Nguồn} & \textbf{Body} & \textbf{Hand} & \textbf{Body} & \textbf{Hand} \\ \midrule
+    Progressive Transformers & \paperProg{ECCV 2020} & 15.01 & 31.77 & 13.67 & 11.95 \\
+    Text2Mesh & \paperMesh{3DV 2022} & 14.04 & 31.64 & 13.48 & 12.06 \\
+    T2S-GPT & \paperTsgpt{ACL 2024} & 11.65 & 19.09 & 10.38 & 6.47 \\
+    S-MotionGPT & \paperMotiongpt{NeurIPS 2023} & 10.42 & 9.08 & 9.45 & 3.41 \\
+    MoMask++ & \paperMomask{NeurIPS 2025} & 8.16 & 9.96 & -- & -- \\
+    GARD\ensuremath{^{\dagger}} & \paperGard{Preprint 2026} & 6.69 & 6.90 & 5.03 & 1.21 \\
+    SOKE (Qwen3)\ensuremath{^{\dagger}} & \paperMadis{MaDiS preprint 2026} & 6.09 & 7.65 & -- & -- \\
+    SOKE (mBART)\ensuremath{^{\dagger}} & \paperSoke{ICCV 2025} & 6.04 & 7.72 & 4.77 & 1.38 \\
+    MDLM baseline & \paperMadis{MaDiS preprint 2026} & 5.98 & 7.58 & -- & -- \\
+    SignFlow & \paperSignflow{ICMI 2025} & 5.40 & 6.21 & 4.56 & 1.20 \\
+    SRVQ\ensuremath{^{\dagger}} & \venueSrvq{WACV 2027} & 5.33 & 6.92 & 6.00 & 1.35 \\
+    MaDiS & \paperMadis{Preprint 2026} & 4.97 & 6.59 & -- & -- \\
+    SignNMFlow (reproduction) & Tái lập nội bộ & 4.93 & 6.54 & 4.35 & 1.30 \\
+    \rowcolor{MyOrangeLight}\textbf{SignRAE (Ours)} & Báo cáo này & \textcolor{DeepOrange}{4.88} & \textcolor{DeepOrange}{6.44} & \textcolor{DeepOrange}{4.31} & \textcolor{DeepOrange}{1.28} \\
+    SignNMFlow-M & \paperNmflow{Preprint 2026} & \underline{4.42} & \underline{5.75} & \underline{3.91} & \underline{1.08} \\
+    SignNMFlow & \paperNmflow{Preprint 2026} & \textbf{4.37} & \textbf{5.57} & \textbf{3.85} & \textbf{1.07} \\
+    \midrule
+    SignSparK-GF\ensuremath{^{*}} & \venueSpark{ECCV 2026} & 4.40 & 7.10 & 5.24 & 1.52 \\
+    SignSparK-SR\ensuremath{^{*\dagger}} & \venueSpark{ECCV 2026} & 3.51 & 4.82 & 3.68 & 1.18 \\
+    M3T\ensuremath{^{*}} & \venueMthree{BMVC 2026} & 4.02 & 8.55 & 3.41 & 1.46 \\
+    BLANC\ensuremath{^{*}} & \paperBlanc{Preprint 2026} & -- & -- & 7.58 & 1.48 \\
+    \bottomrule
+  \end{tabular}
+  \resultnotes{\glossorretrieval}
+\end{frame}
+
+\begin{frame}[t]{\resulttitle{CSL-Daily}{2}}
+  \resultset
+  \begin{tabular}{@{}p{4.45cm}VRRRR@{}}
+    \toprule
+    & & \multicolumn{2}{c}{\textbf{DTW-JPE} $\downarrow$} & \multicolumn{2}{c}{\textbf{DTW-PA-JPE} $\downarrow$} \\
+    \cmidrule(lr){3-4}\cmidrule(lr){5-6}
+    \textbf{Phương pháp} & \textbf{Hội nghị / Nguồn} & \textbf{Body} & \textbf{Hand} & \textbf{Body} & \textbf{Hand} \\ \midrule
+    Progressive Transformers & \paperProg{ECCV 2020} & 16.30 & 32.63 & 15.98 & 12.91 \\
+    Text2Mesh & \paperMesh{3DV 2022} & 13.76 & 30.37 & 13.47 & 12.10 \\
+    T2S-GPT & \paperTsgpt{ACL 2024} & 12.32 & 15.43 & 11.94 & 5.93 \\
+    S-MotionGPT & \paperMotiongpt{NeurIPS 2023} & 11.58 & 11.31 & 10.81 & 3.78 \\
+    MoMask++ & \paperMomask{NeurIPS 2025} & 8.93 & 10.57 & -- & -- \\
+    GARD\ensuremath{^{\dagger}} & \paperGard{Preprint 2026} & 7.73 & 9.32 & 6.98 & 1.56 \\
+    SignFlow & \paperSignflow{ICMI 2025} & 7.56 & 8.82 & 6.43 & 1.65 \\
+    SOKE (mBART)\ensuremath{^{\dagger}} & \paperSoke{ICCV 2025} & 7.38 & 9.68 & 6.24 & 1.71 \\
+    SOKE (Qwen3)\ensuremath{^{\dagger}} & \paperMadis{MaDiS preprint 2026} & 7.29 & 9.59 & -- & -- \\
+    MDLM baseline & \paperMadis{MaDiS preprint 2026} & 7.12 & 9.57 & -- & -- \\
+    SRVQ\ensuremath{^{\dagger}} & \venueSrvq{WACV 2027} & 6.79 & 8.54 & 7.61 & 1.54 \\
+    \rowcolor{MyOrangeLight}\textbf{SignRAE (Ours)} & Báo cáo này & \textcolor{DeepOrange}{6.08} & \textcolor{DeepOrange}{8.07} & \textcolor{DeepOrange}{5.43} & \textcolor{DeepOrange}{1.46} \\
+    MaDiS & \paperMadis{Preprint 2026} & 5.99 & 7.96 & -- & -- \\
+    SignNMFlow-M & \paperNmflow{Preprint 2026} & 5.94 & 7.73 & 5.31 & \underline{1.33} \\
+    SignNMFlow (reproduction) & Tái lập nội bộ & \underline{5.93} & \underline{7.69} & \underline{5.26} & 1.38 \\
+    SignNMFlow & \paperNmflow{Preprint 2026} & \textbf{5.73} & \textbf{7.43} & \textbf{5.10} & \textbf{1.30} \\
+    \midrule
+    SignSparK-GF\ensuremath{^{*}} & \venueSpark{ECCV 2026} & 6.27 & 10.63 & 7.26 & 2.00 \\
+    SignSparK-SR\ensuremath{^{*\dagger}} & \venueSpark{ECCV 2026} & 4.89 & 6.56 & 4.87 & 1.37 \\
+    M3T\ensuremath{^{*}} & \venueMthree{BMVC 2026} & 4.63 & 9.28 & 3.97 & 1.51 \\
+    BLANC\ensuremath{^{*}} & \paperBlanc{Preprint 2026} & -- & -- & 9.75 & 1.71 \\
+    \bottomrule
+  \end{tabular}
+  \resultnotes{\glossorretrieval}
+\end{frame}
+
+\begin{frame}[t]{\resulttitle{How2Sign}{3}}
+  \resultset
+  \begin{tabular}{@{}p{4.45cm}VRRRR@{}}
+    \toprule
+    & & \multicolumn{2}{c}{\textbf{DTW-JPE} $\downarrow$} & \multicolumn{2}{c}{\textbf{DTW-PA-JPE} $\downarrow$} \\
+    \cmidrule(lr){3-4}\cmidrule(lr){5-6}
+    \textbf{Phương pháp} & \textbf{Hội nghị / Nguồn} & \textbf{Body} & \textbf{Hand} & \textbf{Body} & \textbf{Hand} \\ \midrule
+    Text2Mesh & \paperMesh{3DV 2022} & 15.50 & 32.97 & 13.99 & 13.47 \\
+    Progressive Transformers & \paperProg{ECCV 2020} & 14.74 & 30.17 & 14.15 & 11.57 \\
+    T2S-GPT & \paperTsgpt{ACL 2024} & 12.65 & 18.44 & 11.48 & 6.39 \\
+    S-MotionGPT & \paperMotiongpt{NeurIPS 2023} & 12.41 & 13.74 & 11.23 & 4.39 \\
+    NSA & \paperNsa{CVPR 2024} & 9.16 & 18.51 & -- & -- \\
+    MoMask++ & \paperMomask{NeurIPS 2025} & 9.06 & 11.34 & -- & -- \\
+    SignFlow & \paperSignflow{ICMI 2025} & 7.98 & 10.52 & 6.92 & 2.27 \\
+    SOKE (mBART)\ensuremath{^{\dagger}} & \paperSoke{ICCV 2025} & 7.75 & 10.08 & 6.82 & 2.35 \\
+    SignNMFlow (reproduction) & Tái lập nội bộ & 7.45 & 10.67 & 6.63 & 2.35 \\
+    SOKE (Qwen3)\ensuremath{^{\dagger}} & \paperMadis{MaDiS preprint 2026} & 7.18 & 10.09 & -- & -- \\
+    MDLM baseline & \paperMadis{MaDiS preprint 2026} & 7.02 & 10.16 & -- & -- \\
+    \rowcolor{MyOrangeLight}\textbf{SignRAE (Ours)} & Báo cáo này & \textcolor{DeepOrange}{6.99} & \textcolor{DeepOrange}{10.03} & \textcolor{DeepOrange}{6.22} & \textcolor{DeepOrange}{2.33} \\
+    SignNMFlow & \paperNmflow{Preprint 2026} & 6.76 & 9.72 & \underline{6.01} & \underline{2.07} \\
+    SignNMFlow-M & \paperNmflow{Preprint 2026} & 6.74 & 9.77 & \textbf{5.99} & \textbf{2.06} \\
+    MaDiS & \paperMadis{Preprint 2026} & \underline{6.59} & \underline{9.45} & -- & -- \\
+    SeRV & \paperServ{Preprint 2026} & \textbf{6.44} & \textbf{9.16} & -- & -- \\
+    \midrule
+    SignSparK-GF\ensuremath{^{*}} & \venueSpark{ECCV 2026} & 6.30 & 11.43 & 7.26 & 2.72 \\
+    M3T\ensuremath{^{*}} & \venueMthree{BMVC 2026} & 4.86 & 9.44 & 4.28 & 2.28 \\
+    \bottomrule
+  \end{tabular}
+  \resultnotes{\dictionaryonly}
+\end{frame}

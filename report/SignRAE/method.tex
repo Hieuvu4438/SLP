@@ -1,0 +1,255 @@
+% Content checked against methods/morae_slp and METHOD_V3.md.
+% Layout references: I-JEPA and Motion Latent Diffusion author talks, CVPR 2023,
+% and MIT CSAIL Flow Matching, 6.S184 Lecture 2.
+\tikzset{
+  branch/.style={stagearrow,densely dashed},
+  maskedcell/.style={draw=white,line width=.55pt,fill=MyOrange},
+  visiblecell/.style={draw=white,line width=.55pt,fill=Rule!65!white}
+}
+\newcommand{\motionflowarrow}[2]{\draw[stagearrow] (#1.east) -- (#2.west);}
+\newcommand{\methodpoint}[2]{\par\textbf{#1}\enspace #2\par}
+
+\begin{frame}{Động lực nghiên cứu}
+  \lead{Làm sao sinh ký hiệu từ câu văn bản mà vẫn giữ sự phối hợp giữa tay, thân và mặt?}
+  \vspace{.20cm}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{.30\textwidth}
+      \tier{Học điều gì từ pose?}
+      \par\medskip
+      Một bàn tay thường chuyển động cùng cánh tay, thân hoặc tay đối diện. SignRAE che một phần chuyển động để mô hình học cách các phần còn lại cung cấp ngữ cảnh.
+    \end{column}
+    \begin{column}{.30\textwidth}
+      \tier{Biểu diễn nào để sinh?}
+      \par\medskip
+      Đặc trưng rộng có thể hữu ích để nhận biết chuyển động nhưng khó sinh trực tiếp. Ta nén đặc trưng và kiểm tra thông tin còn giữ bằng cách tái tạo pose.
+    \end{column}
+    \begin{column}{.31\textwidth}
+      \tier{Văn bản quyết định gì?}
+      \par\medskip
+      Một câu có thể được ký theo nhiều cách. Ta dùng câu và ngôn ngữ đích để điều kiện hóa quá trình sinh, đồng thời dự đoán độ dài riêng.
+    \end{column}
+  \end{columns}
+  \vspace{.42cm}
+  \small SignRAE áp dụng thiết kế của MoRAE cho ký hiệu bằng mặt nạ theo nhóm cơ thể và điều kiện ngôn ngữ đích.
+  \par\smallskip
+  \hint{\href{https://arxiv.org/abs/2301.08243}{I-JEPA (CVPR 2023)}
+    \enspace $\cdot$ \enspace \href{https://arxiv.org/abs/2212.04048}{MLD (CVPR 2023)}
+    \enspace $\cdot$ \enspace \href{https://arxiv.org/abs/2607.29180v2}{MoRAE (preprint 2026)}
+    \enspace $\cdot$ \enspace \href{https://arxiv.org/abs/2210.02747}{Flow Matching (ICLR 2023)}}
+\end{frame}
+
+\begin{frame}{Ba giai đoạn của SignRAE}
+  \centering
+  \begin{tikzpicture}[stagebox/.append style={minimum height=1.58cm}]
+    \node[orangebox,text width=3.65cm] (jepa) at (0,0)
+      {\textbf{1. SignJEPA}\\Học từ clip bị che};
+    \node[orangebox,text width=3.65cm] (ae) at (4.70,0)
+      {\textbf{2. Compact Latent AE}\\Nén và tái tạo pose};
+    \node[orangebox,text width=3.65cm] (flow) at (9.40,0)
+      {\textbf{3. Latent Flow Matching}\\Học sinh latent từ câu};
+    \motionflowarrow{jepa}{ae}
+    \motionflowarrow{ae}{flow}
+    \node[tensor,text width=3.82cm,anchor=north] at (0,-.99)
+      {Clip chuyển động\\Giữ encoder teacher đã học};
+    \node[tensor,text width=3.82cm,anchor=north] at (4.70,-.99)
+      {Teacher cố định\\Học compressor và decoder};
+    \node[tensor,text width=3.82cm,anchor=north] at (9.40,-.99)
+      {Cặp câu--pose, AE cố định\\Học bộ sinh và dự đoán độ dài};
+  \end{tikzpicture}
+  \par\vspace{.50cm}\raggedright
+  \begin{block}{Khi sinh ký hiệu}
+    Câu và ngôn ngữ đích điều khiển bộ sinh. Flow biến nhiễu thành latent chuyển động, sau đó decoder dựng chuỗi pose SMPL-X.
+  \end{block}
+  \smallskip
+  \hint{Latent là biểu diễn gọn của chuyển động. SignRAE giữ một vector latent cho mỗi frame.}
+\end{frame}
+
+\subsection{SignJEPA}
+\begin{frame}{SignJEPA học từ phần chuyển động còn thấy}
+  \lead{Che cả quỹ đạo để mô hình phải suy từ các phần cơ thể còn lại.}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{.53\textwidth}
+      \centering
+      \begin{tikzpicture}[x=.64cm,y=.52cm]
+        \foreach \row/\name in {0/Thân,1/Cánh tay trái,2/Bàn tay trái,3/Bàn tay phải,4/Mặt}{
+          \node[tensor,anchor=east,inner sep=3pt] at (0,-\row-.5) {\name};
+          \foreach \frameindex in {0,...,6}{
+            \ifnum\row=2
+              \path[maskedcell] (\frameindex,-\row) rectangle ++(1,-1);
+            \else
+              \path[visiblecell] (\frameindex,-\row) rectangle ++(1,-1);
+            \fi
+          }
+        }
+        \draw[stagearrow] (0,-5.32) -- (7,-5.32) node[midway,below,tensor]{Frame theo thời gian};
+      \end{tikzpicture}
+      \par\smallskip
+      \hint{Ví dụ che bàn tay trái trong cả clip.}
+    \end{column}
+    \begin{column}{.42\textwidth}
+      \methodpoint{Ba mức che}{Một khớp, một chuỗi động học như ngón tay hoặc cánh tay, hoặc cả bàn tay.}
+      \medskip
+      \methodpoint{Che xuyên suốt clip}{Dùng cùng mặt nạ cho pose và độ thay đổi pose giữa hai frame.}
+      \medskip
+      \methodpoint{Ngữ cảnh còn lại}{Cánh tay, thân và tay đối diện gợi ý chuyển động của bàn tay đã che.}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Teacher cung cấp đích tự giám sát}
+  \centering
+  \begin{tikzpicture}
+    \node[stagebox,text width=1.93cm] (masked) at (0,0) {Clip đã che};
+    \node[orangebox,text width=2.64cm] (student) at (3.08,0) {\textbf{Student encoder}};
+    \node[orangebox,text width=2.54cm] (predict) at (6.49,0) {\textbf{Predictor}};
+    \node[stagebox,text width=1.58cm] (estimate) at (9.37,0) {Dự đoán};
+    \node[stagebox,text width=1.93cm] (clean) at (0,-1.55) {Clip đầy đủ};
+    \node[stagebox,text width=2.64cm] (teacher) at (3.08,-1.55) {\textbf{Teacher encoder}};
+    \node[stagebox,text width=1.58cm] (target) at (9.37,-1.55) {Đích};
+    \node[orangebox,text width=1.70cm] (loss) at (11.96,-.775) {\textbf{Smooth L1}};
+    \motionflowarrow{masked}{student}
+    \motionflowarrow{student}{predict}
+    \motionflowarrow{predict}{estimate}
+    \motionflowarrow{clean}{teacher}
+    \draw[stagearrow] (teacher.east) -- node[above,tensor]{Đặc trưng clip đầy đủ} (target.west);
+    \draw[branch] (student.south) -- node[right,tensor]{EMA} (teacher.north);
+    \draw[stagearrow] (estimate.east) -| (loss.north);
+    \draw[stagearrow] (target.east) -| (loss.south);
+  \end{tikzpicture}
+  \par\vspace{.44cm}\raggedright
+  \methodpoint{Kiến trúc}{Student và teacher dùng Transformer theo thời gian. Predictor chuyển đầu ra student thành đặc trưng để so với teacher.}
+  \smallskip
+  \methodpoint{Mục tiêu}{Smooth L1 khớp đặc trưng từng frame. Teacher cập nhật bằng trung bình trượt (EMA) của student để đích thay đổi từ từ.}
+  \smallskip
+  \hint{Sau giai đoạn này, giữ teacher cố định để trích đặc trưng cho autoencoder.}
+\end{frame}
+
+\subsection{Compact Latent AE}
+\begin{frame}{Nén theo từng frame và tái tạo pose}
+  \lead{Compact Latent AE giảm số kênh đặc trưng và giữ nguyên số frame.}
+  \centering
+  \begin{tikzpicture}[stagebox/.append style={minimum height=1.38cm}]
+    \node[stagebox,text width=2.15cm] (features) at (0,0) {Đặc trưng teacher\\768 chiều};
+    \node[orangebox,text width=2.25cm] (encoder) at (3.05,0) {\textbf{Compressor}\\Attention thời gian};
+    \node[stagebox,text width=2.13cm] (latent) at (6.13,0) {Latent\\64 chiều};
+    \node[orangebox,text width=2.20cm] (decoder) at (9.14,0) {\textbf{Decoder}\\Transformer};
+    \node[stagebox,text width=1.57cm] (pose) at (11.94,0) {Pose SMPL-X\\133 kênh};
+    \motionflowarrow{features}{encoder}
+    \motionflowarrow{encoder}{latent}
+    \motionflowarrow{latent}{decoder}
+    \motionflowarrow{decoder}{pose}
+  \end{tikzpicture}
+  \par\vspace{.40cm}\raggedright
+  \methodpoint{Compressor}{Đọc ngữ cảnh giữa các frame rồi dự đoán một phân phối Gaussian 64 chiều cho mỗi frame.}
+  \medskip
+  \methodpoint{Decoder}{Dùng một chuỗi mẫu latent để khôi phục pose thân, tay và mặt. Một latent tương ứng một frame đầu ra.}
+  \medskip
+  \hint{Teacher trích đặc trưng từ clip đầy đủ. Compressor và decoder học qua mục tiêu tái tạo.}
+\end{frame}
+
+\begin{frame}{Latent giữ thông tin gì?}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{.47\textwidth}
+      \tier{MSE tái tạo}
+      \par\medskip
+      So chuỗi pose dựng lại với clip gốc. Sai số này hướng compressor giữ những chi tiết mà decoder cần để dựng thân, tay và mặt.
+    \end{column}
+    \begin{column}{.47\textwidth}
+      \tier{KL điều chuẩn}
+      \par\medskip
+      Kéo phân phối latent mỗi frame về gần Gaussian chuẩn. Trọng số nhỏ giúp điều chuẩn mà vẫn ưu tiên mục tiêu tái tạo pose.
+    \end{column}
+  \end{columns}
+  \[
+    \mathcal L_{\mathrm{AE}}=\mathcal L_{\text{tái tạo}}+10^{-4}\,\mathcal L_{\mathrm{KL}}.
+  \]
+  \begin{block}{Bàn giao cho bộ sinh}
+    Đóng băng autoencoder. Thay mẫu ngẫu nhiên bằng trung bình của phân phối để mỗi clip có một latent đích cố định, rồi chuẩn hóa từng kênh theo tập train.
+  \end{block}
+\end{frame}
+
+\subsection{Latent Flow Matching}
+\begin{frame}{Flow Matching học hướng từ nhiễu}
+  \lead{Khi huấn luyện, ta biết cả nhiễu bắt đầu lẫn latent đích.}
+  \centering
+  \begin{tikzpicture}[stagebox/.append style={minimum height=1.33cm}]
+    \node[stagebox,text width=2.90cm] (noise) at (0,0) {Nhiễu $\epsilon$\\Bắt đầu};
+    \node[orangebox,text width=3.20cm] (mix) at (4.60,0) {Latent trộn $z_t$\\Điểm bất kỳ trên đường};
+    \node[stagebox,text width=2.90cm] (motion) at (9.20,0) {Latent thật $z$\\Đích};
+    \motionflowarrow{noise}{mix}
+    \motionflowarrow{mix}{motion}
+  \end{tikzpicture}
+  \[
+    z_t=(1-t)\epsilon+tz,\qquad
+    \underbrace{z-\epsilon}_{\text{vận tốc mục tiêu}}.
+  \]
+  \raggedright
+  \methodpoint{Bài toán học}{Lấy một mức trộn $t$ từ 0 đến 1 cho cả clip. DiT dùng $z_t$, $t$, câu và ngôn ngữ để dự đoán hướng đi.}
+  \smallskip
+  \hint{MSE so vận tốc dự đoán với vận tốc mục tiêu. $t$ là tiến độ sinh, tính chung cho toàn bộ chuỗi frame.}
+\end{frame}
+
+\begin{frame}{Câu văn bản đi vào DiT theo hai đường}
+  \centering
+  \begin{tikzpicture}
+    \node[stagebox,text width=1.66cm] (sentence) at (0,0) {Câu nguồn};
+    \node[orangebox,text width=2.15cm] (mbart) at (2.78,0) {\textbf{mBART}};
+    \node[stagebox,text width=2.74cm] (tokens) at (6.06,0) {Token văn bản};
+    \node[orangebox,text width=3.06cm] (cross) at (10.51,0) {\textbf{Cross-attention}\\Đọc từng phần của câu};
+    \node[stagebox,text width=2.74cm] (global) at (6.06,-1.60) {Vector câu, ngôn ngữ\\và tiến độ sinh};
+    \node[orangebox,text width=3.06cm] (adaln) at (10.51,-1.60) {\textbf{adaLN}\\Điều chỉnh cả block};
+    \motionflowarrow{sentence}{mbart}
+    \motionflowarrow{mbart}{tokens}
+    \motionflowarrow{tokens}{cross}
+    \draw[stagearrow] (tokens.south) -- (global.north);
+    \motionflowarrow{global}{adaln}
+  \end{tikzpicture}
+  \par\vspace{.38cm}\raggedright
+  \methodpoint{Theo từng frame}{Cross-attention cho phép các frame đọc những phần khác nhau của câu.}
+  \medskip
+  \methodpoint{Theo cả chuỗi}{Vector gộp của câu, mã ngôn ngữ và tiến độ sinh điều chỉnh cách DiT xử lý chuyển động qua adaLN.}
+  \smallskip
+  \hint{DiT cũng dùng self-attention giữa các frame để dự đoán vận tốc cho cả chuỗi.}
+\end{frame}
+
+\begin{frame}{Học nội dung chuyển động và độ dài}
+  \lead{Hai nhánh dùng chung bộ mã hóa câu mBART và có hai mục tiêu học.}
+  \vspace{.18cm}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{.48\textwidth}
+      \begin{block}{DiT dự đoán vận tốc}
+        Nhận latent đang trộn, tiến độ sinh và điều kiện văn bản. Trả về một vector vận tốc cho từng frame.\\[6pt]
+        \textbf{Loss flow} so vận tốc dự đoán với hướng từ nhiễu tới latent thật.
+      \end{block}
+    \end{column}
+    \begin{column}{.48\textwidth}
+      \begin{block}{Duration head dự đoán số frame}
+        Nhận vector câu và mã ngôn ngữ. Trả về một giá trị log độ dài để xác định kích thước chuỗi cần sinh.\\[6pt]
+        \textbf{Loss độ dài} so với log số frame của clip thật bằng sai số tuyệt đối.
+      \end{block}
+    \end{column}
+  \end{columns}
+  \vspace{.20cm}
+  \hint{Huấn luyện trên cặp câu--pose. Hai loss được cộng để học bộ sinh trong khi autoencoder giữ cố định.}
+\end{frame}
+
+\subsection{Suy luận}
+\begin{frame}{Từ câu đến chuỗi ký hiệu}
+  \lead{Dự đoán độ dài trước, sinh latent theo độ dài đó, rồi dựng pose.}
+  \centering
+  \begin{tikzpicture}[stagebox/.append style={minimum height=1.43cm}]
+    \node[stagebox,text width=2.64cm] (text) at (0,0) {Câu và ngôn ngữ\\Dự đoán số frame};
+    \node[stagebox,text width=2.30cm] (noise) at (3.18,0) {Khởi tạo nhiễu\\Theo độ dài đã chọn};
+    \node[orangebox,text width=2.80cm] (ode) at (6.62,0) {\textbf{Flow có điều kiện}\\5 bước Euler};
+    \node[orangebox,text width=2.58cm] (dec) at (10.40,0) {\textbf{Decoder}\\Chuỗi pose SMPL-X};
+    \motionflowarrow{text}{noise}
+    \motionflowarrow{noise}{ode}
+    \motionflowarrow{ode}{dec}
+    \node[tensor,above=.44cm of ode] (condition) {Câu và ngôn ngữ dẫn hướng từng bước};
+    \draw[stagearrow] (condition.south) -- (ode.north);
+  \end{tikzpicture}
+  \par\vspace{.45cm}\raggedright
+  \methodpoint{Flow}{Ở mỗi bước, DiT dự đoán hướng đi từ trạng thái hiện tại và Euler tiến thêm một đoạn theo hướng đó.}
+  \smallskip
+  \methodpoint{Decoder}{Hoàn nguyên chuẩn hóa latent cuối rồi dựng pose. Số frame đầu ra bằng độ dài đã dự đoán.}
+\end{frame}
